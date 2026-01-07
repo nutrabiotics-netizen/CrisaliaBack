@@ -11,6 +11,7 @@ export interface IMedico extends Document {
   especialidad?: string;
   numeroColegiatura?: string;
   telefono?: string;
+  whatsapp?: string;
   activo: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -62,6 +63,10 @@ const MedicoSchema = new Schema<IMedico>(
       type: String,
       trim: true
     },
+    whatsapp: {
+      type: String,
+      trim: true
+    },
     activo: {
       type: Boolean,
       default: true
@@ -73,18 +78,13 @@ const MedicoSchema = new Schema<IMedico>(
 );
 
 // Hash password antes de guardar
-MedicoSchema.pre('save', async function (next: any) {
+MedicoSchema.pre('save', async function () {
   if (!this.isModified('password')) {
-    return next();
+    return;
   }
   
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error: any) {
-    next(error);
-  }
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
 // Método para comparar contraseñas

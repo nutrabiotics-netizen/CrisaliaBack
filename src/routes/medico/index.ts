@@ -1,6 +1,7 @@
 import { Router } from 'express';
 // import perfilRoutes from './perfil';
-// import agendamientoRoutes from './agendamiento';
+import agendamientoRoutes from './agendamiento';
+import historiaClinicaRoutes from './historiaClinica';
 // import anamnesisRoutes from './anamnesis';
 // import pagoRoutes from './pago';
 // import consultaRoutes from './consulta';
@@ -9,9 +10,10 @@ import { Router } from 'express';
 
 const router = Router();
 
-// TODO: Montar todas las rutas del módulo médico
+// Montar todas las rutas del módulo médico
 // router.use('/perfil', perfilRoutes);
-// router.use('/agendamiento', agendamientoRoutes);
+router.use('/agendamiento', agendamientoRoutes);
+router.use('/historia-clinica', historiaClinicaRoutes);
 // router.use('/anamnesis', anamnesisRoutes);
 // router.use('/pago', pagoRoutes);
 // router.use('/consulta', consultaRoutes);

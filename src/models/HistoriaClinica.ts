@@ -1,0 +1,246 @@
+import mongoose, { Schema, Document } from 'mongoose';
+
+export interface IHistoriaClinica extends Document {
+  pacienteId: mongoose.Types.ObjectId;
+  medicoId: mongoose.Types.ObjectId;
+  citaId: mongoose.Types.ObjectId;
+  
+  // Información General
+  fechaRegistro: Date;
+  tipoActividad: string; // Primera Vez, Control, etc.
+  acompanamientoEnConsulta?: string;
+  pagador?: string;
+  
+  // Datos del Paciente
+  numeroIdentificacion?: string;
+  pacienteNombre?: string;
+  fechaNacimiento?: Date;
+  genero?: string;
+  telefono1?: string;
+  telefono2?: string;
+  email?: string;
+  direccion?: string;
+  ciudad?: string;
+  departamento?: string;
+  
+  // Datos del Acompañante (si aplica)
+  acompananteNombre?: string;
+  acompananteParentesco?: string;
+  acompananteTelefono?: string;
+  acompananteIdentificacion?: string;
+  
+  // Motivo de Atención
+  motivoConsulta?: string;
+  motivoAtencion?: string;
+  enfermedadActual?: string;
+  
+  // Revisión por Sistemas (solo Primera Vez)
+  sistemas?: Array<{
+    sistema: string;
+    descripcion: string;
+  }>;
+  
+  // Antecedentes (solo Primera Vez)
+  antecedentes?: Array<{
+    tipo: string;
+    descripcion: string;
+  }>;
+  familiares?: string;
+  psicosociales?: string;
+  ginecoobstetricos?: Array<{
+    tipo: string;
+    descripcion: string;
+  }>;
+  planificacion?: string;
+  ciclos?: string;
+  
+  // Examen Físico
+  estadoDeConciencia?: string;
+  equiposSignos?: string;
+  signosVitales?: {
+    presionArterial?: string;
+    frecuenciaCardiaca?: string;
+    frecuenciaRespiratoria?: string;
+    temperatura?: string;
+    peso?: string;
+    talla?: string;
+    imc?: string;
+    saturacionOxigeno?: string;
+  };
+  examenMedico?: {
+    cabeza?: string;
+    cuello?: string;
+    torax?: string;
+    abdomen?: string;
+    extremidades?: string;
+    neurologico?: string;
+    otros?: string;
+  };
+  
+  // Resultados Paraclínicos
+  resultadosParaclinicos?: string;
+  
+  // Alertas y Alergias
+  alertas?: string;
+  alergias?: string;
+  
+  // Análisis y Plan
+  analisisyplan?: string;
+  
+  // Diagnósticos
+  diagnosticos?: Array<{
+    codigo?: string;
+    descripcion: string;
+    tipo?: string;
+  }>;
+  
+  // Recomendaciones
+  recomendaciones?: string;
+  
+  // Información del Profesional
+  profesional?: {
+    nombre: string;
+    especialidad: string;
+  };
+  
+  servicio?: string;
+  
+  // Auditoría
+  creadoPor?: mongoose.Types.ObjectId;
+  creadoPorRol?: string;
+  actualizadoPor?: mongoose.Types.ObjectId;
+  actualizadoPorRol?: string;
+  
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const HistoriaClinicaSchema = new Schema<IHistoriaClinica>(
+  {
+    pacienteId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Paciente',
+      required: true,
+      index: true
+    },
+    medicoId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Medico',
+      required: true,
+      index: true
+    },
+    citaId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Cita',
+      required: true,
+      index: true
+    },
+    fechaRegistro: {
+      type: Date,
+      required: true,
+      default: Date.now
+    },
+    tipoActividad: {
+      type: String,
+      required: true
+    },
+    acompanamientoEnConsulta: String,
+    pagador: String,
+    numeroIdentificacion: String,
+    pacienteNombre: String,
+    fechaNacimiento: Date,
+    genero: String,
+    telefono1: String,
+    telefono2: String,
+    email: String,
+    direccion: String,
+    ciudad: String,
+    departamento: String,
+    acompananteNombre: String,
+    acompananteParentesco: String,
+    acompananteTelefono: String,
+    acompananteIdentificacion: String,
+    motivoConsulta: String,
+    motivoAtencion: String,
+    enfermedadActual: String,
+    sistemas: [{
+      sistema: String,
+      descripcion: String
+    }],
+    antecedentes: [{
+      tipo: String,
+      descripcion: String
+    }],
+    familiares: String,
+    psicosociales: String,
+    ginecoobstetricos: [{
+      tipo: String,
+      descripcion: String
+    }],
+    planificacion: String,
+    ciclos: String,
+    estadoDeConciencia: String,
+    equiposSignos: String,
+    signosVitales: {
+      presionArterial: String,
+      frecuenciaCardiaca: String,
+      frecuenciaRespiratoria: String,
+      temperatura: String,
+      peso: String,
+      talla: String,
+      imc: String,
+      saturacionOxigeno: String
+    },
+    examenMedico: {
+      cabeza: String,
+      cuello: String,
+      torax: String,
+      abdomen: String,
+      extremidades: String,
+      neurologico: String,
+      otros: String
+    },
+    resultadosParaclinicos: String,
+    alertas: String,
+    alergias: String,
+    analisisyplan: String,
+    diagnosticos: [{
+      codigo: String,
+      descripcion: String,
+      tipo: String
+    }],
+    recomendaciones: String,
+    profesional: {
+      nombre: String,
+      especialidad: String
+    },
+    servicio: String,
+    creadoPor: {
+      type: Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    creadoPorRol: {
+      type: String,
+      enum: ['Paciente', 'Medico', 'Administrativo']
+    },
+    actualizadoPor: {
+      type: Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    actualizadoPorRol: {
+      type: String,
+      enum: ['Paciente', 'Medico', 'Administrativo']
+    }
+  },
+  {
+    timestamps: true
+  }
+);
+
+// Índices compuestos para búsquedas frecuentes
+HistoriaClinicaSchema.index({ pacienteId: 1, fechaRegistro: -1 });
+HistoriaClinicaSchema.index({ medicoId: 1, fechaRegistro: -1 });
+HistoriaClinicaSchema.index({ citaId: 1 }, { unique: true });
+
+export default mongoose.model<IHistoriaClinica>('HistoriaClinica', HistoriaClinicaSchema);
+

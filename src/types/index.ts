@@ -50,7 +50,15 @@ export interface Cita {
   fecha: Date;
   hora: string;
   tipo: 'preconsulta' | 'consulta' | 'control';
+  modalidad: 'presencial' | 'virtual';
   estado: 'pendiente' | 'confirmada' | 'cancelada' | 'completada';
+  motivoCancelacion?: string;
+  creadoPor?: string;
+  creadoPorRol?: string;
+  actualizadoPor?: string;
+  actualizadoPorRol?: string;
+  canceladoPor?: string;
+  canceladoPorRol?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }

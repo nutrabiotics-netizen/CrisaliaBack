@@ -17,30 +17,37 @@ app.use(express.urlencoded({ extended: true }));
 // Conexión a la base de datos
 connectDB();
 
+// Importar modelos para asegurar que estén registrados antes de usar populate
+import './models/User';
+import './models/Medico';
+import './models/Paciente';
+import './models/Cita';
+import './models/ConfiguracionAgenda';
+import './models/Auditoria';
+import './models/Interrogatorio';
+import './models/HistoriaClinica';
+
 // Rutas
 import authRoutes from './routes/auth/authRoutes';
+import medicoRoutes from './routes/medico';
+import pacienteRoutes from './routes/paciente';
 
 // Rutas de autenticación
 app.use('/api/auth', authRoutes);
 
-// TODO: Importar y usar las rutas de cada módulo
-// import medicoPerfilRoutes from './routes/medico/perfil';
-// import medicoAgendamientoRoutes from './routes/medico/agendamiento';
-// import pacientePerfilRoutes from './routes/paciente/perfil';
-// import pacienteAgendamientoRoutes from './routes/paciente/agendamiento';
+// Rutas de médico
+app.use('/api/medico', medicoRoutes);
 
-// app.use('/api/medico/perfil', medicoPerfilRoutes);
-// app.use('/api/medico/agendamiento', medicoAgendamientoRoutes);
-// app.use('/api/paciente/perfil', pacientePerfilRoutes);
-// app.use('/api/paciente/agendamiento', pacienteAgendamientoRoutes);
+// Rutas de paciente
+app.use('/api/paciente', pacienteRoutes);
 
 // Ruta de prueba
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (_req, res) => {
   res.json({ status: 'OK', message: 'CRISALIA API está funcionando' });
 });
 
 // Manejo de errores
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err.stack);
   res.status(500).json({ message: 'Error interno del servidor' });
 });

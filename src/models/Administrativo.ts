@@ -2,16 +2,21 @@ import mongoose, { Schema, Document } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { UserRole } from '../types';
 
-export interface IUser extends Document {
+export interface IAdministrativo extends Document {
   email: string;
   password: string;
-  role: UserRole;
+  role: UserRole.ADMINISTRATIVO;
+  nombre: string;
+  apellido: string;
+  cargo?: string;
+  telefono?: string;
+  activo: boolean;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
-const UserSchema = new Schema<IUser>(
+const AdministrativoSchema = new Schema<IAdministrativo>(
   {
     email: {
       type: String,
@@ -29,8 +34,30 @@ const UserSchema = new Schema<IUser>(
     },
     role: {
       type: String,
-      enum: Object.values(UserRole),
-      required: true
+      enum: [UserRole.ADMINISTRATIVO],
+      default: UserRole.ADMINISTRATIVO
+    },
+    nombre: {
+      type: String,
+      required: [true, 'El nombre es requerido'],
+      trim: true
+    },
+    apellido: {
+      type: String,
+      required: [true, 'El apellido es requerido'],
+      trim: true
+    },
+    cargo: {
+      type: String,
+      trim: true
+    },
+    telefono: {
+      type: String,
+      trim: true
+    },
+    activo: {
+      type: Boolean,
+      default: true
     }
   },
   {
@@ -39,7 +66,7 @@ const UserSchema = new Schema<IUser>(
 );
 
 // Hash password antes de guardar
-UserSchema.pre('save', async function () {
+AdministrativoSchema.pre('save', async function () {
   if (!this.isModified('password')) {
     return;
   }
@@ -49,12 +76,12 @@ UserSchema.pre('save', async function () {
 });
 
 // Método para comparar contraseñas
-UserSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
+AdministrativoSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
   if (!this.password) {
     return false;
   }
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-export default mongoose.model<IUser>('User', UserSchema);
+export default mongoose.model<IAdministrativo>('Administrativo', AdministrativoSchema);
 
