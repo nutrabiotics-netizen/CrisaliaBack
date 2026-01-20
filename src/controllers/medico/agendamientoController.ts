@@ -1,9 +1,22 @@
 import { Response } from 'express';
 import { AuthRequest } from '../../middleware/auth';
-import ConfiguracionAgenda, { IJornadaConfig } from '../../models/ConfiguracionAgenda';
+import ConfiguracionAgenda, { IJornadaConfig, ISedeAgenda } from '../../models/ConfiguracionAgenda';
 import agendamientoService from '../../services/medico/agendamiento/agendamientoService';
 import { registrarAccion } from '../../utils/auditoriaHelper';
 import Cita from '../../models/Cita';
+
+const crearJornadasPorDefecto = (): IJornadaConfig[] => {
+  const bloquesLab = { horaInicio: '08:00', horaFin: '18:00', modalidad: 'presencial' as const, duracionConsulta: 30, tiemposInactividad: [{ inicio: '12:00', fin: '13:00', tipo: 'Almuerzo' }] };
+  return [
+    { dia: 'Lunes', activa: true, bloquesHorarios: [bloquesLab] },
+    { dia: 'Martes', activa: true, bloquesHorarios: [bloquesLab] },
+    { dia: 'Miércoles', activa: true, bloquesHorarios: [bloquesLab] },
+    { dia: 'Jueves', activa: true, bloquesHorarios: [bloquesLab] },
+    { dia: 'Viernes', activa: true, bloquesHorarios: [bloquesLab] },
+    { dia: 'Sábado', activa: false, bloquesHorarios: [] },
+    { dia: 'Domingo', activa: false, bloquesHorarios: [] },
+  ];
+};
 
 export const obtenerConfiguracion = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -16,24 +29,16 @@ export const obtenerConfiguracion = async (req: AuthRequest, res: Response): Pro
 
     let configuracion = await ConfiguracionAgenda.findOne({ medico: medicoId });
 
-    // Si no existe configuración, crear una por defecto
+    // Si no existe configuración, crear una por defecto con una sede
     if (!configuracion) {
-      const jornadasPorDefecto: IJornadaConfig[] = [
-        { dia: 'Lunes', activa: true, horaInicio: '08:00', horaFin: '18:00', modalidad: 'presencial', duracionConsulta: 30, tiemposInactividad: [{ inicio: '12:00', fin: '13:00', tipo: 'Almuerzo' }] },
-        { dia: 'Martes', activa: true, horaInicio: '08:00', horaFin: '18:00', modalidad: 'presencial', duracionConsulta: 30, tiemposInactividad: [{ inicio: '12:00', fin: '13:00', tipo: 'Almuerzo' }] },
-        { dia: 'Miércoles', activa: true, horaInicio: '08:00', horaFin: '18:00', modalidad: 'presencial', duracionConsulta: 30, tiemposInactividad: [{ inicio: '12:00', fin: '13:00', tipo: 'Almuerzo' }] },
-        { dia: 'Jueves', activa: true, horaInicio: '08:00', horaFin: '18:00', modalidad: 'presencial', duracionConsulta: 30, tiemposInactividad: [{ inicio: '12:00', fin: '13:00', tipo: 'Almuerzo' }] },
-        { dia: 'Viernes', activa: true, horaInicio: '08:00', horaFin: '18:00', modalidad: 'presencial', duracionConsulta: 30, tiemposInactividad: [{ inicio: '12:00', fin: '13:00', tipo: 'Almuerzo' }] },
-        { dia: 'Sábado', activa: false, horaInicio: '08:00', horaFin: '13:00', modalidad: 'presencial', duracionConsulta: 30, tiemposInactividad: [] },
-        { dia: 'Domingo', activa: false, horaInicio: '08:00', horaFin: '13:00', modalidad: 'presencial', duracionConsulta: 30, tiemposInactividad: [] },
+      const sedesPorDefecto: ISedeAgenda[] = [
+        { nombre: 'Consultorio Principal', direccion: '', jornadas: crearJornadasPorDefecto() }
       ];
-
       configuracion = await ConfiguracionAgenda.create({
         medico: medicoId,
-        direccionConsultorio: '',
         optimizacionAutomatica: true,
         flexibilidadReubicacion: false,
-        jornadas: jornadasPorDefecto,
+        sedes: sedesPorDefecto,
         notificacionesAgendamiento: {
           notificacionAutomaticaPaciente: true,
           recordatorio24Horas: true,
@@ -68,26 +73,34 @@ export const guardarConfiguracion = async (req: AuthRequest, res: Response): Pro
       return;
     }
 
-    const { direccionConsultorio, optimizacionAutomatica, flexibilidadReubicacion, jornadas, notificacionesAgendamiento } = req.body;
+    const { optimizacionAutomatica, flexibilidadReubicacion, sedes, notificacionesAgendamiento } = req.body;
 
     // Validar datos requeridos
-    if (!jornadas || !Array.isArray(jornadas)) {
+    if (!sedes || !Array.isArray(sedes)) {
       res.status(400).json({
         success: false,
-        message: 'Las jornadas son requeridas y deben ser un array'
+        message: 'Las sedes son requeridas y deben ser un array'
       });
       return;
     }
+
+    // Normalizar: jornadas con activa=false no deben guardar bloques (el médico no configuró nada ese día)
+    const sedesNormalizadas = sedes.map((s: any) => ({
+      ...s,
+      jornadas: (s.jornadas || []).map((j: any) => ({
+        ...j,
+        bloquesHorarios: j.activa === false ? [] : (j.bloquesHorarios || [])
+      }))
+    }));
 
     // Buscar configuración existente o crear nueva
     let configuracion = await ConfiguracionAgenda.findOne({ medico: medicoId });
 
     if (configuracion) {
       // Actualizar configuración existente
-      configuracion.direccionConsultorio = direccionConsultorio || '';
       configuracion.optimizacionAutomatica = optimizacionAutomatica !== undefined ? optimizacionAutomatica : true;
       configuracion.flexibilidadReubicacion = flexibilidadReubicacion !== undefined ? flexibilidadReubicacion : false;
-      configuracion.jornadas = jornadas;
+      configuracion.sedes = sedesNormalizadas;
       if (notificacionesAgendamiento) {
         configuracion.notificacionesAgendamiento = {
           ...configuracion.notificacionesAgendamiento,
@@ -108,10 +121,9 @@ export const guardarConfiguracion = async (req: AuthRequest, res: Response): Pro
       
       configuracion = await ConfiguracionAgenda.create({
         medico: medicoId,
-        direccionConsultorio: direccionConsultorio || '',
         optimizacionAutomatica: optimizacionAutomatica !== undefined ? optimizacionAutomatica : true,
         flexibilidadReubicacion: flexibilidadReubicacion !== undefined ? flexibilidadReubicacion : false,
-        jornadas: jornadas,
+        sedes: sedesNormalizadas,
         notificacionesAgendamiento: notificacionesPorDefecto
       });
     }

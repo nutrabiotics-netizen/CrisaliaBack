@@ -7,14 +7,25 @@ export interface ITiempoInactividad {
 }
 
 export interface IJornadaConfig {
-  dia: string;
+  dia: 'Lunes' | 'Martes' | 'Miércoles' | 'Jueves' | 'Viernes' | 'Sábado' | 'Domingo';
   activa: boolean;
+  bloquesHorarios: IBloqueHorario[];
+}
+
+export interface IBloqueHorario {
   horaInicio: string;
   horaFin: string;
   modalidad: 'presencial' | 'virtual' | 'mixta';
-  duracionConsulta: number; // en minutos
+  duracionConsulta: number;
   tiemposInactividad: ITiempoInactividad[];
 }
+
+export interface ISedeAgenda {
+  nombre: string;
+  direccion: string;
+  jornadas: IJornadaConfig[];
+}
+
 
 export interface INotificacionesAgendamiento {
   notificacionAutomaticaPaciente: boolean;
@@ -27,10 +38,9 @@ export interface INotificacionesAgendamiento {
 
 export interface IConfiguracionAgenda extends Document {
   medico: mongoose.Types.ObjectId;
-  direccionConsultorio: string;
   optimizacionAutomatica: boolean;
   flexibilidadReubicacion: boolean;
-  jornadas: IJornadaConfig[];
+  sedes: ISedeAgenda[];
   notificacionesAgendamiento: INotificacionesAgendamiento;
   createdAt: Date;
   updatedAt: Date;
@@ -52,6 +62,28 @@ const TiempoInactividadSchema = new Schema<ITiempoInactividad>({
   }
 }, { _id: false });
 
+
+const BloqueHorarioSchema = new Schema({
+  horaInicio: { type: String, required: true },
+  horaFin: { type: String, required: true },
+  modalidad: {
+    type: String,
+    enum: ['presencial', 'virtual', 'mixta'],
+    default: 'presencial'
+  },
+  duracionConsulta: {
+    type: Number,
+    min: 15,
+    max: 120,
+    required: true
+  },
+  tiemposInactividad: {
+    type: [TiempoInactividadSchema],
+    default: []
+  }
+}, { _id: false });
+
+
 const JornadaConfigSchema = new Schema<IJornadaConfig>({
   dia: {
     type: String,
@@ -62,30 +94,22 @@ const JornadaConfigSchema = new Schema<IJornadaConfig>({
     type: Boolean,
     default: true
   },
-  horaInicio: {
-    type: String,
-    required: true
-  },
-  horaFin: {
-    type: String,
-    required: true
-  },
-  modalidad: {
-    type: String,
-    enum: ['presencial', 'virtual', 'mixta'],
-    default: 'presencial'
-  },
-  duracionConsulta: {
-    type: Number,
-    required: true,
-    min: 15,
-    max: 120
-  },
-  tiemposInactividad: {
-    type: [TiempoInactividadSchema],
+  bloquesHorarios: {
+    type: [BloqueHorarioSchema],
     default: []
   }
 }, { _id: false });
+
+
+const SedeAgendaSchema = new Schema({
+  nombre: { type: String, required: true, trim: true },
+  direccion: { type: String, trim: true },
+  jornadas: {
+    type: [JornadaConfigSchema],
+    default: []
+  }
+}, { _id: false });
+
 
 const ConfiguracionAgendaSchema = new Schema<IConfiguracionAgenda>(
   {
@@ -95,11 +119,7 @@ const ConfiguracionAgendaSchema = new Schema<IConfiguracionAgenda>(
       required: true,
       unique: true
     },
-    direccionConsultorio: {
-      type: String,
-      trim: true,
-      default: ''
-    },
+   
     optimizacionAutomatica: {
       type: Boolean,
       default: true
@@ -108,8 +128,8 @@ const ConfiguracionAgendaSchema = new Schema<IConfiguracionAgenda>(
       type: Boolean,
       default: false
     },
-    jornadas: {
-      type: [JornadaConfigSchema],
+    sedes: {
+      type: [SedeAgendaSchema],
       default: []
     },
     notificacionesAgendamiento: {
