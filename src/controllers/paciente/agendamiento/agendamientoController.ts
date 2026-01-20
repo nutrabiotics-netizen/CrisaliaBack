@@ -50,10 +50,29 @@ export const obtenerMedicoPorId = async (req: AuthRequest, res: Response): Promi
   }
 };
 
+export const obtenerSedesMedico = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { medicoId } = req.params;
+    const sedes = await agendamientoService.obtenerSedes(medicoId);
+
+    res.json({
+      success: true,
+      data: sedes
+    });
+  } catch (error: any) {
+    console.error('Error al obtener sedes del médico:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener sedes',
+      error: error.message
+    });
+  }
+};
+
 export const obtenerHorariosDisponibles = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { medicoId } = req.params;
-    const { fecha } = req.query;
+    const { fecha, sedeIndex } = req.query;
 
     if (!fecha) {
       res.status(400).json({
@@ -63,7 +82,9 @@ export const obtenerHorariosDisponibles = async (req: AuthRequest, res: Response
       return;
     }
 
-    const horarios = await agendamientoService.obtenerHorariosDisponibles(medicoId, fecha as string);
+    const parsed = sedeIndex != null ? parseInt(String(sedeIndex), 10) : NaN;
+    const idx = !isNaN(parsed) ? parsed : undefined;
+    const horarios = await agendamientoService.obtenerHorariosDisponibles(medicoId, fecha as string, idx);
 
     res.json({
       success: true,

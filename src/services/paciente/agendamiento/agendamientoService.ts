@@ -60,70 +60,113 @@ class AgendamientoService {
     };
   }
 
-  async obtenerHorariosDisponibles(medicoId: string, fecha: string): Promise<HorarioDisponible[]> {
+  async obtenerSedes(medicoId: string): Promise<{ nombre: string; direccion: string }[]> {
+    const configuracion = await ConfiguracionAgenda.findOne({ medico: medicoId })
+      .select('sedes')
+      .lean();
+    if (!configuracion?.sedes || !Array.isArray(configuracion.sedes)) {
+      return [];
+    }
+    return configuracion.sedes.map((s: any) => ({
+      nombre: s.nombre || 'Sede',
+      direccion: s.direccion || ''
+    }));
+  }
+
+  async obtenerHorariosDisponibles(medicoId: string, fecha: string, sedeIndex?: number): Promise<HorarioDisponible[]> {
     const configuracion = await ConfiguracionAgenda.findOne({ medico: medicoId });
     
-    if (!configuracion) {
+    if (!configuracion || !configuracion.sedes || configuracion.sedes.length === 0) {
       return [];
     }
 
-    const fechaObj = new Date(fecha);
-    const diaSemana = this.obtenerDiaSemana(fechaObj);
-    const jornada = configuracion.jornadas.find(j => j.dia === diaSemana && j.activa);
-
-    if (!jornada) {
+    const parte = (fecha || '').split('T')[0];
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(parte)) {
       return [];
     }
+    const [y, m, d] = parte.split('-').map(Number);
+    // Usar noon UTC para obtener el día de la semana sin desfase por zona horaria
+    const fechaParaDia = new Date(Date.UTC(y, m - 1, d, 12, 0, 0, 0));
+    const diaSemana = this.obtenerDiaSemana(fechaParaDia);
 
-    const horarios: HorarioDisponible[] = [];
-    const [horaInicio, minutoInicio] = jornada.horaInicio.split(':').map(Number);
-    const [horaFin, minutoFin] = jornada.horaFin.split(':').map(Number);
+    // Citas: el backend guarda fechas en UTC; usamos límites en UTC para el día
+    const inicioDia = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0));
+    const finDia = new Date(Date.UTC(y, m - 1, d + 1, 0, 0, 0, 0));
+    const citasExistentes = await Cita.find({
+      medicoId,
+      fecha: { $gte: inicioDia, $lt: finDia },
+      estado: { $in: ['pendiente', 'confirmada'] }
+    });
 
-    let horaActual = horaInicio * 60 + minutoInicio;
-    const horaFinMinutos = horaFin * 60 + minutoFin;
+    const horasSet = new Set<string>();
+    const horariosMap = new Map<number, boolean>();
 
-    while (horaActual + jornada.duracionConsulta <= horaFinMinutos) {
-      const horaFormato = this.formatearHora(horaActual);
-      
-      const estaEnInactividad = jornada.tiemposInactividad.some(inactividad => {
-        const [inicioH, inicioM] = inactividad.inicio.split(':').map(Number);
-        const [finH, finM] = inactividad.fin.split(':').map(Number);
-        const inicioMinutos = inicioH * 60 + inicioM;
-        const finMinutos = finH * 60 + finM;
-        return horaActual >= inicioMinutos && horaActual < finMinutos;
-      });
+    const sedesAUsar =
+      sedeIndex != null && sedeIndex >= 0 && sedeIndex < configuracion.sedes.length
+        ? [configuracion.sedes[sedeIndex]]
+        : configuracion.sedes;
 
-      if (!estaEnInactividad) {
-        const fechaHoraCompleta = new Date(fechaObj);
-        fechaHoraCompleta.setHours(Math.floor(horaActual / 60), horaActual % 60, 0, 0);
-
-        const citasExistentes = await Cita.find({
-          medicoId,
-          fecha: {
-            $gte: new Date(fechaHoraCompleta.setHours(0, 0, 0, 0)),
-            $lt: new Date(fechaHoraCompleta.setHours(23, 59, 59, 999))
-          },
-          estado: { $in: ['pendiente', 'confirmada'] }
-        });
-
-        const horaOcupada = citasExistentes.some(cita => {
-          const [citaHora, citaMinuto] = cita.hora.split(':').map(Number);
-          const citaMinutos = citaHora * 60 + citaMinuto;
-          const diferenciaMinutos = Math.abs(citaMinutos - horaActual);
-          return diferenciaMinutos < jornada.duracionConsulta;
-        });
-
-        horarios.push({
-          fecha: fecha,
-          hora: horaFormato,
-          disponible: !horaOcupada
-        });
+    // Minutos ya "reservados" por sedes con índice menor: el médico no puede estar en dos sedes a la misma hora
+    const minutosEnSedesAnteriores = new Set<number>();
+    if (sedeIndex != null && sedeIndex >= 1) {
+      for (let j = 0; j < sedeIndex; j++) {
+        const m = this.obtenerMinutosSlotPorSede(configuracion.sedes[j], diaSemana);
+        m.forEach((x: number) => minutosEnSedesAnteriores.add(x));
       }
-
-      horaActual += jornada.duracionConsulta;
     }
 
-    return horarios;
+    for (const sede of sedesAUsar) {
+      if (!sede.jornadas) continue;
+      const jornada = sede.jornadas.find((j: any) => j.dia === diaSemana && j.activa);
+      if (!jornada || !jornada.bloquesHorarios) continue;
+
+      for (const bloque of jornada.bloquesHorarios) {
+        const [horaInicio, minutoInicio] = (bloque.horaInicio || '08:00').split(':').map(Number);
+        const [horaFin, minutoFin] = (bloque.horaFin || '18:00').split(':').map(Number);
+        const duracion = bloque.duracionConsulta || 30;
+        const tiemposInactividad = bloque.tiemposInactividad || [];
+
+        let horaActual = horaInicio * 60 + minutoInicio;
+        const horaFinMinutos = horaFin * 60 + minutoFin;
+
+        while (horaActual + duracion <= horaFinMinutos) {
+          const estaEnInactividad = tiemposInactividad.some((inact: any) => {
+            const [inicioH, inicioM] = (inact.inicio || '00:00').split(':').map(Number);
+            const [finH, finM] = (inact.fin || '00:00').split(':').map(Number);
+            const inicioMinutos = inicioH * 60 + inicioM;
+            const finMinutos = finH * 60 + finM;
+            return horaActual >= inicioMinutos && horaActual < finMinutos;
+          });
+
+          if (!estaEnInactividad) {
+            // No ofrecer este horario si otra sede (con menor índice) ya tiene al médico en ese momento
+            if (minutosEnSedesAnteriores.has(horaActual)) {
+              horaActual += duracion;
+              continue;
+            }
+            const horaFormato = this.formatearHora(horaActual);
+            if (!horasSet.has(horaFormato)) {
+              horasSet.add(horaFormato);
+              const horaOcupada = citasExistentes.some(cita => {
+                const [citaHora, citaMinuto] = cita.hora.split(':').map(Number);
+                const citaMinutos = citaHora * 60 + citaMinuto;
+                return Math.abs(citaMinutos - horaActual) < duracion;
+              });
+              horariosMap.set(horaActual, !horaOcupada);
+            }
+          }
+          horaActual += duracion;
+        }
+      }
+    }
+
+    return Array.from(horariosMap.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([minutos, disponible]) => ({
+        fecha,
+        hora: this.formatearHora(minutos),
+        disponible
+      }));
   }
 
   async crearCita(
@@ -239,6 +282,40 @@ class AgendamientoService {
   private obtenerDiaSemana(fecha: Date): string {
     const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
     return dias[fecha.getDay()];
+  }
+
+  /**
+   * Obtiene los minutos (slot starts) en que el médico tiene bloques válidos en una sede para un día.
+   * Se usa para detectar solapamientos: un mismo minuto no puede ofrecerse en dos sedes.
+   */
+  private obtenerMinutosSlotPorSede(sede: any, diaSemana: string): Set<number> {
+    const minutos = new Set<number>();
+    if (!sede?.jornadas) return minutos;
+    const jornada = sede.jornadas.find((j: any) => j.dia === diaSemana && j.activa);
+    if (!jornada?.bloquesHorarios) return minutos;
+
+    for (const bloque of jornada.bloquesHorarios) {
+      const [horaInicio, minutoInicio] = (bloque.horaInicio || '08:00').split(':').map(Number);
+      const [horaFin, minutoFin] = (bloque.horaFin || '18:00').split(':').map(Number);
+      const duracion = bloque.duracionConsulta || 30;
+      const tiemposInactividad = bloque.tiemposInactividad || [];
+
+      let horaActual = horaInicio * 60 + minutoInicio;
+      const horaFinMinutos = horaFin * 60 + minutoFin;
+
+      while (horaActual + duracion <= horaFinMinutos) {
+        const estaEnInactividad = tiemposInactividad.some((inact: any) => {
+          const [inicioH, inicioM] = (inact.inicio || '00:00').split(':').map(Number);
+          const [finH, finM] = (inact.fin || '00:00').split(':').map(Number);
+          const inicioMinutos = inicioH * 60 + inicioM;
+          const finMinutos = finH * 60 + finM;
+          return horaActual >= inicioMinutos && horaActual < finMinutos;
+        });
+        if (!estaEnInactividad) minutos.add(horaActual);
+        horaActual += duracion;
+      }
+    }
+    return minutos;
   }
 
   private formatearHora(minutos: number): string {
