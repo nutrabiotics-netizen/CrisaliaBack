@@ -7,7 +7,8 @@ import {
   obtenerCitas,
   obtenerCitasHoy,
   confirmarCita,
-  cancelarCita
+  cancelarCita,
+  completarCita
 } from '../../../controllers/medico/agendamientoController';
 
 const router = Router();
@@ -23,8 +24,9 @@ router.put('/configuracion', authenticate, authorize(UserRole.MEDICO), guardarCo
 router.get('/citas', authenticate, authorize(UserRole.MEDICO), obtenerCitas);
 router.get('/citas/hoy', authenticate, authorize(UserRole.MEDICO), obtenerCitasHoy);
 
-// Confirmar o cancelar citas
+// Confirmar, cancelar o completar citas
 router.put('/citas/:citaId/confirmar', authenticate, authorize(UserRole.MEDICO), confirmarCita);
 router.put('/citas/:citaId/cancelar', authenticate, authorize(UserRole.MEDICO), cancelarCita);
+router.put('/citas/:citaId/completar', authenticate, authorize(UserRole.MEDICO), completarCita);
 
 export default router;

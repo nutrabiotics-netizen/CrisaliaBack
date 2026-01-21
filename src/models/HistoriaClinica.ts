@@ -16,6 +16,7 @@ export interface IHistoriaClinica extends Document {
   pacienteNombre?: string;
   fechaNacimiento?: Date;
   genero?: string;
+  sex?: string; // Sexo biológico del paciente
   telefono1?: string;
   telefono2?: string;
   email?: string;
@@ -92,6 +93,7 @@ export interface IHistoriaClinica extends Document {
     codigo?: string;
     descripcion: string;
     tipo?: string;
+    relacionado?: string;
   }>;
   
   // Recomendaciones
@@ -100,6 +102,7 @@ export interface IHistoriaClinica extends Document {
   // Información del Profesional
   profesional?: {
     nombre: string;
+    apellido: string;
     especialidad: string;
   };
   
@@ -150,6 +153,7 @@ const HistoriaClinicaSchema = new Schema<IHistoriaClinica>(
     pacienteNombre: String,
     fechaNacimiento: Date,
     genero: String,
+    sex: String,
     telefono1: String,
     telefono2: String,
     email: String,
@@ -207,11 +211,13 @@ const HistoriaClinicaSchema = new Schema<IHistoriaClinica>(
     diagnosticos: [{
       codigo: String,
       descripcion: String,
-      tipo: String
+      tipo: String,
+      relacionado: String
     }],
     recomendaciones: String,
     profesional: {
       nombre: String,
+      apellido: String,
       especialidad: String
     },
     servicio: String,

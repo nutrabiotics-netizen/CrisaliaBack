@@ -371,3 +371,83 @@ export const cancelarCita = async (req: AuthRequest, res: Response): Promise<voi
   }
 };
 
+export const completarCita = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const medicoId = req.userId;
+    const { citaId } = req.params;
+
+    if (!medicoId) {
+      res.status(401).json({
+        success: false,
+        message: 'Usuario no autenticado'
+      });
+      return;
+    }
+
+    // Obtener cita anterior para auditoría
+    const citaAnterior = await Cita.findById(citaId).lean();
+    if (!citaAnterior) {
+      res.status(404).json({
+        success: false,
+        message: 'Cita no encontrada'
+      });
+      return;
+    }
+
+    const datosAnteriores = {
+      estado: citaAnterior.estado
+    };
+
+    const cita = await agendamientoService.completarCita(
+      citaId, 
+      medicoId,
+      medicoId,
+      'Medico'
+    );
+
+    // Registrar en auditoría
+    await registrarAccion(
+      req,
+      'completar',
+      'Cita',
+      citaId,
+      datosAnteriores,
+      {
+        estado: cita.estado,
+        actualizadoPor: cita.actualizadoPor,
+        actualizadoPorRol: cita.actualizadoPorRol
+      }
+    );
+
+    res.json({
+      success: true,
+      message: 'Cita completada exitosamente',
+      data: cita
+    });
+  } catch (error: any) {
+    console.error('Error al completar cita:', error);
+    
+    if (error.message === 'Cita no encontrada') {
+      res.status(404).json({
+        success: false,
+        message: error.message
+      });
+      return;
+    }
+
+    if (error.message === 'No se puede completar una cita cancelada' || error.message === 'La cita ya está completada') {
+      res.status(400).json({
+        success: false,
+        message: error.message
+      });
+      return;
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Error al completar cita',
+      error: error.message
+    });
+  }
+};
+

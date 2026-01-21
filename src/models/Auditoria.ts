@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 import { UserRole } from '../types';
 
 export type AccionTipo = 'crear' | 'actualizar' | 'eliminar' | 'cancelar' | 'confirmar' | 'completar';
-export type EntidadTipo = 'Cita' | 'Paciente' | 'Medico' | 'Anamnesis' | 'Interrogatorio' | 'Consulta' | 'Pago' | 'ConfiguracionAgenda' | 'HistoriaClinica';
+export type EntidadTipo = 'Cita' | 'Paciente' | 'Medico' | 'Anamnesis' | 'Interrogatorio' | 'Consulta' | 'Pago' | 'ConfiguracionAgenda' | 'HistoriaClinica' | 'FormulaMedica' | 'Incapacidad' | 'Interconsulta' | 'ExamenMedico' | 'ApoyoTerapeutico' | 'AyudaDiagnostica';
 
 export interface IAuditoria extends Document {
   usuarioId: mongoose.Types.ObjectId;

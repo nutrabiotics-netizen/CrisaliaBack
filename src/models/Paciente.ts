@@ -27,9 +27,17 @@ export interface IPaciente extends Document {
   direccion?: string;
   telefono?: string;
   contactoEmergencia?: IContactoEmergencia;
-  // Datos de afiliación
+  // Datos sociodemográficos y clínicos (perfil del paciente, precargables en cita)
+  grupoSanguineo?: string;
+  rh?: string;
+  escolaridad?: string;
+  ocupacion?: string;
+  condicionDesplazamiento?: string;
+  grupoEtnico?: string;
+  // Datos de afiliación (aseguradora se obtiene de eps o campo específico)
   regimenAfiliacion?: 'contributivo' | 'subsidiado' | 'especial' | 'excepcion';
   eps?: string;
+  aseguradora?: string;
   numeroAfiliacion?: string;
   // Estado
   activo: boolean;
@@ -111,6 +119,13 @@ const PacienteSchema = new Schema<IPaciente>(
       type: String,
       trim: true
     },
+    // Datos sociodemográficos y clínicos (perfil del paciente)
+    grupoSanguineo: { type: String, trim: true },
+    rh: { type: String, trim: true },
+    escolaridad: { type: String, trim: true },
+    ocupacion: { type: String, trim: true },
+    condicionDesplazamiento: { type: String, trim: true },
+    grupoEtnico: { type: String, trim: true },
     // Datos de contacto
     direccion: {
       type: String,
@@ -137,6 +152,10 @@ const PacienteSchema = new Schema<IPaciente>(
       trim: true
     },
     eps: {
+      type: String,
+      trim: true
+    },
+    aseguradora: {
       type: String,
       trim: true
     },

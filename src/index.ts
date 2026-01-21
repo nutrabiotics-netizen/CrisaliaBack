@@ -30,11 +30,16 @@ import './models/ConfiguracionAgenda';
 import './models/Auditoria';
 import './models/Interrogatorio';
 import './models/HistoriaClinica';
+import './models/Cups2026';
+import './models/ExamenMedico';
+import './models/ApoyoTerapeutico';
+import './models/AyudaDiagnostica';
 
 // Rutas
 import authRoutes from './routes/auth/authRoutes';
 import medicoRoutes from './routes/medico';
 import pacienteRoutes from './routes/paciente';
+import adminRoutes from './routes/admin';
 
 // Rutas de autenticación
 app.use('/api/auth', authRoutes);
@@ -44,6 +49,9 @@ app.use('/api/medico', medicoRoutes);
 
 // Rutas de paciente
 app.use('/api/paciente', pacienteRoutes);
+
+// Rutas de administración
+app.use('/api/admin', adminRoutes);
 
 // Ruta de prueba
 app.get('/api/health', (_req, res) => {

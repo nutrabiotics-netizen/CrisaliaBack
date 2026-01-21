@@ -77,6 +77,14 @@ export const actualizarPerfil = async (req: AuthRequest, res: Response): Promise
       regimenAfiliacion,
       eps,
       numeroAfiliacion,
+      // Sociodemográficos y clínicos (perfil → precargar en cita)
+      grupoSanguineo,
+      rh,
+      escolaridad,
+      ocupacion,
+      condicionDesplazamiento,
+      grupoEtnico,
+      aseguradora,
       // Configuración de seguridad
       autenticacionDosFactores,
       recordarDispositivo,
@@ -140,6 +148,14 @@ export const actualizarPerfil = async (req: AuthRequest, res: Response): Promise
     }
     if (eps !== undefined) paciente.eps = eps.trim() || undefined;
     if (numeroAfiliacion !== undefined) paciente.numeroAfiliacion = numeroAfiliacion.trim() || undefined;
+    // Sociodemográficos y clínicos
+    if (grupoSanguineo !== undefined) paciente.grupoSanguineo = grupoSanguineo.trim() || undefined;
+    if (rh !== undefined) paciente.rh = rh.trim() || undefined;
+    if (escolaridad !== undefined) paciente.escolaridad = escolaridad.trim() || undefined;
+    if (ocupacion !== undefined) paciente.ocupacion = ocupacion.trim() || undefined;
+    if (condicionDesplazamiento !== undefined) paciente.condicionDesplazamiento = condicionDesplazamiento.trim() || undefined;
+    if (grupoEtnico !== undefined) paciente.grupoEtnico = grupoEtnico.trim() || undefined;
+    if (aseguradora !== undefined) paciente.aseguradora = aseguradora.trim() || undefined;
 
     await paciente.save();
 
