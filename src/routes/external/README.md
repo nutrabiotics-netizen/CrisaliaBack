@@ -185,7 +185,7 @@ Obtiene todos los interrogatorios de un paciente específico.
 Obtiene un interrogatorio específico por su ID.
 
 ---
-
+ 
 ## Ejemplos de Uso
 
 ```bash
