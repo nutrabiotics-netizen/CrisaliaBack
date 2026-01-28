@@ -108,6 +108,8 @@ export interface IHistoriaClinica extends Document {
   
   servicio?: string;
   
+  pdfUrl?: string;
+  
   // Auditoría
   creadoPor?: mongoose.Types.ObjectId;
   creadoPorRol?: string;
@@ -221,6 +223,7 @@ const HistoriaClinicaSchema = new Schema<IHistoriaClinica>(
       especialidad: String
     },
     servicio: String,
+    pdfUrl: { type: String, trim: true },
     creadoPor: {
       type: Schema.Types.ObjectId,
       ref: 'User'

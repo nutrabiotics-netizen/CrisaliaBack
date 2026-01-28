@@ -27,6 +27,7 @@ import './models/User';
 import './models/Medico';
 import './models/Paciente';
 import './models/Cita';
+import './models/Meeting';
 import './models/ConfiguracionAgenda';
 import './models/Auditoria';
 import './models/Interrogatorio';

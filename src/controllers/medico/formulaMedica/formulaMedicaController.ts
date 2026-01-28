@@ -2,6 +2,10 @@ import { Response } from 'express';
 import { AuthRequest } from '../../../middleware/auth';
 import formulaMedicaService from '../../../services/medico/formulaMedica/formulaMedicaService';
 import { registrarAccion } from '../../../utils/auditoriaHelper';
+import { generateFormulaPdf } from '../../../utils/pdfGenerator';
+import { uploadPDFAndGetUrl, buildCitaDocumentKey } from '../../../utils/s3Documents';
+import FormulaMedica from '../../../models/FormulaMedica';
+import Paciente from '../../../models/Paciente';
 import mongoose from 'mongoose';
 
 export const verificarYCrearFormulaMedica = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -104,13 +108,31 @@ export const verificarYCrearFormulaMedica = async (req: AuthRequest, res: Respon
       }
     );
 
+    let pdfUrl: string | undefined;
+    try {
+      const formulaPop = await FormulaMedica.findById(nuevaFormula._id)
+        .populate('pacienteId', 'nombre apellido')
+        .populate('medicoId', 'nombre apellido')
+        .lean();
+      if (formulaPop) {
+        const paciente = await Paciente.findById(pacienteId).select('numeroDocumento').lean();
+        const numeroDoc = paciente?.numeroDocumento ?? String(pacienteId);
+        const key = buildCitaDocumentKey(numeroDoc, citaId, 'formula-medica');
+        const buffer = await generateFormulaPdf(formulaPop);
+        pdfUrl = await uploadPDFAndGetUrl(buffer, key);
+        await FormulaMedica.updateOne({ _id: nuevaFormula._id }, { pdfUrl });
+      }
+    } catch (err) {
+      console.error('Error generando PDF de fórmula médica:', err);
+    }
+
     res.status(201).json({
       success: true,
       message: sobrescribir 
         ? 'Fórmula médica actualizada exitosamente' 
         : 'Fórmula médica creada exitosamente',
-      data: nuevaFormula,
-      pdfUrl: nuevaFormula.pdfUrl
+      data: { ...nuevaFormula.toObject(), pdfUrl: pdfUrl ?? nuevaFormula.pdfUrl },
+      pdfUrl: pdfUrl ?? nuevaFormula.pdfUrl
     });
   } catch (error: any) {
     console.error('Error al crear/actualizar fórmula médica:', error);

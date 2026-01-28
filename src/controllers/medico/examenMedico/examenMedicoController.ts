@@ -3,6 +3,10 @@ import { AuthRequest } from '../../../middleware/auth';
 import examenMedicoService from '../../../services/medico/examenMedico/examenMedicoService';
 import { registrarAccion } from '../../../utils/auditoriaHelper';
 import mongoose from 'mongoose';
+import { generateExamenMedicoPdf } from '../../../utils/pdfGenerator';
+import { uploadPDFAndGetUrl, buildCitaDocumentKey } from '../../../utils/s3Documents';
+import ExamenMedico from '../../../models/ExamenMedico';
+import Paciente from '../../../models/Paciente';
 
 export const crearExamenMedico = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -105,10 +109,30 @@ export const crearExamenMedico = async (req: AuthRequest, res: Response): Promis
       }
     );
 
+    // Generar PDF y subir a S3
+    let pdfUrl: string | undefined;
+    try {
+      const examenPop = await ExamenMedico.findById(nuevoExamenMedico._id)
+        .populate('pacienteId', 'nombre apellido numeroDocumento')
+        .populate('medicoId', 'nombre apellido')
+        .lean();
+      if (examenPop) {
+        const paciente = await Paciente.findById(pacienteId).select('numeroDocumento').lean();
+        const numeroDoc = paciente?.numeroDocumento ?? String(pacienteId);
+        const key = buildCitaDocumentKey(numeroDoc, citaId, 'examenes-laboratorio');
+        const buffer = await generateExamenMedicoPdf(examenPop);
+        pdfUrl = await uploadPDFAndGetUrl(buffer, key);
+        await ExamenMedico.updateOne({ _id: nuevoExamenMedico._id }, { pdfUrl });
+      }
+    } catch (err) {
+      console.error('Error generando PDF de orden de exámenes:', err);
+    }
+
     res.status(201).json({
       success: true,
       message: 'Orden de exámenes creada exitosamente',
-      data: nuevoExamenMedico
+      data: { ...(nuevoExamenMedico.toObject?.() ?? nuevoExamenMedico), pdfUrl: pdfUrl ?? (nuevoExamenMedico as any).pdfUrl },
+      pdfUrl: pdfUrl ?? (nuevoExamenMedico as any).pdfUrl
     });
   } catch (error: any) {
     console.error('Error al crear orden de exámenes:', error);
@@ -308,10 +332,31 @@ export const actualizarExamenMedico = async (req: AuthRequest, res: Response): P
       examenMedicoActualizado
     );
 
+    // Regenerar PDF con los datos actualizados y reemplazar en S3
+    let pdfUrl: string | undefined;
+    try {
+      const examenPop = await ExamenMedico.findById(examenMedicoActualizado._id)
+        .populate('pacienteId', 'nombre apellido numeroDocumento')
+        .populate('medicoId', 'nombre apellido')
+        .lean();
+      if (examenPop) {
+        const paciente = await Paciente.findById(examenPop.pacienteId).select('numeroDocumento').lean();
+        const numeroDoc = paciente?.numeroDocumento ?? String(examenPop.pacienteId);
+        const citaId = String(examenPop.citaId);
+        const key = buildCitaDocumentKey(numeroDoc, citaId, 'examenes-laboratorio');
+        const buffer = await generateExamenMedicoPdf(examenPop);
+        pdfUrl = await uploadPDFAndGetUrl(buffer, key);
+        await ExamenMedico.updateOne({ _id: examenMedicoActualizado._id }, { pdfUrl });
+      }
+    } catch (err) {
+      console.error('Error regenerando PDF de orden de exámenes:', err);
+    }
+
     res.json({
       success: true,
       message: 'Orden de exámenes actualizada exitosamente',
-      data: examenMedicoActualizado
+      data: { ...(examenMedicoActualizado.toObject?.() ?? examenMedicoActualizado), pdfUrl: pdfUrl ?? (examenMedicoActualizado as any).pdfUrl },
+      pdfUrl: pdfUrl ?? (examenMedicoActualizado as any).pdfUrl
     });
   } catch (error: any) {
     console.error('Error al actualizar orden de exámenes:', error);

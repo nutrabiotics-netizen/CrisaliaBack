@@ -73,6 +73,7 @@ class AgendamientoService {
         tipo: cita.tipo,
         modalidad: cita.modalidad,
         estado: cita.estado,
+        meetingId: cita.meetingId,
         motivoCancelacion: cita.motivoCancelacion,
         creadoPor: cita.creadoPor?.toString(),
         creadoPorRol: cita.creadoPorRol,

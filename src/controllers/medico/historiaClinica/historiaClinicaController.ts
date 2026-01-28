@@ -2,6 +2,10 @@ import { Response } from 'express';
 import { AuthRequest } from '../../../middleware/auth';
 import historiaClinicaService from '../../../services/medico/historiaClinica/historiaClinicaService';
 import { registrarAccion } from '../../../utils/auditoriaHelper';
+import { generateHistoriaPdf } from '../../../utils/pdfGenerator';
+import { uploadPDFAndGetUrl, buildCitaDocumentKey } from '../../../utils/s3Documents';
+import HistoriaClinica from '../../../models/HistoriaClinica';
+import Paciente from '../../../models/Paciente';
 
 export const crearHistoriaClinica = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -63,10 +67,27 @@ export const crearHistoriaClinica = async (req: AuthRequest, res: Response): Pro
       }
     );
 
+    let pdfUrl: string | undefined;
+    try {
+      const historiaParaPdf = await HistoriaClinica.findById(nuevaHistoria._id).lean();
+      if (historiaParaPdf) {
+        const paciente = await Paciente.findById(nuevaHistoria.pacienteId).select('numeroDocumento').lean();
+        const numeroDoc = paciente?.numeroDocumento ?? String(nuevaHistoria.pacienteId);
+        const citaIdStr = String(nuevaHistoria.citaId);
+        const key = buildCitaDocumentKey(numeroDoc, citaIdStr, 'historia-clinica');
+        const buffer = await generateHistoriaPdf(historiaParaPdf);
+        pdfUrl = await uploadPDFAndGetUrl(buffer, key);
+        await HistoriaClinica.updateOne({ _id: nuevaHistoria._id }, { pdfUrl });
+      }
+    } catch (err) {
+      console.error('Error generando PDF de historia clínica:', err);
+    }
+
     res.status(201).json({
       success: true,
       message: 'Historia clínica creada exitosamente',
-      data: nuevaHistoria
+      data: { ...nuevaHistoria.toObject(), pdfUrl: pdfUrl ?? (nuevaHistoria as any).pdfUrl },
+      pdfUrl
     });
   } catch (error: any) {
     console.error('Error al crear historia clínica:', error);

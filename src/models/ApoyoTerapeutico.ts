@@ -18,6 +18,7 @@ export interface IApoyoTerapeutico extends Document {
   
   // Información adicional
   estado?: string; // pendiente, atendida, cancelada
+  pdfUrl?: string;
   
   // Auditoría
   creadoPor?: mongoose.Types.ObjectId;
@@ -83,6 +84,9 @@ const ApoyoTerapeuticoSchema = new Schema<IApoyoTerapeutico>(
       type: String,
       enum: ['pendiente', 'atendida', 'cancelada'],
       default: 'pendiente'
+    },
+    pdfUrl: {
+      type: String
     },
     creadoPor: {
       type: Schema.Types.ObjectId,

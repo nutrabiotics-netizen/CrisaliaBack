@@ -2,6 +2,10 @@ import { Response } from 'express';
 import { AuthRequest } from '../../../middleware/auth';
 import interconsultaService from '../../../services/medico/interconsulta/interconsultaService';
 import { registrarAccion } from '../../../utils/auditoriaHelper';
+import { generateInterconsultaPdf } from '../../../utils/pdfGenerator';
+import { uploadPDFAndGetUrl, buildCitaDocumentKey } from '../../../utils/s3Documents';
+import Interconsulta from '../../../models/Interconsulta';
+import Paciente from '../../../models/Paciente';
 import mongoose from 'mongoose';
 
 export const crearInterconsulta = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -107,10 +111,26 @@ export const crearInterconsulta = async (req: AuthRequest, res: Response): Promi
       }
     );
 
+    let pdfUrl: string | undefined;
+    try {
+      const interconsultaLean = await Interconsulta.findById(nuevaInterconsulta._id).lean();
+      if (interconsultaLean) {
+        const paciente = await Paciente.findById(pacienteId).select('numeroDocumento').lean();
+        const numeroDoc = paciente?.numeroDocumento ?? String(pacienteId);
+        const key = buildCitaDocumentKey(numeroDoc, citaId, 'interconsulta');
+        const buffer = await generateInterconsultaPdf(interconsultaLean);
+        pdfUrl = await uploadPDFAndGetUrl(buffer, key);
+        await Interconsulta.updateOne({ _id: nuevaInterconsulta._id }, { pdfUrl });
+      }
+    } catch (err) {
+      console.error('Error generando PDF de interconsulta:', err);
+    }
+
     res.status(201).json({
       success: true,
       message: 'Interconsulta creada exitosamente',
-      data: nuevaInterconsulta
+      data: { ...nuevaInterconsulta.toObject(), pdfUrl: pdfUrl ?? (nuevaInterconsulta as any).pdfUrl },
+      pdfUrl
     });
   } catch (error: any) {
     console.error('Error al crear interconsulta:', error);

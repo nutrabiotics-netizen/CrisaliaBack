@@ -16,6 +16,7 @@ export interface IExamenMedico extends Document {
   
   // Información adicional
   estado?: string; // pendiente, procesado, cancelado
+  pdfUrl?: string;
   
   // Auditoría
   creadoPor?: mongoose.Types.ObjectId;
@@ -71,6 +72,9 @@ const ExamenMedicoSchema = new Schema<IExamenMedico>(
       type: String,
       enum: ['pendiente', 'procesado', 'cancelado'],
       default: 'pendiente'
+    },
+    pdfUrl: {
+      type: String
     },
     creadoPor: {
       type: Schema.Types.ObjectId,

@@ -8,7 +8,8 @@ import {
   obtenerCitasHoy,
   confirmarCita,
   cancelarCita,
-  completarCita
+  completarCita,
+  generarResumenPdfCita
 } from '../../../controllers/medico/agendamientoController';
 
 const router = Router();
@@ -28,5 +29,8 @@ router.get('/citas/hoy', authenticate, authorize(UserRole.MEDICO), obtenerCitasH
 router.put('/citas/:citaId/confirmar', authenticate, authorize(UserRole.MEDICO), confirmarCita);
 router.put('/citas/:citaId/cancelar', authenticate, authorize(UserRole.MEDICO), cancelarCita);
 router.put('/citas/:citaId/completar', authenticate, authorize(UserRole.MEDICO), completarCita);
+
+// Generar PDF resumen de la cita (historia + fórmula + incapacidad + interconsulta)
+router.post('/citas/:citaId/resumen-pdf', authenticate, authorize(UserRole.MEDICO), generarResumenPdfCita);
 
 export default router;

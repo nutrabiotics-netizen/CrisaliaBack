@@ -73,7 +73,7 @@ class AgendamientoService {
     }));
   }
 
-  async obtenerHorariosDisponibles(medicoId: string, fecha: string, sedeIndex?: number): Promise<HorarioDisponible[]> {
+  async obtenerHorariosDisponibles(medicoId: string, fecha: string, sedeIndex?: number, pacienteId?: string): Promise<HorarioDisponible[]> {
     const configuracion = await ConfiguracionAgenda.findOne({ medico: medicoId });
     
     if (!configuracion || !configuracion.sedes || configuracion.sedes.length === 0) {
@@ -97,6 +97,18 @@ class AgendamientoService {
       fecha: { $gte: inicioDia, $lt: finDia },
       estado: { $in: ['pendiente', 'confirmada'] }
     });
+
+    // Citas del paciente en este día: para deshabilitar horarios donde ya tiene cita
+    const citasPacienteMismoDia = pacienteId
+      ? await Cita.find({
+          pacienteId,
+          fecha: { $gte: inicioDia, $lt: finDia },
+          estado: { $in: ['pendiente', 'confirmada', 'completada'] }
+        })
+          .select('hora')
+          .lean()
+      : [];
+    const horasOcupadasPaciente = new Set<string>(citasPacienteMismoDia.map((c: { hora: string }) => String(c.hora).trim()));
 
     const horasSet = new Set<string>();
     const horariosMap = new Map<number, boolean>();
@@ -152,7 +164,9 @@ class AgendamientoService {
                 const citaMinutos = citaHora * 60 + citaMinuto;
                 return Math.abs(citaMinutos - horaActual) < duracion;
               });
-              horariosMap.set(horaActual, !horaOcupada);
+              const slotHora24 = `${Math.floor(horaActual / 60).toString().padStart(2, '0')}:${(horaActual % 60).toString().padStart(2, '0')}`;
+              const pacienteYaTieneCita = horasOcupadasPaciente.has(slotHora24);
+              horariosMap.set(horaActual, !horaOcupada && !pacienteYaTieneCita);
             }
           }
           horaActual += duracion;
@@ -225,6 +239,7 @@ class AgendamientoService {
         tipo: cita.tipo,
         modalidad: cita.modalidad,
         estado: cita.estado,
+        meetingId: (cita as any).meetingId,
         createdAt: cita.createdAt,
         updatedAt: cita.updatedAt
       };

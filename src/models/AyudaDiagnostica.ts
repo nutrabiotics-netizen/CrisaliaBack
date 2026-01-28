@@ -16,6 +16,7 @@ export interface IAyudaDiagnostica extends Document {
   
   // Información adicional
   estado?: string; // pendiente, procesado, cancelado
+  pdfUrl?: string;
   
   // Auditoría
   creadoPor?: mongoose.Types.ObjectId;
@@ -71,6 +72,9 @@ const AyudaDiagnosticaModelSchema = new Schema<IAyudaDiagnostica>(
       type: String,
       enum: ['pendiente', 'procesado', 'cancelado'],
       default: 'pendiente'
+    },
+    pdfUrl: {
+      type: String
     },
     creadoPor: {
       type: Schema.Types.ObjectId,

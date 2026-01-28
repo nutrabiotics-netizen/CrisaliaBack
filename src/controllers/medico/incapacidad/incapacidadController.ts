@@ -2,6 +2,10 @@ import { Response } from 'express';
 import { AuthRequest } from '../../../middleware/auth';
 import incapacidadService from '../../../services/medico/incapacidad/incapacidadService';
 import { registrarAccion } from '../../../utils/auditoriaHelper';
+import { generateIncapacidadPdf } from '../../../utils/pdfGenerator';
+import { uploadPDFAndGetUrl, buildCitaDocumentKey } from '../../../utils/s3Documents';
+import Incapacidad from '../../../models/Incapacidad';
+import Paciente from '../../../models/Paciente';
 import mongoose from 'mongoose';
 
 export const crearIncapacidad = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -102,11 +106,29 @@ export const crearIncapacidad = async (req: AuthRequest, res: Response): Promise
       }
     );
 
+    let pdfUrl: string | undefined;
+    try {
+      const incapacidadPop = await Incapacidad.findById(nuevaIncapacidad._id)
+        .populate('pacienteId', 'nombre apellido')
+        .populate('medicoId', 'nombre apellido')
+        .lean();
+      if (incapacidadPop) {
+        const paciente = await Paciente.findById(pacienteId).select('numeroDocumento').lean();
+        const numeroDoc = paciente?.numeroDocumento ?? String(pacienteId);
+        const key = buildCitaDocumentKey(numeroDoc, citaId, 'incapacidad');
+        const buffer = await generateIncapacidadPdf(incapacidadPop);
+        pdfUrl = await uploadPDFAndGetUrl(buffer, key);
+        await Incapacidad.updateOne({ _id: nuevaIncapacidad._id }, { pdfUrl });
+      }
+    } catch (err) {
+      console.error('Error generando PDF de incapacidad:', err);
+    }
+
     res.status(201).json({
       success: true,
       message: 'Incapacidad creada exitosamente',
-      data: nuevaIncapacidad,
-      pdfUrl: nuevaIncapacidad.pdfUrl
+      data: { ...nuevaIncapacidad.toObject(), pdfUrl: pdfUrl ?? nuevaIncapacidad.pdfUrl },
+      pdfUrl: pdfUrl ?? nuevaIncapacidad.pdfUrl
     });
   } catch (error: any) {
     console.error('Error al crear incapacidad:', error);

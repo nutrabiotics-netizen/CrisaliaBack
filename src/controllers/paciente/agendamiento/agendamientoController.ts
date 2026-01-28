@@ -4,6 +4,20 @@ import agendamientoService from '../../../services/paciente/agendamiento/agendam
 import { registrarAccion } from '../../../utils/auditoriaHelper';
 import Cita from '../../../models/Cita';
 
+/** Normaliza hora "08:00 AM" / "08:00" al formato 24h que guarda el servicio (ej. "08:00") */
+function horaA24Horas(hora: string): string {
+  const s = String(hora).trim();
+  const tieneAMPM = /AM|PM/i.test(s);
+  if (!tieneAMPM) return s;
+  const match = s.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return s;
+  let h = parseInt(match[1], 10);
+  const m = match[2];
+  if (match[3].toUpperCase() === 'PM' && h !== 12) h += 12;
+  else if (match[3].toUpperCase() === 'AM' && h === 12) h = 0;
+  return `${h.toString().padStart(2, '0')}:${m}`;
+}
+
 export const obtenerMedicosDisponibles = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const busqueda = req.query.busqueda as string | undefined;
@@ -73,6 +87,7 @@ export const obtenerHorariosDisponibles = async (req: AuthRequest, res: Response
   try {
     const { medicoId } = req.params;
     const { fecha, sedeIndex } = req.query;
+    const pacienteId = req.userId ?? undefined;
 
     if (!fecha) {
       res.status(400).json({
@@ -84,7 +99,7 @@ export const obtenerHorariosDisponibles = async (req: AuthRequest, res: Response
 
     const parsed = sedeIndex != null ? parseInt(String(sedeIndex), 10) : NaN;
     const idx = !isNaN(parsed) ? parsed : undefined;
-    const horarios = await agendamientoService.obtenerHorariosDisponibles(medicoId, fecha as string, idx);
+    const horarios = await agendamientoService.obtenerHorariosDisponibles(medicoId, fecha as string, idx, pacienteId);
 
     res.json({
       success: true,
@@ -143,6 +158,26 @@ export const crearCita = async (req: AuthRequest, res: Response): Promise<void> 
       res.status(400).json({
         success: false,
         message: 'Fecha inválida'
+      });
+      return;
+    }
+
+    // Validar que el paciente no tenga ya una cita en la misma fecha y hora (evitar duplicados)
+    const parte = String(fecha).split('T')[0];
+    const [y, m, d] = /^\d{4}-\d{2}-\d{2}$/.test(parte) ? parte.split('-').map(Number) : [fechaObj.getFullYear(), fechaObj.getMonth() + 1, fechaObj.getDate()];
+    const inicioDia = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0));
+    const finDia = new Date(Date.UTC(y, m - 1, d + 1, 0, 0, 0, 0));
+    const hora24 = horaA24Horas(String(hora));
+    const citaExistente = await Cita.findOne({
+      pacienteId,
+      estado: { $in: ['pendiente', 'confirmada', 'completada'] },
+      fecha: { $gte: inicioDia, $lt: finDia },
+      hora: hora24
+    });
+    if (citaExistente) {
+      res.status(400).json({
+        success: false,
+        message: 'Ya tiene una cita agendada para esta fecha y hora. No puede crear otra cita en el mismo horario.'
       });
       return;
     }

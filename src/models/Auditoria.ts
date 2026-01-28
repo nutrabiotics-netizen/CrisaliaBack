@@ -48,7 +48,7 @@ const AuditoriaSchema = new Schema<IAuditoria>(
     },
     entidad: {
       type: String,
-      enum: ['Cita', 'Paciente', 'Medico', 'Anamnesis', 'Interrogatorio', 'Consulta', 'Pago', 'ConfiguracionAgenda', 'HistoriaClinica'],
+      enum: ['Cita', 'Paciente', 'Medico', 'Anamnesis', 'Interrogatorio', 'Consulta', 'Pago', 'ConfiguracionAgenda', 'HistoriaClinica', 'FormulaMedica', 'Incapacidad', 'Interconsulta', 'ExamenMedico', 'ApoyoTerapeutico', 'AyudaDiagnostica'],
       required: true,
       index: true
     },

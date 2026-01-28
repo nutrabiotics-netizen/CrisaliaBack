@@ -8,7 +8,9 @@ export interface ICita extends Document {
   tipo: 'preconsulta' | 'consulta' | 'control';
   modalidad: 'presencial' | 'virtual';
   estado: 'pendiente' | 'confirmada' | 'cancelada' | 'completada';
+  meetingId?: string; // ID de reunión AWS Chime para videoconsultas
   motivoCancelacion?: string;
+  pdfResumenUrl?: string; // PDF resumen de la consulta (historia + fórmulas + incapacidades + etc.)
   creadoPor?: mongoose.Types.ObjectId;
   creadoPorRol?: string;
   actualizadoPor?: mongoose.Types.ObjectId;
@@ -54,6 +56,11 @@ const CitaSchema = new Schema<ICita>(
       enum: ['pendiente', 'confirmada', 'cancelada', 'completada'],
       default: 'pendiente'
     },
+    meetingId: {
+      type: String,
+      trim: true
+    },
+    pdfResumenUrl: { type: String, trim: true },
     motivoCancelacion: {
       type: String,
       trim: true

@@ -2,8 +2,15 @@ import { Response } from 'express';
 import { AuthRequest } from '../../middleware/auth';
 import ConfiguracionAgenda, { IJornadaConfig, ISedeAgenda } from '../../models/ConfiguracionAgenda';
 import agendamientoService from '../../services/medico/agendamiento/agendamientoService';
+import historiaClinicaService from '../../services/medico/historiaClinica/historiaClinicaService';
+import formulaMedicaService from '../../services/medico/formulaMedica/formulaMedicaService';
+import incapacidadService from '../../services/medico/incapacidad/incapacidadService';
+import interconsultaService from '../../services/medico/interconsulta/interconsultaService';
 import { registrarAccion } from '../../utils/auditoriaHelper';
+import { generateCitaResumenPdf } from '../../utils/pdfGenerator';
+import { uploadPDFAndGetUrl, buildCitaDocumentKey } from '../../utils/s3Documents';
 import Cita from '../../models/Cita';
+import Paciente from '../../models/Paciente';
 
 const crearJornadasPorDefecto = (): IJornadaConfig[] => {
   const bloquesLab = { horaInicio: '08:00', horaFin: '18:00', modalidad: 'presencial' as const, duracionConsulta: 30, tiemposInactividad: [{ inicio: '12:00', fin: '13:00', tipo: 'Almuerzo' }] };
@@ -446,6 +453,58 @@ export const completarCita = async (req: AuthRequest, res: Response): Promise<vo
     res.status(500).json({
       success: false,
       message: 'Error al completar cita',
+      error: error.message
+    });
+  }
+};
+
+/** Genera el PDF resumen de la cita (historia + fórmula + incapacidad + interconsulta) y lo sube a S3. */
+export const generarResumenPdfCita = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const medicoId = req.userId;
+    const { citaId } = req.params;
+
+    if (!medicoId) {
+      res.status(401).json({ success: false, message: 'Usuario no autenticado' });
+      return;
+    }
+
+    const cita = await Cita.findOne({ _id: citaId, medicoId }).lean();
+    if (!cita) {
+      res.status(404).json({ success: false, message: 'Cita no encontrada' });
+      return;
+    }
+
+    const [historia, formula, incapacidad, interconsulta] = await Promise.all([
+      historiaClinicaService.obtenerHistoriaClinicaPorCita(citaId, medicoId),
+      formulaMedicaService.obtenerFormulaMedicaPorCita(citaId, medicoId),
+      incapacidadService.obtenerIncapacidadPorCita(citaId, medicoId),
+      interconsultaService.obtenerInterconsultaPorCita(citaId, medicoId)
+    ]);
+
+    const buffer = await generateCitaResumenPdf({
+      historia: historia || undefined,
+      formula: formula || undefined,
+      incapacidad: incapacidad || undefined,
+      interconsulta: interconsulta || undefined
+    });
+
+    const paciente = await Paciente.findById(cita.pacienteId).select('numeroDocumento').lean();
+    const numeroDoc = paciente?.numeroDocumento ?? String(cita.pacienteId);
+    const key = buildCitaDocumentKey(numeroDoc, citaId, 'resumen');
+    const pdfResumenUrl = await uploadPDFAndGetUrl(buffer, key);
+    await Cita.updateOne({ _id: citaId }, { pdfResumenUrl });
+
+    res.json({
+      success: true,
+      message: 'PDF resumen generado correctamente',
+      pdfResumenUrl
+    });
+  } catch (error: any) {
+    console.error('Error al generar PDF resumen de cita:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al generar PDF resumen',
       error: error.message
     });
   }
