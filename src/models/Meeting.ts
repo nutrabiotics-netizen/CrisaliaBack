@@ -7,6 +7,8 @@ export interface IMeeting extends Document {
   meetingData: Record<string, unknown>;
   status: 'created' | 'active' | 'ended' | 'expired';
   pipelineId?: string;
+  /** SinkArn devuelto por Chime al crear el pipeline (para construir la ruta real en S3) */
+  recordingSinkArn?: string;
   transcriptionEnabled?: boolean;
   grabacionUrl?: string;
   duracionMinutos?: number;
@@ -27,6 +29,7 @@ const MeetingSchema = new Schema<IMeeting>(
       default: 'created'
     },
     pipelineId: { type: String, trim: true },
+    recordingSinkArn: { type: String, trim: true },
     transcriptionEnabled: { type: Boolean, default: false },
     grabacionUrl: { type: String, trim: true },
     duracionMinutos: { type: Number },
