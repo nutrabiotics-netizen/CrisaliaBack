@@ -13,6 +13,10 @@ export interface IMedico extends Document {
   telefono?: string;
   whatsapp?: string;
   activo: boolean;
+  /** URL del logo del médico (ej. S3) para documentos/PDFs */
+  logoUrl?: string;
+  /** URL de la imagen de firma del médico para documentos/PDFs */
+  firmaUrl?: string;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -70,7 +74,9 @@ const MedicoSchema = new Schema<IMedico>(
     activo: {
       type: Boolean,
       default: true
-    }
+    },
+    logoUrl: { type: String, trim: true },
+    firmaUrl: { type: String, trim: true }
   },
   {
     timestamps: true

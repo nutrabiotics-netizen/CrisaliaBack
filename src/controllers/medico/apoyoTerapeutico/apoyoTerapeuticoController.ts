@@ -116,7 +116,7 @@ export const crearApoyoTerapeutico = async (req: AuthRequest, res: Response): Pr
     try {
       const apoyoPop = await ApoyoTerapeutico.findById(nuevoApoyoTerapeutico._id)
         .populate('pacienteId', 'nombre apellido numeroDocumento')
-        .populate('medicoId', 'nombre apellido')
+        .populate('medicoId', 'nombre apellido logoUrl')
         .lean();
       if (apoyoPop) {
         const paciente = await Paciente.findById(pacienteId).select('numeroDocumento').lean();
@@ -339,7 +339,7 @@ export const actualizarApoyoTerapeutico = async (req: AuthRequest, res: Response
     try {
       const apoyoPop = await ApoyoTerapeutico.findById(apoyoTerapeuticoActualizado._id)
         .populate('pacienteId', 'nombre apellido numeroDocumento')
-        .populate('medicoId', 'nombre apellido')
+        .populate('medicoId', 'nombre apellido logoUrl')
         .lean();
       if (apoyoPop) {
         const paciente = await Paciente.findById(apoyoPop.pacienteId).select('numeroDocumento').lean();

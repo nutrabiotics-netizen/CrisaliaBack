@@ -112,7 +112,7 @@ export const verificarYCrearFormulaMedica = async (req: AuthRequest, res: Respon
     try {
       const formulaPop = await FormulaMedica.findById(nuevaFormula._id)
         .populate('pacienteId', 'nombre apellido')
-        .populate('medicoId', 'nombre apellido')
+        .populate('medicoId', 'nombre apellido logoUrl')
         .lean();
       if (formulaPop) {
         const paciente = await Paciente.findById(pacienteId).select('numeroDocumento').lean();

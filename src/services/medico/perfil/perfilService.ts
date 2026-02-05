@@ -8,6 +8,8 @@ export interface UpdatePerfilMedicoData {
   telefono?: string;
   especialidad?: string;
   numeroColegiatura?: string;
+  logoUrl?: string;
+  firmaUrl?: string;
 }
 
 class PerfilMedicoService {
@@ -47,6 +49,12 @@ class PerfilMedicoService {
     }
     if (datosActualizacion.numeroColegiatura !== undefined) {
       medico.numeroColegiatura = datosActualizacion.numeroColegiatura;
+    }
+    if (datosActualizacion.logoUrl !== undefined) {
+      medico.logoUrl = datosActualizacion.logoUrl || undefined;
+    }
+    if (datosActualizacion.firmaUrl !== undefined) {
+      medico.firmaUrl = datosActualizacion.firmaUrl || undefined;
     }
 
     await medico.save();

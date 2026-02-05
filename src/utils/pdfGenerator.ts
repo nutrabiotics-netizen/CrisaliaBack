@@ -67,6 +67,30 @@ function getLogoPath(): string | null {
   return null;
 }
 
+/** Descarga una imagen desde URL y devuelve un Buffer para usar en PDF. */
+export async function fetchImageAsBuffer(url: string): Promise<Buffer> {
+  const res = await fetch(url, { headers: { 'User-Agent': 'Crisalia-PDF/1.0' } });
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status} al cargar imagen: ${url}`);
+  }
+  const arr = await res.arrayBuffer();
+  return Buffer.from(arr);
+}
+
+/** URL única del logo para todos los PDFs (variable de entorno). Si no está definida, se usa logo local. */
+const PDF_LOGO_URL = process.env.PDF_LOGO_URL || process.env.CRISALIA_PDF_LOGO_URL || '';
+
+/** Obtiene el buffer del logo global (misma URL para todos los documentos). */
+async function getGlobalLogoBuffer(): Promise<Buffer | null> {
+  if (!PDF_LOGO_URL.trim()) return null;
+  try {
+    return await fetchImageAsBuffer(PDF_LOGO_URL.trim());
+  } catch (e) {
+    console.warn('[PDF] No se pudo cargar logo global (PDF_LOGO_URL):', e);
+    return null;
+  }
+}
+
 
 
 function getPageWidth(doc: Doc): number {
@@ -84,20 +108,34 @@ function ensureSpace(doc: Doc, neededHeight: number, headerTitle: string): void 
   addDocumentHeader(doc, headerTitle);
 }
 
+/** Opciones opcionales para la cabecera del PDF (logo global o local). */
+export type DocumentHeaderOptions = {
+  logoBuffer?: Buffer | null;
+};
+
 /**
- * Cabecera de documento: background (si existe) + logo (si existe) + título del documento + línea.
- * Si hay logo, NO se muestra el texto "Crisalia".
+ * Cabecera de documento: logo (global por URL o archivo local) + título + línea.
  */
-function addDocumentHeader(doc: Doc, documentTitle: string): void {
+function addDocumentHeader(doc: Doc, documentTitle: string, options?: DocumentHeaderOptions): void {
   const pageWidth = getPageWidth(doc);
   const startY = doc.y;
 
-  const logoPath = getLogoPath();
-  const logoWidth = 110; // 👈 tamaño correcto
+  const logoPath = !options?.logoBuffer ? getLogoPath() : null;
+  const logoWidth = 110;
   const logoHeight = 40;
 
-  // === LOGO ===
-  if (logoPath) {
+  // === LOGO (prioridad: buffer global URL > archivo local) ===
+  if (options?.logoBuffer) {
+    try {
+      doc.image(options.logoBuffer, MARGIN, startY, {
+        width: logoWidth,
+        fit: [logoWidth, logoHeight],
+        align: 'left'
+      });
+    } catch (err) {
+      console.warn('[PDF] No se pudo usar logo en cabecera:', err);
+    }
+  } else if (logoPath) {
     try {
       doc.image(logoPath, MARGIN, startY, {
         width: logoWidth,
@@ -295,6 +333,7 @@ function createDocument(): { doc: Doc; chunks: Buffer[] } {
 
 /** Genera PDF de historia clínica (resumen). */
 export async function generateHistoriaPdf(historia: any): Promise<Buffer> {
+  const logoBuffer = await getGlobalLogoBuffer();
   return new Promise((resolve, reject) => {
     const { doc, chunks } = createDocument();
     setupPageFooter(doc);
@@ -302,7 +341,7 @@ export async function generateHistoriaPdf(historia: any): Promise<Buffer> {
     doc.on('error', reject);
 
     const headerTitle = 'Historia Clínica';
-    addDocumentHeader(doc, headerTitle);
+    addDocumentHeader(doc, headerTitle, { logoBuffer });
 
     addSectionTitle(doc, 'Datos del registro');
     drawKeyValueTable(doc, headerTitle, [
@@ -356,6 +395,7 @@ export async function generateHistoriaPdf(historia: any): Promise<Buffer> {
 
 /** Genera PDF de fórmula médica. */
 export async function generateFormulaPdf(formula: any): Promise<Buffer> {
+  const logoBuffer = await getGlobalLogoBuffer();
   return new Promise((resolve, reject) => {
     const { doc, chunks } = createDocument();
     setupPageFooter(doc);
@@ -363,7 +403,7 @@ export async function generateFormulaPdf(formula: any): Promise<Buffer> {
     doc.on('error', reject);
 
     const headerTitle = 'Fórmula Médica';
-    addDocumentHeader(doc, headerTitle);
+    addDocumentHeader(doc, headerTitle, { logoBuffer });
     const pacienteNombre = formula.pacienteId?.nombre && formula.pacienteId?.apellido
       ? `${formula.pacienteId.nombre} ${formula.pacienteId.apellido}` : '';
     // addSectionTitle(doc, 'Datos');
@@ -409,6 +449,7 @@ export async function generateFormulaPdf(formula: any): Promise<Buffer> {
 
 /** Genera PDF de incapacidad. */
 export async function generateIncapacidadPdf(incapacidad: any): Promise<Buffer> {
+  const logoBuffer = await getGlobalLogoBuffer();
   return new Promise((resolve, reject) => {
     const { doc, chunks } = createDocument();
     setupPageFooter(doc);
@@ -416,7 +457,7 @@ export async function generateIncapacidadPdf(incapacidad: any): Promise<Buffer> 
     doc.on('error', reject);
 
     const headerTitle = 'Incapacidad Laboral';
-    addDocumentHeader(doc, headerTitle);
+    addDocumentHeader(doc, headerTitle, { logoBuffer });
     addSectionTitle(doc, 'Datos');
     drawKeyValueTable(doc, headerTitle, [
       {
@@ -441,18 +482,19 @@ export async function generateIncapacidadPdf(incapacidad: any): Promise<Buffer> 
 
 /** Genera PDF de interconsulta. */
 export async function generateInterconsultaPdf(interconsulta: any): Promise<Buffer> {
+  const logoBuffer = await getGlobalLogoBuffer();
+  const servicioSolicita = typeof interconsulta.servicioQueSolicita === 'object'
+    ? (interconsulta.servicioQueSolicita?.name || interconsulta.servicioQueSolicita?.nombre || '')
+    : String(interconsulta.servicioQueSolicita || '');
+
   return new Promise((resolve, reject) => {
     const { doc, chunks } = createDocument();
     setupPageFooter(doc);
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
 
-    const servicioSolicita = typeof interconsulta.servicioQueSolicita === 'object'
-      ? (interconsulta.servicioQueSolicita?.name || interconsulta.servicioQueSolicita?.nombre || '')
-      : String(interconsulta.servicioQueSolicita || '');
-
     const headerTitle = 'Orden de Interconsulta';
-    addDocumentHeader(doc, headerTitle);
+    addDocumentHeader(doc, headerTitle, { logoBuffer });
     addSectionTitle(doc, 'Datos');
     drawKeyValueTable(doc, headerTitle, [
       { label: 'Servicio que solicita', value: servicioSolicita },
@@ -479,6 +521,7 @@ export async function generateInterconsultaPdf(interconsulta: any): Promise<Buff
 
 /** Genera PDF de orden de exámenes de laboratorio. */
 export async function generateExamenMedicoPdf(examen: any): Promise<Buffer> {
+  const logoBuffer = await getGlobalLogoBuffer();
   return new Promise((resolve, reject) => {
     const { doc, chunks } = createDocument();
     setupPageFooter(doc);
@@ -486,7 +529,7 @@ export async function generateExamenMedicoPdf(examen: any): Promise<Buffer> {
     doc.on('error', reject);
 
     const headerTitle = 'Orden de Exámenes de Laboratorio';
-    addDocumentHeader(doc, headerTitle);
+    addDocumentHeader(doc, headerTitle, { logoBuffer });
 
     const pacienteNombre =
       examen.pacienteId?.nombre && examen.pacienteId?.apellido
@@ -526,6 +569,7 @@ export async function generateExamenMedicoPdf(examen: any): Promise<Buffer> {
 
 /** Genera PDF de orden de ayudas diagnósticas. */
 export async function generateAyudaDiagnosticaPdf(ayuda: any): Promise<Buffer> {
+  const logoBuffer = await getGlobalLogoBuffer();
   return new Promise((resolve, reject) => {
     const { doc, chunks } = createDocument();
     setupPageFooter(doc);
@@ -533,7 +577,7 @@ export async function generateAyudaDiagnosticaPdf(ayuda: any): Promise<Buffer> {
     doc.on('error', reject);
 
     const headerTitle = 'Orden de Ayudas Diagnósticas';
-    addDocumentHeader(doc, headerTitle);
+    addDocumentHeader(doc, headerTitle, { logoBuffer });
 
     const pacienteNombre =
       ayuda.pacienteId?.nombre && ayuda.pacienteId?.apellido
@@ -573,6 +617,7 @@ export async function generateAyudaDiagnosticaPdf(ayuda: any): Promise<Buffer> {
 
 /** Genera PDF de apoyo terapéutico. */
 export async function generateApoyoTerapeuticoPdf(apoyo: any): Promise<Buffer> {
+  const logoBuffer = await getGlobalLogoBuffer();
   return new Promise((resolve, reject) => {
     const { doc, chunks } = createDocument();
     setupPageFooter(doc);
@@ -580,7 +625,7 @@ export async function generateApoyoTerapeuticoPdf(apoyo: any): Promise<Buffer> {
     doc.on('error', reject);
 
     const headerTitle = 'Orden de Apoyo Terapéutico';
-    addDocumentHeader(doc, headerTitle);
+    addDocumentHeader(doc, headerTitle, { logoBuffer });
 
     const pacienteNombre =
       apoyo.pacienteId?.nombre && apoyo.pacienteId?.apellido

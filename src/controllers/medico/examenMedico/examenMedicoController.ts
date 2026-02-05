@@ -114,7 +114,7 @@ export const crearExamenMedico = async (req: AuthRequest, res: Response): Promis
     try {
       const examenPop = await ExamenMedico.findById(nuevoExamenMedico._id)
         .populate('pacienteId', 'nombre apellido numeroDocumento')
-        .populate('medicoId', 'nombre apellido')
+        .populate('medicoId', 'nombre apellido logoUrl')
         .lean();
       if (examenPop) {
         const paciente = await Paciente.findById(pacienteId).select('numeroDocumento').lean();
@@ -337,7 +337,7 @@ export const actualizarExamenMedico = async (req: AuthRequest, res: Response): P
     try {
       const examenPop = await ExamenMedico.findById(examenMedicoActualizado._id)
         .populate('pacienteId', 'nombre apellido numeroDocumento')
-        .populate('medicoId', 'nombre apellido')
+        .populate('medicoId', 'nombre apellido logoUrl')
         .lean();
       if (examenPop) {
         const paciente = await Paciente.findById(examenPop.pacienteId).select('numeroDocumento').lean();

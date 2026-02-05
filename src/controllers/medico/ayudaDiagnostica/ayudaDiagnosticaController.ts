@@ -114,7 +114,7 @@ export const crearAyudaDiagnostica = async (req: AuthRequest, res: Response): Pr
     try {
       const ayudaPop = await AyudaDiagnostica.findById(nuevaAyudaDiagnostica._id)
         .populate('pacienteId', 'nombre apellido numeroDocumento')
-        .populate('medicoId', 'nombre apellido')
+        .populate('medicoId', 'nombre apellido logoUrl')
         .lean();
       if (ayudaPop) {
         const paciente = await Paciente.findById(pacienteId).select('numeroDocumento').lean();
@@ -337,7 +337,7 @@ export const actualizarAyudaDiagnostica = async (req: AuthRequest, res: Response
     try {
       const ayudaPop = await AyudaDiagnostica.findById(ayudaDiagnosticaActualizada._id)
         .populate('pacienteId', 'nombre apellido numeroDocumento')
-        .populate('medicoId', 'nombre apellido')
+        .populate('medicoId', 'nombre apellido logoUrl')
         .lean();
       if (ayudaPop) {
         const paciente = await Paciente.findById(ayudaPop.pacienteId).select('numeroDocumento').lean();

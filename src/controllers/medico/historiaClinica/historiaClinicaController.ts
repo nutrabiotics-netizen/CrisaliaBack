@@ -69,7 +69,9 @@ export const crearHistoriaClinica = async (req: AuthRequest, res: Response): Pro
 
     let pdfUrl: string | undefined;
     try {
-      const historiaParaPdf = await HistoriaClinica.findById(nuevaHistoria._id).lean();
+      const historiaParaPdf = await HistoriaClinica.findById(nuevaHistoria._id)
+        .populate('medicoId', 'nombre apellido logoUrl')
+        .lean();
       if (historiaParaPdf) {
         const paciente = await Paciente.findById(nuevaHistoria.pacienteId).select('numeroDocumento').lean();
         const numeroDoc = paciente?.numeroDocumento ?? String(nuevaHistoria.pacienteId);

@@ -50,7 +50,7 @@ export const updatePerfilMedico = async (req: AuthRequest, res: Response): Promi
     const datosActualizacion = req.body;
 
     // Validar que al menos un campo sea proporcionado
-    const camposPermitidos = ['nombre', 'apellido', 'email', 'telefono', 'especialidad', 'numeroColegiatura'];
+    const camposPermitidos = ['nombre', 'apellido', 'email', 'telefono', 'especialidad', 'numeroColegiatura', 'logoUrl', 'firmaUrl'];
     const camposProporcionados = Object.keys(datosActualizacion);
     const tieneCamposValidos = camposProporcionados.some(campo => camposPermitidos.includes(campo));
 

@@ -110,7 +110,7 @@ export const crearIncapacidad = async (req: AuthRequest, res: Response): Promise
     try {
       const incapacidadPop = await Incapacidad.findById(nuevaIncapacidad._id)
         .populate('pacienteId', 'nombre apellido')
-        .populate('medicoId', 'nombre apellido')
+        .populate('medicoId', 'nombre apellido logoUrl')
         .lean();
       if (incapacidadPop) {
         const paciente = await Paciente.findById(pacienteId).select('numeroDocumento').lean();

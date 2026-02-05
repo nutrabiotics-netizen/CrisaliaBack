@@ -113,7 +113,9 @@ export const crearInterconsulta = async (req: AuthRequest, res: Response): Promi
 
     let pdfUrl: string | undefined;
     try {
-      const interconsultaLean = await Interconsulta.findById(nuevaInterconsulta._id).lean();
+      const interconsultaLean = await Interconsulta.findById(nuevaInterconsulta._id)
+        .populate('medicoId', 'nombre apellido logoUrl')
+        .lean();
       if (interconsultaLean) {
         const paciente = await Paciente.findById(pacienteId).select('numeroDocumento').lean();
         const numeroDoc = paciente?.numeroDocumento ?? String(pacienteId);
