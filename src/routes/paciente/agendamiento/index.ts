@@ -8,7 +8,8 @@ import {
   obtenerHorariosDisponibles,
   crearCita,
   obtenerCitasPaciente,
-  cancelarCita
+  cancelarCita,
+  obtenerRecordingUrl
 } from '../../../controllers/paciente/agendamiento/agendamientoController';
 
 const router = Router();
@@ -20,6 +21,7 @@ router.get('/medicos/:medicoId/horarios', authenticate, authorize(UserRole.PACIE
 router.get('/citas', authenticate, authorize(UserRole.PACIENTE), obtenerCitasPaciente);
 router.post('/citas', authenticate, authorize(UserRole.PACIENTE), crearCita);
 router.put('/citas/:citaId/cancelar', authenticate, authorize(UserRole.PACIENTE), cancelarCita);
+router.get('/citas/:citaId/recording-url', authenticate, authorize(UserRole.PACIENTE), obtenerRecordingUrl);
 
 export default router;
 

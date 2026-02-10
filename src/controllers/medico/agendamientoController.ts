@@ -8,9 +8,11 @@ import incapacidadService from '../../services/medico/incapacidad/incapacidadSer
 import interconsultaService from '../../services/medico/interconsulta/interconsultaService';
 import { registrarAccion } from '../../utils/auditoriaHelper';
 import { generateCitaResumenPdf } from '../../utils/pdfGenerator';
-import { uploadPDFAndGetUrl, buildCitaDocumentKey } from '../../utils/s3Documents';
+import { uploadPDFAndGetUrl, buildCitaDocumentKey, getRecordingPlaybackUrl } from '../../utils/s3Documents';
 import Cita from '../../models/Cita';
 import Paciente from '../../models/Paciente';
+import Meeting from '../../models/Meeting';
+import mongoose from 'mongoose';
 
 const crearJornadasPorDefecto = (): IJornadaConfig[] => {
   const bloquesLab = { horaInicio: '08:00', horaFin: '18:00', modalidad: 'presencial' as const, duracionConsulta: 30, tiemposInactividad: [{ inicio: '12:00', fin: '13:00', tipo: 'Almuerzo' }] };
@@ -505,6 +507,59 @@ export const generarResumenPdfCita = async (req: AuthRequest, res: Response): Pr
     res.status(500).json({
       success: false,
       message: 'Error al generar PDF resumen',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Obtener URL firmada para ver la grabación de la videoconsulta (solo médico de la cita).
+ */
+export const obtenerRecordingUrl = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const medicoId = req.userId;
+    const { citaId } = req.params;
+    if (!medicoId) {
+      res.status(401).json({ success: false, message: 'Usuario no autenticado' });
+      return;
+    }
+    const cita = await Cita.findOne({
+      _id: new mongoose.Types.ObjectId(citaId),
+      medicoId: new mongoose.Types.ObjectId(medicoId)
+    }).lean();
+    if (!cita) {
+      res.status(404).json({ success: false, message: 'Cita no encontrada' });
+      return;
+    }
+    let grabacionUrl = (cita as any).grabacionUrl;
+    if (!grabacionUrl && (cita as any).meetingId) {
+      const meeting = await Meeting.findOne({
+        meetingId: (cita as any).meetingId,
+        citaId: new mongoose.Types.ObjectId(citaId)
+      }).lean();
+      if (meeting?.grabacionUrl) {
+        grabacionUrl = meeting.grabacionUrl;
+        await Cita.findByIdAndUpdate(citaId, { grabacionUrl });
+      }
+    }
+    if (!grabacionUrl) {
+      res.status(404).json({ success: false, message: 'No hay grabación disponible para esta cita' });
+      return;
+    }
+    const url = await getRecordingPlaybackUrl(grabacionUrl);
+    if (!url) {
+      res.status(404).json({
+        success: false,
+        message: 'No se encontraron archivos de grabación en S3. Compruebe que el bucket esté en la región correcta (AWS_CHIME_S3_RECORDING_REGION o AWS_REGION) y que el IAM tenga s3:ListBucket y s3:GetObject sobre el bucket de grabaciones.'
+      });
+      return;
+    }
+    res.json({ success: true, url });
+  } catch (error: any) {
+    console.error('Error al obtener URL de grabación:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener enlace de grabación',
       error: error.message
     });
   }

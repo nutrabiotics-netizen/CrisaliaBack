@@ -240,6 +240,8 @@ class AgendamientoService {
         modalidad: cita.modalidad,
         estado: cita.estado,
         meetingId: (cita as any).meetingId,
+        grabacionUrl: (cita as any).grabacionUrl,
+        pdfResumenUrl: (cita as any).pdfResumenUrl,
         createdAt: cita.createdAt,
         updatedAt: cita.updatedAt
       };

@@ -23,6 +23,14 @@ function buildRecordingPathFromSinkArn(sinkArn: string | undefined, pipelineId: 
   return prefix ? `${bucket}/${prefix}/${pipelineId}` : `${bucket}/${pipelineId}`;
 }
 
+/** Extrae el nombre del bucket del SinkArn (donde Chime realmente escribió). */
+function getBucketFromSinkArn(sinkArn: string | undefined): string | null {
+  if (!sinkArn) return null;
+  const after = sinkArn.replace(/^arn:aws:s3:::/, '').trim();
+  const bucket = after.split('/').filter(Boolean)[0];
+  return bucket || null;
+}
+
 /**
  * Debug: verificar configuración AWS (solo médico)
  */
@@ -32,7 +40,7 @@ export const debugAWSConfig = async (_req: AuthRequest, res: Response) => {
       region: process.env.AWS_REGION || 'us-east-1',
       hasAccessKey: !!process.env.AWS_ACCESS_KEY_ID,
       hasSecretKey: !!process.env.AWS_SECRET_ACCESS_KEY,
-      hasS3Bucket: !!process.env.AWS_CHIME_S3_BUCKET_ARN,
+      hasS3RecordingBucket: !!videoCallConfig.s3BucketArn,
       videoCallConfig
     };
     return res.json({ success: true, config });
@@ -124,7 +132,7 @@ export const createMeeting = async (req: AuthRequest, res: Response) => {
           pipelineResponse = await tryCreatePipeline(sinkArnFirst);
         } catch (err: any) {
           if (sinkArnFirst !== bucketArnOnly && (err.name === 'BadRequestException' || err.Code === 'BadRequest')) {
-            console.warn('⚠️ Prefijo S3 no aceptado por Chime, reintentando sin carpeta grabaciones...');
+            console.warn('⚠️ Prefijo S3 no aceptado por Chime, reintentando solo con bucket...');
             pipelineResponse = await tryCreatePipeline(bucketArnOnly);
           } else {
             throw err;
@@ -156,7 +164,7 @@ export const createMeeting = async (req: AuthRequest, res: Response) => {
         console.log('ℹ️ Grabación automática deshabilitada en configuración');
       }
       if (!videoCallConfig.s3BucketArn) {
-        console.warn('⚠️ AWS_CHIME_S3_BUCKET_ARN no configurado. No se puede iniciar grabación.');
+        console.warn('⚠️ AWS_CHIME_S3_RECORDING_BUCKET_ARN no configurado. No se puede iniciar grabación.');
       }
     }
 
@@ -317,12 +325,10 @@ export const getMeeting = async (req: AuthRequest, res: Response) => {
 
     const recordingPath =
       buildRecordingPathFromSinkArn(meeting.recordingSinkArn, meeting.pipelineId) ??
-      (meeting.pipelineId
+      (meeting.pipelineId && videoCallConfig.s3BucketArn
         ? (() => {
-            const bucketArn = videoCallConfig.s3BucketArn || '';
-            const bucketName = bucketArn.replace(/^arn:aws:s3:::/, '').split('/')[0].trim() || 'crisalia';
-            const prefix = videoCallConfig.s3RecordingPrefix;
-            return prefix ? `${bucketName}/${prefix}/${meeting.pipelineId}` : `${bucketName}/${meeting.pipelineId}`;
+            const bucketName = (videoCallConfig.s3BucketArn || '').replace(/^arn:aws:s3:::/, '').split('/')[0].trim();
+            return bucketName ? `${bucketName}/${meeting.pipelineId}` : null;
           })()
         : null);
 
@@ -381,18 +387,16 @@ export const endMeeting = async (req: AuthRequest, res: Response) => {
     }
 
     if (meeting.pipelineId) {
-      // Guardar ruta de la grabación en S3 antes de borrar el pipeline (los archivos ya escritos permanecen en el bucket)
+      // Guardar solo la ruta donde Chime escribió: bucket/<pipelineId>/ (bucket desde .env, sin hardcodear)
       const pathFromSink = buildRecordingPathFromSinkArn(meeting.recordingSinkArn, meeting.pipelineId);
-      meeting.grabacionUrl = pathFromSink
+      const bucketName = getBucketFromSinkArn(meeting.recordingSinkArn)
+        || (videoCallConfig.s3BucketArn || '').replace(/^arn:aws:s3:::/, '').split('/')[0].trim();
+      const url = pathFromSink
         ? `s3://${pathFromSink}/`
-        : (() => {
-            const bucketArn = videoCallConfig.s3BucketArn || '';
-            const bucketName = bucketArn.replace(/^arn:aws:s3:::/, '').split('/')[0].trim() || 'crisalia';
-            const prefix = videoCallConfig.s3RecordingPrefix;
-            return prefix
-              ? `s3://${bucketName}/${prefix}/${meeting.pipelineId}/`
-              : `s3://${bucketName}/${meeting.pipelineId}/`;
-          })();
+        : bucketName
+          ? `s3://${bucketName}/${meeting.pipelineId}/`
+          : null;
+      if (url) meeting.grabacionUrl = url;
       try {
         await chimeMediaClient.send(new DeleteMediaCapturePipelineCommand({ MediaPipelineId: meeting.pipelineId }));
       } catch {
@@ -406,6 +410,10 @@ export const endMeeting = async (req: AuthRequest, res: Response) => {
     meeting.status = 'ended';
     meeting.duracionMinutos = duracionMinutos;
     await meeting.save();
+
+    if (meeting.citaId && meeting.grabacionUrl) {
+      await Cita.findByIdAndUpdate(meeting.citaId, { grabacionUrl: meeting.grabacionUrl });
+    }
 
     return res.json({
       success: true,

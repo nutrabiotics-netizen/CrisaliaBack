@@ -53,6 +53,8 @@ export interface Cita {
   modalidad: 'presencial' | 'virtual';
   estado: 'pendiente' | 'confirmada' | 'cancelada' | 'completada';
   meetingId?: string;
+  grabacionUrl?: string;
+  pdfResumenUrl?: string;
   motivoCancelacion?: string;
   creadoPor?: string;
   creadoPorRol?: string;

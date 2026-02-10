@@ -9,7 +9,8 @@ import {
   confirmarCita,
   cancelarCita,
   completarCita,
-  generarResumenPdfCita
+  generarResumenPdfCita,
+  obtenerRecordingUrl
 } from '../../../controllers/medico/agendamientoController';
 
 const router = Router();
@@ -32,5 +33,8 @@ router.put('/citas/:citaId/completar', authenticate, authorize(UserRole.MEDICO),
 
 // Generar PDF resumen de la cita (historia + fórmula + incapacidad + interconsulta)
 router.post('/citas/:citaId/resumen-pdf', authenticate, authorize(UserRole.MEDICO), generarResumenPdfCita);
+
+// URL firmada para ver grabación de videoconsulta
+router.get('/citas/:citaId/recording-url', authenticate, authorize(UserRole.MEDICO), obtenerRecordingUrl);
 
 export default router;

@@ -9,6 +9,8 @@ export interface ICita extends Document {
   modalidad: 'presencial' | 'virtual';
   estado: 'pendiente' | 'confirmada' | 'cancelada' | 'completada';
   meetingId?: string; // ID de reunión AWS Chime para videoconsultas
+  /** Ruta S3 de la grabación de videoconsulta (ej. s3://bucket/prefix/pipelineId/) para poder generar link de visualización */
+  grabacionUrl?: string;
   motivoCancelacion?: string;
   pdfResumenUrl?: string; // PDF resumen de la consulta (historia + fórmulas + incapacidades + etc.)
   creadoPor?: mongoose.Types.ObjectId;
@@ -60,6 +62,7 @@ const CitaSchema = new Schema<ICita>(
       type: String,
       trim: true
     },
+    grabacionUrl: { type: String, trim: true },
     pdfResumenUrl: { type: String, trim: true },
     motivoCancelacion: {
       type: String,

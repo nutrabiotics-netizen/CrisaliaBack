@@ -17,16 +17,18 @@ export const chimeMediaClient = new ChimeSDKMediaPipelinesClient({
   }
 });
 
-/** Prefijo opcional en el bucket. Si se usa, Chime escribe en bucket/prefix/ SIN subcarpeta por pipelineId (todas las reuniones se mezclarían). Por eso por defecto está vacío: cada reunión queda en bucket/<pipelineId>/ */
-const s3RecordingPrefix = (process.env.AWS_CHIME_S3_RECORDING_PREFIX || '').replace(/^\/+|\/+$/g, '');
+/**
+ * Bucket para grabaciones de videoconsultas (Chime).
+ * Definir en .env: AWS_CHIME_S3_RECORDING_BUCKET_ARN=arn:aws:s3:::tu-bucket
+ * Chime escribe en bucket/<pipelineId>/ (sin subcarpetas extra).
+ */
+const recordingBucketArn = (process.env.AWS_CHIME_S3_RECORDING_BUCKET_ARN || '').trim();
 
 export const videoCallConfig = {
   defaultRegion: process.env.AWS_REGION || 'us-east-1',
-  s3BucketArn: process.env.AWS_CHIME_S3_BUCKET_ARN || '',
-  /** Solo bucket (sin prefijo) para que Chime cree bucket/<pipelineId>/ y cada reunión tenga su carpeta */
-  s3SinkArn: process.env.AWS_CHIME_S3_BUCKET_ARN || '',
-  s3RecordingPrefix: s3RecordingPrefix || undefined,
+  s3BucketArn: recordingBucketArn,
+  s3SinkArn: recordingBucketArn,
   maxMeetingDurationMinutes: 120,
-  autoStartRecording: !!process.env.AWS_CHIME_S3_BUCKET_ARN,
+  autoStartRecording: !!recordingBucketArn,
   autoStartTranscription: false
 };
