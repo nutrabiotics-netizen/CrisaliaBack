@@ -5,8 +5,10 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "nodemon --exec ts-node src/server.ts",
+    "dev:ws": "ts-node src/server-ws.ts",
     "build": "tsc",
     "start": "node dist/server.js",
+    "start:ws": "node dist/server-ws.js",
     "create-test-medico": "ts-node src/scripts/createTestMedico.ts",
     "create-initial-users": "ts-node src/scripts/createInitialUsers.ts",
     "load-cups2026": "ts-node src/scripts/loadCups2026.ts",
