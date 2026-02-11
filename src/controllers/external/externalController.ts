@@ -7,11 +7,17 @@ import FormulaMedica from '../../models/FormulaMedica';
 import Interrogatorio from '../../models/Interrogatorio';
 import Cups2026 from '../../models/Cups2026';
 import ConfiguracionAgenda from '../../models/ConfiguracionAgenda';
+import { formatDatesInObject } from '../../utils/dateFormatter';
 
 /**
  * Controlador para APIs Externas - Solo lectura
  * Proporciona endpoints de consulta para servidores externos
+ * Las fechas se formatean como DD/MM/YYYY o DD/MM/YYYY HH:mm
  */
+
+const sendFormatted = (res: Response, body: object, status = 200): void => {
+  res.status(status).json(formatDatesInObject(body));
+};
 
 // ==================== PACIENTES ====================
 
@@ -21,7 +27,7 @@ export const obtenerTodosLosPacientes = async (_req: any, res: Response): Promis
       .select('-password')
       .lean();
 
-    res.json({
+    sendFormatted(res, {
       success: true,
       data: pacientes,
       total: pacientes.length
@@ -51,7 +57,7 @@ export const obtenerPacientePorId = async (req: any, res: Response): Promise<voi
       return;
     }
 
-    res.json({
+    sendFormatted(res, {
       success: true,
       data: paciente
     });
@@ -73,7 +79,7 @@ export const obtenerTodosLosMedicos = async (_req: any, res: Response): Promise<
       .select('-password')
       .lean();
 
-    res.json({
+    sendFormatted(res, {
       success: true,
       data: medicos,
       total: medicos.length
@@ -103,7 +109,7 @@ export const obtenerMedicoPorId = async (req: any, res: Response): Promise<void>
       return;
     }
 
-    res.json({
+    sendFormatted(res, {
       success: true,
       data: medico
     });
@@ -138,7 +144,7 @@ export const obtenerTodasLasCitas = async (req: any, res: Response): Promise<voi
       .sort({ fecha: -1, hora: 1 })
       .lean();
 
-    res.json({
+    sendFormatted(res, {
       success: true,
       data: citas,
       total: citas.length
@@ -169,7 +175,7 @@ export const obtenerCitaPorId = async (req: any, res: Response): Promise<void> =
       return;
     }
 
-    res.json({
+    sendFormatted(res, {
       success: true,
       data: cita
     });
@@ -211,7 +217,7 @@ export const obtenerCitasPorMedico = async (req: any, res: Response): Promise<vo
       .sort({ fecha: -1, hora: 1 })
       .lean();
 
-    res.json({
+    sendFormatted(res, {
       success: true,
       data: citas,
       total: citas.length,
@@ -260,7 +266,7 @@ export const obtenerCitasPorPaciente = async (req: any, res: Response): Promise<
       .sort({ fecha: -1, hora: 1 })
       .lean();
 
-    res.json({
+    sendFormatted(res, {
       success: true,
       data: citas,
       total: citas.length,
@@ -303,7 +309,7 @@ export const obtenerTodasLasHistoriasClinicas = async (req: any, res: Response):
       .sort({ fechaRegistro: -1 })
       .lean();
 
-    res.json({
+    sendFormatted(res, {
       success: true,
       data: historias,
       total: historias.length
@@ -335,7 +341,7 @@ export const obtenerHistoriaClinicaPorId = async (req: any, res: Response): Prom
       return;
     }
 
-    res.json({
+    sendFormatted(res, {
       success: true,
       data: historia
     });
@@ -344,6 +350,56 @@ export const obtenerHistoriaClinicaPorId = async (req: any, res: Response): Prom
     res.status(500).json({
       success: false,
       message: 'Error al obtener historia clínica',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Obtener la última (más reciente) historia clínica de un paciente
+ * GET /api/external/historias-clinicas/paciente/:pacienteId/ultima
+ */
+export const obtenerUltimaHistoriaClinicaPorPaciente = async (req: any, res: Response): Promise<void> => {
+  try {
+    const { pacienteId } = req.params;
+
+    const paciente = await Paciente.findById(pacienteId);
+    if (!paciente) {
+      res.status(404).json({
+        success: false,
+        message: 'Paciente no encontrado'
+      });
+      return;
+    }
+
+    const historia = await HistoriaClinica.findOne({ pacienteId })
+      .populate('medicoId', 'nombre apellido especialidad numeroColegiatura')
+      .populate('citaId', 'fecha hora tipo modalidad estado')
+      .sort({ fechaRegistro: -1 })
+      .lean();
+
+    if (!historia) {
+      res.status(404).json({
+        success: false,
+        message: 'No se encontró historia clínica para este paciente'
+      });
+      return;
+    }
+
+    sendFormatted(res, {
+      success: true,
+      data: historia,
+      paciente: {
+        _id: paciente._id.toString(),
+        nombre: paciente.nombre,
+        apellido: paciente.apellido
+      }
+    });
+  } catch (error: any) {
+    console.error('Error al obtener última historia clínica del paciente:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener última historia clínica del paciente',
       error: error.message
     });
   }
@@ -376,7 +432,7 @@ export const obtenerHistoriasClinicasPorPaciente = async (req: any, res: Respons
       .sort({ fechaRegistro: -1 })
       .lean();
 
-    res.json({
+    sendFormatted(res, {
       success: true,
       data: historias,
       total: historias.length,
@@ -423,7 +479,7 @@ export const obtenerHistoriasClinicasPorMedico = async (req: any, res: Response)
       .sort({ fechaRegistro: -1 })
       .lean();
 
-    res.json({
+    sendFormatted(res, {
       success: true,
       data: historias,
       total: historias.length,
@@ -461,7 +517,7 @@ export const obtenerHistoriaClinicaPorCita = async (req: any, res: Response): Pr
       return;
     }
 
-    res.json({
+    sendFormatted(res, {
       success: true,
       data: historia
     });
@@ -497,7 +553,7 @@ export const obtenerTodasLasFormulasMedicas = async (req: any, res: Response): P
       .sort({ createdAt: -1 })
       .lean();
 
-    res.json({
+    sendFormatted(res, {
       success: true,
       data: formulas,
       total: formulas.length
@@ -529,7 +585,7 @@ export const obtenerFormulaMedicaPorId = async (req: any, res: Response): Promis
       return;
     }
 
-    res.json({
+    sendFormatted(res, {
       success: true,
       data: formula
     });
@@ -570,7 +626,7 @@ export const obtenerFormulasMedicasPorPaciente = async (req: any, res: Response)
       .sort({ createdAt: -1 })
       .lean();
 
-    res.json({
+    sendFormatted(res, {
       success: true,
       data: formulas,
       total: formulas.length,
@@ -607,7 +663,7 @@ export const obtenerFormulasMedicasPorCita = async (req: any, res: Response): Pr
       return;
     }
 
-    res.json({
+    sendFormatted(res, {
       success: true,
       data: formula
     });
@@ -645,7 +701,7 @@ export const obtenerInterrogatoriosPorPaciente = async (req: any, res: Response)
       .sort({ createdAt: -1 })
       .lean();
 
-    res.json({
+    sendFormatted(res, {
       success: true,
       data: interrogatorios,
       total: interrogatorios.length,
@@ -680,7 +736,7 @@ export const obtenerInterrogatorioPorId = async (req: any, res: Response): Promi
       return;
     }
 
-    res.json({
+    sendFormatted(res, {
       success: true,
       data: interrogatorio
     });
@@ -713,7 +769,7 @@ export const buscarCups2026 = async (req: any, res: Response): Promise<void> => 
       .sort({ codigo: 1 })
       .lean();
 
-    res.json({
+    sendFormatted(res, {
       success: true,
       data: cups,
       total: cups.length
@@ -741,7 +797,7 @@ export const obtenerCups2026PorCodigo = async (req: any, res: Response): Promise
       return;
     }
 
-    res.json({
+    sendFormatted(res, {
       success: true,
       data: cups
     });
@@ -778,7 +834,7 @@ export const obtenerDisponibilidadMedico = async (req: any, res: Response): Prom
       .populate('medico', 'nombre apellido especialidad')
       .lean();
 
-    res.json({
+    sendFormatted(res, {
       success: true,
       data: {
         medico: {
@@ -879,7 +935,7 @@ export const obtenerEstadisticasCitasPorMedico = async (req: any, res: Response)
       }
     }
 
-    res.json({
+    sendFormatted(res, {
       success: true,
       data: {
         medico: {
@@ -946,7 +1002,7 @@ export const obtenerCantidadCitasPorMedico = async (req: any, res: Response): Pr
 
     const cantidad = await Cita.countDocuments(query);
 
-    res.json({
+    sendFormatted(res, {
       success: true,
       data: {
         medico: {

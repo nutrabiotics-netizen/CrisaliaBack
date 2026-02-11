@@ -16,6 +16,7 @@ import {
   obtenerTodasLasHistoriasClinicas,
   obtenerHistoriaClinicaPorId,
   obtenerHistoriasClinicasPorPaciente,
+  obtenerUltimaHistoriaClinicaPorPaciente,
   obtenerHistoriasClinicasPorMedico,
   obtenerHistoriaClinicaPorCita,
   // Fórmulas Médicas
@@ -58,6 +59,7 @@ router.get('/citas/paciente/:pacienteId', obtenerCitasPorPaciente);
 // ==================== HISTORIAS CLÍNICAS ====================
 router.get('/historias-clinicas', obtenerTodasLasHistoriasClinicas);
 router.get('/historias-clinicas/:id', obtenerHistoriaClinicaPorId);
+router.get('/historias-clinicas/paciente/:pacienteId/ultima', obtenerUltimaHistoriaClinicaPorPaciente);
 router.get('/historias-clinicas/paciente/:pacienteId', obtenerHistoriasClinicasPorPaciente);
 router.get('/historias-clinicas/medico/:medicoId', obtenerHistoriasClinicasPorMedico);
 router.get('/historias-clinicas/cita/:citaId', obtenerHistoriaClinicaPorCita);

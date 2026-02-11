@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
 import AuthController from '../../controllers/auth/authController';
-import { authenticate } from '../../middleware/auth';
+import { authenticate, authorize } from '../../middleware/auth';
+import { UserRole } from '../../types';
 
 const router = Router();
 
@@ -55,6 +56,14 @@ const registerValidation = [
 router.post('/register', registerValidation, AuthController.register.bind(AuthController));
 router.post('/login', loginValidation, AuthController.login.bind(AuthController));
 router.get('/me', authenticate, AuthController.getCurrentUser.bind(AuthController));
+
+// Autenticación por WhatsApp (pacientes)
+router.post('/whatsapp/send-code', AuthController.sendWhatsAppCode.bind(AuthController));
+router.post('/whatsapp/verify', AuthController.verifyWhatsApp.bind(AuthController));
+
+// 2FA WhatsApp (paciente ya logueado con email/password)
+router.post('/whatsapp/send-code-2fa', authenticate, authorize(UserRole.PACIENTE), AuthController.sendWhatsAppCode2FA.bind(AuthController));
+router.post('/whatsapp/verify-2fa', authenticate, authorize(UserRole.PACIENTE), AuthController.verifyWhatsApp2FA.bind(AuthController));
 
 export default router;
 

@@ -1,10 +1,11 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import authService, { LoginCredentials, RegisterMedicoData } from '../../services/auth/authService';
 import { handleError } from '../../utils/errors';
 import { validationResult } from 'express-validator';
+import { AuthRequest } from '../../middleware/auth';
 
 export class AuthController {
-  async login(req: Request, res: Response): Promise<void> {
+  async login(req: AuthRequest, res: Response): Promise<void> {
     try {
       // Validar errores de validación
       const errors = validationResult(req);
@@ -33,7 +34,7 @@ export class AuthController {
     }
   }
 
-  async register(req: Request, res: Response): Promise<void> {
+  async register(req: AuthRequest, res: Response): Promise<void> {
     try {
       // Validar errores de validación
       const errors = validationResult(req);
@@ -106,6 +107,88 @@ export class AuthController {
         success: true,
         data: userData
       });
+    } catch (error: any) {
+      handleError(error, res);
+    }
+  }
+
+  /** Envía código de login por WhatsApp al número indicado */
+  async sendWhatsAppCode(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const { celular } = req.body;
+      if (!celular || typeof celular !== 'string' || !celular.trim()) {
+        res.status(400).json({
+          success: false,
+          message: 'El número de celular es requerido'
+        });
+        return;
+      }
+      const result = await authService.sendWhatsAppCode(celular.trim());
+      res.status(200).json({
+        success: true,
+        message: result.message
+      });
+    } catch (error: any) {
+      handleError(error, res);
+    }
+  }
+
+  /** Verifica código WhatsApp y devuelve token y usuario (login paciente) */
+  async verifyWhatsApp(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const { celular, codigo } = req.body;
+      if (!celular || typeof celular !== 'string' || !celular.trim()) {
+        res.status(400).json({
+          success: false,
+          message: 'El número de celular es requerido'
+        });
+        return;
+      }
+      if (!codigo || typeof codigo !== 'string' || !codigo.trim()) {
+        res.status(400).json({
+          success: false,
+          message: 'El código es requerido'
+        });
+        return;
+      }
+      const result = await authService.verifyWhatsAppAndLogin(celular.trim(), codigo.trim());
+      res.status(200).json({
+        success: true,
+        message: 'Login exitoso',
+        data: {
+          token: result.token,
+          user: result.user
+        }
+      });
+    } catch (error: any) {
+      handleError(error, res);
+    }
+  }
+
+  /** 2FA: envía código WhatsApp al número registrado del paciente (autenticado). En desarrollo acepta body.celular opcional. */
+  async sendWhatsAppCode2FA(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const userId = req.userId!;
+      const celular = typeof req.body?.celular === 'string' ? req.body.celular.trim() : undefined;
+      const result = await authService.sendWhatsAppCode2FA(userId, celular);
+      res.status(200).json({ success: true, message: result.message });
+    } catch (error: any) {
+      handleError(error, res);
+    }
+  }
+
+  /** 2FA: verifica código WhatsApp (autenticado, solo paciente). En desarrollo acepta body.celular opcional. */
+  async verifyWhatsApp2FA(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const userId = req.userId!;
+      const { codigo, celular } = req.body;
+      if (!codigo || typeof codigo !== 'string' || !codigo.trim()) {
+        res.status(400).json({ success: false, message: 'El código es requerido' });
+        return;
+      }
+      const celularOverride = typeof celular === 'string' ? celular.trim() : undefined;
+      await authService.verifyWhatsAppCode2FA(userId, codigo.trim(), celularOverride);
+      res.status(200).json({ success: true, message: 'Verificación exitosa' });
     } catch (error: any) {
       handleError(error, res);
     }

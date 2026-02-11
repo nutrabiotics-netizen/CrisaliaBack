@@ -4,6 +4,11 @@ import Administrativo, { IAdministrativo } from '../../models/Administrativo';
 import { generateToken } from '../../utils/jwt';
 import { AppError } from '../../utils/errors';
 import { UserRole } from '../../types';
+import {
+  envioCodigoWhatsApp,
+  verificarCodigoWhatsApp,
+  normalizarTelefono
+} from '../whatsapp/whatsappService';
 
 export interface LoginCredentials {
   email: string;
@@ -170,6 +175,93 @@ export class AuthService {
         return Administrativo.findById(userId);
       default:
         return null;
+    }
+  }
+
+  /**
+   * Envía código de autenticación por WhatsApp al número del paciente.
+   */
+  async sendWhatsAppCode(celular: string): Promise<{ message: string }> {
+    const result = await envioCodigoWhatsApp(celular);
+    return { message: result.message };
+  }
+
+  /**
+   * Verifica el código WhatsApp y devuelve token y usuario si es un paciente registrado.
+   */
+  async verifyWhatsAppAndLogin(celular: string, codigo: string): Promise<AuthResponse> {
+    const ok = verificarCodigoWhatsApp(celular, codigo);
+    if (!ok) {
+      throw new AppError('Código inválido o expirado', 401);
+    }
+
+    const formattedPhone = normalizarTelefono(celular);
+    const sinPrefijo = formattedPhone.replace(/^\+57/, '').trim();
+
+    const paciente = await Paciente.findOne({
+      $or: [
+        { telefono: formattedPhone },
+        { telefono: sinPrefijo },
+        { telefono: formattedPhone.replace(/\s/g, '') }
+      ],
+      activo: true
+    });
+
+    if (!paciente) {
+      throw new AppError('No hay una cuenta de paciente asociada a este número', 404);
+    }
+
+    const token = generateToken(paciente._id.toString(), UserRole.PACIENTE);
+    const userResponse: AuthResponse['user'] = {
+      _id: paciente._id.toString(),
+      email: paciente.email,
+      nombre: paciente.nombre,
+      apellido: paciente.apellido,
+      role: UserRole.PACIENTE,
+      fechaNacimiento: paciente.fechaNacimiento,
+      direccion: paciente.direccion,
+      telefono: paciente.telefono
+    };
+
+    return {
+      token,
+      user: userResponse
+    };
+  }
+
+  /**
+   * Envía código 2FA por WhatsApp. En desarrollo acepta celular opcional para enviar a otro número.
+   */
+  async sendWhatsAppCode2FA(userId: string, celularOverride?: string): Promise<{ message: string }> {
+    const paciente = await Paciente.findById(userId);
+    if (!paciente) {
+      throw new AppError('Paciente no encontrado', 404);
+    }
+    const esDesarrollo = process.env.NODE_ENV !== 'production';
+    const telefono = (esDesarrollo && celularOverride?.trim()) ? celularOverride.trim() : (paciente.telefono || '');
+    if (!telefono || !telefono.trim()) {
+      throw new AppError('No tienes un número de WhatsApp registrado. Actualiza tu perfil.', 400);
+    }
+    const result = await envioCodigoWhatsApp(telefono);
+    return { message: result.message };
+  }
+
+  /**
+   * Verifica el código 2FA WhatsApp. En desarrollo acepta celular opcional (debe ser el mismo al que se envió el código).
+   */
+  async verifyWhatsAppCode2FA(userId: string, codigo: string, celularOverride?: string): Promise<void> {
+    const paciente = await Paciente.findById(userId);
+    if (!paciente) {
+      throw new AppError('Paciente no encontrado', 404);
+    }
+    const esDesarrollo = process.env.NODE_ENV !== 'production';
+    const telefono = (esDesarrollo && celularOverride?.trim()) ? celularOverride.trim() : (paciente.telefono || '');
+    if (!telefono || !telefono.trim()) {
+      throw new AppError('No hay número de WhatsApp registrado', 400);
+    }
+    const ok = verificarCodigoWhatsApp(telefono, codigo);
+    if (!ok) {
+      throw new AppError('Código inválido o expirado', 401);
     }
   }
 }

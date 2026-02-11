@@ -8,7 +8,7 @@ import {
   getMeeting,
   endMeeting,
   listMeetings
-} from '../../../controllers/medico/Videocall/meeting.controller';
+} from '../../../controllers/medico/Videocall/meetingController';
 
 const router = Router();
 
