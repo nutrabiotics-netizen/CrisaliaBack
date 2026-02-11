@@ -4,6 +4,11 @@ import Medico from '../../models/Medico';
 import Cita from '../../models/Cita';
 import HistoriaClinica from '../../models/HistoriaClinica';
 import FormulaMedica from '../../models/FormulaMedica';
+import ExamenMedico from '../../models/ExamenMedico';
+import ApoyoTerapeutico from '../../models/ApoyoTerapeutico';
+import AyudaDiagnostica from '../../models/AyudaDiagnostica';
+import Interconsulta from '../../models/Interconsulta';
+import Incapacidad from '../../models/Incapacidad';
 import Interrogatorio from '../../models/Interrogatorio';
 import Cups2026 from '../../models/Cups2026';
 import ConfiguracionAgenda from '../../models/ConfiguracionAgenda';
@@ -386,9 +391,36 @@ export const obtenerUltimaHistoriaClinicaPorPaciente = async (req: any, res: Res
       return;
     }
 
+    const citaId = (historia as any).citaId?._id ?? (historia as any).citaId;
+
+    const [
+      formulaMedica,
+      examenesMedicos,
+      apoyosTerapeuticos,
+      ayudasDiagnosticas,
+      interconsultas,
+      incapacidades
+    ] = await Promise.all([
+      FormulaMedica.findOne({ citaId }).lean(),
+      ExamenMedico.find({ citaId }).lean(),
+      ApoyoTerapeutico.find({ citaId }).lean(),
+      AyudaDiagnostica.find({ citaId }).lean(),
+      Interconsulta.find({ citaId }).lean(),
+      Incapacidad.find({ citaId }).lean()
+    ]);
+
     sendFormatted(res, {
       success: true,
-      data: historia,
+      data: {
+        ...historia,
+        medicamentos: formulaMedica?.medicamentos ?? [],
+        formulaMedica: formulaMedica ?? null,
+        examenes: examenesMedicos ?? [],
+        apoyosTerapeuticos: apoyosTerapeuticos ?? [],
+        ayudasDiagnosticas: ayudasDiagnosticas ?? [],
+        interconsultas: interconsultas ?? [],
+        incapacidades: incapacidades ?? []
+      },
       paciente: {
         _id: paciente._id.toString(),
         nombre: paciente.nombre,
