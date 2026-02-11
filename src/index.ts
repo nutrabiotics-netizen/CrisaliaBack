@@ -38,6 +38,8 @@ import './models/MaterialPais';
 import './models/ExamenMedico';
 import './models/ApoyoTerapeutico';
 import './models/AyudaDiagnostica';
+import './models/TranscriptionSession';
+import './models/TranscriptionSegment';
 
 // Rutas
 import authRoutes from './routes/auth/authRoutes';
