@@ -12,6 +12,7 @@
     "create-test-medico": "ts-node src/scripts/createTestMedico.ts",
     "create-initial-users": "ts-node src/scripts/createInitialUsers.ts",
     "load-cups2026": "ts-node src/scripts/loadCups2026.ts",
+    "load-parametros-nutrabiotics": "ts-node src/scripts/loadParametrosNutrabiotics.ts",
     "import-materiales": "ts-node src/scripts/importMaterialesRegulatorios.ts",
     "import-materiales-json": "ts-node src/scripts/importMaterialesFromJson.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
