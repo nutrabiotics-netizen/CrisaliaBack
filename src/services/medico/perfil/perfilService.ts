@@ -10,6 +10,7 @@ export interface UpdatePerfilMedicoData {
   numeroColegiatura?: string;
   logoUrl?: string;
   firmaUrl?: string;
+  indicacionesAntesConsulta?: string;
 }
 
 class PerfilMedicoService {
@@ -55,6 +56,9 @@ class PerfilMedicoService {
     }
     if (datosActualizacion.firmaUrl !== undefined) {
       medico.firmaUrl = datosActualizacion.firmaUrl || undefined;
+    }
+    if (datosActualizacion.indicacionesAntesConsulta !== undefined) {
+      medico.indicacionesAntesConsulta = datosActualizacion.indicacionesAntesConsulta ?? '';
     }
 
     await medico.save();

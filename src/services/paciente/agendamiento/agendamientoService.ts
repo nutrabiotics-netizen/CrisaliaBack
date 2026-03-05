@@ -216,16 +216,25 @@ class AgendamientoService {
 
   async obtenerCitasPaciente(pacienteId: string): Promise<(ICita & { pacienteNombre?: string; pacienteApellido?: string })[]> {
     const citas = await Cita.find({ pacienteId })
-      .populate('medicoId', 'nombre apellido especialidad')
+      .populate('medicoId', 'nombre apellido especialidad indicacionesAntesConsulta')
       .populate('pacienteId', 'nombre apellido')
       .sort({ fecha: 1, hora: 1 })
       .lean();
 
     return citas.map(cita => {
+      const medico = cita.medicoId as any;
       let medicoIdStr: string;
-      
-      if (typeof cita.medicoId === 'object' && cita.medicoId !== null && '_id' in cita.medicoId) {
-        medicoIdStr = (cita.medicoId as any)._id.toString();
+      let medicoData: { _id: string; nombre: string; apellido: string; especialidad?: string; indicacionesAntesConsulta?: string } | undefined;
+
+      if (typeof medico === 'object' && medico !== null && '_id' in medico) {
+        medicoIdStr = medico._id.toString();
+        medicoData = {
+          _id: medicoIdStr,
+          nombre: medico.nombre ?? '',
+          apellido: medico.apellido ?? '',
+          especialidad: medico.especialidad,
+          indicacionesAntesConsulta: medico.indicacionesAntesConsulta ?? ''
+        };
       } else {
         medicoIdStr = (cita.medicoId as any).toString();
       }
@@ -234,6 +243,7 @@ class AgendamientoService {
         _id: cita._id.toString(),
         pacienteId: cita.pacienteId.toString(),
         medicoId: medicoIdStr,
+        medico: medicoData,
         fecha: cita.fecha,
         hora: this.formatearHoraDesde24Horas(cita.hora),
         tipo: cita.tipo,

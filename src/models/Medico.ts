@@ -17,6 +17,8 @@ export interface IMedico extends Document {
   logoUrl?: string;
   /** URL de la imagen de firma del médico para documentos/PDFs */
   firmaUrl?: string;
+  /** Indicaciones y recomendaciones que el paciente debe ver antes de la consulta */
+  indicacionesAntesConsulta?: string;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -76,7 +78,8 @@ const MedicoSchema = new Schema<IMedico>(
       default: true
     },
     logoUrl: { type: String, trim: true },
-    firmaUrl: { type: String, trim: true }
+    firmaUrl: { type: String, trim: true },
+    indicacionesAntesConsulta: { type: String, trim: true, default: '' }
   },
   {
     timestamps: true
