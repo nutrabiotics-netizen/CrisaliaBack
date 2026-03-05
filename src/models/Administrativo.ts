@@ -11,6 +11,8 @@ export interface IAdministrativo extends Document {
   cargo?: string;
   telefono?: string;
   activo: boolean;
+  /** Vinculación con Personal Institucional (cuando se habilita usuario desde Módulo de Ingreso) */
+  personalInstitucionalId?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -58,7 +60,8 @@ const AdministrativoSchema = new Schema<IAdministrativo>(
     activo: {
       type: Boolean,
       default: true
-    }
+    },
+    personalInstitucionalId: { type: Schema.Types.ObjectId, ref: 'PersonalInstitucional', default: null }
   },
   {
     timestamps: true
