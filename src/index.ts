@@ -11,6 +11,7 @@ const app = express();
 // Middlewares
 app.use(cors({
   origin: [
+    'https://nutrabiotics.mozartai.com.co',
     'https://app.nutrabiotics.mozartia.com',
     'http://localhost:5173'
   ],
