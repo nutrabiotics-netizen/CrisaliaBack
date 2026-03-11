@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { AuthRequest } from '../../middleware/auth';
-import ConfiguracionAgenda, { IJornadaConfig, ISedeAgenda } from '../../models/ConfiguracionAgenda';
+import ConfiguracionAgenda, { IJornadaConfig, ISedeAgenda, IFlujoPaciente } from '../../models/ConfiguracionAgenda';
 import agendamientoService from '../../services/medico/agendamiento/agendamientoService';
 import historiaClinicaService from '../../services/medico/historiaClinica/historiaClinicaService';
 import formulaMedicaService from '../../services/medico/formulaMedica/formulaMedicaService';
@@ -43,6 +43,16 @@ export const obtenerConfiguracion = async (req: AuthRequest, res: Response): Pro
       const sedesPorDefecto: ISedeAgenda[] = [
         { nombre: 'Consultorio Principal', direccion: '', jornadas: crearJornadasPorDefecto() }
       ];
+      const flujoPacientePorDefecto: IFlujoPaciente = {
+        activarAnalisisAutomatico: true,
+        mostrarMedicamentos: true,
+        recomendacionesOrigen: 'ia',
+        activarCodigosDescuento: false,
+        tipoCodigosDescuento: 'propios',
+        activarDescuentoSiAgendaPronto: false,
+        activarVideosTestimonios: false,
+        activarChatDirectoMedico: false
+      };
       configuracion = await ConfiguracionAgenda.create({
         medico: medicoId,
         optimizacionAutomatica: true,
@@ -55,13 +65,29 @@ export const obtenerConfiguracion = async (req: AuthRequest, res: Response): Pro
           notificacionMedicoPreconsulta: true,
           notificacionMedicoConsulta: true,
           notificacionMedicoControl: true
-        }
+        },
+        flujoPaciente: flujoPacientePorDefecto
       });
+    }
+
+    const data = (configuracion as any).toObject ? (configuracion as any).toObject() : configuracion;
+    const fp = (data as any).flujoPaciente;
+    if (!fp || typeof fp !== 'object') {
+      (data as any).flujoPaciente = {
+        activarAnalisisAutomatico: true,
+        mostrarMedicamentos: true,
+        recomendacionesOrigen: 'ia',
+        activarCodigosDescuento: false,
+        tipoCodigosDescuento: 'propios',
+        activarDescuentoSiAgendaPronto: false,
+        activarVideosTestimonios: false,
+        activarChatDirectoMedico: false
+      };
     }
 
     res.json({
       success: true,
-      data: configuracion
+      data
     });
   } catch (error: any) {
     console.error('Error al obtener configuración de agenda:', error);
@@ -82,7 +108,7 @@ export const guardarConfiguracion = async (req: AuthRequest, res: Response): Pro
       return;
     }
 
-    const { optimizacionAutomatica, flexibilidadReubicacion, sedes, notificacionesAgendamiento } = req.body;
+    const { optimizacionAutomatica, flexibilidadReubicacion, sedes, notificacionesAgendamiento, flujoPaciente } = req.body;
 
     // Validar datos requeridos
     if (!sedes || !Array.isArray(sedes)) {
@@ -116,6 +142,19 @@ export const guardarConfiguracion = async (req: AuthRequest, res: Response): Pro
           ...notificacionesAgendamiento
         };
       }
+      if (flujoPaciente && typeof flujoPaciente === 'object') {
+        const fp = configuracion.flujoPaciente || {} as IFlujoPaciente;
+        configuracion.flujoPaciente = {
+          activarAnalisisAutomatico: flujoPaciente.activarAnalisisAutomatico !== undefined ? flujoPaciente.activarAnalisisAutomatico : fp.activarAnalisisAutomatico ?? true,
+          mostrarMedicamentos: flujoPaciente.mostrarMedicamentos !== undefined ? flujoPaciente.mostrarMedicamentos : fp.mostrarMedicamentos ?? true,
+          recomendacionesOrigen: flujoPaciente.recomendacionesOrigen === 'ia' || flujoPaciente.recomendacionesOrigen === 'manual' ? flujoPaciente.recomendacionesOrigen : (fp.recomendacionesOrigen ?? 'ia'),
+          activarCodigosDescuento: flujoPaciente.activarCodigosDescuento !== undefined ? flujoPaciente.activarCodigosDescuento : fp.activarCodigosDescuento ?? false,
+          tipoCodigosDescuento: flujoPaciente.tipoCodigosDescuento === 'propios' || flujoPaciente.tipoCodigosDescuento === 'por_consulta' ? flujoPaciente.tipoCodigosDescuento : (fp.tipoCodigosDescuento ?? 'propios'),
+          activarDescuentoSiAgendaPronto: flujoPaciente.activarDescuentoSiAgendaPronto !== undefined ? flujoPaciente.activarDescuentoSiAgendaPronto : fp.activarDescuentoSiAgendaPronto ?? false,
+          activarVideosTestimonios: flujoPaciente.activarVideosTestimonios !== undefined ? flujoPaciente.activarVideosTestimonios : fp.activarVideosTestimonios ?? false,
+          activarChatDirectoMedico: flujoPaciente.activarChatDirectoMedico !== undefined ? flujoPaciente.activarChatDirectoMedico : fp.activarChatDirectoMedico ?? false
+        };
+      }
       await configuracion.save();
     } else {
       // Crear nueva configuración
@@ -128,12 +167,32 @@ export const guardarConfiguracion = async (req: AuthRequest, res: Response): Pro
         notificacionMedicoControl: true
       };
       
+      const flujoDefault: IFlujoPaciente = flujoPaciente && typeof flujoPaciente === 'object' ? {
+          activarAnalisisAutomatico: flujoPaciente.activarAnalisisAutomatico !== undefined ? flujoPaciente.activarAnalisisAutomatico : true,
+          mostrarMedicamentos: flujoPaciente.mostrarMedicamentos !== undefined ? flujoPaciente.mostrarMedicamentos : true,
+          recomendacionesOrigen: flujoPaciente.recomendacionesOrigen === 'ia' || flujoPaciente.recomendacionesOrigen === 'manual' ? flujoPaciente.recomendacionesOrigen : 'ia',
+          activarCodigosDescuento: flujoPaciente.activarCodigosDescuento ?? false,
+          tipoCodigosDescuento: flujoPaciente.tipoCodigosDescuento === 'propios' || flujoPaciente.tipoCodigosDescuento === 'por_consulta' ? flujoPaciente.tipoCodigosDescuento : 'propios',
+          activarDescuentoSiAgendaPronto: flujoPaciente.activarDescuentoSiAgendaPronto ?? false,
+          activarVideosTestimonios: flujoPaciente.activarVideosTestimonios ?? false,
+          activarChatDirectoMedico: flujoPaciente.activarChatDirectoMedico ?? false
+        } : {
+          activarAnalisisAutomatico: true,
+          mostrarMedicamentos: true,
+          recomendacionesOrigen: 'ia',
+          activarCodigosDescuento: false,
+          tipoCodigosDescuento: 'propios',
+          activarDescuentoSiAgendaPronto: false,
+          activarVideosTestimonios: false,
+          activarChatDirectoMedico: false
+        };
       configuracion = await ConfiguracionAgenda.create({
         medico: medicoId,
         optimizacionAutomatica: optimizacionAutomatica !== undefined ? optimizacionAutomatica : true,
         flexibilidadReubicacion: flexibilidadReubicacion !== undefined ? flexibilidadReubicacion : false,
         sedes: sedesNormalizadas,
-        notificacionesAgendamiento: notificacionesPorDefecto
+        notificacionesAgendamiento: notificacionesPorDefecto,
+        flujoPaciente: flujoDefault
       });
     }
 

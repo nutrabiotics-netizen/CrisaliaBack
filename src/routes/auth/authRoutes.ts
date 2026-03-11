@@ -52,8 +52,56 @@ const registerValidation = [
     .trim()
 ];
 
+// Validaciones para registro de paciente
+const registerPacienteValidation = [
+  body('nombre')
+    .notEmpty()
+    .withMessage('El nombre es requerido')
+    .trim()
+    .isLength({ min: 2 })
+    .withMessage('El nombre debe tener al menos 2 caracteres'),
+  body('apellido')
+    .notEmpty()
+    .withMessage('El apellido es requerido')
+    .trim()
+    .isLength({ min: 2 })
+    .withMessage('El apellido debe tener al menos 2 caracteres'),
+  body('email')
+    .isEmail()
+    .withMessage('Debe ser un email válido')
+    .normalizeEmail(),
+  body('password')
+    .notEmpty()
+    .withMessage('La contraseña es requerida')
+    .isLength({ min: 6 })
+    .withMessage('La contraseña debe tener al menos 6 caracteres'),
+  body('telefono')
+    .optional()
+    .trim(),
+  body('acudiente')
+    .optional()
+    .isObject()
+    .withMessage('Acudiente debe ser un objeto'),
+  body('acudiente.nombre')
+    .optional()
+    .trim(),
+  body('acudiente.parentesco')
+    .optional()
+    .trim(),
+  body('acudiente.telefono')
+    .optional()
+    .trim(),
+  body('aceptaTerminos')
+    .optional()
+    .isBoolean(),
+  body('aceptaConsentimiento')
+    .optional()
+    .isBoolean()
+];
+
 // Rutas
 router.post('/register', registerValidation, AuthController.register.bind(AuthController));
+router.post('/register-paciente', registerPacienteValidation, AuthController.registerPaciente.bind(AuthController));
 router.post('/login', loginValidation, AuthController.login.bind(AuthController));
 router.get('/me', authenticate, AuthController.getCurrentUser.bind(AuthController));
 

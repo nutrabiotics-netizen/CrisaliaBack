@@ -93,7 +93,8 @@ export const actualizarPerfil = async (req: AuthRequest, res: Response): Promise
       visualizarContrasena,
       metodoNotificacion,
       aceptaTerminos,
-      aceptaConsentimiento
+      aceptaConsentimiento,
+      consentimientosDetalle
     } = req.body;
 
     // Actualizar datos del paciente
@@ -194,6 +195,9 @@ export const actualizarPerfil = async (req: AuthRequest, res: Response): Promise
         if (aceptaConsentimiento && !configuracionSeguridad.fechaAceptacionConsentimiento) {
           configuracionSeguridad.fechaAceptacionConsentimiento = new Date();
         }
+      }
+      if (consentimientosDetalle !== undefined && typeof consentimientosDetalle === 'object' && consentimientosDetalle !== null) {
+        configuracionSeguridad.consentimientosDetalle = consentimientosDetalle;
       }
       await configuracionSeguridad.save();
     }

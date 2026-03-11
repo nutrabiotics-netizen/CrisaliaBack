@@ -1,6 +1,6 @@
 import Medico from '../../../models/Medico';
 import Cita from '../../../models/Cita';
-import ConfiguracionAgenda from '../../../models/ConfiguracionAgenda';
+import ConfiguracionAgenda, { IFlujoPaciente } from '../../../models/ConfiguracionAgenda';
 import { Cita as ICita } from '../../../types';
 
 export interface MedicoDisponible {
@@ -9,6 +9,18 @@ export interface MedicoDisponible {
   apellido: string;
   especialidad?: string;
   disponibilidad?: string;
+  /** Para filtros del paciente (desde perfilVerificacion) */
+  genero?: string;
+  pais?: string;
+  ciudadVivienda?: string;
+  direccionVivienda?: string;
+  celularContacto?: string;
+  modalidadesTerapeuticas?: string[];
+  motivosConsultaQueAtiende?: string[];
+  direccionConsultorioHabilitado?: string;
+  telefonoLugarTrabajo?: string;
+  registroMinisterioSalud?: string;
+  gruposInteres?: string[];
 }
 
 export interface HorarioDisponible {
@@ -30,33 +42,74 @@ class AgendamientoService {
     }
 
     const medicos = await Medico.find(query)
-      .select('nombre apellido especialidad')
+      .select('nombre apellido especialidad perfilVerificacion')
       .lean();
 
-    return medicos.map(medico => ({
+    return medicos.map(medico => this.mapearMedicoDisponible(medico as any));
+  }
+
+  private mapearMedicoDisponible(medico: { _id: any; nombre: string; apellido: string; especialidad?: string; perfilVerificacion?: Record<string, any> }): MedicoDisponible {
+    const pv = medico.perfilVerificacion && typeof medico.perfilVerificacion === 'object' ? medico.perfilVerificacion : {};
+    return {
       _id: medico._id.toString(),
       nombre: medico.nombre,
       apellido: medico.apellido,
       especialidad: medico.especialidad,
-      disponibilidad: 'Consultar disponibilidad'
-    }));
+      disponibilidad: 'Consultar disponibilidad',
+      genero: pv.genero,
+      pais: pv.pais,
+      ciudadVivienda: pv.ciudadVivienda,
+      direccionVivienda: pv.direccionVivienda,
+      celularContacto: pv.celularContacto,
+      modalidadesTerapeuticas: Array.isArray(pv.modalidadesTerapeuticas) ? pv.modalidadesTerapeuticas : undefined,
+      motivosConsultaQueAtiende: Array.isArray(pv.motivosConsultaQueAtiende) ? pv.motivosConsultaQueAtiende : undefined,
+      direccionConsultorioHabilitado: pv.direccionConsultorioHabilitado,
+      telefonoLugarTrabajo: pv.telefonoLugarTrabajo,
+      registroMinisterioSalud: pv.registroMinisterioSalud,
+      gruposInteres: Array.isArray(pv.gruposInteres) ? pv.gruposInteres : undefined
+    };
   }
 
   async obtenerMedicoPorId(medicoId: string): Promise<MedicoDisponible | null> {
     const medico = await Medico.findById(medicoId)
-      .select('nombre apellido especialidad')
+      .select('nombre apellido especialidad perfilVerificacion')
       .lean();
 
     if (!medico) {
       return null;
     }
 
+    return this.mapearMedicoDisponible(medico as any);
+  }
+
+  private static defaultFlujoPaciente(): IFlujoPaciente {
     return {
-      _id: medico._id.toString(),
-      nombre: medico.nombre,
-      apellido: medico.apellido,
-      especialidad: medico.especialidad,
-      disponibilidad: 'Consultar disponibilidad'
+      activarAnalisisAutomatico: true,
+      mostrarMedicamentos: true,
+      recomendacionesOrigen: 'ia',
+      activarCodigosDescuento: false,
+      tipoCodigosDescuento: 'propios',
+      activarDescuentoSiAgendaPronto: false,
+      activarVideosTestimonios: false,
+      activarChatDirectoMedico: false
+    };
+  }
+
+  async obtenerConfiguracionFlujoMedico(medicoId: string): Promise<IFlujoPaciente> {
+    const config = await ConfiguracionAgenda.findOne({ medico: medicoId }).select('flujoPaciente').lean();
+    const fp = (config as any)?.flujoPaciente;
+    if (!fp || typeof fp !== 'object') {
+      return AgendamientoService.defaultFlujoPaciente();
+    }
+    return {
+      activarAnalisisAutomatico: fp.activarAnalisisAutomatico ?? true,
+      mostrarMedicamentos: fp.mostrarMedicamentos ?? true,
+      recomendacionesOrigen: fp.recomendacionesOrigen === 'manual' ? 'manual' : 'ia',
+      activarCodigosDescuento: fp.activarCodigosDescuento ?? false,
+      tipoCodigosDescuento: fp.tipoCodigosDescuento === 'por_consulta' ? 'por_consulta' : 'propios',
+      activarDescuentoSiAgendaPronto: fp.activarDescuentoSiAgendaPronto ?? false,
+      activarVideosTestimonios: fp.activarVideosTestimonios ?? false,
+      activarChatDirectoMedico: fp.activarChatDirectoMedico ?? false
     };
   }
 

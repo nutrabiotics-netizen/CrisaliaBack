@@ -1,6 +1,14 @@
 import Medico from '../../../models/Medico';
 import { IMedico } from '../../../models/Medico';
 
+const CAMPOS_PERFIL_VERIFICACION = [
+  'genero', 'fechaNacimiento', 'tipoDocumento', 'numeroDocumento', 'pais', 'ciudadVivienda',
+  'direccionVivienda', 'codigoPostal', 'celularContacto', 'fotoMedicoUrl', 'fotoEntornoClinicoUrl',
+  'rethusTarjetaProfesional', 'tituloUniversitario', 'tituloEspecialidad', 'formacionMedicinaFuncional',
+  'estiloPractica', 'modalidadesTerapeuticas', 'gruposInteres', 'motivosConsultaQueAtiende',
+  'registroMinisterioSalud', 'direccionConsultorioHabilitado', 'telefonoLugarTrabajo'
+] as const;
+
 export interface UpdatePerfilMedicoData {
   nombre?: string;
   apellido?: string;
@@ -11,6 +19,29 @@ export interface UpdatePerfilMedicoData {
   logoUrl?: string;
   firmaUrl?: string;
   indicacionesAntesConsulta?: string;
+  // Campos de perfilVerificacion (el front envía todo plano)
+  genero?: string;
+  fechaNacimiento?: string;
+  tipoDocumento?: string;
+  numeroDocumento?: string;
+  pais?: string;
+  ciudadVivienda?: string;
+  direccionVivienda?: string;
+  codigoPostal?: string;
+  celularContacto?: string;
+  fotoMedicoUrl?: string;
+  fotoEntornoClinicoUrl?: string;
+  rethusTarjetaProfesional?: string;
+  tituloUniversitario?: string;
+  tituloEspecialidad?: string;
+  formacionMedicinaFuncional?: string;
+  estiloPractica?: string;
+  modalidadesTerapeuticas?: string[];
+  gruposInteres?: string[];
+  motivosConsultaQueAtiende?: string[];
+  registroMinisterioSalud?: string;
+  direccionConsultorioHabilitado?: string;
+  telefonoLugarTrabajo?: string;
 }
 
 class PerfilMedicoService {
@@ -60,6 +91,18 @@ class PerfilMedicoService {
     if (datosActualizacion.indicacionesAntesConsulta !== undefined) {
       medico.indicacionesAntesConsulta = datosActualizacion.indicacionesAntesConsulta ?? '';
     }
+
+    // Actualizar perfilVerificacion (campos para filtros y verificación)
+    const perfilVerificacion = (medico.perfilVerificacion && typeof medico.perfilVerificacion === 'object')
+      ? { ...medico.perfilVerificacion }
+      : {};
+    for (const key of CAMPOS_PERFIL_VERIFICACION) {
+      const val = (datosActualizacion as Record<string, unknown>)[key];
+      if (val !== undefined) {
+        (perfilVerificacion as Record<string, unknown>)[key] = val;
+      }
+    }
+    medico.perfilVerificacion = perfilVerificacion;
 
     await medico.save();
 

@@ -15,6 +15,8 @@ export interface IConfiguracionSeguridadPaciente extends Document {
   aceptaConsentimiento: boolean;
   fechaAceptacionTerminos?: Date;
   fechaAceptacionConsentimiento?: Date;
+  /** Fechas de aceptación por documento (id documento -> ISO date). Para los 10 documentos legales. */
+  consentimientosDetalle?: Record<string, string>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -66,6 +68,10 @@ const ConfiguracionSeguridadPacienteSchema = new Schema<IConfiguracionSeguridadP
     },
     fechaAceptacionConsentimiento: {
       type: Date
+    },
+    consentimientosDetalle: {
+      type: Schema.Types.Mixed,
+      default: undefined
     }
   },
   {

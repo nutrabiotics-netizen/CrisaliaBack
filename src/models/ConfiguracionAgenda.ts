@@ -36,12 +36,34 @@ export interface INotificacionesAgendamiento {
   notificacionMedicoControl: boolean;
 }
 
+/** Configuración del flujo que ve el paciente cuando entra por el link del médico (pasos 5-8) */
+export interface IFlujoPaciente {
+  /** Activar análisis automático de posibles disfunciones (paso 6) */
+  activarAnalisisAutomatico: boolean;
+  /** Mostrar medicamentos OTC/ALIVIA al paciente */
+  mostrarMedicamentos: boolean;
+  /** Origen de las recomendaciones: IA o manuales del médico */
+  recomendacionesOrigen: 'ia' | 'manual';
+  /** Activar códigos de descuento para el paciente */
+  activarCodigosDescuento: boolean;
+  /** Tipo de códigos: propios del médico o por consulta */
+  tipoCodigosDescuento: 'propios' | 'por_consulta';
+  /** Descuento si el paciente agenda en los próximos minutos */
+  activarDescuentoSiAgendaPronto: boolean;
+  /** Mostrar videos y testimonios de médicos funcionales si tiene dudas */
+  activarVideosTestimonios: boolean;
+  /** Activar chat directo con el médico (seguimiento) */
+  activarChatDirectoMedico: boolean;
+}
+
 export interface IConfiguracionAgenda extends Document {
   medico: mongoose.Types.ObjectId;
   optimizacionAutomatica: boolean;
   flexibilidadReubicacion: boolean;
   sedes: ISedeAgenda[];
   notificacionesAgendamiento: INotificacionesAgendamiento;
+  /** Configuración del flujo para pacientes que entran por el link de Conexión 1 */
+  flujoPaciente?: IFlujoPaciente;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -157,6 +179,16 @@ const ConfiguracionAgendaSchema = new Schema<IConfiguracionAgenda>(
         type: Boolean,
         default: true
       }
+    },
+    flujoPaciente: {
+      activarAnalisisAutomatico: { type: Boolean, default: true },
+      mostrarMedicamentos: { type: Boolean, default: true },
+      recomendacionesOrigen: { type: String, enum: ['ia', 'manual'], default: 'ia' },
+      activarCodigosDescuento: { type: Boolean, default: false },
+      tipoCodigosDescuento: { type: String, enum: ['propios', 'por_consulta'], default: 'propios' },
+      activarDescuentoSiAgendaPronto: { type: Boolean, default: false },
+      activarVideosTestimonios: { type: Boolean, default: false },
+      activarChatDirectoMedico: { type: Boolean, default: false }
     }
   },
   {

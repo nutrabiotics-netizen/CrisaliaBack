@@ -1,6 +1,7 @@
 import Medico, { IMedico } from '../../models/Medico';
 import Paciente, { IPaciente } from '../../models/Paciente';
 import Administrativo, { IAdministrativo } from '../../models/Administrativo';
+import ConfiguracionSeguridadPaciente from '../../models/ConfiguracionSeguridadPaciente';
 import { generateToken } from '../../utils/jwt';
 import { AppError } from '../../utils/errors';
 import { UserRole } from '../../types';
@@ -24,6 +25,23 @@ export interface RegisterMedicoData {
   whatsapp?: string;
 }
 
+export interface AcudienteTutorData {
+  nombre: string;
+  parentesco: string;
+  telefono?: string;
+}
+
+export interface RegisterPacienteData {
+  nombre: string;
+  apellido: string;
+  email: string;
+  password: string;
+  telefono?: string;
+  acudiente?: AcudienteTutorData;
+  aceptaTerminos?: boolean;
+  aceptaConsentimiento?: boolean;
+}
+
 export interface AuthResponse {
   token: string;
   user: {
@@ -38,6 +56,10 @@ export interface AuthResponse {
     fechaNacimiento?: Date;
     direccion?: string;
     cargo?: string;
+    /** 2FA: solo pacientes. Por defecto false (usuarios nuevos no tienen WhatsApp para validación). */
+    habilitado2FA?: boolean;
+    aceptaTerminos?: boolean;
+    aceptaConsentimiento?: boolean;
   };
 }
 
@@ -109,6 +131,10 @@ export class AuthService {
       userResponse.fechaNacimiento = user.fechaNacimiento;
       userResponse.direccion = user.direccion;
       userResponse.telefono = user.telefono;
+      const configSeguridad = await ConfiguracionSeguridadPaciente.findOne({ paciente: user._id });
+      userResponse.habilitado2FA = configSeguridad?.autenticacionDosFactores ?? false;
+      userResponse.aceptaTerminos = configSeguridad?.aceptaTerminos ?? false;
+      userResponse.aceptaConsentimiento = configSeguridad?.aceptaConsentimiento ?? false;
     }
 
     if (userRole === UserRole.ADMINISTRATIVO && 'cargo' in user) {
@@ -157,6 +183,71 @@ export class AuthService {
       role: UserRole.MEDICO,
       especialidad: nuevoMedico.especialidad,
       telefono: nuevoMedico.telefono
+    };
+
+    return {
+      token,
+      user: userResponse
+    };
+  }
+
+  async registerPaciente(data: RegisterPacienteData): Promise<AuthResponse> {
+    const { nombre, apellido, email, password, telefono, acudiente, aceptaTerminos, aceptaConsentimiento } = data;
+
+    const existingPaciente = await Paciente.findOne({ email });
+    if (existingPaciente) {
+      throw new AppError('Este correo electrónico ya está registrado', 400);
+    }
+
+    const nuevoPaciente = new Paciente({
+      nombre,
+      apellido,
+      email,
+      password,
+      telefono: telefono?.trim() || undefined,
+      acudiente:
+        acudiente?.nombre?.trim() && acudiente?.parentesco?.trim()
+          ? {
+              nombre: acudiente.nombre.trim(),
+              parentesco: acudiente.parentesco.trim(),
+              telefono: acudiente.telefono?.trim()
+            }
+          : undefined,
+      role: UserRole.PACIENTE,
+      activo: true
+    });
+
+    await nuevoPaciente.save();
+
+    const ahora = new Date();
+    await ConfiguracionSeguridadPaciente.create({
+      paciente: nuevoPaciente._id,
+      autenticacionDosFactores: false,
+      recordarDispositivo: false,
+      autenticacionBiometrica: false,
+      tipoBiometrico: 'ninguno',
+      visualizarContrasena: false,
+      metodoNotificacion: 'whatsapp',
+      aceptaTerminos: aceptaTerminos ?? false,
+      aceptaConsentimiento: aceptaConsentimiento ?? false,
+      fechaAceptacionTerminos: aceptaTerminos ? ahora : undefined,
+      fechaAceptacionConsentimiento: aceptaConsentimiento ? ahora : undefined
+    });
+
+    const configSeguridad = await ConfiguracionSeguridadPaciente.findOne({ paciente: nuevoPaciente._id });
+    const token = generateToken(nuevoPaciente._id.toString(), UserRole.PACIENTE);
+    const userResponse: AuthResponse['user'] = {
+      _id: nuevoPaciente._id.toString(),
+      email: nuevoPaciente.email,
+      nombre: nuevoPaciente.nombre,
+      apellido: nuevoPaciente.apellido,
+      role: UserRole.PACIENTE,
+      fechaNacimiento: nuevoPaciente.fechaNacimiento,
+      direccion: nuevoPaciente.direccion,
+      telefono: nuevoPaciente.telefono,
+      habilitado2FA: configSeguridad?.autenticacionDosFactores ?? false,
+      aceptaTerminos: configSeguridad?.aceptaTerminos ?? false,
+      aceptaConsentimiento: configSeguridad?.aceptaConsentimiento ?? false
     };
 
     return {

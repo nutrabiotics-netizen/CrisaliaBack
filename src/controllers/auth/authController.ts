@@ -1,8 +1,9 @@
 import { Response } from 'express';
-import authService, { LoginCredentials, RegisterMedicoData } from '../../services/auth/authService';
+import authService, { LoginCredentials, RegisterMedicoData, RegisterPacienteData } from '../../services/auth/authService';
 import { handleError } from '../../utils/errors';
 import { validationResult } from 'express-validator';
 import { AuthRequest } from '../../middleware/auth';
+import ConfiguracionSeguridadPaciente from '../../models/ConfiguracionSeguridadPaciente';
 
 export class AuthController {
   async login(req: AuthRequest, res: Response): Promise<void> {
@@ -63,6 +64,32 @@ export class AuthController {
     }
   }
 
+  async registerPaciente(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({
+          success: false,
+          message: 'Error de validación',
+          errors: errors.array()
+        });
+        return;
+      }
+      const data: RegisterPacienteData = req.body;
+      const result = await authService.registerPaciente(data);
+      res.status(201).json({
+        success: true,
+        message: 'Cuenta creada correctamente',
+        data: {
+          token: result.token,
+          user: result.user
+        }
+      });
+    } catch (error: any) {
+      handleError(error, res);
+    }
+  }
+
   async getCurrentUser(req: any, res: Response): Promise<void> {
     try {
       const userId = req.userId;
@@ -96,6 +123,10 @@ export class AuthController {
         userData.fechaNacimiento = user.fechaNacimiento;
         userData.direccion = user.direccion;
         userData.telefono = user.telefono;
+        const configSeguridad = await ConfiguracionSeguridadPaciente.findOne({ paciente: user._id });
+        userData.habilitado2FA = configSeguridad?.autenticacionDosFactores ?? false;
+        userData.aceptaTerminos = configSeguridad?.aceptaTerminos ?? false;
+        userData.aceptaConsentimiento = configSeguridad?.aceptaConsentimiento ?? false;
       }
 
       if (userRole === 'administrativo' && 'cargo' in user) {

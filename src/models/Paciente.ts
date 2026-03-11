@@ -8,6 +8,12 @@ export interface IContactoEmergencia {
   telefono: string;
 }
 
+export interface IAcudienteTutor {
+  nombre: string;
+  parentesco: string;
+  telefono?: string;
+}
+
 export interface IPaciente extends Document {
   email: string;
   password: string;
@@ -39,6 +45,8 @@ export interface IPaciente extends Document {
   eps?: string;
   aseguradora?: string;
   numeroAfiliacion?: string;
+  // Acudiente/tutor (pacientes pediátricos o con discapacidad)
+  acudiente?: IAcudienteTutor;
   // Estado
   activo: boolean;
   createdAt: Date;
@@ -162,6 +170,11 @@ const PacienteSchema = new Schema<IPaciente>(
     numeroAfiliacion: {
       type: String,
       trim: true
+    },
+    acudiente: {
+      nombre: { type: String, trim: true },
+      parentesco: { type: String, trim: true },
+      telefono: { type: String, trim: true }
     },
     activo: {
       type: Boolean,

@@ -19,6 +19,8 @@ export interface IMedico extends Document {
   firmaUrl?: string;
   /** Indicaciones y recomendaciones que el paciente debe ver antes de la consulta */
   indicacionesAntesConsulta?: string;
+  /** Perfil de verificación y datos para filtros de búsqueda (grupos de interés, modalidades, etc.) */
+  perfilVerificacion?: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -79,7 +81,8 @@ const MedicoSchema = new Schema<IMedico>(
     },
     logoUrl: { type: String, trim: true },
     firmaUrl: { type: String, trim: true },
-    indicacionesAntesConsulta: { type: String, trim: true, default: '' }
+    indicacionesAntesConsulta: { type: String, trim: true, default: '' },
+    perfilVerificacion: { type: Schema.Types.Mixed, default: {} }
   },
   {
     timestamps: true

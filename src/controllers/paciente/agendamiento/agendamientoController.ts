@@ -67,6 +67,24 @@ export const obtenerMedicoPorId = async (req: AuthRequest, res: Response): Promi
   }
 };
 
+export const obtenerConfiguracionFlujoMedico = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { medicoId } = req.params;
+    const flujoPaciente = await agendamientoService.obtenerConfiguracionFlujoMedico(medicoId);
+    res.json({
+      success: true,
+      data: flujoPaciente
+    });
+  } catch (error: any) {
+    console.error('Error al obtener configuración de flujo del médico:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener la configuración',
+      error: error.message
+    });
+  }
+};
+
 export const obtenerSedesMedico = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { medicoId } = req.params;
