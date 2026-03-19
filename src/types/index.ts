@@ -51,7 +51,7 @@ export interface Cita {
   hora: string;
   tipo: 'preconsulta' | 'consulta' | 'control';
   modalidad: 'presencial' | 'virtual';
-  estado: 'pendiente' | 'confirmada' | 'cancelada' | 'completada';
+  estado: 'pendiente' | 'confirmada' | 'en_espera' | 'en_consulta' | 'cancelada' | 'completada';
   meetingId?: string;
   grabacionUrl?: string;
   pdfResumenUrl?: string;

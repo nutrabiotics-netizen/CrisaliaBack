@@ -54,6 +54,7 @@ import pacienteRoutes from './routes/paciente';
 import adminRoutes from './routes/admin';
 import administrativoRoutes from './routes/administrativo';
 import externalRoutes from './routes/external';
+import publicRoutes from './routes/public/index';
 
 // Rutas de autenticación
 app.use('/api/auth', authRoutes);
@@ -72,6 +73,9 @@ app.use('/api/administrativo', administrativoRoutes);
 
 // Rutas Externas (solo lectura, con token de autenticación)
 app.use('/api/external', externalRoutes);
+
+// Rutas Públicas Abiertas (No Auth)
+app.use('/api/public', publicRoutes);
 
 // Ruta de prueba
 app.get('/api/health', (_req, res) => {

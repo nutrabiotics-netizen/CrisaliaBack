@@ -7,7 +7,8 @@ export interface ICita extends Document {
   hora: string;
   tipo: 'preconsulta' | 'consulta' | 'control';
   modalidad: 'presencial' | 'virtual';
-  estado: 'pendiente' | 'confirmada' | 'cancelada' | 'completada';
+  estado: 'pendiente' | 'confirmada' | 'en_espera' | 'en_consulta' | 'cancelada' | 'completada';
+  horaLlegada?: Date; // Si estado es en_espera, guardamos cuando llegó físicamente
   meetingId?: string; // ID de reunión AWS Chime para videoconsultas
   /** Ruta S3 de la grabación de videoconsulta (ej. s3://bucket/prefix/pipelineId/) para poder generar link de visualización */
   grabacionUrl?: string;
@@ -55,8 +56,11 @@ const CitaSchema = new Schema<ICita>(
     },
     estado: {
       type: String,
-      enum: ['pendiente', 'confirmada', 'cancelada', 'completada'],
+      enum: ['pendiente', 'confirmada', 'en_espera', 'en_consulta', 'cancelada', 'completada'],
       default: 'pendiente'
+    },
+    horaLlegada: {
+       type: Date
     },
     meetingId: {
       type: String,
