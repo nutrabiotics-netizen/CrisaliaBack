@@ -37,7 +37,6 @@ import './models/Interrogatorio';
 import './models/HistoriaClinica';
 import './models/Cups2026';
 import './models/Material';
-import './models/MaterialPais';
 import './models/ExamenMedico';
 import './models/ApoyoTerapeutico';
 import './models/AyudaDiagnostica';
