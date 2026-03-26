@@ -40,6 +40,6 @@ export const videoCallConfig = {
   maxMeetingDurationMinutes: 120,
   autoStartRecording: !!recordingBucketArn,
   autoStartTranscription: false,
-  bedrockAgentId: process.env.BEDROCK_AGENT_ID || '',
-  bedrockAgentAliasId: process.env.BEDROCK_AGENT_ALIAS_ID || 'TSTALIASID'
+  bedrockAgentId: process.env.BEDROCK_AGENT_ID || '7HQWEUQTTS',
+  bedrockAgentAliasId: process.env.BEDROCK_AGENT_ALIAS_ID || '5GHAISC3Z9'
 };
