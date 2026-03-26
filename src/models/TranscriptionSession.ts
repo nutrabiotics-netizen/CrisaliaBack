@@ -6,7 +6,14 @@ export const CLINICAL_SECTIONS = [
   'antecedentes',
   'evaluacion',
   'diagnostico',
-  'plan_tratamiento'
+  'plan_tratamiento',
+  'motivo_atencion',
+  'examen_fisico',
+  'resultados_paraclinicos',
+  'alertas_y_alergias',
+  'analisis_y_plan',
+  'diagnosticos',
+  'recomendaciones'
 ] as const;
 
 export type ClinicalSectionType = (typeof CLINICAL_SECTIONS)[number];

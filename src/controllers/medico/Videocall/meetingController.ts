@@ -56,7 +56,7 @@ export const debugAWSConfig = async (_req: AuthRequest, res: Response) => {
  */
 export const createMeeting = async (req: AuthRequest, res: Response) => {
   try {
-    const { externalMeetingId, citaId } = req.body;
+    const { externalMeetingId, citaId, isGuided } = req.body;
     const medicoId = req.userId;
     if (!medicoId) {
       return res.status(401).json({ success: false, error: 'No autenticado' });
@@ -90,7 +90,8 @@ export const createMeeting = async (req: AuthRequest, res: Response) => {
       externalMeetingId: meetingResponse.Meeting!.ExternalMeetingId,
       citaId: citaId || undefined,
       meetingData: meetingResponse.Meeting as unknown as Record<string, unknown>,
-      transcriptionEnabled: videoCallConfig.autoStartTranscription
+      transcriptionEnabled: videoCallConfig.autoStartTranscription,
+      isGuided: !!isGuided
     });
 
     let pipelineId: string | null = null;
@@ -187,7 +188,8 @@ export const createMeeting = async (req: AuthRequest, res: Response) => {
         citaId: meeting.citaId,
         status: meeting.status,
         transcriptionEnabled: meeting.transcriptionEnabled,
-        recordingEnabled: !!pipelineId
+        recordingEnabled: !!pipelineId,
+        isGuided: meeting.isGuided
       }
     });
   } catch (error: unknown) {
@@ -350,6 +352,7 @@ export const getMeeting = async (req: AuthRequest, res: Response) => {
         recordingPath,
         grabacionUrl: meeting.grabacionUrl,
         duracionMinutos: meeting.duracionMinutos,
+        isGuided: meeting.isGuided,
         createdAt: meeting.createdAt,
         updatedAt: meeting.updatedAt
       }

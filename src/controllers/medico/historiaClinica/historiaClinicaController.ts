@@ -6,6 +6,7 @@ import { generateHistoriaPdf } from '../../../utils/pdfGenerator';
 import { uploadPDFAndGetUrl, buildCitaDocumentKey } from '../../../utils/s3Documents';
 import HistoriaClinica from '../../../models/HistoriaClinica';
 import Paciente from '../../../models/Paciente';
+import { summarizeLastClinicalHistory } from '../../../services/ai/bedrock.service';
 
 export const crearHistoriaClinica = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -324,3 +325,49 @@ export const eliminarHistoriaClinica = async (req: AuthRequest, res: Response): 
   }
 };
 
+export const obtenerResumenUltimaHistoria = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const medicoId = req.userId;
+    const { pacienteId } = req.params;
+
+    if (!medicoId) {
+      res.status(401).json({ success: false, message: 'Usuario no autenticado' });
+      return;
+    }
+
+    // Buscar la historia más reciente del paciente
+    const ultimaHistoria = await HistoriaClinica.findOne({ pacienteId })
+      .sort({ fechaRegistro: -1 })
+      .lean();
+
+    if (!ultimaHistoria) {
+      res.json({
+        success: true,
+        data: {
+          resumen: 'No se encontraron historias clínicas previas para este paciente.',
+          fecha: null
+        }
+      });
+      return;
+    }
+
+    // Generar resumen con Bedrock
+    const resumen = await summarizeLastClinicalHistory(ultimaHistoria);
+
+    res.json({
+      success: true,
+      data: {
+        resumen,
+        fecha: ultimaHistoria.fechaRegistro,
+        tipoActividad: ultimaHistoria.tipoActividad
+      }
+    });
+  } catch (error: any) {
+    console.error('Error al obtener resumen de última historia:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener resumen de la historia clínica',
+      error: error.message
+    });
+  }
+};

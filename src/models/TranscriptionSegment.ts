@@ -1,7 +1,20 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 /** Secciones clínicas (debe coincidir con TranscriptionSession.CLINICAL_SECTIONS). */
-const CLINICAL_SECTIONS = ['motivo_consulta', 'antecedentes', 'evaluacion', 'diagnostico', 'plan_tratamiento'] as const;
+const CLINICAL_SECTIONS = [
+  'motivo_consulta',
+  'antecedentes',
+  'evaluacion',
+  'diagnostico',
+  'plan_tratamiento',
+  'motivo_atencion',
+  'examen_fisico',
+  'resultados_paraclinicos',
+  'alertas_y_alergias',
+  'analisis_y_plan',
+  'diagnosticos',
+  'recomendaciones'
+] as const;
 export type ClinicalSectionType = (typeof CLINICAL_SECTIONS)[number];
 
 /** Rol del hablante: quien está hablando en ese fragmento (asignado por el cliente según quién tiene el micrófono o selección manual). */

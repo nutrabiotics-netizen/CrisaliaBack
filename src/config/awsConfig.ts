@@ -1,5 +1,6 @@
 import { ChimeSDKMeetingsClient } from '@aws-sdk/client-chime-sdk-meetings';
 import { ChimeSDKMediaPipelinesClient } from '@aws-sdk/client-chime-sdk-media-pipelines';
+import { BedrockAgentRuntimeClient } from '@aws-sdk/client-bedrock-agent-runtime';
 
 export const chimeClient = new ChimeSDKMeetingsClient({
   region: process.env.AWS_REGION || 'us-east-1',
@@ -10,6 +11,14 @@ export const chimeClient = new ChimeSDKMeetingsClient({
 });
 
 export const chimeMediaClient = new ChimeSDKMediaPipelinesClient({
+  region: process.env.AWS_REGION || 'us-east-1',
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || ''
+  }
+});
+
+export const bedrockClient = new BedrockAgentRuntimeClient({
   region: process.env.AWS_REGION || 'us-east-1',
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
@@ -30,5 +39,7 @@ export const videoCallConfig = {
   s3SinkArn: recordingBucketArn,
   maxMeetingDurationMinutes: 120,
   autoStartRecording: !!recordingBucketArn,
-  autoStartTranscription: false
+  autoStartTranscription: false,
+  bedrockAgentId: process.env.BEDROCK_AGENT_ID || '',
+  bedrockAgentAliasId: process.env.BEDROCK_AGENT_ALIAS_ID || 'TSTALIASID'
 };

@@ -13,6 +13,7 @@ export interface IMeeting extends Document {
   grabacionUrl?: string;
   duracionMinutos?: number;
   attendees: Array<Record<string, unknown> & { joinedAt?: Date }>;
+  isGuided?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -33,7 +34,8 @@ const MeetingSchema = new Schema<IMeeting>(
     transcriptionEnabled: { type: Boolean, default: false },
     grabacionUrl: { type: String, trim: true },
     duracionMinutos: { type: Number },
-    attendees: { type: [{ type: Schema.Types.Mixed }], default: [] }
+    attendees: { type: [{ type: Schema.Types.Mixed }], default: [] },
+    isGuided: { type: Boolean, default: false }
   },
   { timestamps: true }
 );

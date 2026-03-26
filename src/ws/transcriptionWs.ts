@@ -20,6 +20,8 @@ import {
   createTranscriptionAudioQueue,
   type TranscriptStreamEvent
 } from '../services/transcription/streaming/transcribeStreamingService';
+import { invokeBedrockAgent, parseBedrockResponse } from '../services/ai/bedrock.service';
+import Paciente from '../models/Paciente';
 import type { ClinicalSectionType } from '../models/TranscriptionSession';
 import type { SpeakerRoleType } from '../models/TranscriptionSegment';
 
@@ -28,7 +30,14 @@ const CLINICAL_SECTIONS = [
   'antecedentes',
   'evaluacion',
   'diagnostico',
-  'plan_tratamiento'
+  'plan_tratamiento',
+  'motivo_atencion',
+  'examen_fisico',
+  'resultados_paraclinicos',
+  'alertas_y_alergias',
+  'analisis_y_plan',
+  'diagnosticos',
+  'recomendaciones'
 ] as const;
 
 function isClinicalSection(s: string): s is ClinicalSectionType {
@@ -58,7 +67,15 @@ interface ClosePayload {
   type: 'close';
 }
 
-type ClientMessage = StartPayload | SetSectionPayload | SetSpeakerPayload | ClosePayload;
+interface ProcessWithAgentPayload {
+  type: 'process_with_agent';
+  transcription: string; // Puede ser el acumulado o el último segmento
+  isPartial: boolean;
+  currentSections?: Record<string, string>;
+  activeSection?: ClinicalSectionType;
+}
+
+type ClientMessage = StartPayload | SetSectionPayload | SetSpeakerPayload | ClosePayload | ProcessWithAgentPayload;
 
 function parseClientMessage(data: Buffer | string): ClientMessage | null {
   try {
@@ -148,6 +165,7 @@ export function attachTranscriptionWebSocket(server: import('http').Server): voi
 
     let sessionId: mongoose.Types.ObjectId | null = null;
     let citaIdStr: string | null = null;
+    let pacienteIdStr: string | null = null;
     let currentSection: ClinicalSectionType = 'motivo_consulta';
     let speakerRole: SpeakerRoleType = 'MEDICO';
     let sequence = 0;
@@ -226,6 +244,7 @@ export function attachTranscriptionWebSocket(server: import('http').Server): voi
           }
           sessionId = session._id;
           citaIdStr = msg.citaId;
+          pacienteIdStr = msg.pacienteId;
           if (!roomsByCitaId.has(citaIdStr)) roomsByCitaId.set(citaIdStr, new Set());
           roomsByCitaId.get(citaIdStr)!.add(ws);
 
@@ -316,6 +335,42 @@ export function attachTranscriptionWebSocket(server: import('http').Server): voi
           sendJson(ws, { type: 'session_closed', sessionId: sessionId.toString() });
         }
         ws.close(1000, 'Normal closure');
+      }
+
+      if (msg.type === 'process_with_agent' && citaIdStr) {
+        try {
+          // Obtener contexto del paciente para Bedrock
+          const pId = pacienteIdStr;
+          const paciente = pId ? await Paciente.findById(pId).lean() : null;
+          const patientContext = paciente ? `
+            Paciente: ${paciente.nombre} ${paciente.apellido}
+            Edad: ${paciente.fechaNacimiento ? Math.floor((new Date().getTime() - new Date(paciente.fechaNacimiento).getTime()) / 31557600000) : 'N/A'}
+            Sexo: ${paciente.sexoBiologico || 'N/A'}
+            EPS: ${paciente.eps || 'N/A'}
+            Aseguradora: ${paciente.aseguradora || 'N/A'}
+          `.trim() : 'Información del paciente no disponible.';
+
+          const responseText = await invokeBedrockAgent({
+            patientHistoryContext: patientContext,
+            transcriptionSegment: msg.transcription,
+            isPartial: msg.isPartial,
+            currentSections: msg.currentSections,
+            activeSection: msg.activeSection || currentSection
+          });
+
+          const parsed = parseBedrockResponse(responseText);
+          
+          broadcastToCitaRoom(citaIdStr, {
+            type: 'proposal',
+            payload: {
+              resumen: parsed.resumen || '',
+              propuestas: parsed.propuestas || []
+            }
+          });
+        } catch (err) {
+          console.error('[TranscriptionWS] Error procesando con agente:', err);
+          sendJson(ws, { type: 'error', message: 'Error al procesar con el agente IA' });
+        }
       }
     });
 
