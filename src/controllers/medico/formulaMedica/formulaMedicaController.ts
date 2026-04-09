@@ -158,7 +158,7 @@ export const obtenerFormulaMedicaPorCita = async (req: AuthRequest, res: Respons
     }
 
     const formula = await formulaMedicaService.obtenerFormulaMedicaPorCita(
-      citaId,
+      citaId as string,
       medicoId
     );
 
@@ -198,7 +198,7 @@ export const obtenerFormulasMedicasPorPaciente = async (req: AuthRequest, res: R
     }
 
     const formulas = await formulaMedicaService.obtenerFormulasMedicasPorPaciente(
-      pacienteId,
+      pacienteId as string,
       medicoId
     );
 
@@ -230,7 +230,7 @@ export const obtenerFormulaMedicaPorId = async (req: AuthRequest, res: Response)
     }
 
     const formula = await formulaMedicaService.obtenerFormulaMedicaPorId(
-      formulaId,
+      formulaId as string,
       medicoId
     );
 
@@ -271,7 +271,7 @@ export const eliminarFormulaMedica = async (req: AuthRequest, res: Response): Pr
 
     // Obtener datos anteriores para auditoría
     const formulaAnterior = await formulaMedicaService.obtenerFormulaMedicaPorId(
-      formulaId,
+      formulaId as string,
       medicoId
     );
 
@@ -284,7 +284,7 @@ export const eliminarFormulaMedica = async (req: AuthRequest, res: Response): Pr
     }
 
     const eliminada = await formulaMedicaService.eliminarFormulaMedica(
-      formulaId,
+      formulaId as string,
       medicoId
     );
 
@@ -301,7 +301,7 @@ export const eliminarFormulaMedica = async (req: AuthRequest, res: Response): Pr
       req,
       'eliminar',
       'FormulaMedica',
-      formulaId,
+      formulaId as string,
       formulaAnterior,
       undefined
     );

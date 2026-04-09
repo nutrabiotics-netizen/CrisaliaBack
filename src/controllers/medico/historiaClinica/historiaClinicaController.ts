@@ -116,7 +116,7 @@ export const obtenerHistoriaClinica = async (req: AuthRequest, res: Response): P
     }
 
     const historia = await historiaClinicaService.obtenerHistoriaClinicaPorId(
-      historiaId,
+      historiaId as string,
       medicoId
     );
 
@@ -156,7 +156,7 @@ export const obtenerHistoriaClinicaPorCita = async (req: AuthRequest, res: Respo
     }
 
     const historia = await historiaClinicaService.obtenerHistoriaClinicaPorCita(
-      citaId,
+      citaId as string,
       medicoId
     );
 
@@ -188,7 +188,7 @@ export const obtenerHistoriasClinicasPorPaciente = async (req: AuthRequest, res:
     }
 
     const historias = await historiaClinicaService.obtenerHistoriasClinicasPorPaciente(
-      pacienteId,
+      pacienteId as string,
       medicoId
     );
 
@@ -222,7 +222,7 @@ export const actualizarHistoriaClinica = async (req: AuthRequest, res: Response)
 
     // Obtener datos anteriores para auditoría
     const historiaAnterior = await historiaClinicaService.obtenerHistoriaClinicaPorId(
-      historiaId,
+      historiaId as string,
       medicoId
     );
 
@@ -235,7 +235,7 @@ export const actualizarHistoriaClinica = async (req: AuthRequest, res: Response)
     }
 
     const historiaActualizada = await historiaClinicaService.actualizarHistoriaClinica(
-      historiaId,
+      historiaId as string,
       medicoId,
       datosActualizados,
       medicoId,
@@ -255,7 +255,7 @@ export const actualizarHistoriaClinica = async (req: AuthRequest, res: Response)
       req,
       'actualizar',
       'HistoriaClinica',
-      historiaId,
+      historiaId as string,
       historiaAnterior,
       historiaActualizada
     );
@@ -289,7 +289,7 @@ export const eliminarHistoriaClinica = async (req: AuthRequest, res: Response): 
     }
 
     const eliminada = await historiaClinicaService.eliminarHistoriaClinica(
-      historiaId,
+      historiaId as string,
       medicoId
     );
 
@@ -306,7 +306,7 @@ export const eliminarHistoriaClinica = async (req: AuthRequest, res: Response): 
       req,
       'eliminar',
       'HistoriaClinica',
-      historiaId,
+      historiaId as string,
       undefined,
       undefined
     );

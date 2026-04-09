@@ -301,14 +301,14 @@ export const confirmarCita = async (req: AuthRequest, res: Response): Promise<vo
       estado: citaAnterior.estado
     };
 
-    const cita = await agendamientoService.confirmarCita(citaId, medicoId, medicoId, 'Medico');
+    const cita = await agendamientoService.confirmarCita(citaId as string, medicoId, medicoId, 'Medico');
 
     // Registrar en auditoría
     await registrarAccion(
       req,
       'confirmar',
       'Cita',
-      citaId,
+      citaId as string,
       datosAnteriores,
       {
         estado: cita.estado,
@@ -323,7 +323,7 @@ export const confirmarCita = async (req: AuthRequest, res: Response): Promise<vo
       data: cita
     });
 
-    void notificarCitaConfirmadaPorMedico(citaId);
+    void notificarCitaConfirmadaPorMedico(citaId as string);
   } catch (error: any) {
     console.error('Error al confirmar cita:', error);
     
@@ -389,7 +389,7 @@ export const cancelarCita = async (req: AuthRequest, res: Response): Promise<voi
     };
 
     const cita = await agendamientoService.cancelarCitaMedico(
-      citaId, 
+      citaId as string, 
       medicoId,
       motivoCancelacion,
       medicoId,
@@ -401,7 +401,7 @@ export const cancelarCita = async (req: AuthRequest, res: Response): Promise<voi
       req,
       'cancelar',
       'Cita',
-      citaId,
+      citaId as string,
       datosAnteriores,
       {
         estado: cita.estado,
@@ -472,7 +472,7 @@ export const completarCita = async (req: AuthRequest, res: Response): Promise<vo
     };
 
     const cita = await agendamientoService.completarCita(
-      citaId, 
+      citaId as string, 
       medicoId,
       medicoId,
       'Medico'
@@ -483,7 +483,7 @@ export const completarCita = async (req: AuthRequest, res: Response): Promise<vo
       req,
       'completar',
       'Cita',
-      citaId,
+      citaId as string,
       datosAnteriores,
       {
         estado: cita.estado,
@@ -542,10 +542,10 @@ export const generarResumenPdfCita = async (req: AuthRequest, res: Response): Pr
     }
 
     const [historia, formula, incapacidad, interconsulta, medicoDoc] = await Promise.all([
-      historiaClinicaService.obtenerHistoriaClinicaPorCita(citaId, medicoId),
-      formulaMedicaService.obtenerFormulaMedicaPorCita(citaId, medicoId),
-      incapacidadService.obtenerIncapacidadPorCita(citaId, medicoId),
-      interconsultaService.obtenerInterconsultaPorCita(citaId, medicoId),
+      historiaClinicaService.obtenerHistoriaClinicaPorCita(citaId as string, medicoId),
+      formulaMedicaService.obtenerFormulaMedicaPorCita(citaId as string, medicoId),
+      incapacidadService.obtenerIncapacidadPorCita(citaId as string, medicoId),
+      interconsultaService.obtenerInterconsultaPorCita(citaId as string, medicoId),
       Medico.findById(medicoId).select('nombre apellido numeroColegiatura firmaUrl').lean()
     ]);
 
@@ -574,7 +574,7 @@ export const generarResumenPdfCita = async (req: AuthRequest, res: Response): Pr
 
     const paciente = await Paciente.findById(cita.pacienteId).select('numeroDocumento').lean();
     const numeroDoc = paciente?.numeroDocumento ?? String(cita.pacienteId);
-    const key = buildCitaDocumentKey(numeroDoc, citaId, 'resumen');
+    const key = buildCitaDocumentKey(numeroDoc, citaId as string, 'resumen');
     const pdfResumenUrl = await uploadPDFAndGetUrl(buffer, key);
     await Cita.updateOne({ _id: citaId }, { pdfResumenUrl });
 
@@ -605,7 +605,7 @@ export const obtenerRecordingUrl = async (req: AuthRequest, res: Response): Prom
       return;
     }
     const cita = await Cita.findOne({
-      _id: new mongoose.Types.ObjectId(citaId),
+      _id: new mongoose.Types.ObjectId(citaId as string),
       medicoId: new mongoose.Types.ObjectId(medicoId)
     }).lean();
     if (!cita) {
@@ -616,7 +616,7 @@ export const obtenerRecordingUrl = async (req: AuthRequest, res: Response): Prom
     if (!grabacionUrl && (cita as any).meetingId) {
       const meeting = await Meeting.findOne({
         meetingId: (cita as any).meetingId,
-        citaId: new mongoose.Types.ObjectId(citaId)
+        citaId: new mongoose.Types.ObjectId(citaId as string)
       }).lean();
       if (meeting?.grabacionUrl) {
         grabacionUrl = meeting.grabacionUrl;

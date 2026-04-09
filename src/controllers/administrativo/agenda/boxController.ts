@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthRequest } from '../../../middleware/auth';
 import BoxConsultorio from '../../../models/BoxConsultorio';
 import AsignacionBox from '../../../models/AsignacionBox';
+import mongoose from 'mongoose';
 
 /** Formato YYYY-MM-DD a Date inicio del día UTC */
 function parseFechaDia(str: string): Date | null {
@@ -126,8 +127,8 @@ export const asignarMedico = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
     const asig = await AsignacionBox.create({
-      boxId: idBox,
-      medicoId,
+      boxId: new mongoose.Types.ObjectId(idBox as string),
+      medicoId: new mongoose.Types.ObjectId(medicoId as string),
       fecha: fechaDate,
       horaInicio,
       horaFin

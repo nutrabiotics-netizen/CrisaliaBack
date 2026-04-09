@@ -14,11 +14,11 @@ export const getEstadoSalaEspera = async (req: AuthRequest, res: Response): Prom
       res.status(401).json({ success: false, message: 'Usuario no autenticado' });
       return;
     }
-    if (!mongoose.Types.ObjectId.isValid(citaId)) {
+    if (!mongoose.Types.ObjectId.isValid(citaId as string)) {
       res.status(400).json({ success: false, message: 'Identificador de cita inválido' });
       return;
     }
-    const data = await obtenerEstadoColaSalaEspera(citaId, pacienteId);
+    const data = await obtenerEstadoColaSalaEspera(citaId as string, pacienteId);
     if (!data) {
       res.status(404).json({ success: false, message: 'Cita no encontrada' });
       return;

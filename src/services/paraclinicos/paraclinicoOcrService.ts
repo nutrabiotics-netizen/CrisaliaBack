@@ -1,7 +1,5 @@
 import OpenAI from 'openai';
-import { PDFParse } from 'pdf-parse';
 
-const MIN_PDF_TEXT_CHARS = 80;
 const STRUCTURE_MODEL = process.env.OPENAI_PARACLINICO_MODEL || 'gpt-4o-mini';
 
 export type ParaclinicoOcrEstado = 'listo' | 'error' | 'omitido';
@@ -26,16 +24,6 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-async function extractPdfPlainText(buffer: Buffer): Promise<string> {
-  const parser = new PDFParse({ data: buffer });
-  try {
-    const result = await parser.getText();
-    return (result.text || '').trim();
-  } finally {
-    await parser.destroy();
-  }
-}
-
 function stripJsonFence(raw: string): string {
   let s = raw.trim();
   if (s.startsWith('```')) {
@@ -57,30 +45,6 @@ function parseValoresJson(text: string): ParaclinicoOcrValor[] {
       referencia: v.referencia != null ? String(v.referencia) : undefined
     }))
     .filter((v) => v.nombre && v.nombre !== 'Sin nombre');
-}
-
-async function estructurarDesdeTexto(plainText: string): Promise<ParaclinicoOcrValor[]> {
-  const completion = await openai.chat.completions.create({
-    model: STRUCTURE_MODEL,
-    temperature: 0.2,
-    max_tokens: 4096,
-    messages: [
-      {
-        role: 'system',
-        content: `Eres un asistente clínico. Extrae del texto de un resultado de laboratorio o paraclínico las mediciones tabulares.
-Responde SOLO con un array JSON válido (sin markdown), por ejemplo:
-[{"nombre":"Hemoglobina","valor":"14.2","unidad":"g/dL","referencia":"12-16"}]
-Usa claves: nombre (obligatorio), valor, unidad, referencia (opcionales).
-Si no hay valores estructurables, responde exactamente: []`
-      },
-      {
-        role: 'user',
-        content: plainText.slice(0, 24000)
-      }
-    ]
-  });
-  const raw = completion.choices[0]?.message?.content || '[]';
-  return parseValoresJson(raw);
 }
 
 async function visionDesdeImagen(buffer: Buffer, mimeType: string): Promise<ParaclinicoOcrOutcome> {
@@ -137,8 +101,8 @@ Si no puedes leer valores, responde [].`
 }
 
 /**
- * Ejecuta extracción OCR / estructuración para un paraclínico ya en memoria.
- * Sin OPENAI_API_KEY: devuelve omitido. PDF escaneado (poco texto): error con mensaje claro.
+ * Extracción con IA: solo imágenes. Los PDF se guardan sin análisis automático.
+ * Sin OPENAI_API_KEY: omitido.
  */
 export async function extraerParaclinicoOcr(
   buffer: Buffer,
@@ -157,23 +121,10 @@ export async function extraerParaclinicoOcr(
       return await visionDesdeImagen(buffer, mimeType);
     }
 
-    const plain = await extractPdfPlainText(buffer);
-    if (plain.length < MIN_PDF_TEXT_CHARS) {
-      return {
-        ocrEstado: 'error',
-        ocrMetodo: 'pdf-texto',
-        ocrTextoPlano: plain || undefined,
-        ocrError:
-          'El PDF tiene muy poco texto extraíble (suele ser un escaneo). Sube una imagen JPG/PNG nítida o un PDF con texto seleccionable.'
-      };
-    }
-
-    const valores = await estructurarDesdeTexto(plain);
     return {
-      ocrEstado: 'listo',
-      ocrMetodo: 'pdf-texto',
-      ocrTextoPlano: plain.slice(0, 32000),
-      ocrValores: valores
+      ocrEstado: 'omitido',
+      ocrError:
+        'El análisis automático no está disponible para PDF. Sube el resultado como imagen (JPG/PNG/WebP) para extraer valores, o completa los datos manualmente.'
     };
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);

@@ -17,13 +17,13 @@ export const getTranscriptionByCita = async (req: AuthRequest, res: Response): P
   try {
     const medicoId = req.userId;
     const { citaId } = req.params;
-    if (!medicoId || !citaId || !mongoose.Types.ObjectId.isValid(citaId)) {
+    if (!medicoId || !citaId || !mongoose.Types.ObjectId.isValid(citaId as string)) {
       res.status(400).json({ success: false, message: 'citaId inválido' });
       return;
     }
 
     const session = await TranscriptionSession.findOne({
-      citaId: new mongoose.Types.ObjectId(citaId),
+      citaId: new mongoose.Types.ObjectId(citaId as string),
       medicoId: new mongoose.Types.ObjectId(medicoId)
     })
       .sort({ createdAt: -1 })

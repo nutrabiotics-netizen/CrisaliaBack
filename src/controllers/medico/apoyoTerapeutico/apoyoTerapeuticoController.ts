@@ -160,7 +160,7 @@ export const obtenerApoyoTerapeuticoPorCita = async (req: AuthRequest, res: Resp
     }
 
     const apoyoTerapeutico = await apoyoTerapeuticoService.obtenerApoyoTerapeuticoPorCita(
-      citaId,
+      citaId as string,
       medicoId
     );
 
@@ -200,7 +200,7 @@ export const obtenerApoyosTerapeuticosPorPaciente = async (req: AuthRequest, res
     }
 
     const apoyosTerapeuticos = await apoyoTerapeuticoService.obtenerApoyosTerapeuticosPorPaciente(
-      pacienteId,
+      pacienteId as string,
       medicoId
     );
 
@@ -232,7 +232,7 @@ export const obtenerApoyoTerapeuticoPorId = async (req: AuthRequest, res: Respon
     }
 
     const apoyoTerapeutico = await apoyoTerapeuticoService.obtenerApoyoTerapeuticoPorId(
-      apoyoTerapeuticoId,
+      apoyoTerapeuticoId as string,
       medicoId
     );
 
@@ -296,7 +296,7 @@ export const actualizarApoyoTerapeutico = async (req: AuthRequest, res: Response
 
     // Obtener datos anteriores para auditoría
     const apoyoTerapeuticoAnterior = await apoyoTerapeuticoService.obtenerApoyoTerapeuticoPorId(
-      apoyoTerapeuticoId,
+      apoyoTerapeuticoId as string,
       medicoId
     );
 
@@ -309,7 +309,7 @@ export const actualizarApoyoTerapeutico = async (req: AuthRequest, res: Response
     }
 
     const apoyoTerapeuticoActualizado = await apoyoTerapeuticoService.actualizarApoyoTerapeutico(
-      apoyoTerapeuticoId,
+      apoyoTerapeuticoId as string,
       medicoId,
       datosActualizados,
       medicoId,
@@ -329,7 +329,7 @@ export const actualizarApoyoTerapeutico = async (req: AuthRequest, res: Response
       req,
       'actualizar',
       'ApoyoTerapeutico',
-      apoyoTerapeuticoId,
+      apoyoTerapeuticoId as string,
       apoyoTerapeuticoAnterior,
       apoyoTerapeuticoActualizado
     );
@@ -385,7 +385,7 @@ export const eliminarApoyoTerapeutico = async (req: AuthRequest, res: Response):
 
     // Obtener datos anteriores para auditoría
     const apoyoTerapeuticoAnterior = await apoyoTerapeuticoService.obtenerApoyoTerapeuticoPorId(
-      apoyoTerapeuticoId,
+      apoyoTerapeuticoId as string,
       medicoId
     );
 
@@ -398,7 +398,7 @@ export const eliminarApoyoTerapeutico = async (req: AuthRequest, res: Response):
     }
 
     const eliminado = await apoyoTerapeuticoService.eliminarApoyoTerapeutico(
-      apoyoTerapeuticoId,
+      apoyoTerapeuticoId as string,
       medicoId
     );
 
@@ -415,7 +415,7 @@ export const eliminarApoyoTerapeutico = async (req: AuthRequest, res: Response):
       req,
       'eliminar',
       'ApoyoTerapeutico',
-      apoyoTerapeuticoId,
+      apoyoTerapeuticoId as string,
       apoyoTerapeuticoAnterior,
       undefined
     );

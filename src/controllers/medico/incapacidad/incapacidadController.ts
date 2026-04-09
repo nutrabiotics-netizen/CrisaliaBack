@@ -154,7 +154,7 @@ export const obtenerIncapacidadPorCita = async (req: AuthRequest, res: Response)
     }
 
     const incapacidad = await incapacidadService.obtenerIncapacidadPorCita(
-      citaId,
+      citaId as string,
       medicoId
     );
 
@@ -194,7 +194,7 @@ export const obtenerIncapacidadesPorPaciente = async (req: AuthRequest, res: Res
     }
 
     const incapacidades = await incapacidadService.obtenerIncapacidadesPorPaciente(
-      pacienteId,
+      pacienteId as string,
       medicoId
     );
 
@@ -226,7 +226,7 @@ export const obtenerIncapacidadPorId = async (req: AuthRequest, res: Response): 
     }
 
     const incapacidad = await incapacidadService.obtenerIncapacidadPorId(
-      incapacidadId,
+      incapacidadId as string,
       medicoId
     );
 
@@ -282,7 +282,7 @@ export const actualizarIncapacidad = async (req: AuthRequest, res: Response): Pr
 
     // Obtener datos anteriores para auditoría
     const incapacidadAnterior = await incapacidadService.obtenerIncapacidadPorId(
-      incapacidadId,
+      incapacidadId as string,
       medicoId
     );
 
@@ -295,7 +295,7 @@ export const actualizarIncapacidad = async (req: AuthRequest, res: Response): Pr
     }
 
     const incapacidadActualizada = await incapacidadService.actualizarIncapacidad(
-      incapacidadId,
+      incapacidadId as string,
       medicoId,
       datosActualizados,
       medicoId,
@@ -315,7 +315,7 @@ export const actualizarIncapacidad = async (req: AuthRequest, res: Response): Pr
       req,
       'actualizar',
       'Incapacidad',
-      incapacidadId,
+      incapacidadId as string,
       incapacidadAnterior,
       incapacidadActualizada
     );
@@ -350,7 +350,7 @@ export const eliminarIncapacidad = async (req: AuthRequest, res: Response): Prom
 
     // Obtener datos anteriores para auditoría
     const incapacidadAnterior = await incapacidadService.obtenerIncapacidadPorId(
-      incapacidadId,
+      incapacidadId as string,
       medicoId
     );
 
@@ -363,7 +363,7 @@ export const eliminarIncapacidad = async (req: AuthRequest, res: Response): Prom
     }
 
     const eliminada = await incapacidadService.eliminarIncapacidad(
-      incapacidadId,
+      incapacidadId as string,
       medicoId
     );
 
@@ -380,7 +380,7 @@ export const eliminarIncapacidad = async (req: AuthRequest, res: Response): Prom
       req,
       'eliminar',
       'Incapacidad',
-      incapacidadId,
+      incapacidadId as string,
       incapacidadAnterior,
       undefined
     );

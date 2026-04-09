@@ -113,7 +113,7 @@ export const registrarSalida = async (req: AuthRequest, res: Response): Promise<
       res.status(400).json({ success: false, message: 'horaSalida es requerida' });
       return;
     }
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!mongoose.Types.ObjectId.isValid(id as string)) {
       res.status(400).json({ success: false, message: 'ID inválido' });
       return;
     }

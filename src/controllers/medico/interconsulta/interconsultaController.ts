@@ -158,7 +158,7 @@ export const obtenerInterconsultaPorCita = async (req: AuthRequest, res: Respons
     }
 
     const interconsulta = await interconsultaService.obtenerInterconsultaPorCita(
-      citaId,
+      citaId as string, 
       medicoId
     );
 
@@ -198,7 +198,7 @@ export const obtenerInterconsultasPorPaciente = async (req: AuthRequest, res: Re
     }
 
     const interconsultas = await interconsultaService.obtenerInterconsultasPorPaciente(
-      pacienteId,
+      pacienteId as string,
       medicoId
     );
 
@@ -230,7 +230,7 @@ export const obtenerInterconsultaPorId = async (req: AuthRequest, res: Response)
     }
 
     const interconsulta = await interconsultaService.obtenerInterconsultaPorId(
-      interconsultaId,
+      interconsultaId as string,
       medicoId
     );
 
@@ -272,7 +272,7 @@ export const actualizarInterconsulta = async (req: AuthRequest, res: Response): 
 
     // Obtener datos anteriores para auditoría
     const interconsultaAnterior = await interconsultaService.obtenerInterconsultaPorId(
-      interconsultaId,
+      interconsultaId as string,
       medicoId
     );
 
@@ -285,7 +285,7 @@ export const actualizarInterconsulta = async (req: AuthRequest, res: Response): 
     }
 
     const interconsultaActualizada = await interconsultaService.actualizarInterconsulta(
-      interconsultaId,
+      interconsultaId as string,
       medicoId,
       datosActualizados,
       medicoId,
@@ -305,7 +305,7 @@ export const actualizarInterconsulta = async (req: AuthRequest, res: Response): 
       req,
       'actualizar',
       'Interconsulta',
-      interconsultaId,
+      interconsultaId as string,
       interconsultaAnterior,
       interconsultaActualizada
     );
@@ -340,7 +340,7 @@ export const eliminarInterconsulta = async (req: AuthRequest, res: Response): Pr
 
     // Obtener datos anteriores para auditoría
     const interconsultaAnterior = await interconsultaService.obtenerInterconsultaPorId(
-      interconsultaId,
+      interconsultaId as string,
       medicoId
     );
 
@@ -353,7 +353,7 @@ export const eliminarInterconsulta = async (req: AuthRequest, res: Response): Pr
     }
 
     const eliminada = await interconsultaService.eliminarInterconsulta(
-      interconsultaId,
+      interconsultaId as string,
       medicoId
     );
 
@@ -370,7 +370,7 @@ export const eliminarInterconsulta = async (req: AuthRequest, res: Response): Pr
       req,
       'eliminar',
       'Interconsulta',
-      interconsultaId,
+      interconsultaId as string,
       interconsultaAnterior,
       undefined
     );
