@@ -340,6 +340,11 @@ export const obtenerResumenUltimaHistoria = async (req: AuthRequest, res: Respon
       .sort({ fechaRegistro: -1 })
       .lean();
 
+    console.log('[HistoriaClinicaController] Historia buscada para paciente:', {
+      pacienteId,
+      encontrada: !!ultimaHistoria
+    });
+
     if (!ultimaHistoria) {
       res.json({
         success: true,

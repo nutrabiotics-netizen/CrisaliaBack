@@ -54,7 +54,7 @@ export async function invokeBedrockAgent(input: BedrockAgentInput): Promise<stri
     return chunks.join('');
   } catch (err: unknown) {
     const error = err as any;
-    console.error('[BedrockService] Error invadiendo agente:', error);
+    console.error('[BedrockService] Error invocando agente (Propuestas):', error);
     return JSON.stringify({
       resumen: `Error del agente: ${error.message || String(error)}`,
       propuestas: [],
@@ -147,6 +147,13 @@ export async function summarizeLastClinicalHistory(historyData: any): Promise<st
   const agentId = videoCallConfig.bedrockAgentId;
   const agentAliasId = videoCallConfig.bedrockAgentAliasId;
 
+  console.log('[BedrockService] Resumiendo historia:', {
+    hasAgentId: !!agentId,
+    agentId,
+    hasHistoryData: !!historyData,
+    pacienteNombre: historyData?.pacienteNombre
+  });
+
   if (!agentId || !historyData) {
     return 'No hay información suficiente para generar un resumen.';
   }
@@ -206,7 +213,7 @@ Genera solo el texto del resumen, sin introducciones.
 
     return chunks.join('').trim();
   } catch (err) {
-    console.error('[BedrockService] Error generando resumen:', err);
+    console.error('[BedrockService] Error generando resumen (Resumen Histórico):', err);
     return 'Error al generar el resumen contextual del paciente.';
   }
 }
