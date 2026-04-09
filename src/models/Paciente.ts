@@ -47,6 +47,8 @@ export interface IPaciente extends Document {
   numeroAfiliacion?: string;
   // Acudiente/tutor (pacientes pediátricos o con discapacidad)
   acudiente?: IAcudienteTutor;
+  // Zonas de dolor del mapa corporal (capturadas en el onboarding)
+  zonasDolor?: string[];
   // Estado
   activo: boolean;
   createdAt: Date;
@@ -175,6 +177,10 @@ const PacienteSchema = new Schema<IPaciente>(
       nombre: { type: String, trim: true },
       parentesco: { type: String, trim: true },
       telefono: { type: String, trim: true }
+    },
+    zonasDolor: {
+      type: [String],
+      default: []
     },
     activo: {
       type: Boolean,

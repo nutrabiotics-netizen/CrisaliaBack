@@ -56,6 +56,13 @@ export function buildCitaDocumentKey(
  * key = ruta completa, ej: pacientes/123/citas/abc/historia-clinica.pdf
  */
 export async function uploadPDF(buffer: Buffer, key: string): Promise<string> {
+  return uploadBinary(buffer, key, 'application/pdf');
+}
+
+/**
+ * Sube un archivo binario al bucket de documentos con el Content-Type indicado.
+ */
+export async function uploadBinary(buffer: Buffer, key: string, contentType: string): Promise<string> {
   if (!BUCKET) {
     throw new Error('AWS_S3_DOCUMENTS_BUCKET o AWS_CHIME_S3_BUCKET_ARN no configurado');
   }
@@ -63,9 +70,77 @@ export async function uploadPDF(buffer: Buffer, key: string): Promise<string> {
     Bucket: BUCKET,
     Key: key,
     Body: buffer,
-    ContentType: 'application/pdf'
+    ContentType: contentType || 'application/octet-stream'
   }));
   return key;
+}
+
+/**
+ * Clave S3 para paraclínicos: pacientes/{numeroDocumento}/paraclinicos/{timestamp}-{nombreSanitizado}
+ */
+export function buildParaclinicoKey(numeroDocumentoPaciente: string, originalName: string, contentType: string): string {
+  const sanitizedDoc = String(numeroDocumentoPaciente || '')
+    .replace(/[/\\]/g, '-')
+    .trim() || 'sin-documento';
+  const ts = Date.now();
+  let base = String(originalName || 'archivo')
+    .replace(/[/\\]/g, '-')
+    .replace(/[^\w.\-() áéíóúñÁÉÍÓÚÑ]/gi, '_')
+    .trim()
+    .slice(0, 120);
+  const extFromMime = (mime: string): string => {
+    if (mime === 'application/pdf') return '.pdf';
+    if (mime === 'image/jpeg') return '.jpg';
+    if (mime === 'image/png') return '.png';
+    if (mime === 'image/webp') return '.webp';
+    return '';
+  };
+  const ext = extFromMime(contentType);
+  if (ext && !base.toLowerCase().endsWith(ext)) {
+    base += ext;
+  }
+  return `pacientes/${sanitizedDoc}/paraclinicos/${ts}-${base}`;
+}
+
+/**
+ * Clave S3 para fotos de evaluación de alimentos (Lambda / análisis).
+ * pacientes/{numeroDocumento}/evaluacion-alimentos/{timestamp}-{nombre}
+ */
+export function buildAlimentoEvaluacionKey(
+  numeroDocumentoPaciente: string,
+  originalName: string,
+  contentType: string
+): string {
+  const sanitizedDoc = String(numeroDocumentoPaciente || '')
+    .replace(/[/\\]/g, '-')
+    .trim() || 'sin-documento';
+  const ts = Date.now();
+  let base = String(originalName || 'plato')
+    .replace(/[/\\]/g, '-')
+    .replace(/[^\w.\-() áéíóúñÁÉÍÓÚÑ]/gi, '_')
+    .trim()
+    .slice(0, 120);
+  const extFromMime = (mime: string): string => {
+    if (mime === 'image/jpeg') return '.jpg';
+    if (mime === 'image/png') return '.png';
+    if (mime === 'image/webp') return '.webp';
+    return '';
+  };
+  const ext = extFromMime(contentType);
+  if (ext && !base.toLowerCase().endsWith(ext)) {
+    base += ext;
+  }
+  return `pacientes/${sanitizedDoc}/evaluacion-alimentos/${ts}-${base}`;
+}
+
+/**
+ * Prefijo S3 esperado para validar que una clave pertenece al paciente (misma lógica que al subir).
+ */
+export function prefixAlimentoEvaluacionParaPaciente(numeroDocumentoOPacienteId: string): string {
+  const sanitizedDoc = String(numeroDocumentoOPacienteId || '')
+    .replace(/[/\\]/g, '-')
+    .trim() || 'sin-documento';
+  return `pacientes/${sanitizedDoc}/evaluacion-alimentos/`;
 }
 
 /**
@@ -85,6 +160,11 @@ export async function getDocumentUrl(s3Key: string): Promise<string> {
  */
 export async function uploadPDFAndGetUrl(buffer: Buffer, key: string): Promise<string> {
   const s3Key = await uploadPDF(buffer, key);
+  return getDocumentUrl(s3Key);
+}
+
+export async function uploadBinaryAndGetUrl(buffer: Buffer, key: string, contentType: string): Promise<string> {
+  const s3Key = await uploadBinary(buffer, key, contentType);
   return getDocumentUrl(s3Key);
 }
 

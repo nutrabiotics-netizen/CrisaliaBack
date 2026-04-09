@@ -8,6 +8,7 @@ export interface IInterrogatorio extends Document {
   respuestas: Record<string, any>; // Respuestas del paciente
   observacionesIA?: string[]; // Observaciones de la IA sobre incoherencias
   analisisIA?: string; // Análisis completo de la IA
+  analisisFisiologicoIA?: any[]; // Matriz de salud semafórica (A4)
   objetivos?: string[]; // Objetivos identificados por la IA
   creadoPor?: mongoose.Types.ObjectId;
   creadoPorRol?: string;
@@ -52,6 +53,10 @@ const InterrogatorioSchema = new Schema<IInterrogatorio>(
     },
     analisisIA: {
       type: String
+    },
+    analisisFisiologicoIA: {
+      type: Schema.Types.Mixed,
+      default: []
     },
     objetivos: {
       type: [String],

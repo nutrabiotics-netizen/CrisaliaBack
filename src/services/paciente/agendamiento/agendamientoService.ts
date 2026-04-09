@@ -1,5 +1,8 @@
 import Medico from '../../../models/Medico';
 import Cita from '../../../models/Cita';
+import Interrogatorio from '../../../models/Interrogatorio';
+import Paciente from '../../../models/Paciente';
+import { AIService } from '../../ai/AIService';
 import ConfiguracionAgenda, { IFlujoPaciente } from '../../../models/ConfiguracionAgenda';
 import { Cita as ICita } from '../../../types';
 
@@ -46,6 +49,41 @@ class AgendamientoService {
       .lean();
 
     return medicos.map(medico => this.mapearMedicoDisponible(medico as any));
+  }
+
+  async obtenerMedicosRecomendados(pacienteId: string): Promise<any[]> {
+    // 1. Obtener objetivos del último interrogatorio y ubicación del paciente
+    const [interrogatorio, paciente] = await Promise.all([
+      Interrogatorio.findOne({ pacienteId, estado: 'completado' }).sort({ updatedAt: -1 }),
+      Paciente.findById(pacienteId).select('lugarResidencia').lean()
+    ]);
+    
+    const objetivos = interrogatorio?.objetivos || [];
+    const ubicacionPaciente = paciente?.lugarResidencia;
+
+    // 2. Obtener todos los médicos activos
+    const medicos = await Medico.find({ activo: true }).lean();
+
+    // 3. Calcular matches
+    const recomendaciones = await Promise.all(medicos.map(async (m) => {
+      const score = await AIService.calcularMatchMedico(objetivos, m, ubicacionPaciente);
+      return {
+        _id: m._id.toString(),
+        nombre: m.nombre,
+        apellido: m.apellido,
+        especialidad: m.especialidad,
+        matchScore: score,
+        razonMatch: score > 60 
+          ? `Excelente coincidencia en especialidad${ubicacionPaciente ? ' y ubicación' : ''}.` 
+          : "Sugerencia basada en especialidad médica."
+      };
+    }));
+
+    // 4. Ordenar por score y devolver los mejores 4
+    return recomendaciones
+      .filter(r => r.matchScore > 0)
+      .sort((a, b) => b.matchScore - a.matchScore)
+      .slice(0, 4);
   }
 
   private mapearMedicoDisponible(medico: { _id: any; nombre: string; apellido: string; especialidad?: string; perfilVerificacion?: Record<string, any> }): MedicoDisponible {
@@ -364,10 +402,6 @@ class AgendamientoService {
     return dias[fecha.getDay()];
   }
 
-  /**
-   * Obtiene los minutos (slot starts) en que el médico tiene bloques válidos en una sede para un día.
-   * Se usa para detectar solapamientos: un mismo minuto no puede ofrecerse en dos sedes.
-   */
   private obtenerMinutosSlotPorSede(sede: any, diaSemana: string): Set<number> {
     const minutos = new Set<number>();
     if (!sede?.jornadas) return minutos;
@@ -441,4 +475,3 @@ class AgendamientoService {
 }
 
 export default new AgendamientoService();
-

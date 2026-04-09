@@ -110,6 +110,14 @@ export interface IHistoriaClinica extends Document {
   
   pdfUrl?: string;
   
+  // Análisis Fisiológico IA (Semaforización)
+  analisisFisiologicoIA?: Array<{
+    sistema: string; // Digestivo, Hormonal, Inmune, etc.
+    nivel: 'optimo' | 'moderado' | 'critico'; // Verde, Amarillo, Rojo
+    puntuacion: number; // 0-100
+    hallazgos: string[]; 
+  }>;
+  
   // Auditoría
   creadoPor?: mongoose.Types.ObjectId;
   creadoPorRol?: string;
@@ -224,6 +232,12 @@ const HistoriaClinicaSchema = new Schema<IHistoriaClinica>(
     },
     servicio: String,
     pdfUrl: { type: String, trim: true },
+    analisisFisiologicoIA: [{
+      sistema: String,
+      nivel: { type: String, enum: ['optimo', 'moderado', 'critico'] },
+      puntuacion: Number,
+      hallazgos: [String]
+    }],
     creadoPor: {
       type: Schema.Types.ObjectId,
       ref: 'User'

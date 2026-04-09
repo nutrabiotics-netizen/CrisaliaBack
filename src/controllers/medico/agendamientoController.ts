@@ -11,8 +11,11 @@ import { generateCitaResumenPdf } from '../../utils/pdfGenerator';
 import { uploadPDFAndGetUrl, buildCitaDocumentKey, getRecordingPlaybackUrl } from '../../utils/s3Documents';
 import Cita from '../../models/Cita';
 import Paciente from '../../models/Paciente';
+import Medico from '../../models/Medico';
 import Meeting from '../../models/Meeting';
 import mongoose from 'mongoose';
+import { fetchImageAsBuffer } from '../../utils/pdfGenerator';
+import { notificarCitaConfirmadaPorMedico } from '../../services/notifications/citaWhatsAppNotifier';
 
 const crearJornadasPorDefecto = (): IJornadaConfig[] => {
   const bloquesLab = { horaInicio: '08:00', horaFin: '18:00', modalidad: 'presencial' as const, duracionConsulta: 30, tiemposInactividad: [{ inicio: '12:00', fin: '13:00', tipo: 'Almuerzo' }] };
@@ -319,6 +322,8 @@ export const confirmarCita = async (req: AuthRequest, res: Response): Promise<vo
       message: 'Cita confirmada exitosamente',
       data: cita
     });
+
+    void notificarCitaConfirmadaPorMedico(citaId);
   } catch (error: any) {
     console.error('Error al confirmar cita:', error);
     
@@ -536,18 +541,35 @@ export const generarResumenPdfCita = async (req: AuthRequest, res: Response): Pr
       return;
     }
 
-    const [historia, formula, incapacidad, interconsulta] = await Promise.all([
+    const [historia, formula, incapacidad, interconsulta, medicoDoc] = await Promise.all([
       historiaClinicaService.obtenerHistoriaClinicaPorCita(citaId, medicoId),
       formulaMedicaService.obtenerFormulaMedicaPorCita(citaId, medicoId),
       incapacidadService.obtenerIncapacidadPorCita(citaId, medicoId),
-      interconsultaService.obtenerInterconsultaPorCita(citaId, medicoId)
+      interconsultaService.obtenerInterconsultaPorCita(citaId, medicoId),
+      Medico.findById(medicoId).select('nombre apellido numeroColegiatura firmaUrl').lean()
     ]);
+
+    let firmaImageBuffer: Buffer | null = null;
+    if (medicoDoc?.firmaUrl?.trim()) {
+      try {
+        firmaImageBuffer = await fetchImageAsBuffer(medicoDoc.firmaUrl.trim());
+      } catch (e) {
+        console.warn('[PDF] No se pudo descargar firma del médico:', e);
+      }
+    }
 
     const buffer = await generateCitaResumenPdf({
       historia: historia || undefined,
       formula: formula || undefined,
       incapacidad: incapacidad || undefined,
-      interconsulta: interconsulta || undefined
+      interconsulta: interconsulta || undefined,
+      medico: medicoDoc
+        ? {
+            nombreCompleto: `${medicoDoc.nombre || ''} ${medicoDoc.apellido || ''}`.trim(),
+            numeroColegiatura: medicoDoc.numeroColegiatura,
+            firmaImageBuffer
+          }
+        : undefined
     });
 
     const paciente = await Paciente.findById(cita.pacienteId).select('numeroDocumento').lean();

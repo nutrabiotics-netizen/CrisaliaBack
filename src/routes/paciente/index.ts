@@ -8,6 +8,7 @@ import paraclinicosRoutes from './paraclinicos';
 import formulaMedicaRoutes from './formula-medica';
 import pagoRoutes from './pago';
 import ordenExamenesRoutes from './orden-examenes';
+import alimentosRoutes from './alimentos';
 
 const router = Router();
 
@@ -22,6 +23,7 @@ router.use('/paraclinicos', paraclinicosRoutes);
 router.use('/formula-medica', formulaMedicaRoutes);
 router.use('/pago', pagoRoutes);
 router.use('/orden-examenes', ordenExamenesRoutes);
+router.use('/alimentos', alimentosRoutes);
 
 export default router;
 

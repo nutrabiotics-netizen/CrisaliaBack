@@ -12,6 +12,7 @@ import {
   generarResumenPdfCita,
   obtenerRecordingUrl
 } from '../../../controllers/medico/agendamientoController';
+import { obtenerPreconsulta } from '../../../controllers/medico/preconsultaController';
 
 const router = Router();
 
@@ -36,5 +37,8 @@ router.post('/citas/:citaId/resumen-pdf', authenticate, authorize(UserRole.MEDIC
 
 // URL firmada para ver grabación de videoconsulta
 router.get('/citas/:citaId/recording-url', authenticate, authorize(UserRole.MEDICO), obtenerRecordingUrl);
+
+// A7 — Análisis preconsulta IA: resumen del interrogatorio del paciente para el médico
+router.get('/citas/:citaId/preconsulta', authenticate, authorize(UserRole.MEDICO), obtenerPreconsulta);
 
 export default router;

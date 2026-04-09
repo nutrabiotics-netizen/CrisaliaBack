@@ -14,6 +14,10 @@ export interface ICita extends Document {
   grabacionUrl?: string;
   motivoCancelacion?: string;
   pdfResumenUrl?: string; // PDF resumen de la consulta (historia + fórmulas + incapacidades + etc.)
+  /** Marca de envío de recordatorio WhatsApp (~24 h antes de la cita) */
+  notifRecordatorio24hAt?: Date;
+  /** Marca de envío de recordatorio WhatsApp (~2 h antes de la cita) */
+  notifRecordatorio2hAt?: Date;
   creadoPor?: mongoose.Types.ObjectId;
   creadoPorRol?: string;
   actualizadoPor?: mongoose.Types.ObjectId;
@@ -68,6 +72,8 @@ const CitaSchema = new Schema<ICita>(
     },
     grabacionUrl: { type: String, trim: true },
     pdfResumenUrl: { type: String, trim: true },
+    notifRecordatorio24hAt: { type: Date },
+    notifRecordatorio2hAt: { type: Date },
     motivoCancelacion: {
       type: String,
       trim: true

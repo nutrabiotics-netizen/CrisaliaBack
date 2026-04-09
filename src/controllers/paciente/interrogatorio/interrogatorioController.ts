@@ -3,6 +3,7 @@ import { AuthRequest } from '../../../middleware/auth';
 import interrogatorioService from '../../../services/paciente/interrogatorio/interrogatorioService';
 import { registrarAccion } from '../../../utils/auditoriaHelper';
 import Interrogatorio from '../../../models/Interrogatorio';
+import { AIService } from '../../../services/ai/AIService';
 
 export const crearInterrogatorio = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -98,24 +99,19 @@ export const obtenerInterrogatorios = async (req: AuthRequest, res: Response): P
 
     const interrogatorios = await interrogatorioService.obtenerInterrogatoriosPaciente(
       pacienteId,
-      tipo as 'primera_vez' | 'control' | undefined,
-      estado as 'en_proceso' | 'completado' | 'pendiente' | undefined
+      tipo as any,
+      estado as any
     );
 
     res.json({
       success: true,
-      data: interrogatorios.map(inter => ({
-        _id: inter._id?.toString(),
-        pacienteId: inter.pacienteId.toString(),
-        tipo: inter.tipo,
-        estado: inter.estado,
-        progreso: inter.progreso,
-        analisisIA: inter.analisisIA,
-        objetivos: inter.objetivos,
-        observacionesIA: inter.observacionesIA,
-        respuestas: inter.respuestas,
-        createdAt: inter.createdAt,
-        updatedAt: inter.updatedAt
+      data: interrogatorios.map(i => ({
+        _id: i._id?.toString(),
+        tipo: i.tipo,
+        estado: i.estado,
+        progreso: i.progreso,
+        createdAt: i.createdAt,
+        updatedAt: i.updatedAt
       }))
     });
   } catch (error: any) {
@@ -128,7 +124,7 @@ export const obtenerInterrogatorios = async (req: AuthRequest, res: Response): P
   }
 };
 
-export const obtenerInterrogatorio = async (req: AuthRequest, res: Response): Promise<void> => {
+export const obtenerInterrogatorioPorId = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const pacienteId = req.userId;
     const { interrogatorioId } = req.params;
@@ -175,6 +171,33 @@ export const obtenerInterrogatorio = async (req: AuthRequest, res: Response): Pr
     res.status(500).json({
       success: false,
       message: 'Error al obtener interrogatorio',
+      error: error.message
+    });
+  }
+};
+
+export const verificarIncoherencias = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const pacienteId = req.userId;
+    const { interrogatorioId } = req.params;
+    const { mapaCorporal, respuestas } = req.body;
+
+    if (!pacienteId || !interrogatorioId) {
+      res.status(400).json({ success: false, message: 'Faltan parámetros' });
+      return;
+    }
+
+    const incoherencias = await AIService.detectarIncoherencias(mapaCorporal, respuestas);
+
+    res.json({
+      success: true,
+      data: { incoherencias }
+    });
+  } catch (error: any) {
+    console.error('Error al verificar incoherencias:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error en la verificación de IA',
       error: error.message
     });
   }
@@ -249,21 +272,11 @@ export const actualizarRespuestas = async (req: AuthRequest, res: Response): Pro
         _id: interrogatorio._id.toString(),
         progreso: interrogatorio.progreso,
         estado: interrogatorio.estado,
-        respuestas: interrogatorio.respuestas,
-        updatedAt: interrogatorio.updatedAt
+        respuestas: interrogatorio.respuestas
       }
     });
   } catch (error: any) {
     console.error('Error al actualizar respuestas:', error);
-    
-    if (error.message === 'Interrogatorio no encontrado') {
-      res.status(404).json({
-        success: false,
-        message: error.message
-      });
-      return;
-    }
-
     res.status(500).json({
       success: false,
       message: 'Error al actualizar respuestas',
@@ -276,7 +289,6 @@ export const completarInterrogatorio = async (req: AuthRequest, res: Response): 
   try {
     const pacienteId = req.userId;
     const { interrogatorioId } = req.params;
-    const { analisisIA, objetivos } = req.body;
 
     if (!pacienteId) {
       res.status(401).json({
@@ -288,25 +300,7 @@ export const completarInterrogatorio = async (req: AuthRequest, res: Response): 
 
     const interrogatorio = await interrogatorioService.completarInterrogatorio(
       interrogatorioId,
-      pacienteId,
-      analisisIA,
-      objetivos
-    );
-
-    // Registrar en auditoría
-    await registrarAccion(
-      req,
-      'completar',
-      'Interrogatorio',
-      interrogatorioId,
-      {
-        estado: 'en_proceso'
-      },
-      {
-        estado: 'completado',
-        analisisIA: interrogatorio.analisisIA,
-        objetivos: interrogatorio.objetivos
-      }
+      pacienteId
     );
 
     res.json({
@@ -315,24 +309,12 @@ export const completarInterrogatorio = async (req: AuthRequest, res: Response): 
       data: {
         _id: interrogatorio._id.toString(),
         estado: interrogatorio.estado,
-        progreso: interrogatorio.progreso,
         analisisIA: interrogatorio.analisisIA,
-        objetivos: interrogatorio.objetivos,
-        tieneAnalisis: !!interrogatorio.analisisIA,
-        updatedAt: interrogatorio.updatedAt
+        objetivos: interrogatorio.objetivos
       }
     });
   } catch (error: any) {
     console.error('Error al completar interrogatorio:', error);
-    
-    if (error.message === 'Interrogatorio no encontrado') {
-      res.status(404).json({
-        success: false,
-        message: error.message
-      });
-      return;
-    }
-
     res.status(500).json({
       success: false,
       message: 'Error al completar interrogatorio',
@@ -359,48 +341,22 @@ export const generarAnalisisIA = async (req: AuthRequest, res: Response): Promis
       pacienteId
     );
 
-    // Registrar en auditoría
-    await registrarAccion(
-      req,
-      'actualizar',
-      'Interrogatorio',
-      interrogatorioId,
-      {
-        analisisIA: null
-      },
-      {
-        analisisIA: interrogatorio.analisisIA,
-        objetivos: interrogatorio.objetivos
-      }
-    );
-
     res.json({
       success: true,
-      message: 'Análisis generado exitosamente',
+      message: 'Análisis IA generado exitosamente',
       data: {
         _id: interrogatorio._id.toString(),
         analisisIA: interrogatorio.analisisIA,
         objetivos: interrogatorio.objetivos,
-        observacionesIA: interrogatorio.observacionesIA,
-        updatedAt: interrogatorio.updatedAt
+        observacionesIA: interrogatorio.observacionesIA
       }
     });
   } catch (error: any) {
     console.error('Error al generar análisis IA:', error);
-    
-    if (error.message === 'Interrogatorio no encontrado') {
-      res.status(404).json({
-        success: false,
-        message: error.message
-      });
-      return;
-    }
-
     res.status(500).json({
       success: false,
-      message: 'Error al generar análisis',
+      message: 'Error al generar análisis IA',
       error: error.message
     });
   }
 };
-

@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthRequest } from '../../../middleware/auth';
 import agendamientoService from '../../../services/paciente/agendamiento/agendamientoService';
 import { registrarAccion } from '../../../utils/auditoriaHelper';
+import { notificarCitaAgendadaPaciente } from '../../../services/notifications/citaWhatsAppNotifier';
 import { getRecordingPlaybackUrl } from '../../../utils/s3Documents';
 import Cita from '../../../models/Cita';
 import Meeting from '../../../models/Meeting';
@@ -35,6 +36,25 @@ export const obtenerMedicosDisponibles = async (req: AuthRequest, res: Response)
     res.status(500).json({
       success: false,
       message: 'Error al obtener médicos disponibles',
+      error: error.message
+    });
+  }
+};
+
+export const obtenerMedicosRecomendados = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const pacienteId = req.userId;
+    const medicos = await agendamientoService.obtenerMedicosRecomendados(pacienteId!);
+
+    res.json({
+      success: true,
+      data: medicos
+    });
+  } catch (error: any) {
+    console.error('Error al obtener médicos recomendados:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener recomendaciones',
       error: error.message
     });
   }
@@ -234,6 +254,10 @@ export const crearCita = async (req: AuthRequest, res: Response): Promise<void> 
       message: 'Cita creada exitosamente',
       data: cita
     });
+
+    if (cita._id) {
+      void notificarCitaAgendadaPaciente(String(cita._id));
+    }
   } catch (error: any) {
     console.error('Error al crear cita:', error);
     res.status(500).json({

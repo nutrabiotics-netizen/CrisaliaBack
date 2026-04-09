@@ -1,5 +1,6 @@
 import Interrogatorio, { IInterrogatorio } from '../../../models/Interrogatorio';
 import openaiService from '../../openai/openaiService';
+import { AIService } from '../../ai/AIService';
 
 export interface RespuestaInterrogatorio {
   preguntaId: string;
@@ -189,15 +190,19 @@ class InterrogatorioService {
     }
 
     try {
-      // Generar el análisis con la IA
+      // Generar el análisis con la IA (Texto + Objetivos)
       const analisis = await openaiService.analizarInterrogatorio(interrogatorioExistente.respuestas);
       
+      // A4: Generar Semaforización Fisiológica
+      const semaforizacion = await AIService.generarSemaforizacion(interrogatorioId);
+
       // Actualizar usando findByIdAndUpdate para evitar conflictos de versión
       const interrogatorioActualizado = await Interrogatorio.findByIdAndUpdate(
         interrogatorioId,
         {
           analisisIA: analisis.analisisIA,
           objetivos: analisis.objetivos,
+          analisisFisiologicoIA: semaforizacion,
           observacionesIA: analisis.observacionesIA && analisis.observacionesIA.length > 0 
             ? analisis.observacionesIA 
             : interrogatorioExistente.observacionesIA || []

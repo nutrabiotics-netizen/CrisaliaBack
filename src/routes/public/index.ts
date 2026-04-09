@@ -1,9 +1,10 @@
 import { Router } from 'express';
-import { enviarEncuesta } from '../../controllers/public/encuestaController';
+import * as documentosLegalesController from '../../controllers/public/documentosLegalesController';
+import { authenticate } from '../../middleware/auth';
 
 const router = Router();
 
-// /api/public/encuesta
-router.post('/encuesta', enviarEncuesta);
+router.get('/documentos-legales', documentosLegalesController.obtenerDocumentosActivos);
+router.post('/documentos-legales/aceptar', authenticate, documentosLegalesController.aceptarDocumento);
 
 export default router;

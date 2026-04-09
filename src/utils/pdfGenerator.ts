@@ -665,12 +665,20 @@ export async function generateApoyoTerapeuticoPdf(apoyo: any): Promise<Buffer> {
   });
 }
 
+/** Datos del profesional para bloque de firma al final del resumen de cita. */
+export type MedicoPdfFirma = {
+  nombreCompleto: string;
+  numeroColegiatura?: string;
+  firmaImageBuffer?: Buffer | null;
+};
+
 /** Genera un PDF resumen de la cita (historia + fórmula + incapacidad + interconsulta en un solo PDF). */
 export async function generateCitaResumenPdf(payload: {
   historia?: any;
   formula?: any;
   incapacidad?: any;
   interconsulta?: any;
+  medico?: MedicoPdfFirma;
 }): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const { doc, chunks } = createDocument();
@@ -770,6 +778,36 @@ export async function generateCitaResumenPdf(payload: {
           motivo: s.motivo || ''
         }))
       );
+    }
+
+    if (payload.medico?.nombreCompleto) {
+      addSectionTitle(doc, 'Profesional de la salud');
+      ensureSpace(doc, 100, headerTitle);
+      if (payload.medico.firmaImageBuffer && payload.medico.firmaImageBuffer.length > 0) {
+        try {
+          const y0 = doc.y;
+          doc.image(payload.medico.firmaImageBuffer, MARGIN, y0, {
+            fit: [140, 56],
+            align: 'left'
+          });
+          doc.y = y0 + 62;
+        } catch (err) {
+          console.warn('[PDF] No se pudo incrustar firma del médico:', err);
+        }
+      }
+      doc.font('Helvetica').fontSize(10).fillColor('#111827').text(payload.medico.nombreCompleto);
+      if (payload.medico.numeroColegiatura) {
+        doc.font('Helvetica').fontSize(9).text(`Registro / TP: ${payload.medico.numeroColegiatura}`);
+      }
+      doc.moveDown(0.5);
+      doc
+        .font('Helvetica-Oblique')
+        .fontSize(8)
+        .fillColor('#4B5563')
+        .text(
+          'Documento generado electrónicamente en Crisal-iA. La firma reproduida tiene validez según la normativa aplicable y la política institucional.',
+          { width: getPageWidth(doc) - MARGIN * 2 }
+        );
     }
 
     // Nota: evitamos doc.addPage() manual para prevenir hojas en blanco.

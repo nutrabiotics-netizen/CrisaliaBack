@@ -172,10 +172,14 @@ export const createMeeting = async (req: AuthRequest, res: Response) => {
     await meeting.save();
 
     if (citaId) {
-      await Cita.findByIdAndUpdate(citaId, {
-        meetingId: meeting.meetingId,
-        estado: 'confirmada'
-      });
+      const citaPrev = await Cita.findById(citaId).select('estado').lean();
+      const patch: { meetingId: string; estado?: string } = { meetingId: meeting.meetingId };
+      // No revertir sala de espera ni consulta en curso al crear la reunión
+      const est = citaPrev?.estado;
+      if (est !== 'en_espera' && est !== 'en_consulta') {
+        patch.estado = 'confirmada';
+      }
+      await Cita.findByIdAndUpdate(citaId, patch);
     }
 
     return res.status(201).json({

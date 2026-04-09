@@ -40,6 +40,7 @@ export interface RegisterPacienteData {
   acudiente?: AcudienteTutorData;
   aceptaTerminos?: boolean;
   aceptaConsentimiento?: boolean;
+  zonasDolor?: string[];
 }
 
 export interface AuthResponse {
@@ -192,7 +193,7 @@ export class AuthService {
   }
 
   async registerPaciente(data: RegisterPacienteData): Promise<AuthResponse> {
-    const { nombre, apellido, email, password, telefono, acudiente, aceptaTerminos, aceptaConsentimiento } = data;
+    const { nombre, apellido, email, password, telefono, acudiente, aceptaTerminos, aceptaConsentimiento, zonasDolor } = data;
 
     const existingPaciente = await Paciente.findOne({ email });
     if (existingPaciente) {
@@ -214,7 +215,8 @@ export class AuthService {
             }
           : undefined,
       role: UserRole.PACIENTE,
-      activo: true
+      activo: true,
+      ...(zonasDolor && zonasDolor.length > 0 && { zonasDolor })
     });
 
     await nuevoPaciente.save();

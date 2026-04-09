@@ -3,25 +3,38 @@ import { AuthRequest } from '../../middleware/auth';
 import Cita from '../../models/Cita';
 import AsignacionBox from '../../models/AsignacionBox';
 
-export const obtenerPacientesDelDia = async (_req: AuthRequest, res: Response): Promise<void> => {
+function parseFechaQuery(fechaParam: unknown): { y: number; m: number; d: number } {
+  if (typeof fechaParam === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fechaParam)) {
+    const [y, m, d] = fechaParam.split('-').map(Number);
+    if (y >= 2000 && y <= 2100 && m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+      return { y, m, d };
+    }
+  }
+  const now = new Date();
+  return { y: now.getFullYear(), m: now.getMonth() + 1, d: now.getDate() };
+}
+
+export const obtenerPacientesDelDia = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const inicioDia = new Date();
-    inicioDia.setHours(0, 0, 0, 0);
+    const { y, m, d } = parseFechaQuery(req.query.fecha);
 
-    const finDia = new Date();
-    finDia.setHours(23, 59, 59, 999);
+    // Rango local del día elegido (boxes / asignaciones suelen alinearse al calendario local)
+    const inicioDia = new Date(y, m - 1, d, 0, 0, 0, 0);
+    const finDia = new Date(y, m - 1, d, 23, 59, 59, 999);
 
-    // Traemos de la base de datos TODAS las citas reales activas
-    // (quitamos temporalmente el filtro de "Solo Hoy" para que veas todas tus citas agendadas)
+    // Citas guardan `fecha` como inicio del día en UTC (mismo criterio que agendamiento / sala de espera)
+    const inicioDiaCita = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0));
+    const finDiaCita = new Date(Date.UTC(y, m - 1, d + 1, 0, 0, 0, 0));
+
     const citasHoy = await Cita.find({
-      estado: { $nin: ['cancelada', 'completada'] }
+      estado: { $nin: ['cancelada', 'completada'] },
+      fecha: { $gte: inicioDiaCita, $lt: finDiaCita }
     })
     .populate('pacienteId', 'nombre apellido numeroIdentificacion email telefono informacionMedica alergias tipoSangre')
     .populate('medicoId', 'nombre apellido especialidades')
-    .sort({ hora: 1 }) // Ordenar cronológicamente
+    .sort({ hora: 1 })
     .lean();
 
-    // Map boxes por médico para el día de hoy
     const asignacionesHoy = await AsignacionBox.find({
       fecha: { $gte: inicioDia, $lte: finDia },
       activo: true
