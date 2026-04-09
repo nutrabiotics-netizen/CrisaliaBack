@@ -63,7 +63,7 @@ export const obtenerMedicosRecomendados = async (req: AuthRequest, res: Response
 export const obtenerMedicoPorId = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { medicoId } = req.params;
-    const medico = await agendamientoService.obtenerMedicoPorId(medicoId);
+    const medico = await agendamientoService.obtenerMedicoPorId(medicoId as string);
 
     if (!medico) {
       res.status(404).json({
@@ -90,7 +90,7 @@ export const obtenerMedicoPorId = async (req: AuthRequest, res: Response): Promi
 export const obtenerConfiguracionFlujoMedico = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { medicoId } = req.params;
-    const flujoPaciente = await agendamientoService.obtenerConfiguracionFlujoMedico(medicoId);
+    const flujoPaciente = await agendamientoService.obtenerConfiguracionFlujoMedico(medicoId as string);
     res.json({
       success: true,
       data: flujoPaciente
@@ -108,7 +108,7 @@ export const obtenerConfiguracionFlujoMedico = async (req: AuthRequest, res: Res
 export const obtenerSedesMedico = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { medicoId } = req.params;
-    const sedes = await agendamientoService.obtenerSedes(medicoId);
+    const sedes = await agendamientoService.obtenerSedes(medicoId as string);
 
     res.json({
       success: true,
@@ -140,7 +140,7 @@ export const obtenerHorariosDisponibles = async (req: AuthRequest, res: Response
 
     const parsed = sedeIndex != null ? parseInt(String(sedeIndex), 10) : NaN;
     const idx = !isNaN(parsed) ? parsed : undefined;
-    const horarios = await agendamientoService.obtenerHorariosDisponibles(medicoId, fecha as string, idx, pacienteId);
+    const horarios = await agendamientoService.obtenerHorariosDisponibles(medicoId as string, fecha as string, idx, pacienteId);
 
     res.json({
       success: true,
@@ -307,12 +307,12 @@ export const obtenerRecordingUrl = async (req: AuthRequest, res: Response): Prom
       res.status(401).json({ success: false, message: 'Usuario no autenticado' });
       return;
     }
-    if (!mongoose.Types.ObjectId.isValid(citaId) || !mongoose.Types.ObjectId.isValid(pacienteId)) {
+    if (!mongoose.Types.ObjectId.isValid(citaId as string) || !mongoose.Types.ObjectId.isValid(pacienteId as string)) {
       res.status(404).json({ success: false, message: 'Cita no encontrada' });
       return;
     }
     const cita = await Cita.findOne({
-      _id: new mongoose.Types.ObjectId(citaId),
+      _id: new mongoose.Types.ObjectId(citaId as string),
       pacienteId: new mongoose.Types.ObjectId(pacienteId)
     }).lean();
     if (!cita) {
@@ -323,11 +323,11 @@ export const obtenerRecordingUrl = async (req: AuthRequest, res: Response): Prom
     if (!grabacionUrl && (cita as any).meetingId) {
       const meeting = await Meeting.findOne({
         meetingId: (cita as any).meetingId,
-        citaId: new mongoose.Types.ObjectId(citaId)
+        citaId: new mongoose.Types.ObjectId(citaId as string)
       }).lean();
       if (meeting?.grabacionUrl) {
         grabacionUrl = meeting.grabacionUrl;
-        await Cita.findByIdAndUpdate(citaId, { grabacionUrl });
+        await Cita.findByIdAndUpdate(citaId as string, { grabacionUrl });
       }
     }
     if (!grabacionUrl) {
@@ -391,7 +391,7 @@ export const cancelarCita = async (req: AuthRequest, res: Response): Promise<voi
     };
 
     const cita = await agendamientoService.cancelarCita(
-      citaId, 
+      citaId as string, 
       pacienteId, 
       motivoCancelacion,
       pacienteId,
@@ -403,7 +403,7 @@ export const cancelarCita = async (req: AuthRequest, res: Response): Promise<voi
       req,
       'cancelar',
       'Cita',
-      citaId,
+      citaId as string,
       datosAnteriores,
       {
         estado: cita.estado,

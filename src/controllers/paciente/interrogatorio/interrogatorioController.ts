@@ -138,7 +138,7 @@ export const obtenerInterrogatorioPorId = async (req: AuthRequest, res: Response
     }
 
     const interrogatorio = await interrogatorioService.obtenerInterrogatorioPorId(
-      interrogatorioId,
+      interrogatorioId as string,
       pacienteId
     );
 
@@ -242,7 +242,7 @@ export const actualizarRespuestas = async (req: AuthRequest, res: Response): Pro
     };
 
     const interrogatorio = await interrogatorioService.actualizarRespuestas(
-      interrogatorioId,
+      interrogatorioId as string,   
       pacienteId,
       {
         respuestas,
@@ -256,7 +256,7 @@ export const actualizarRespuestas = async (req: AuthRequest, res: Response): Pro
       req,
       'actualizar',
       'Interrogatorio',
-      interrogatorioId,
+      interrogatorioId as string,
       datosAnteriores,
       {
         respuestas: interrogatorio.respuestas,
@@ -299,7 +299,7 @@ export const completarInterrogatorio = async (req: AuthRequest, res: Response): 
     }
 
     const interrogatorio = await interrogatorioService.completarInterrogatorio(
-      interrogatorioId,
+      interrogatorioId as string,
       pacienteId
     );
 
@@ -337,7 +337,7 @@ export const generarAnalisisIA = async (req: AuthRequest, res: Response): Promis
     }
 
     const interrogatorio = await interrogatorioService.generarAnalisisIA(
-      interrogatorioId,
+      interrogatorioId as string,
       pacienteId
     );
 

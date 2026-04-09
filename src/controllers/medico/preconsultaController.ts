@@ -21,7 +21,7 @@ export const obtenerPreconsulta = async (req: AuthRequest, res: Response): Promi
 
     // 1. Verificar que la cita pertenece al médico (mismo patrón que obtenerRecordingUrl)
     const cita = await Cita.findOne({
-      _id: new mongoose.Types.ObjectId(citaId),
+      _id: new mongoose.Types.ObjectId(citaId as string),
       medicoId: new mongoose.Types.ObjectId(medicoId)
     }).lean();
 

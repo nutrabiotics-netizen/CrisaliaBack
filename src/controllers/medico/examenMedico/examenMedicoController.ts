@@ -158,7 +158,7 @@ export const obtenerExamenMedicoPorCita = async (req: AuthRequest, res: Response
     }
 
     const examenMedico = await examenMedicoService.obtenerExamenMedicoPorCita(
-      citaId,
+      citaId as string,
       medicoId
     );
 
@@ -198,7 +198,7 @@ export const obtenerExamenesMedicosPorPaciente = async (req: AuthRequest, res: R
     }
 
     const examenesMedicos = await examenMedicoService.obtenerExamenesMedicosPorPaciente(
-      pacienteId,
+      pacienteId as string,
       medicoId
     );
 
@@ -230,7 +230,7 @@ export const obtenerExamenMedicoPorId = async (req: AuthRequest, res: Response):
     }
 
     const examenMedico = await examenMedicoService.obtenerExamenMedicoPorId(
-      examenMedicoId,
+      examenMedicoId as string,
       medicoId
     );
 
@@ -294,7 +294,7 @@ export const actualizarExamenMedico = async (req: AuthRequest, res: Response): P
 
     // Obtener datos anteriores para auditoría
     const examenMedicoAnterior = await examenMedicoService.obtenerExamenMedicoPorId(
-      examenMedicoId,
+      examenMedicoId as string,
       medicoId
     );
 
@@ -307,7 +307,7 @@ export const actualizarExamenMedico = async (req: AuthRequest, res: Response): P
     }
 
     const examenMedicoActualizado = await examenMedicoService.actualizarExamenMedico(
-      examenMedicoId,
+      examenMedicoId as string,
       medicoId,
       datosActualizados,
       medicoId,
@@ -327,7 +327,7 @@ export const actualizarExamenMedico = async (req: AuthRequest, res: Response): P
       req,
       'actualizar',
       'ExamenMedico',
-      examenMedicoId,
+      examenMedicoId as string,
       examenMedicoAnterior,
       examenMedicoActualizado
     );
@@ -383,7 +383,7 @@ export const eliminarExamenMedico = async (req: AuthRequest, res: Response): Pro
 
     // Obtener datos anteriores para auditoría
     const examenMedicoAnterior = await examenMedicoService.obtenerExamenMedicoPorId(
-      examenMedicoId,
+      examenMedicoId as string,
       medicoId
     );
 
@@ -396,7 +396,7 @@ export const eliminarExamenMedico = async (req: AuthRequest, res: Response): Pro
     }
 
     const eliminada = await examenMedicoService.eliminarExamenMedico(
-      examenMedicoId,
+      examenMedicoId as string,
       medicoId
     );
 
@@ -413,7 +413,7 @@ export const eliminarExamenMedico = async (req: AuthRequest, res: Response): Pro
       req,
       'eliminar',
       'ExamenMedico',
-      examenMedicoId,
+      examenMedicoId as string,
       examenMedicoAnterior,
       undefined
     );

@@ -25,7 +25,7 @@ export const listar = async (_req: AuthRequest, res: Response): Promise<void> =>
 export const obtenerPorId = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!mongoose.Types.ObjectId.isValid(id as string)) {
       res.status(400).json({ success: false, message: 'ID inválido' });
       return;
     }
@@ -85,7 +85,7 @@ export const actualizar = async (req: AuthRequest, res: Response): Promise<void>
   try {
     const { id } = req.params;
     const { nombre, tipo, descripcion, activo, integrado, cantidadPacientes } = req.body;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!mongoose.Types.ObjectId.isValid(id as string)) {
       res.status(400).json({ success: false, message: 'ID inválido' });
       return;
     }
@@ -121,7 +121,7 @@ export const actualizar = async (req: AuthRequest, res: Response): Promise<void>
 export const eliminar = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!mongoose.Types.ObjectId.isValid(id as string)) {
       res.status(400).json({ success: false, message: 'ID inválido' });
       return;
     }

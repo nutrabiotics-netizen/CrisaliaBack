@@ -239,7 +239,7 @@ export const createAttendee = async (req: AuthRequest, res: Response) => {
 
     try {
       const createAttendeeCommand = new CreateAttendeeCommand({
-        MeetingId: meetingId,
+        MeetingId: meetingId as string,
         ExternalUserId: externalUserId || `User-${Date.now()}`
       });
       const attendeeResponse = await chimeClient.send(createAttendeeCommand);
@@ -388,7 +388,7 @@ export const endMeeting = async (req: AuthRequest, res: Response) => {
     }
 
     try {
-      await chimeClient.send(new DeleteMeetingCommand({ MeetingId: meetingId }));
+      await chimeClient.send(new DeleteMeetingCommand({ MeetingId: meetingId as string }));
     } catch {
       // AWS puede devolver error si ya está eliminada
     }

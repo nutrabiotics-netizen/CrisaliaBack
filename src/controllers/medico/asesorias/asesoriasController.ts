@@ -62,7 +62,7 @@ export const asignarAsesoria = async (req: AuthRequest, res: Response): Promise<
       res.status(401).json({ success: false, message: 'Usuario no autenticado' });
       return;
     }
-    if (!mongoose.Types.ObjectId.isValid(asesoriaId)) {
+    if (!mongoose.Types.ObjectId.isValid(asesoriaId as string)) {
       res.status(400).json({ success: false, message: 'ID de asesoría inválido' });
       return;
     }
@@ -109,7 +109,7 @@ export const responderAsesoria = async (req: AuthRequest, res: Response): Promis
       res.status(400).json({ success: false, message: 'La respuesta es requerida' });
       return;
     }
-    if (!mongoose.Types.ObjectId.isValid(asesoriaId)) {
+    if (!mongoose.Types.ObjectId.isValid(asesoriaId as string)) {
       res.status(400).json({ success: false, message: 'ID de asesoría inválido' });
       return;
     }

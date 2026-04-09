@@ -158,7 +158,7 @@ export const obtenerAyudaDiagnosticaPorCita = async (req: AuthRequest, res: Resp
     }
 
     const ayudaDiagnostica = await ayudaDiagnosticaService.obtenerAyudaDiagnosticaPorCita(
-      citaId,
+      citaId as string,
       medicoId
     );
 
@@ -198,7 +198,7 @@ export const obtenerAyudasDiagnosticasPorPaciente = async (req: AuthRequest, res
     }
 
     const ayudasDiagnosticas = await ayudaDiagnosticaService.obtenerAyudasDiagnosticasPorPaciente(
-      pacienteId,
+      pacienteId as string,
       medicoId
     );
 
@@ -230,7 +230,7 @@ export const obtenerAyudaDiagnosticaPorId = async (req: AuthRequest, res: Respon
     }
 
     const ayudaDiagnostica = await ayudaDiagnosticaService.obtenerAyudaDiagnosticaPorId(
-      ayudaDiagnosticaId,
+      ayudaDiagnosticaId as string,
       medicoId
     );
 
@@ -294,7 +294,7 @@ export const actualizarAyudaDiagnostica = async (req: AuthRequest, res: Response
 
     // Obtener datos anteriores para auditoría
     const ayudaDiagnosticaAnterior = await ayudaDiagnosticaService.obtenerAyudaDiagnosticaPorId(
-      ayudaDiagnosticaId,
+      ayudaDiagnosticaId as string,
       medicoId
     );
 
@@ -307,7 +307,7 @@ export const actualizarAyudaDiagnostica = async (req: AuthRequest, res: Response
     }
 
     const ayudaDiagnosticaActualizada = await ayudaDiagnosticaService.actualizarAyudaDiagnostica(
-      ayudaDiagnosticaId,
+      ayudaDiagnosticaId as string,
       medicoId,
       datosActualizados,
       medicoId,
@@ -327,7 +327,7 @@ export const actualizarAyudaDiagnostica = async (req: AuthRequest, res: Response
       req,
       'actualizar',
       'AyudaDiagnostica',
-      ayudaDiagnosticaId,
+      ayudaDiagnosticaId as string,
       ayudaDiagnosticaAnterior,
       ayudaDiagnosticaActualizada
     );
@@ -383,7 +383,7 @@ export const eliminarAyudaDiagnostica = async (req: AuthRequest, res: Response):
 
     // Obtener datos anteriores para auditoría
     const ayudaDiagnosticaAnterior = await ayudaDiagnosticaService.obtenerAyudaDiagnosticaPorId(
-      ayudaDiagnosticaId,
+      ayudaDiagnosticaId as string,
       medicoId
     );
 
@@ -396,7 +396,7 @@ export const eliminarAyudaDiagnostica = async (req: AuthRequest, res: Response):
     }
 
     const eliminada = await ayudaDiagnosticaService.eliminarAyudaDiagnostica(
-      ayudaDiagnosticaId,
+      ayudaDiagnosticaId as string,
       medicoId
     );
 
@@ -413,7 +413,7 @@ export const eliminarAyudaDiagnostica = async (req: AuthRequest, res: Response):
       req,
       'eliminar',
       'AyudaDiagnostica',
-      ayudaDiagnosticaId,
+      ayudaDiagnosticaId as string,
       ayudaDiagnosticaAnterior,
       undefined
     );
