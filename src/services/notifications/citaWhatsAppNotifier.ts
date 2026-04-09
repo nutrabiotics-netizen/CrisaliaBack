@@ -3,8 +3,6 @@ import Paciente from '../../models/Paciente';
 import { normalizarTelefono } from '../whatsapp/whatsappService';
 import { combineFechaCitaConHora } from '../../utils/citaFechaHora';
 
-const MS_HORA = 60 * 60 * 1000;
-
 function fmtCitaFechaHora(fecha: Date, hora: string): string {
   const dt = combineFechaCitaConHora(fecha, hora);
   return dt.toLocaleString('es-CO', {
@@ -86,46 +84,5 @@ export async function notificarCitaConfirmadaPorMedico(citaId: string): Promise<
     await enviarMensajeCitaPaciente(paciente.telefono, msg);
   } catch (e) {
     console.error('[Cita-WhatsApp] notificarCitaConfirmadaPorMedico:', e);
-  }
-}
-
-/**
- * Ejecuta recordatorios ~24 h y ~2 h antes de la cita (ventanas amplias para job cada 15 min).
- */
-export async function ejecutarRecordatoriosCitasPendientes(): Promise<void> {
-  if (process.env.ENABLE_CITA_REMINDER_JOB === '0') return;
-
-  const now = Date.now();
-  const limiteInferior = new Date(now - MS_HORA); // citas desde ayer
-  const limiteSuperior = new Date(now + 49 * MS_HORA); // próximos ~2 días
-
-  const citas = await Cita.find({
-    estado: 'confirmada',
-    fecha: { $gte: limiteInferior, $lte: limiteSuperior }
-  })
-    .populate('medicoId', 'nombre apellido')
-    .lean();
-
-  for (const cita of citas) {
-    const appointment = combineFechaCitaConHora(new Date(cita.fecha), cita.hora).getTime();
-    const delta = appointment - now;
-    const paciente = await Paciente.findById(cita.pacienteId).select('telefono nombre').lean();
-    if (!paciente?.telefono) continue;
-
-    const med = cita.medicoId as unknown as { nombre?: string; apellido?: string };
-
-    const r24 = (cita as { notifRecordatorio24hAt?: Date }).notifRecordatorio24hAt;
-    if (!r24 && delta >= 23.25 * MS_HORA && delta <= 24.75 * MS_HORA) {
-      const msg = `Recordatorio Crisal-iA: mañana tienes cita con ${nombreMedico(med)} el ${fmtCitaFechaHora(new Date(cita.fecha), cita.hora)} (${cita.modalidad}).`;
-      await enviarMensajeCitaPaciente(paciente.telefono, msg);
-      await Cita.updateOne({ _id: cita._id }, { $set: { notifRecordatorio24hAt: new Date() } });
-    }
-
-    const r2 = (cita as { notifRecordatorio2hAt?: Date }).notifRecordatorio2hAt;
-    if (!r2 && delta >= 1.5 * MS_HORA && delta <= 2.5 * MS_HORA) {
-      const msg = `Recordatorio Crisal-iA: en aprox. 2 horas tu cita con ${nombreMedico(med)} (${fmtCitaFechaHora(new Date(cita.fecha), cita.hora)}, ${cita.modalidad}).`;
-      await enviarMensajeCitaPaciente(paciente.telefono, msg);
-      await Cita.updateOne({ _id: cita._id }, { $set: { notifRecordatorio2hAt: new Date() } });
-    }
   }
 }
