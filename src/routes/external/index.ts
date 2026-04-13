@@ -31,7 +31,11 @@ import {
   // Disponibilidad y Estadísticas
   obtenerDisponibilidadMedico,
   obtenerEstadisticasCitasPorMedico,
-  obtenerCantidadCitasPorMedico
+  obtenerCantidadCitasPorMedico,
+  // Materiales
+  buscarMateriales,
+  obtenerTodosLosMateriales,
+  obtenerMaterialPorId
 } from '../../controllers/external/externalController';
 
 const router = Router();
@@ -73,6 +77,11 @@ router.get('/formulas-medicas/cita/:citaId', obtenerFormulasMedicasPorCita);
 // ==================== INTERROGATORIOS ====================
 router.get('/interrogatorios/paciente/:pacienteId', obtenerInterrogatoriosPorPaciente);
 router.get('/interrogatorios/:id', obtenerInterrogatorioPorId);
+
+// ==================== MEDICAMENTOS NUTRABIOTICS ====================
+router.get('/medicamentos-nutrabiotic', buscarMateriales);           // ?q=texto  → búsqueda
+router.get('/medicamentos-nutrabiotic/all', obtenerTodosLosMateriales); // ?limit=100&skip=0 → listado paginado
+router.get('/medicamentos-nutrabiotic/:id', obtenerMaterialPorId);  // por ID de MongoDB
 
 
 export default router;

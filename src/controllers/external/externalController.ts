@@ -1,5 +1,6 @@
 import { Response } from 'express';
 import Paciente from '../../models/Paciente';
+import Material from '../../models/Material';
 import Medico from '../../models/Medico';
 import Cita from '../../models/Cita';
 import HistoriaClinica from '../../models/HistoriaClinica';
@@ -1057,6 +1058,126 @@ export const obtenerCantidadCitasPorMedico = async (req: any, res: Response): Pr
       success: false,
       message: 'Error al obtener cantidad de citas del médico',
       error: error.message
+    });
+  }
+};
+
+// ==================== MATERIALES ====================
+
+/**
+ * GET /api/external/materiales?q=texto
+ * Busca materiales por nombre o código (mínimo 2 caracteres).
+ */
+export const buscarMateriales = async (req: any, res: Response): Promise<void> => {
+  try {
+    const q = String(req.query.q || '').trim();
+
+    if (!q || q.length < 2) {
+      sendFormatted(res, { success: true, data: [] });
+      return;
+    }
+
+    const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    const materiales = await Material.find({
+      activo: true,
+      $or: [{ nombre: regex }, { codigo: regex }],
+    })
+      .limit(30)
+      .lean();
+
+    const data = materiales.map((m) => {
+      const presentaciones = Array.isArray(m.presentaciones)
+        ? m.presentaciones
+            .filter((p: any) => p?.nombre?.trim())
+            .map((p: any) => ({ nombre: String(p.nombre || '').trim(), mockup: p.mockup || '' }))
+        : [];
+
+      const primeraPresentacion =
+        presentaciones[0]?.nombre || m.formaFarmaceutica || m.presentacion || m.categoria || '';
+
+      return {
+        id: m._id,
+        codigo: m.codigo,
+        producto: m.nombre || m.codigo,
+        denominacionComun: m.nombre || m.codigo,
+        formafarmaceutica: primeraPresentacion,
+        formaFarmaceutica: primeraPresentacion,
+        concentracion: m.concentracion || '',
+        unidadmedida: m.unidadMedida || '',
+        unidadMedida: m.unidadMedida || '',
+        viaAdministracion: m.viaAdministracion || '',
+        descripcionLocal: m.descripcion || '',
+        composicion: m.composicion || '',
+        categoriaLocal: m.categoria || '',
+        registroSanitario: m.registroSanitario || '',
+        presentaciones,
+      };
+    });
+
+    sendFormatted(res, { success: true, data });
+  } catch (error: any) {
+    console.error('Error en búsqueda de materiales (external):', error);
+    res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Error al buscar materiales',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * GET /api/external/materiales/all
+ * Lista todos los materiales activos con paginación opcional.
+ * Query params: limit (default 100), skip (default 0)
+ */
+export const obtenerTodosLosMateriales = async (req: any, res: Response): Promise<void> => {
+  try {
+    const limit = Math.min(parseInt(String(req.query.limit || '100')), 500);
+    const skip = parseInt(String(req.query.skip || '0'));
+
+    const [materiales, total] = await Promise.all([
+      Material.find({ activo: true }).limit(limit).skip(skip).sort({ nombre: 1 }).lean(),
+      Material.countDocuments({ activo: true }),
+    ]);
+
+    sendFormatted(res, {
+      success: true,
+      data: materiales,
+      total,
+      limit,
+      skip,
+    });
+  } catch (error: any) {
+    console.error('Error al obtener materiales (external):', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener materiales',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * GET /api/external/materiales/:id
+ * Obtiene un material por su ID de MongoDB.
+ */
+export const obtenerMaterialPorId = async (req: any, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const material = await Material.findById(id).lean();
+
+    if (!material) {
+      res.status(404).json({ success: false, message: 'Material no encontrado' });
+      return;
+    }
+
+    sendFormatted(res, { success: true, data: material });
+  } catch (error: any) {
+    console.error('Error al obtener material por ID (external):', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener material',
+      error: error.message,
     });
   }
 };
