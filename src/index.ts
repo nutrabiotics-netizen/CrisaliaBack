@@ -49,6 +49,8 @@ import './models/RegistroIngresoSalida';
 import './models/CodigoDescuento';
 import './models/PagoSimulado';
 import './models/CuidadorIAConversacion';
+import './models/LinkCaptacion';
+import './models/ReferidoMedico';
 
 // Rutas
 import authRoutes from './routes/auth/authRoutes';
@@ -60,6 +62,13 @@ import externalRoutes from './routes/external';
 import publicRoutes from './routes/public/index';
 import cuidadorIARoutes from './routes/paciente/cuidador-ia';
 import { scheduleControlPreCitaJob } from './services/jobs/controlPreCitaJob';
+// Fase 5
+import { crearLink, listarLinks, desactivarLink, listarReferidos, bonificarReferido } from './controllers/admin/linkCaptacionController';
+import { validarCodigo, invitarMedico, misReferidos } from './controllers/captacion/captacionController';
+import { getMiLinkReferido, renovarMiLinkReferido } from './controllers/medico/miLinkReferidoController';
+import { generarTokenHCPublica, verHCPublica } from './controllers/paciente/hcPublicaController';
+import { authenticate, authorize } from './middleware/auth';
+import { UserRole } from './types';
 
 // Rutas de autenticación
 app.use('/api/auth', authRoutes);
@@ -87,6 +96,27 @@ app.use('/api/paciente/cuidador-ia', cuidadorIARoutes);
 
 // Iniciar job diario de pre-cita de control
 scheduleControlPreCitaJob();
+
+// ─── Fase 5 — Captación médica ─────────────────────────────────────────────
+// Admin: links de captación y referidos
+app.post('/api/admin/links-captacion', authenticate, authorize(UserRole.ADMINISTRATIVO), crearLink);
+app.get('/api/admin/links-captacion', authenticate, authorize(UserRole.ADMINISTRATIVO), listarLinks);
+app.delete('/api/admin/links-captacion/:id', authenticate, authorize(UserRole.ADMINISTRATIVO), desactivarLink);
+app.get('/api/admin/referidos', authenticate, authorize(UserRole.ADMINISTRATIVO), listarReferidos);
+app.post('/api/admin/referidos/:id/bonificar', authenticate, authorize(UserRole.ADMINISTRATIVO), bonificarReferido);
+
+// Public: validar código de registro médico + HC pública
+app.get('/api/public/registro-medico/:codigo', validarCodigo);
+app.get('/api/public/hc-publica/:token', verHCPublica);
+
+// Paciente: invitar médico + QR de HC
+app.post('/api/paciente/invitar-medico', authenticate, authorize(UserRole.PACIENTE), invitarMedico);
+app.get('/api/paciente/hc-publica/generar-token', authenticate, authorize(UserRole.PACIENTE), generarTokenHCPublica);
+
+// Médico: mis referidos + link de referido propio
+app.get('/api/medico/mis-referidos', authenticate, authorize(UserRole.MEDICO), misReferidos);
+app.get('/api/medico/mi-link-referido', authenticate, authorize(UserRole.MEDICO), getMiLinkReferido);
+app.post('/api/medico/mi-link-referido/renovar', authenticate, authorize(UserRole.MEDICO), renovarMiLinkReferido);
 
 // Ruta de prueba
 app.get('/api/health', (_req, res) => {

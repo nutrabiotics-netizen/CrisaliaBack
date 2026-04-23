@@ -33,6 +33,7 @@
     "@aws-sdk/client-transcribe-streaming": "^3.986.0",
     "@aws-sdk/s3-request-presigner": "^3.0.0",
     "@elevenlabs/elevenlabs-js": "^2.43.0",
+    "@types/qrcode": "^1.5.6",
     "archiver": "^7.0.1",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
@@ -44,6 +45,7 @@
     "multer": "^2.1.1",
     "openai": "^6.15.0",
     "pdfkit": "^0.15.0",
+    "qrcode": "^1.5.4",
     "ws": "^8.19.0",
     "xlsx": "^0.18.5"
   },
