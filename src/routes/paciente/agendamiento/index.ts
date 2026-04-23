@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../../../middleware/auth';
 import { UserRole } from '../../../types';
+import { requireCuota1 } from '../../../middleware/requirePago';
 import {
   obtenerMedicosDisponibles,
   obtenerMedicosRecomendados,
@@ -29,9 +30,9 @@ router.get('/medicos/:medicoId/sedes', authenticate, authorize(UserRole.PACIENTE
 router.get('/medicos/:medicoId/horarios', authenticate, authorize(UserRole.PACIENTE), obtenerHorariosDisponibles);
 router.get('/medicos/:medicoId/configuracion-flujo', authenticate, authorize(UserRole.PACIENTE), obtenerConfiguracionFlujoMedico);
 router.get('/citas', authenticate, authorize(UserRole.PACIENTE), obtenerCitasPaciente);
-router.post('/citas', authenticate, authorize(UserRole.PACIENTE), crearCita);
+router.post('/citas', authenticate, authorize(UserRole.PACIENTE), requireCuota1, crearCita);
 router.put('/citas/:citaId/cancelar', authenticate, authorize(UserRole.PACIENTE), cancelarCita);
-router.get('/citas/:citaId/sala-espera', authenticate, authorize(UserRole.PACIENTE), getEstadoSalaEspera);
+router.get('/citas/:citaId/sala-espera', authenticate, authorize(UserRole.PACIENTE), requireCuota1, getEstadoSalaEspera);
 router.get('/citas/:citaId/recording-url', authenticate, authorize(UserRole.PACIENTE), obtenerRecordingUrl);
 
 export default router;

@@ -4,12 +4,20 @@ export interface IInterrogatorio extends Document {
   pacienteId: mongoose.Types.ObjectId;
   tipo: 'primera_vez' | 'control';
   estado: 'en_proceso' | 'completado' | 'pendiente';
-  progreso: number; // Porcentaje de completitud (0-100)
-  respuestas: Record<string, any>; // Respuestas del paciente
-  observacionesIA?: string[]; // Observaciones de la IA sobre incoherencias
-  analisisIA?: string; // Análisis completo de la IA
-  analisisFisiologicoIA?: any[]; // Matriz de salud semafórica (A4)
-  objetivos?: string[]; // Objetivos identificados por la IA
+  progreso: number;
+  respuestas: Record<string, any>;
+  observacionesIA?: string[];
+  analisisIA?: string;
+  analisisFisiologicoIA?: any[];
+  objetivos?: string[];
+  recomendacionAutomatica?: {
+    semaforizacion: any[];
+    recomendacionesOTC: string[];
+    estiloVida: string[];
+    estrategiasFuncionales: any[];
+    llamadoAccion: string;
+    generadoEn: Date;
+  };
   creadoPor?: mongoose.Types.ObjectId;
   creadoPorRol?: string;
   actualizadoPor?: mongoose.Types.ObjectId;
@@ -61,6 +69,9 @@ const InterrogatorioSchema = new Schema<IInterrogatorio>(
     objetivos: {
       type: [String],
       default: []
+    },
+    recomendacionAutomatica: {
+      type: Schema.Types.Mixed
     },
     creadoPor: {
       type: Schema.Types.ObjectId,

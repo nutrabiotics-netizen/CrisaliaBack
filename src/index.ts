@@ -46,6 +46,8 @@ import './models/Asesoria';
 import './models/Tercero';
 import './models/PersonalInstitucional';
 import './models/RegistroIngresoSalida';
+import './models/CodigoDescuento';
+import './models/PagoSimulado';
 
 // Rutas
 import authRoutes from './routes/auth/authRoutes';

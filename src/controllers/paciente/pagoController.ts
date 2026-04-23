@@ -1,5 +1,6 @@
 import { Response } from 'express';
 import PagoSimulado from '../../models/PagoSimulado';
+import CodigoDescuento from '../../models/CodigoDescuento';
 import { AuthRequest } from '../../middleware/auth';
 
 const PAQUETES = {
@@ -50,13 +51,12 @@ export const simularPago = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    const { cuota } = req.body;
+    const { cuota, codigoDescuento } = req.body;
     if (cuota !== 1 && cuota !== 2) {
       res.status(400).json({ mensaje: 'Cuota inválida (debe ser 1 o 2)' });
       return;
     }
 
-    // Si cuota 2, verificar que cuota 1 esté pagada
     if (cuota === 2) {
       const cuota1 = await PagoSimulado.findOne({ pacienteId, cuota: 1 });
       if (!cuota1 || cuota1.estado !== 'pagado') {
@@ -66,6 +66,25 @@ export const simularPago = async (req: AuthRequest, res: Response): Promise<void
     }
 
     const paquete = PAQUETES[cuota as 1 | 2];
+    let montoFinal = paquete.monto;
+    let descuentoAplicado = 0;
+    let codigoDescuentoId: string | undefined;
+
+    if (codigoDescuento) {
+      const codDoc = await CodigoDescuento.findOne({
+        codigo: codigoDescuento.toUpperCase().trim(),
+        activo: true,
+        expiresAt: { $gt: new Date() }
+      });
+      if (codDoc && codDoc.usos < codDoc.maxUsos) {
+        descuentoAplicado = codDoc.tipo === 'porcentaje'
+          ? Math.round(paquete.monto * codDoc.valor / 100)
+          : codDoc.valor;
+        montoFinal = Math.max(0, paquete.monto - descuentoAplicado);
+        codigoDescuentoId = codDoc._id.toString();
+        await CodigoDescuento.findByIdAndUpdate(codDoc._id, { $inc: { usos: 1 } });
+      }
+    }
 
     const pago = await PagoSimulado.findOneAndUpdate(
       { pacienteId, cuota },
@@ -73,14 +92,16 @@ export const simularPago = async (req: AuthRequest, res: Response): Promise<void
         pacienteId,
         cuota,
         estado: 'pagado',
-        monto: paquete.monto,
+        monto: montoFinal,
+        descuentoAplicado,
+        codigoDescuentoId: codigoDescuentoId || undefined,
         descripcion: paquete.descripcion,
         fechaPago: new Date()
       },
       { upsert: true, new: true }
     );
 
-    res.status(200).json({ mensaje: `Cuota ${cuota} pagada exitosamente (simulación).`, pago });
+    res.status(200).json({ mensaje: `Cuota ${cuota} pagada exitosamente (simulación).`, pago, descuentoAplicado });
   } catch (error) {
     console.error('Error al simular pago:', error);
     res.status(500).json({ mensaje: 'Error al procesar el pago simulado' });

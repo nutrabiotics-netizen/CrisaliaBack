@@ -7,6 +7,8 @@ export interface IPagoSimulado extends Document {
   pacienteId: mongoose.Types.ObjectId;
   cuota: CuotaPago;
   monto: number;
+  descuentoAplicado: number;
+  codigoDescuentoId?: mongoose.Types.ObjectId;
   estado: EstadoPago;
   descripcion: string;
   fechaPago?: Date;
@@ -31,6 +33,14 @@ const PagoSimuladoSchema = new Schema<IPagoSimulado>(
       type: Number,
       required: true,
       default: 0
+    },
+    descuentoAplicado: {
+      type: Number,
+      default: 0
+    },
+    codigoDescuentoId: {
+      type: Schema.Types.ObjectId,
+      ref: 'CodigoDescuento'
     },
     estado: {
       type: String,

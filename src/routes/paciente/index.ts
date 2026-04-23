@@ -9,11 +9,11 @@ import formulaMedicaRoutes from './formula-medica';
 import pagoRoutes from './pago';
 import ordenExamenesRoutes from './orden-examenes';
 import alimentosRoutes from './alimentos';
+import recomendacionRoutes from './recomendacion';
+import codigoDescuentoRoutes from './codigo-descuento';
 
 const router = Router();
 
-
-// Montar todas las rutas del módulo paciente
 router.use('/perfil', perfilRoutes);
 router.use('/agendamiento', agendamientoRoutes);
 router.use('/interrogatorio', interrogatorioRoutes);
@@ -24,6 +24,8 @@ router.use('/formula-medica', formulaMedicaRoutes);
 router.use('/pago', pagoRoutes);
 router.use('/orden-examenes', ordenExamenesRoutes);
 router.use('/alimentos', alimentosRoutes);
+router.use('/recomendacion', recomendacionRoutes);
+router.use('/codigo-descuento', codigoDescuentoRoutes);
 
 export default router;
 
