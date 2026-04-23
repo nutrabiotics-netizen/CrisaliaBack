@@ -24,6 +24,13 @@ export interface ICita extends Document {
   actualizadoPorRol?: string;
   canceladoPor?: mongoose.Types.ObjectId;
   canceladoPorRol?: string;
+  /** Demora detectada automáticamente si la cita no inicia en su hora */
+  demora?: {
+    detectadaEn: Date;
+    minutosDemora: number;
+    motivo?: string;
+    registradoPor?: mongoose.Types.ObjectId;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -101,6 +108,15 @@ const CitaSchema = new Schema<ICita>(
     canceladoPorRol: {
       type: String,
       enum: ['Paciente', 'Medico', 'Administrativo']
+    },
+    demora: {
+      type: new Schema({
+        detectadaEn: { type: Date, required: true },
+        minutosDemora: { type: Number, required: true },
+        motivo: { type: String, trim: true },
+        registradoPor: { type: Schema.Types.ObjectId }
+      }, { _id: false }),
+      default: undefined
     }
   },
   {

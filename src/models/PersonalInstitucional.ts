@@ -1,17 +1,17 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export type TipoPersonal = 'asistencial' | 'administrativo';
+export type CategoriaPersonal = 'asistencial_salud' | 'administrativo' | 'servicios_generales';
 
 export interface IPersonalInstitucional extends Document {
   tipo: TipoPersonal;
+  /** Subcategoría del diagrama PERFIL ADM */
+  categoria: CategoriaPersonal;
   nombre: string;
   apellido?: string;
-  /** Área (asistencial) o cargo (administrativo) */
   cargo: string;
   activo: boolean;
-  /** Solo para tipo administrativo: habilita usuario de ingreso (login) */
   email?: string;
-  /** Ref al usuario Administrativo creado cuando se asigna email/contraseña */
   administrativoId?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -23,6 +23,12 @@ const PersonalInstitucionalSchema = new Schema<IPersonalInstitucional>(
       type: String,
       enum: ['asistencial', 'administrativo'],
       required: true,
+      index: true
+    },
+    categoria: {
+      type: String,
+      enum: ['asistencial_salud', 'administrativo', 'servicios_generales'],
+      default: 'asistencial_salud',
       index: true
     },
     nombre: {
