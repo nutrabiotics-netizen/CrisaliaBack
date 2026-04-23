@@ -1,5 +1,6 @@
 import { InvokeAgentCommand } from '@aws-sdk/client-bedrock-agent-runtime';
 import { bedrockClient, videoCallConfig } from '../../config/awsConfig';
+import { copilotoVozBedrockConfig } from '../../config/copilotoVozConfig';
 
 export interface BedrockAgentInput {
   patientHistoryContext: string;
@@ -143,6 +144,84 @@ export function parseBedrockResponse(response: string): BedrockAgentResponse {
   }
   return result;
 }
+/**
+ * Invoca el agente Bedrock entrenado de Crisal-iA con un prompt de texto libre.
+ * Reutiliza el mismo agentId/aliasId del copiloto de voz y la videollamada.
+ */
+export async function invokeAgent(prompt: string, sessionId?: string): Promise<string> {
+  const agentId = copilotoVozBedrockConfig.agentId;
+  const agentAliasId = copilotoVozBedrockConfig.agentAliasId;
+
+  if (!agentId) {
+    console.warn('[BedrockAgent] Agente Bedrock no configurado (COPILOTO_VOZ_BEDROCK_AGENT_ID)');
+    return '';
+  }
+
+  const sid = sessionId ?? `aiservice-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+
+  try {
+    const command = new InvokeAgentCommand({
+      agentId,
+      agentAliasId,
+      sessionId: sid,
+      inputText: prompt,
+    });
+
+    const response = await bedrockClient.send(command);
+    const chunks: string[] = [];
+
+    if (response.completion) {
+      for await (const event of response.completion) {
+        if (event.chunk?.bytes) {
+          chunks.push(new TextDecoder().decode(event.chunk.bytes));
+        }
+      }
+    }
+
+    return chunks.join('').trim();
+  } catch (err: unknown) {
+    console.error('[BedrockAgent] Error invocando agente:', err);
+    return '';
+  }
+}
+
+/**
+ * Igual que invokeAgent() pero parsea la respuesta como JSON.
+ * Si el agente no retorna JSON válido, retorna el fallback indicado.
+ */
+export async function invokeAgentJson<T>(prompt: string, fallback: T, sessionId?: string): Promise<T> {
+  const raw = await invokeAgent(prompt, sessionId);
+  if (!raw) return fallback;
+  try {
+    // Extraer bloque JSON si el agente incluye texto antes o después
+    const firstBrace = raw.indexOf('{');
+    const lastBrace = raw.lastIndexOf('}');
+    const firstBracket = raw.indexOf('[');
+    const lastBracket = raw.lastIndexOf(']');
+
+    // Determinar si la respuesta es un objeto o un array
+    let jsonStr: string;
+    if (firstBracket !== -1 && (firstBrace === -1 || firstBracket < firstBrace)) {
+      jsonStr = raw.substring(firstBracket, lastBracket + 1);
+    } else if (firstBrace !== -1) {
+      jsonStr = raw.substring(firstBrace, lastBrace + 1);
+    } else {
+      return fallback;
+    }
+
+    // Limpiar (reutiliza lógica de parseBedrockResponse)
+    jsonStr = jsonStr.replace(/,[ \t]*([\]}])/g, '$1');
+    jsonStr = jsonStr.replace(/[\u0000-\u001F\u007F-\u009F]/g, (c) =>
+      c === '\n' || c === '\r' || c === '\t' ? ' ' : ''
+    );
+
+    return JSON.parse(jsonStr) as T;
+  } catch {
+    console.warn('[BedrockAgent] Respuesta no es JSON válido:', raw.substring(0, 200));
+    return fallback;
+  }
+}
+
 export async function summarizeLastClinicalHistory(historyData: any): Promise<string> {
   const agentId = videoCallConfig.bedrockAgentId;
   const agentAliasId = videoCallConfig.bedrockAgentAliasId;

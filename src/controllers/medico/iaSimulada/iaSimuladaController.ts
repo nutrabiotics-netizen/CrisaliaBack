@@ -88,9 +88,9 @@ export const postOptimizarAgenda = async (req: AuthRequest, res: Response): Prom
   }
 };
 
-export const getDemoAnamnesisLista = async (_req: AuthRequest, res: Response): Promise<void> => {
+export const getDemoAnamnesisLista = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const data = await AIService.listarAnamnesisDemoMedico();
+    const data = await AIService.listarAnamnesisMedico(req.userId || '');
     ok(res, data);
   } catch (e: any) {
     res.status(500).json({ success: false, error: e?.message || 'Error' });
@@ -99,7 +99,7 @@ export const getDemoAnamnesisLista = async (_req: AuthRequest, res: Response): P
 
 export const getDemoMetricasImpacto = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const data = await AIService.metricasImpactoDemo();
+    const data = await AIService.metricasImpacto();
     ok(res, data);
   } catch (e: any) {
     res.status(500).json({ success: false, error: e?.message || 'Error' });
@@ -109,7 +109,7 @@ export const getDemoMetricasImpacto = async (_req: AuthRequest, res: Response): 
 export const getDemoVersiculos = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const tema = req.query.tema ? String(req.query.tema) : undefined;
-    const data = await AIService.versiculosDemo(tema);
+    const data = await AIService.versiculos(tema);
     ok(res, data);
   } catch (e: any) {
     res.status(500).json({ success: false, error: e?.message || 'Error' });
