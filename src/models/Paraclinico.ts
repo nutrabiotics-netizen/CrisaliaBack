@@ -22,6 +22,12 @@ export interface IParaclinico extends Document {
   ocrMetodo?: 'pdf-texto' | 'vision';
   ocrError?: string;
 
+  // Análisis funcional IA (Fase 3)
+  semaforo?: 'verde' | 'amarillo' | 'rojo';
+  valorFuncional?: string;  // interpretación en rangos funcionales
+  tendencia?: 'mejorando' | 'estable' | 'empeorando';
+  analisisIA?: string;
+
   // Auditoría
   createdAt: Date;
   updatedAt: Date;
@@ -95,6 +101,23 @@ const ParaclinicoSchema = new Schema<IParaclinico>(
     ocrError: {
       type: String,
       trim: true
+    },
+
+    // Análisis funcional IA (Fase 3)
+    semaforo: {
+      type: String,
+      enum: ['verde', 'amarillo', 'rojo']
+    },
+    valorFuncional: {
+      type: String,
+      trim: true
+    },
+    tendencia: {
+      type: String,
+      enum: ['mejorando', 'estable', 'empeorando']
+    },
+    analisisIA: {
+      type: String
     }
   },
   {

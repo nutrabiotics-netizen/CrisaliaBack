@@ -169,3 +169,92 @@ export const eliminarParaclinico = async (req: AuthRequest, res: Response): Prom
     res.status(500).json({ mensaje: 'Error al eliminar el paraclínico' });
   }
 };
+
+/**
+ * GET /api/paciente/paraclinicos/analisis-evolutivo
+ * Obtiene todos los paraclínicos del paciente en orden cronológico,
+ * los analiza con IA (rangos funcionales) y persiste semaforo/tendencia/analisisIA.
+ */
+export const obtenerAnalisisEvolutivo = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const pacienteId = req.userId;
+    if (!pacienteId) {
+      res.status(401).json({ mensaje: 'No autorizado' });
+      return;
+    }
+
+    // Cargar todos los paraclínicos cronológicamente
+    const docs = await Paraclinico.find({ pacienteId }).sort({ fecha: 1 }).lean();
+
+    if (docs.length === 0) {
+      res.json({
+        success: true,
+        lineaTemporal: [],
+        tendencias: [],
+        semaforoPorExamen: {},
+        correlacionAnamnesis: [],
+        conversionesAplicadas: []
+      });
+      return;
+    }
+
+    // Invocar análisis IA (importación dinámica para no aumentar cold start)
+    const { AIService } = await import('../../services/ai/AIService');
+    const analisis = await AIService.analizarParaclinicos({ pacienteId });
+
+    // Calcular tendencia por examen comparando semáforos en la línea temporal
+    const tendenciasPorExamen: Record<string, string> = {};
+    if (analisis.lineaTemporal?.length) {
+      // Agrupa mediciones del mismo examen
+      const grupos: Record<string, { fecha: string; semaforo: string }[]> = {};
+      for (const item of analisis.lineaTemporal) {
+        if (!grupos[item.examen]) grupos[item.examen] = [];
+        grupos[item.examen].push({ fecha: item.fecha, semaforo: item.semaforo });
+      }
+      const nivelNum = (s: string) => s === 'verde' ? 2 : s === 'amarillo' ? 1 : 0;
+      for (const [examen, mediciones] of Object.entries(grupos)) {
+        if (mediciones.length < 2) {
+          tendenciasPorExamen[examen] = 'estable';
+          continue;
+        }
+        const sorted = [...mediciones].sort((a, b) => a.fecha.localeCompare(b.fecha));
+        const primero = nivelNum(sorted[0].semaforo);
+        const ultimo = nivelNum(sorted[sorted.length - 1].semaforo);
+        tendenciasPorExamen[examen] = ultimo > primero ? 'mejorando' : ultimo < primero ? 'empeorando' : 'estable';
+      }
+    }
+
+    // Persistir semaforo, tendencia y analisisIA en cada documento
+    if (analisis.lineaTemporal?.length) {
+      const updates = analisis.lineaTemporal.map((item) =>
+        Paraclinico.updateMany(
+          { pacienteId, nombre: { $regex: item.examen, $options: 'i' } },
+          {
+            $set: {
+              semaforo: item.semaforo as 'verde' | 'amarillo' | 'rojo',
+              tendencia: (tendenciasPorExamen[item.examen] || 'estable') as 'mejorando' | 'estable' | 'empeorando',
+              analisisIA: item.hallazgo
+            }
+          }
+        )
+      );
+      await Promise.allSettled(updates);
+    }
+
+    res.json({
+      success: true,
+      lineaTemporal: analisis.lineaTemporal || [],
+      tendencias: Object.entries(tendenciasPorExamen).map(([examen, tendencia]) => ({ examen, tendencia })),
+      semaforoPorExamen: Object.fromEntries(
+        (analisis.lineaTemporal || []).map((i) => [i.examen, i.semaforo])
+      ),
+      correlacionAnamnesis: analisis.correlacionAnamnesis || [],
+      conversionesAplicadas: analisis.conversionesAplicadas || [],
+      totalDocumentos: docs.length
+    });
+  } catch (error) {
+    console.error('[ParaclinicosController] analisis-evolutivo:', error);
+    res.status(500).json({ mensaje: 'Error al generar el análisis evolutivo.' });
+  }
+};
+

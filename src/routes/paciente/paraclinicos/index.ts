@@ -7,7 +7,8 @@ import {
   obtenerParaclinicos,
   subirParaclinico,
   subirParaclinicoArchivo,
-  eliminarParaclinico
+  eliminarParaclinico,
+  obtenerAnalisisEvolutivo
 } from '../../../controllers/paciente/paraclinicosController';
 
 const router = Router();
@@ -43,8 +44,11 @@ function uploadParaclinicoMiddleware(req: Request, res: Response, next: NextFunc
 // Todas las rutas requieren autenticación y rol de paciente
 router.use(authenticate, authorize(UserRole.PACIENTE));
 
-// GET: libre para que el paciente siempre vea sus paraclínicos existentes
+// GET listado: libre para que el paciente siempre vea sus paraclínicos existentes
 router.get('/', obtenerParaclinicos);
+
+// GET análisis evolutivo con IA (Fase 3) — debe ir antes de /:id
+router.get('/analisis-evolutivo', obtenerAnalisisEvolutivo);
 
 // POST/DELETE: requieren Cuota 1 pagada (el pago desbloquea la carga de paraclínicos)
 router.post('/upload', requireCuota1, uploadParaclinicoMiddleware, subirParaclinicoArchivo);
