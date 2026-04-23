@@ -137,12 +137,8 @@ function broadcastToCitaRoom(citaId: string, obj: object): void {
   });
 }
 
-export function attachTranscriptionWebSocket(server: import('http').Server): void {
-  const wss = new WebSocketServer({
-    server,
-    path: '/api/transcription-ws'
-  });
-
+/** Registra el handler de conexión (usar con `noServer` + enrutado único de `upgrade`). */
+export function registerTranscriptionHandlers(wss: WebSocketServer): void {
   wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
     const url = req.url || '';
     const token = getTokenFromUrl(url);
@@ -395,4 +391,13 @@ export function attachTranscriptionWebSocket(server: import('http').Server): voi
       if (stopTranscribe) stopTranscribe();
     });
   });
+}
+
+/** Servidor dedicado solo transcripción (p. ej. Railway): un solo WSS, sin conflicto. */
+export function attachTranscriptionWebSocket(server: import('http').Server): void {
+  const wss = new WebSocketServer({
+    server,
+    path: '/api/transcription-ws'
+  });
+  registerTranscriptionHandlers(wss);
 }

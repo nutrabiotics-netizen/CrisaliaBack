@@ -2,6 +2,12 @@ import mongoose, { Schema, Document } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { UserRole } from '../types';
 
+/** Preferencias del asistente STT/TTS + Bedrock en perfil médico */
+export interface IMedicoCopilotoVoz {
+  /** Si es false, el WebSocket del copiloto rechaza la conexión */
+  habilitado?: boolean;
+}
+
 export interface IMedico extends Document {
   email: string;
   password: string;
@@ -21,10 +27,18 @@ export interface IMedico extends Document {
   indicacionesAntesConsulta?: string;
   /** Perfil de verificación y datos para filtros de búsqueda (grupos de interés, modalidades, etc.) */
   perfilVerificacion?: Record<string, unknown>;
+  copilotoVoz?: IMedicoCopilotoVoz;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
+
+const CopilotoVozSchema = new Schema<IMedicoCopilotoVoz>(
+  {
+    habilitado: { type: Boolean, default: true }
+  },
+  { _id: false }
+);
 
 const MedicoSchema = new Schema<IMedico>(
   {
@@ -82,7 +96,8 @@ const MedicoSchema = new Schema<IMedico>(
     logoUrl: { type: String, trim: true },
     firmaUrl: { type: String, trim: true },
     indicacionesAntesConsulta: { type: String, trim: true, default: '' },
-    perfilVerificacion: { type: Schema.Types.Mixed, default: {} }
+    perfilVerificacion: { type: Schema.Types.Mixed, default: {} },
+    copilotoVoz: { type: CopilotoVozSchema, default: () => ({}) }
   },
   {
     timestamps: true
