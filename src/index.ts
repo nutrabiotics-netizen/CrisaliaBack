@@ -48,6 +48,7 @@ import './models/PersonalInstitucional';
 import './models/RegistroIngresoSalida';
 import './models/CodigoDescuento';
 import './models/PagoSimulado';
+import './models/CuidadorIAConversacion';
 
 // Rutas
 import authRoutes from './routes/auth/authRoutes';
@@ -57,6 +58,8 @@ import adminRoutes from './routes/admin';
 import administrativoRoutes from './routes/administrativo';
 import externalRoutes from './routes/external';
 import publicRoutes from './routes/public/index';
+import cuidadorIARoutes from './routes/paciente/cuidador-ia';
+import { scheduleControlPreCitaJob } from './services/jobs/controlPreCitaJob';
 
 // Rutas de autenticación
 app.use('/api/auth', authRoutes);
@@ -78,6 +81,12 @@ app.use('/api/external', externalRoutes);
 
 // Rutas Públicas Abiertas (No Auth)
 app.use('/api/public', publicRoutes);
+
+// Cuidador IA (ruta directa, fuera del router paciente para limpieza de path)
+app.use('/api/paciente/cuidador-ia', cuidadorIARoutes);
+
+// Iniciar job diario de pre-cita de control
+scheduleControlPreCitaJob();
 
 // Ruta de prueba
 app.get('/api/health', (_req, res) => {
