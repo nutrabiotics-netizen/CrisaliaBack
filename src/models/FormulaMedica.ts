@@ -40,13 +40,17 @@ export interface IFormulaMedica extends Document {
   // Información adicional
   observaciones?: string;
   pdfUrl?: string;
-  
-  // Auditoría
+  /** Orden generada para ALIVIA suplementos */
+  ordenAlivia?: {
+    json: Record<string, unknown>;
+    estado: 'pendiente_envio' | 'enviado' | 'pagado' | 'cancelado';
+    linkCarrito?: string;
+    fechaEnvio?: Date;
+  };
   creadoPor?: mongoose.Types.ObjectId;
   creadoPorRol?: string;
   actualizadoPor?: mongoose.Types.ObjectId;
   actualizadoPorRol?: string;
-  
   createdAt: Date;
   updatedAt: Date;
 }
@@ -112,6 +116,19 @@ const FormulaMedicaSchema = new Schema<IFormulaMedica>(
     }],
     observaciones: String,
     pdfUrl: String,
+    ordenAlivia: {
+      type: new Schema({
+        json: { type: Schema.Types.Mixed, required: true },
+        estado: {
+          type: String,
+          enum: ['pendiente_envio', 'enviado', 'pagado', 'cancelado'],
+          default: 'pendiente_envio'
+        },
+        linkCarrito: { type: String, trim: true },
+        fechaEnvio: { type: Date }
+      }, { _id: false }),
+      default: undefined
+    },
     creadoPor: {
       type: Schema.Types.ObjectId,
       ref: 'User'

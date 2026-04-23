@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authenticateExternal } from '../../middleware/externalAuth';
+import { aliviaWebhook } from '../../controllers/external/aliviaWebhookController';
 import {
   // Pacientes
   obtenerTodosLosPacientes,
@@ -82,6 +83,9 @@ router.get('/interrogatorios/:id', obtenerInterrogatorioPorId);
 router.get('/medicamentos-nutrabiotic', buscarMateriales);           // ?q=texto  → búsqueda
 router.get('/medicamentos-nutrabiotic/all', obtenerTodosLosMateriales); // ?limit=100&skip=0 → listado paginado
 router.get('/medicamentos-nutrabiotic/:id', obtenerMaterialPorId);  // por ID de MongoDB
+
+// ==================== ALIVIA — Webhook de confirmación de compra ====================
+router.post('/alivia/webhook', aliviaWebhook);
 
 
 export default router;

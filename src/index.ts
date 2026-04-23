@@ -66,6 +66,7 @@ import { scheduleControlPreCitaJob } from './services/jobs/controlPreCitaJob';
 import { crearLink, listarLinks, desactivarLink, listarReferidos, bonificarReferido } from './controllers/admin/linkCaptacionController';
 import { validarCodigo, invitarMedico, misReferidos } from './controllers/captacion/captacionController';
 import { getMiLinkReferido, renovarMiLinkReferido } from './controllers/medico/miLinkReferidoController';
+import { generarOrdenAlivia } from './controllers/medico/formulaMedica/formulaAliviaController';
 import { generarTokenHCPublica, verHCPublica } from './controllers/paciente/hcPublicaController';
 import { authenticate, authorize } from './middleware/auth';
 import { UserRole } from './types';
@@ -117,6 +118,9 @@ app.get('/api/paciente/hc-publica/generar-token', authenticate, authorize(UserRo
 app.get('/api/medico/mis-referidos', authenticate, authorize(UserRole.MEDICO), misReferidos);
 app.get('/api/medico/mi-link-referido', authenticate, authorize(UserRole.MEDICO), getMiLinkReferido);
 app.post('/api/medico/mi-link-referido/renovar', authenticate, authorize(UserRole.MEDICO), renovarMiLinkReferido);
+
+// Fase 7 — ALIVIA (webhook se registra en el external router)
+app.post('/api/medico/formula-medica/:formulaId/generar-orden-alivia', authenticate, authorize(UserRole.MEDICO), generarOrdenAlivia);
 
 // Ruta de prueba
 app.get('/api/health', (_req, res) => {
