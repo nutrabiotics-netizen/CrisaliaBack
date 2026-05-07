@@ -12,8 +12,8 @@ import { IncomingMessage } from 'http';
 import { verifyToken } from '../utils/jwt';
 import { UserRole } from '../types';
 import mongoose from 'mongoose';
-import TranscriptionSession from '../models/TranscriptionSession';
-import TranscriptionSegment from '../models/TranscriptionSegment';
+import TranscriptionSession, { CLINICAL_SECTIONS, type ClinicalSectionType } from '../models/TranscriptionSession';
+import TranscriptionSegment, { type SpeakerRoleType } from '../models/TranscriptionSegment';
 import Cita from '../models/Cita';
 import {
   startTranscribeStreaming,
@@ -22,26 +22,11 @@ import {
 } from '../services/transcription/streaming/transcribeStreamingService';
 import { invokeBedrockAgent, parseBedrockResponse } from '../services/ai/bedrock.service';
 import Paciente from '../models/Paciente';
-import type { ClinicalSectionType } from '../models/TranscriptionSession';
-import type { SpeakerRoleType } from '../models/TranscriptionSegment';
 
-const CLINICAL_SECTIONS = [
-  'motivo_consulta',
-  'antecedentes',
-  'evaluacion',
-  'diagnostico',
-  'plan_tratamiento',
-  'motivo_atencion',
-  'examen_fisico',
-  'resultados_paraclinicos',
-  'alertas_y_alergias',
-  'analisis_y_plan',
-  'diagnosticos',
-  'recomendaciones'
-] as const;
+const CLINICAL_SECTIONS_LIST = [...CLINICAL_SECTIONS] as readonly string[];
 
 function isClinicalSection(s: string): s is ClinicalSectionType {
-  return (CLINICAL_SECTIONS as readonly string[]).includes(s);
+  return CLINICAL_SECTIONS_LIST.includes(s);
 }
 
 interface StartPayload {
@@ -162,7 +147,7 @@ export function registerTranscriptionHandlers(wss: WebSocketServer): void {
     let sessionId: mongoose.Types.ObjectId | null = null;
     let citaIdStr: string | null = null;
     let pacienteIdStr: string | null = null;
-    let currentSection: ClinicalSectionType = 'motivo_consulta';
+    let currentSection: ClinicalSectionType = 'orden_consulta_ia';
     let speakerRole: SpeakerRoleType = 'MEDICO';
     let sequence = 0;
     let audioQueue: ReturnType<typeof createTranscriptionAudioQueue> | null = null;

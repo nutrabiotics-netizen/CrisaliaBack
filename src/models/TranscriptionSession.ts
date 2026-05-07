@@ -2,8 +2,17 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 /** Secciones clínicas estándar para ordenar la transcripción en la historia clínica. */
 export const CLINICAL_SECTIONS = [
+  // Flujo consulta asistida IA (orden clínico sugerido)
+  'orden_consulta_ia',
   'motivo_consulta',
+  'enfermedad_actual',
   'antecedentes',
+  'revision_sistemas_alertas',
+  'resultados_laboratorio',
+  'examen_fisico_kinesiologia',
+  'analisis_plan_tratamiento',
+  'recomendaciones',
+  // Compatibilidad (clientes o agentes anteriores)
   'evaluacion',
   'diagnostico',
   'plan_tratamiento',
@@ -12,8 +21,7 @@ export const CLINICAL_SECTIONS = [
   'resultados_paraclinicos',
   'alertas_y_alergias',
   'analisis_y_plan',
-  'diagnosticos',
-  'recomendaciones'
+  'diagnosticos'
 ] as const;
 
 export type ClinicalSectionType = (typeof CLINICAL_SECTIONS)[number];
@@ -60,7 +68,7 @@ const TranscriptionSessionSchema = new Schema<ITranscriptionSession>(
     currentClinicalSection: {
       type: String,
       enum: CLINICAL_SECTIONS,
-      default: 'motivo_consulta'
+      default: 'orden_consulta_ia'
     },
     startedAt: {
       type: Date,

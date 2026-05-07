@@ -94,7 +94,9 @@ Instrucciones de Formato (JSON):
 Debes entregar la información exclusivamente en un objeto JSON con las siguientes claves:
 - "resumen": Un resumen ejecutivo de lo discutido recientemente.
 - "propuestas": Un array de objetos { "seccion": "string", "contenido": "string" }.
-  Secciones válidas: informacion_general, tipo_actividad_acompanamiento, motivo_atencion, examen_fisico, resultados_paraclinicos, alertas_y_alergias, analisis_y_plan, diagnosticos, recomendaciones.
+  Secciones válidas (usa preferentemente esta nomenclatura y orden clínico):
+  orden_consulta_ia, motivo_consulta, enfermedad_actual, antecedentes, revision_sistemas_alertas, resultados_laboratorio, examen_fisico_kinesiologia, analisis_plan_tratamiento, recomendaciones.
+  Compatibilidad: motivo_atencion, examen_fisico, resultados_paraclinicos, alertas_y_alergias, analisis_y_plan, diagnosticos; informacion_general, tipo_actividad_acompanamiento.
 
 No incluyas texto fuera del bloque JSON.`;
 }
