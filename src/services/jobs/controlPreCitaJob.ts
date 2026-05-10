@@ -11,6 +11,7 @@
 import Cita from '../../models/Cita';
 import Interrogatorio from '../../models/Interrogatorio';
 import Paciente from '../../models/Paciente';
+import Paraclinico from '../../models/Paraclinico';
 import { enviarMensajeCitaPaciente } from '../notifications/citaWhatsAppNotifier';
 import { AIService } from '../ai/AIService';
 
@@ -43,20 +44,38 @@ async function procesarCitaControl(_citaId: string, pacienteId: string): Promise
   }
 
   // Resumen IA en background (no bloquea el flujo si falla)
+  let semaforoGeneral = '';
   try {
     const resumen = await AIService.generarResumenControl({ pacienteId, tipoControl: 'seguimiento' });
-    console.info(`[ControlJob] paciente=${pacienteId} semaforo=${resumen.semaforoGeneral}`);
+    semaforoGeneral = resumen.semaforoGeneral ?? '';
+    console.info(`[ControlJob] paciente=${pacienteId} semaforo=${semaforoGeneral}`);
   } catch (err) {
     console.warn('[ControlJob] generarResumenControl error (no crítico):', err);
+  }
+
+  // Análisis evolutivo de paraclínicos si el paciente tiene documentos
+  let tieneParaclinicos = false;
+  try {
+    const countParac = await Paraclinico.countDocuments({ pacienteId });
+    if (countParac > 0) {
+      tieneParaclinicos = true;
+      await AIService.analizarParaclinicos({ pacienteId });
+      console.info(`[ControlJob] Paraclínicos re-analizados para paciente=${pacienteId}`);
+    }
+  } catch (err) {
+    console.warn('[ControlJob] analizarParaclinicos error (no crítico):', err);
   }
 
   // Notificación WhatsApp al paciente
   try {
     const paciente = await Paciente.findById(pacienteId).select('nombre telefono').lean();
     if (paciente?.telefono) {
+      const extras = tieneParaclinicos
+        ? ' Tus resultados de laboratorio han sido actualizados en tu perfil.'
+        : '';
       const msg =
         `Hola${paciente.nombre ? ` ${paciente.nombre}` : ''}, tienes una consulta de control próxima en Crisal-iA. ` +
-        `Por favor completa tu cuestionario de seguimiento en la app para que tu médico esté preparado. ¡Gracias!`;
+        `Por favor completa tu cuestionario de seguimiento en la app para que tu médico esté preparado.${extras} ¡Gracias!`;
       await enviarMensajeCitaPaciente(paciente.telefono, msg);
     }
   } catch (err) {

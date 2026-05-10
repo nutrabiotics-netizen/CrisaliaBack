@@ -1,4 +1,5 @@
-import { Response } from 'express';
+import { Response, Request } from 'express';
+import jwt from 'jsonwebtoken';
 import { AuthRequest } from '../../../middleware/auth';
 import historiaClinicaService from '../../../services/medico/historiaClinica/historiaClinicaService';
 import { registrarAccion } from '../../../utils/auditoriaHelper';
@@ -7,6 +8,41 @@ import { uploadPDFAndGetUrl, buildCitaDocumentKey } from '../../../utils/s3Docum
 import HistoriaClinica from '../../../models/HistoriaClinica';
 import Paciente from '../../../models/Paciente';
 import { summarizeLastClinicalHistory } from '../../../services/ai/bedrock.service';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'secret';
+
+/** Genera un JWT de 48 h para acceso público a una HC. */
+function generarTokenPublicoHC(historiaId: string): string {
+  return jwt.sign({ historiaId, tipo: 'hc-publica' }, JWT_SECRET, { expiresIn: '48h' } as any);
+}
+
+/**
+ * GET /api/public/hc/:token
+ * Devuelve la HC sin autenticación (token de 48h generado al crear la HC).
+ */
+export const obtenerHCPublica = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { token } = req.params;
+    let payload: { historiaId: string };
+    try {
+      payload = jwt.verify(token as string, JWT_SECRET) as unknown as { historiaId: string };
+    } catch {
+      res.status(401).json({ mensaje: 'Enlace inválido o expirado.' });
+      return;
+    }
+    const historia = await HistoriaClinica.findById(payload.historiaId)
+      .populate('medicoId', 'nombre apellido especialidad')
+      .lean();
+    if (!historia) {
+      res.status(404).json({ mensaje: 'Historia clínica no encontrada.' });
+      return;
+    }
+    res.json({ success: true, data: historia });
+  } catch (err) {
+    console.error('[hc-publica]:', err);
+    res.status(500).json({ mensaje: 'Error al obtener la historia clínica.' });
+  }
+};
 
 export const crearHistoriaClinica = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -78,7 +114,8 @@ export const crearHistoriaClinica = async (req: AuthRequest, res: Response): Pro
         const numeroDoc = paciente?.numeroDocumento ?? String(nuevaHistoria.pacienteId);
         const citaIdStr = String(nuevaHistoria.citaId);
         const key = buildCitaDocumentKey(numeroDoc, citaIdStr, 'historia-clinica');
-        const buffer = await generateHistoriaPdf(historiaParaPdf);
+        const tokenPublico = generarTokenPublicoHC(String(nuevaHistoria._id));
+        const buffer = await generateHistoriaPdf({ ...historiaParaPdf, tokenPublico });
         pdfUrl = await uploadPDFAndGetUrl(buffer, key);
         await HistoriaClinica.updateOne({ _id: nuevaHistoria._id }, { pdfUrl });
       }

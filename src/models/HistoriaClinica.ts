@@ -123,7 +123,10 @@ export interface IHistoriaClinica extends Document {
   creadoPorRol?: string;
   actualizadoPor?: mongoose.Types.ObjectId;
   actualizadoPorRol?: string;
-  
+
+  /** Borrado lógico — nunca se elimina físicamente */
+  activo: boolean;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -253,7 +256,8 @@ const HistoriaClinicaSchema = new Schema<IHistoriaClinica>(
     actualizadoPorRol: {
       type: String,
       enum: ['Paciente', 'Medico', 'Administrativo']
-    }
+    },
+    activo: { type: Boolean, default: true, index: true }
   },
   {
     timestamps: true
@@ -264,6 +268,7 @@ const HistoriaClinicaSchema = new Schema<IHistoriaClinica>(
 HistoriaClinicaSchema.index({ pacienteId: 1, fechaRegistro: -1 });
 HistoriaClinicaSchema.index({ medicoId: 1, fechaRegistro: -1 });
 HistoriaClinicaSchema.index({ citaId: 1 }, { unique: true });
+HistoriaClinicaSchema.index({ medicoId: 1, activo: 1, fechaRegistro: -1 });
 
 export default mongoose.model<IHistoriaClinica>('HistoriaClinica', HistoriaClinicaSchema);
 

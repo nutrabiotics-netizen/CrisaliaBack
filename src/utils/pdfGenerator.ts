@@ -1,6 +1,7 @@
 import PDFDocument from 'pdfkit';
 import * as fs from 'fs';
 import * as path from 'path';
+import QRCode from 'qrcode';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Doc = any;
@@ -92,6 +93,11 @@ async function getGlobalLogoBuffer(): Promise<Buffer | null> {
 }
 
 
+
+/** Genera un buffer PNG del código QR para la URL dada. */
+async function generateQRBuffer(url: string): Promise<Buffer> {
+  return QRCode.toBuffer(url, { type: 'png', width: 120, margin: 1 });
+}
 
 function getPageWidth(doc: Doc): number {
   return doc?.page?.width || 595.28; // A4 width default
@@ -334,6 +340,15 @@ function createDocument(): { doc: Doc; chunks: Buffer[] } {
 /** Genera PDF de historia clínica (resumen). */
 export async function generateHistoriaPdf(historia: any): Promise<Buffer> {
   const logoBuffer = await getGlobalLogoBuffer();
+
+  // QR: si viene tokenPublico, generar QR apuntando al link público de la HC
+  let qrBuffer: Buffer | null = null;
+  if (historia.tokenPublico) {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const hcUrl = `${frontendUrl}/hc-publica/${historia.tokenPublico}`;
+    qrBuffer = await generateQRBuffer(hcUrl).catch(() => null);
+  }
+
   return new Promise((resolve, reject) => {
     const { doc, chunks } = createDocument();
     setupPageFooter(doc);
@@ -342,6 +357,18 @@ export async function generateHistoriaPdf(historia: any): Promise<Buffer> {
 
     const headerTitle = 'Historia Clínica';
     addDocumentHeader(doc, headerTitle, { logoBuffer });
+
+    // QR en la esquina superior derecha (si existe)
+    if (qrBuffer) {
+      try {
+        const pageWidth = getPageWidth(doc);
+        doc.image(qrBuffer, pageWidth - MARGIN - 80, MARGIN, { width: 80 });
+        doc.fontSize(7).fillColor('#6b7280').text('Ver HC digital', pageWidth - MARGIN - 80, MARGIN + 82, { width: 80, align: 'center' });
+        doc.fillColor('#374151');
+      } catch (e) {
+        console.warn('[PDF] No se pudo insertar QR en HC:', e);
+      }
+    }
 
     addSectionTitle(doc, 'Datos del registro');
     drawKeyValueTable(doc, headerTitle, [

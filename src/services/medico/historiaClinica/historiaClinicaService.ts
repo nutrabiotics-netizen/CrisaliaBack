@@ -1,5 +1,6 @@
 import HistoriaClinica from '../../../models/HistoriaClinica';
 import { IHistoriaClinica } from '../../../models/HistoriaClinica';
+import { incrementarPacientesPlanPrueba } from '../../../middleware/checkSuscripcion';
 
 class HistoriaClinicaService {
   async crearHistoriaClinica(
@@ -13,6 +14,13 @@ class HistoriaClinicaService {
       creadoPorRol: creadoPorRol || 'Medico'
     });
 
+    // Incrementar contador del plan de prueba (solo aplica si no tiene suscripción activa)
+    if (historiaData.medicoId) {
+      incrementarPacientesPlanPrueba(String(historiaData.medicoId)).catch((e) =>
+        console.warn('[HC] incrementarPlanPrueba error (no crítico):', e)
+      );
+    }
+
     return nuevaHistoria;
   }
 
@@ -22,7 +30,8 @@ class HistoriaClinicaService {
   ): Promise<IHistoriaClinica | null> {
     const historia = await HistoriaClinica.findOne({
       _id: historiaId,
-      medicoId
+      medicoId,
+      activo: { $ne: false }
     })
       .populate('pacienteId', 'nombre apellido email telefono')
       .populate('citaId', 'fecha hora tipo modalidad estado')
@@ -50,7 +59,7 @@ class HistoriaClinicaService {
     pacienteId: string,
     medicoId?: string
   ): Promise<IHistoriaClinica[]> {
-    const query: any = { pacienteId };
+    const query: any = { pacienteId, activo: { $ne: false } };
     if (medicoId) {
       query.medicoId = medicoId;
     }
@@ -96,12 +105,12 @@ class HistoriaClinicaService {
     historiaId: string,
     medicoId: string
   ): Promise<boolean> {
-    const resultado = await HistoriaClinica.deleteOne({
-      _id: historiaId,
-      medicoId
-    });
-
-    return resultado.deletedCount > 0;
+    // Borrado lógico: nunca se elimina físicamente (requisito §5.4 del plan maestro)
+    const resultado = await HistoriaClinica.findOneAndUpdate(
+      { _id: historiaId, medicoId },
+      { $set: { activo: false } }
+    );
+    return resultado !== null;
   }
 }
 

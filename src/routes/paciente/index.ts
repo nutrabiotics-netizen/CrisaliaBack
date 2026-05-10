@@ -11,6 +11,8 @@ import ordenExamenesRoutes from './orden-examenes';
 import alimentosRoutes from './alimentos';
 import recomendacionRoutes from './recomendacion';
 import codigoDescuentoRoutes from './codigo-descuento';
+import cuidadorIARoutes from './cuidador-ia';
+import invitarMedicoRoutes from './invitar-medico';
 
 const router = Router();
 
@@ -26,6 +28,8 @@ router.use('/orden-examenes', ordenExamenesRoutes);
 router.use('/alimentos', alimentosRoutes);
 router.use('/recomendacion', recomendacionRoutes);
 router.use('/codigo-descuento', codigoDescuentoRoutes);
+router.use('/cuidador-ia', cuidadorIARoutes);
+router.use('/invitar-medico', invitarMedicoRoutes);
 
 export default router;
 

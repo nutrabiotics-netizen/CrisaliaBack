@@ -124,5 +124,10 @@ const CitaSchema = new Schema<ICita>(
   }
 );
 
+// Índices compuestos para consultas frecuentes del médico y del paciente
+CitaSchema.index({ medicoId: 1, fecha: 1 });
+CitaSchema.index({ pacienteId: 1, fecha: -1 });
+CitaSchema.index({ medicoId: 1, estado: 1, fecha: 1 });
+
 export default mongoose.model<ICita>('Cita', CitaSchema);
 

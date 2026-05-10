@@ -1,7 +1,11 @@
 import { Response } from 'express';
 import PagoSimulado from '../../models/PagoSimulado';
 import CodigoDescuento from '../../models/CodigoDescuento';
+import Cita from '../../models/Cita';
+import Paciente from '../../models/Paciente';
+import Medico from '../../models/Medico';
 import { AuthRequest } from '../../middleware/auth';
+import { enviarMensajeCitaPaciente } from '../../services/notifications/citaWhatsAppNotifier';
 
 const PAQUETES = {
   1: { descripcion: 'Paquete Cuota 1: Gestión de Agenda + Preconsulta', monto: 150000 },
@@ -101,9 +105,51 @@ export const simularPago = async (req: AuthRequest, res: Response): Promise<void
       { upsert: true, new: true }
     );
 
+    // Notificar al médico cuando cuota 2 es pagada
+    if (cuota === 2) {
+      notificarMedicoCuota2(pacienteId).catch((e) =>
+        console.warn('[Pago] notificarMedicoCuota2 error (no crítico):', e)
+      );
+    }
+
     res.status(200).json({ mensaje: `Cuota ${cuota} pagada exitosamente (simulación).`, pago, descuentoAplicado });
   } catch (error) {
     console.error('Error al simular pago:', error);
     res.status(500).json({ mensaje: 'Error al procesar el pago simulado' });
   }
 };
+
+/**
+ * Busca el médico asignado al paciente (desde su cita más reciente) y le envía
+ * un WhatsApp informando que la Cuota 2 fue pagada.
+ */
+async function notificarMedicoCuota2(pacienteId: string): Promise<void> {
+  // Cita más reciente del paciente para obtener el médico
+  const cita = await Cita.findOne({ pacienteId })
+    .sort({ createdAt: -1 })
+    .select('medicoId')
+    .lean();
+
+  if (!cita?.medicoId) return;
+
+  const [medico, paciente] = await Promise.all([
+    Medico.findById(cita.medicoId).select('nombre apellido whatsapp telefono').lean(),
+    Paciente.findById(pacienteId).select('nombre apellido').lean(),
+  ]);
+
+  if (!medico) return;
+
+  const telMedico = (medico.whatsapp || medico.telefono)?.trim();
+  if (!telMedico) {
+    console.info('[Pago] Médico sin teléfono registrado; omitiendo notificación WhatsApp.');
+    return;
+  }
+
+  const nombrePac = [paciente?.nombre, paciente?.apellido].filter(Boolean).join(' ') || 'Un paciente';
+  const msg =
+    `Hola Dr(a). ${[medico.nombre, medico.apellido].filter(Boolean).join(' ')}, ` +
+    `${nombrePac} ha completado el pago de la Cuota 2 en Crisal-iA. ` +
+    `Ya puede acceder a la consulta y seguimiento completo. ¡Buena suerte en la consulta!`;
+
+  await enviarMensajeCitaPaciente(telMedico, msg);
+}

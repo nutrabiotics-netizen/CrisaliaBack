@@ -256,6 +256,85 @@ export const obtenerFormulaMedicaPorId = async (req: AuthRequest, res: Response)
   }
 };
 
+/**
+ * POST /api/medico/formula-medica/:formulaId/generar-orden-alivia
+ * Genera el JSON de orden ALIVIA para la fórmula y lo persiste en la BD.
+ * El médico puede luego enviar el link_carrito al paciente.
+ */
+export const generarOrdenAlivia = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const medicoId = req.userId;
+    const { formulaId } = req.params;
+
+    if (!medicoId) {
+      res.status(401).json({ success: false, message: 'Usuario no autenticado' });
+      return;
+    }
+    if (!mongoose.isValidObjectId(formulaId)) {
+      res.status(400).json({ success: false, message: 'ID de fórmula inválido' });
+      return;
+    }
+
+    const formula = await FormulaMedica.findById(formulaId)
+      .populate('pacienteId', 'nombre apellido')
+      .lean();
+
+    if (!formula) {
+      res.status(404).json({ success: false, message: 'Fórmula médica no encontrada' });
+      return;
+    }
+    if (String(formula.medicoId) !== medicoId) {
+      res.status(403).json({ success: false, message: 'No tiene permiso para esta fórmula' });
+      return;
+    }
+    if (formula.ordenAlivia?.estado && formula.ordenAlivia.estado !== 'cancelado') {
+      // Ya tiene orden activa — devolver la existente
+      res.json({ success: true, ordenAlivia: formula.ordenAlivia, yaExistia: true });
+      return;
+    }
+
+    const idOrden = `CRISAL-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+
+    const productos = formula.medicamentos.map((m, idx) => ({
+      codigo_unico: `CRISAL-${formulaId}-${idx}`,
+      nombre: `${m.denominacionComun} ${m.concentracion} ${m.unidadMedida}`,
+      dosis: `${m.dosis} — ${m.frecuencia} por ${m.diasTratamiento}`,
+      cantidad: 1,
+      tipo: 'otc',
+      precio_referencia: null
+    }));
+
+    const ordenJson: Record<string, unknown> = {
+      id_orden: idOrden,
+      id_paciente: String(formula.pacienteId),
+      id_medico: medicoId,
+      fecha_generacion: new Date().toISOString(),
+      productos,
+      link_carrito: null,
+      estado: 'pendiente_envio'
+    };
+
+    const updated = await FormulaMedica.findByIdAndUpdate(
+      formulaId,
+      {
+        $set: {
+          ordenAlivia: {
+            json: ordenJson,
+            estado: 'pendiente_envio',
+            linkCarrito: undefined
+          }
+        }
+      },
+      { new: true }
+    ).lean();
+
+    res.status(201).json({ success: true, ordenAlivia: updated?.ordenAlivia, idOrden });
+  } catch (error: any) {
+    console.error('[generarOrdenAlivia]:', error);
+    res.status(500).json({ success: false, message: 'Error al generar la orden ALIVIA', error: error.message });
+  }
+};
+
 export const eliminarFormulaMedica = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const medicoId = req.userId;

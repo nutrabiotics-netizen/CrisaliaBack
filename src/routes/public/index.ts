@@ -1,10 +1,19 @@
 import { Router } from 'express';
 import * as documentosLegalesController from '../../controllers/public/documentosLegalesController';
+import { validarCodigo, registrarMedicoConCodigo } from '../../controllers/public/registroMedicoController';
+import { obtenerHCPublica } from '../../controllers/medico/historiaClinica/historiaClinicaController';
 import { authenticate } from '../../middleware/auth';
 
 const router = Router();
 
 router.get('/documentos-legales', documentosLegalesController.obtenerDocumentosActivos);
 router.post('/documentos-legales/aceptar', authenticate, documentosLegalesController.aceptarDocumento);
+
+// Registro médico con código de captación (endpoints públicos)
+router.get('/registro-medico/:codigo', validarCodigo);
+router.post('/registro-medico', registrarMedicoConCodigo);
+
+// Historia clínica pública (QR del PDF — token de 48h)
+router.get('/hc/:token', obtenerHCPublica);
 
 export default router;

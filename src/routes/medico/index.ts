@@ -14,11 +14,15 @@ import materialesRoutes from './materiales';
 import asesoriasRoutes from './asesorias';
 import iaSimuladaRoutes from './ia-simulada';
 import copilotoVozRoutes from './copiloto-voz';
-// import anamnesisRoutes from './anamnesis';
-// import pagoRoutes from './pago';
-// import consultaRoutes from './consulta';
-// import iaEntrenadaRoutes from './ia-entrenada';
-// import seguimientoRoutes from './seguimiento';
+import paraclinicosRoutes from './paraclinicos';
+import referidosRoutes from './referidos';
+import anamnesisRoutes from './anamnesis';
+import seguimientoRoutes from './seguimiento';
+import googleCalendarRoutes from './googleCalendar';
+import metricasRoutes from './metricas';
+import pagoRoutes from './pago';
+import consultaRoutes from './consulta';
+import iaEntrenadaRoutes from './ia-entrenada';
 
 const router = Router();
 
@@ -38,11 +42,15 @@ router.use('/materiales', materialesRoutes);
 router.use('/asesorias', asesoriasRoutes);
 router.use('/ia-simulada', iaSimuladaRoutes);
 router.use('/copiloto-voz', copilotoVozRoutes);
-// router.use('/anamnesis', anamnesisRoutes);
-// router.use('/pago', pagoRoutes);
-// router.use('/consulta', consultaRoutes);
-// router.use('/ia-entrenada', iaEntrenadaRoutes);
-// router.use('/seguimiento', seguimientoRoutes);
+router.use('/paraclinicos', paraclinicosRoutes);
+router.use('/mis-referidos', referidosRoutes);
+router.use('/anamnesis', anamnesisRoutes);
+router.use('/seguimiento', seguimientoRoutes);
+router.use('/google-calendar', googleCalendarRoutes);
+router.use('/metricas', metricasRoutes);
+router.use('/pago', pagoRoutes);
+router.use('/consulta', consultaRoutes);
+router.use('/ia-entrenada', iaEntrenadaRoutes);
 
 export default router;
 

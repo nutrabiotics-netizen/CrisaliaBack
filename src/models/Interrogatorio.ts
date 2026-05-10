@@ -18,6 +18,7 @@ export interface IInterrogatorio extends Document {
     llamadoAccion: string;
     generadoEn: Date;
   };
+  notasMedico?: string;
   creadoPor?: mongoose.Types.ObjectId;
   creadoPorRol?: string;
   actualizadoPor?: mongoose.Types.ObjectId;
@@ -72,6 +73,9 @@ const InterrogatorioSchema = new Schema<IInterrogatorio>(
     },
     recomendacionAutomatica: {
       type: Schema.Types.Mixed
+    },
+    notasMedico: {
+      type: String
     },
     creadoPor: {
       type: Schema.Types.ObjectId,

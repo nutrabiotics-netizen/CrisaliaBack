@@ -1,6 +1,7 @@
 import Interrogatorio, { IInterrogatorio } from '../../../models/Interrogatorio';
 import openaiService from '../../openai/openaiService';
 import { AIService } from '../../ai/AIService';
+import { notificarMedicoProgresoAnamnesis } from '../../notifications/medicoNotificacionService';
 
 export interface RespuestaInterrogatorio {
   preguntaId: string;
@@ -110,6 +111,7 @@ class InterrogatorioService {
     interrogatorio.progreso = Math.min(100, Math.round((respuestasCompletadas / totalPreguntas) * 100));
 
     // Actualizar estado si está completo
+    const progresoAnterior = interrogatorio.progreso;
     if (interrogatorio.progreso === 100) {
       interrogatorio.estado = 'completado';
     } else if (interrogatorio.estado === 'pendiente') {
@@ -123,6 +125,18 @@ class InterrogatorioService {
     }
 
     await interrogatorio.save();
+
+    // Notificación proactiva al médico en umbrales 50% y 100%
+    const nuevoProgreso = interrogatorio.progreso;
+    const cruzaUmbral = (umbral: number) =>
+      progresoAnterior < umbral && nuevoProgreso >= umbral;
+
+    if (cruzaUmbral(50) || cruzaUmbral(100)) {
+      notificarMedicoProgresoAnamnesis(
+        String(interrogatorio.pacienteId),
+        nuevoProgreso
+      ).catch((e) => console.warn('[Interrogatorio] notifMedico error (no crítico):', e));
+    }
 
     return interrogatorio;
   }

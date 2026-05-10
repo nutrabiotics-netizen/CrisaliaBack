@@ -2,6 +2,10 @@ import { Response } from 'express';
 import { AuthRequest } from '../../middleware/auth';
 import CuidadorIAConversacion from '../../models/CuidadorIAConversacion';
 import Interrogatorio from '../../models/Interrogatorio';
+import Cita from '../../models/Cita';
+import Paciente from '../../models/Paciente';
+import Medico from '../../models/Medico';
+import { enviarMensajeCitaPaciente } from '../../services/notifications/citaWhatsAppNotifier';
 
 const MAX_MENSAJES_HISTORIAL = 40; // Ventana de contexto enviada a la IA
 const MAX_CHARS_CONTEXTO = 3000;  // Límite de caracteres del resumen de anamnesis inyectado
@@ -128,6 +132,63 @@ export const obtenerHistorial = async (req: AuthRequest, res: Response): Promise
   } catch (error) {
     console.error('[CuidadorIA] obtenerHistorial:', error);
     res.status(500).json({ mensaje: 'Error al obtener el historial.' });
+  }
+};
+
+/**
+ * POST /api/paciente/cuidador-ia/alertar-medico
+ * El paciente escala una preocupación al médico desde el Cuidador IA.
+ * Body: { motivo?: string }
+ */
+export const alertarMedico = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const pacienteId = req.userId;
+    if (!pacienteId) { res.status(401).json({ mensaje: 'No autorizado' }); return; }
+
+    const { motivo } = req.body as { motivo?: string };
+
+    // Buscar médico asignado via cita más reciente
+    const cita = await Cita.findOne({ pacienteId })
+      .sort({ createdAt: -1 })
+      .select('medicoId')
+      .lean();
+
+    if (!cita?.medicoId) {
+      res.status(404).json({ mensaje: 'No tienes un médico asignado aún.' });
+      return;
+    }
+
+    const [medico, paciente] = await Promise.all([
+      Medico.findById(cita.medicoId).select('nombre apellido whatsapp telefono').lean(),
+      Paciente.findById(pacienteId).select('nombre apellido').lean(),
+    ]);
+
+    if (!medico) {
+      res.status(404).json({ mensaje: 'Médico no encontrado.' });
+      return;
+    }
+
+    const telMedico = (medico.whatsapp || medico.telefono)?.trim();
+    const nombrePac = [paciente?.nombre, paciente?.apellido].filter(Boolean).join(' ') || 'Tu paciente';
+    const nombreMed = [medico.nombre, medico.apellido].filter(Boolean).join(' ');
+
+    const msg =
+      `⚠️ ALERTA CUIDADOR IA — Crisal-iA\n` +
+      `Hola Dr(a). ${nombreMed}, ${nombrePac} ha solicitado asistencia urgente desde el Cuidador IA.\n` +
+      (motivo?.trim() ? `Motivo: "${motivo.trim()}"\n` : '') +
+      `Por favor revisa su estado y comunícate con el paciente a la brevedad.`;
+
+    if (telMedico) {
+      await enviarMensajeCitaPaciente(telMedico, msg);
+    } else {
+      console.info('[CuidadorIA] alertarMedico — médico sin teléfono; solo log.');
+    }
+
+    console.info(`[CuidadorIA] alertarMedico paciente=${pacienteId} medico=${cita.medicoId}`);
+    res.json({ success: true, mensaje: 'Tu médico ha sido notificado. Estará en contacto contigo.' });
+  } catch (error) {
+    console.error('[CuidadorIA] alertarMedico:', error);
+    res.status(500).json({ mensaje: 'No se pudo enviar la alerta al médico.' });
   }
 };
 

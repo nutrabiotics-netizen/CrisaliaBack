@@ -6,14 +6,17 @@ import mongoose from 'mongoose';
 import { UserRole } from '../../../types';
 
 const TIPOS = ['asistencial', 'administrativo'] as const;
+const CATEGORIAS = ['asistencial_salud', 'administrativo', 'servicios_generales'] as const;
 
-/** Listar personal (opcional filtro por tipo) */
+/** Listar personal (filtro opcional por tipo y/o categoria) */
 export const listar = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const tipo = req.query.tipo as string | undefined;
+    const categoria = req.query.categoria as string | undefined;
     const filter: Record<string, unknown> = {};
     if (tipo && TIPOS.includes(tipo as any)) filter.tipo = tipo;
-    const personal = await PersonalInstitucional.find(filter).sort({ tipo: 1, nombre: 1 }).lean();
+    if (categoria && CATEGORIAS.includes(categoria as any)) filter.categoria = categoria;
+    const personal = await PersonalInstitucional.find(filter).sort({ categoria: 1, nombre: 1 }).lean();
     res.json({ success: true, data: personal });
   } catch (error: any) {
     console.error('Error al listar personal:', error);
@@ -44,14 +47,16 @@ export const obtenerPorId = async (req: AuthRequest, res: Response): Promise<voi
 /** Crear */
 export const crear = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { tipo, nombre, apellido, cargo, activo, email, password } = req.body;
+    const { tipo, categoria, nombre, apellido, cargo, activo, email, password } = req.body;
     if (!nombre?.trim() || !cargo?.trim()) {
       res.status(400).json({ success: false, message: 'Nombre y cargo son requeridos' });
       return;
     }
     const tipoValido = tipo && TIPOS.includes(tipo) ? tipo : 'administrativo';
+    const categoriaValida = categoria && CATEGORIAS.includes(categoria) ? categoria : 'administrativo';
     const personal = await PersonalInstitucional.create({
       tipo: tipoValido,
+      categoria: categoriaValida,
       nombre: nombre.trim(),
       apellido: (apellido ?? '').trim() || undefined,
       cargo: cargo.trim(),
@@ -91,7 +96,7 @@ export const crear = async (req: AuthRequest, res: Response): Promise<void> => {
 export const actualizar = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { tipo, nombre, apellido, cargo, activo, email, password } = req.body;
+    const { tipo, categoria, nombre, apellido, cargo, activo, email, password } = req.body;
     if (!mongoose.Types.ObjectId.isValid(id as string)) {
       res.status(400).json({ success: false, message: 'ID inválido' });
       return;
@@ -103,6 +108,7 @@ export const actualizar = async (req: AuthRequest, res: Response): Promise<void>
     }
     const update: Record<string, unknown> = {};
     if (tipo !== undefined) update.tipo = TIPOS.includes(tipo) ? tipo : 'administrativo';
+    if (categoria !== undefined) update.categoria = CATEGORIAS.includes(categoria) ? categoria : 'administrativo';
     if (nombre !== undefined) update.nombre = String(nombre).trim();
     if (apellido !== undefined) update.apellido = String(apellido).trim() || '';
     if (cargo !== undefined) update.cargo = String(cargo).trim();

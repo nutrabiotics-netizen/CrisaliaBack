@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { connectDB } from './config/database';
 
@@ -8,7 +10,32 @@ dotenv.config();
 
 const app = express();
 
-// Middlewares
+// ─── Seguridad ────────────────────────────────────────────────────────────────
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' } // permite imágenes S3 desde el frontend
+}));
+
+// Rate limiting global: 200 req/15 min por IP
+const limiterGlobal = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Demasiadas solicitudes. Intenta en 15 minutos.' }
+});
+app.use('/api/', limiterGlobal);
+
+// Rate limiting estricto para auth: 20 req/15 min
+const limiterAuth = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Demasiados intentos de autenticación. Intenta en 15 minutos.' }
+});
+app.use('/api/auth/', limiterAuth);
+
+// ─── CORS ─────────────────────────────────────────────────────────────────────
 app.use(cors({
   origin: [
     'https://nutrabiotics.mozartai.com.co',
