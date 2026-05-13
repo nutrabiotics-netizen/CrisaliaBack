@@ -3,6 +3,7 @@ import { body } from 'express-validator';
 import AuthController from '../../controllers/auth/authController';
 import { authenticate, authorize } from '../../middleware/auth';
 import { UserRole } from '../../types';
+import { enviarCodigo2FA, validarCodigo2FA } from '../../controllers/auth/twoFactorController';
 
 const router = Router();
 
@@ -112,6 +113,22 @@ router.post('/whatsapp/verify', AuthController.verifyWhatsApp.bind(AuthControlle
 // 2FA WhatsApp (paciente ya logueado con email/password)
 router.post('/whatsapp/send-code-2fa', authenticate, authorize(UserRole.PACIENTE), AuthController.sendWhatsAppCode2FA.bind(AuthController));
 router.post('/whatsapp/verify-2fa', authenticate, authorize(UserRole.PACIENTE), AuthController.verifyWhatsApp2FA.bind(AuthController));
+
+// 2FA por documento (paciente o médico) — flujo pre-login: solo se pide el documento,
+// se busca el usuario, se envía un código por WhatsApp y luego se valida para emitir JWT.
+router.post(
+  '/2fa/enviar',
+  [body('documento').notEmpty().withMessage('El documento es requerido').trim()],
+  enviarCodigo2FA
+);
+router.post(
+  '/2fa/validar',
+  [
+    body('documento').notEmpty().withMessage('El documento es requerido').trim(),
+    body('codigo').notEmpty().withMessage('El código es requerido').trim()
+  ],
+  validarCodigo2FA
+);
 
 export default router;
 
