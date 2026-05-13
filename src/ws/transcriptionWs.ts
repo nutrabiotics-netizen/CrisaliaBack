@@ -319,6 +319,13 @@ export function registerTranscriptionHandlers(wss: WebSocketServer): void {
       }
 
       if (msg.type === 'process_with_agent' && citaIdStr) {
+        console.log('[TranscriptionWS] ▶ process_with_agent recibido', {
+          citaId: citaIdStr,
+          transcriptionLen: msg.transcription?.length || 0,
+          isPartial: msg.isPartial,
+          activeSection: msg.activeSection,
+          currentSectionsKeys: msg.currentSections ? Object.keys(msg.currentSections) : [],
+        });
         try {
           // Obtener contexto del paciente para Bedrock
           const pId = pacienteIdStr;
@@ -340,7 +347,13 @@ export function registerTranscriptionHandlers(wss: WebSocketServer): void {
           });
 
           const parsed = parseBedrockResponse(responseText);
-          
+
+          console.log('[TranscriptionWS] ◀ broadcast proposal', {
+            citaId: citaIdStr,
+            propuestasCount: (parsed.propuestas || []).length,
+            resumenLen: (parsed.resumen || '').length,
+          });
+
           broadcastToCitaRoom(citaIdStr, {
             type: 'proposal',
             payload: {
@@ -349,7 +362,7 @@ export function registerTranscriptionHandlers(wss: WebSocketServer): void {
             }
           });
         } catch (err) {
-          console.error('[TranscriptionWS] Error procesando con agente:', err);
+          console.error('[TranscriptionWS] ✗ Error procesando con agente:', err);
           sendJson(ws, { type: 'error', message: 'Error al procesar con el agente IA' });
         }
       }

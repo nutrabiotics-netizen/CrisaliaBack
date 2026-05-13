@@ -6,8 +6,10 @@ import {
   CommitStrategy,
   type RealtimeConnection
 } from '@elevenlabs/elevenlabs-js';
-import { bedrockClient } from '../../../config/awsConfig';
-import { copilotoVozBedrockConfig } from '../../../config/copilotoVozConfig';
+import {
+  copilotoVozBedrockClient as bedrockClient,
+  copilotoVozBedrockConfig,
+} from '../../../config/copilotoVozConfig';
 
 let elevenLabsClient: ElevenLabsClient | null = null;
 

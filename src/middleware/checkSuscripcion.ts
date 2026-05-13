@@ -20,6 +20,18 @@ export const checkSuscripcion = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    // ── Bypass de desarrollo ──────────────────────────────────────────────
+    // Permite saltarse la verificación de suscripción durante pruebas locales.
+    // Solo se activa si BYPASS_SUSCRIPCION=true en .env y NODE_ENV != 'production'.
+    if (
+      process.env.BYPASS_SUSCRIPCION === 'true' &&
+      process.env.NODE_ENV !== 'production'
+    ) {
+      console.warn('[checkSuscripcion] ⚠ BYPASS activo — saltando verificación de suscripción');
+      next();
+      return;
+    }
+
     const medicoId = req.userId;
     if (!medicoId) {
       res.status(401).json({ success: false, message: 'No autenticado.' });

@@ -23,7 +23,17 @@ export async function invokeBedrockAgent(input: BedrockAgentInput): Promise<stri
   const agentId = videoCallConfig.bedrockAgentId;
   const agentAliasId = videoCallConfig.bedrockAgentAliasId;
 
+  console.log('[BedrockService] ▶ invokeBedrockAgent', {
+    agentId,
+    agentAliasId,
+    transcriptLen: input.transcriptionSegment?.length || 0,
+    transcriptPreview: input.transcriptionSegment?.slice(0, 100),
+    activeSection: input.activeSection,
+    hasCurrentSections: !!input.currentSections && Object.keys(input.currentSections).length > 0,
+  });
+
   if (!agentId) {
+    console.warn('[BedrockService] ⚠ Agente no configurado');
     return JSON.stringify({
       resumen: 'Agente Bedrock no configurado en variables de entorno.',
       propuestas: [],
@@ -41,6 +51,7 @@ export async function invokeBedrockAgent(input: BedrockAgentInput): Promise<stri
       inputText: prompt,
     });
 
+    const t0 = Date.now();
     const response = await bedrockClient.send(command);
     const chunks: string[] = [];
 
@@ -52,10 +63,21 @@ export async function invokeBedrockAgent(input: BedrockAgentInput): Promise<stri
       }
     }
 
-    return chunks.join('');
+    const raw = chunks.join('');
+    console.log('[BedrockService] ◀ respuesta cruda', {
+      ms: Date.now() - t0,
+      len: raw.length,
+      preview: raw.slice(0, 400),
+    });
+
+    if (!raw.trim()) {
+      console.warn('[BedrockService] ⚠ Agente devolvió respuesta VACÍA');
+    }
+
+    return raw;
   } catch (err: unknown) {
     const error = err as any;
-    console.error('[BedrockService] Error invocando agente (Propuestas):', error);
+    console.error('[BedrockService] ✗ Error invocando agente (Propuestas):', error);
     return JSON.stringify({
       resumen: `Error del agente: ${error.message || String(error)}`,
       propuestas: [],
@@ -64,41 +86,71 @@ export async function invokeBedrockAgent(input: BedrockAgentInput): Promise<stri
 }
 
 function buildBedrockPrompt(input: BedrockAgentInput): string {
-  const activeSectionNote = input.activeSection
-    ? `
-IMPORTANTE - Sección activa: "${input.activeSection}".
-- La consulta se desarrolla por secciones. El médico está actualmente en esta sección.
-- Genera propuestas ÚNICAMENTE para la sección "${input.activeSection}".
-- Si no hay información relevante para esta sección en la transcripción, deja el array de propuestas vacío.
-`
+  const ALL_SECTIONS = [
+    'motivo_consulta', 'enfermedad_actual', 'antecedentes',
+    'revision_sistemas', 'alertas_alergias', 'resultados_paraclinicos',
+    'examen_fisico', 'diagnosticos', 'analisis_plan', 'recomendaciones'
+  ];
+
+  const sections = input.currentSections || {};
+  const filledKeys: string[] = [];
+  const emptyKeys: string[] = [];
+  const filledDetails: string[] = [];
+
+  for (const key of ALL_SECTIONS) {
+    const val = sections[key];
+    if (typeof val === 'string' && val.trim().length > 0) {
+      filledKeys.push(key);
+      filledDetails.push(`${key}: "${val.replace(/\s+/g, ' ').slice(0, 100)}"`);
+    } else {
+      emptyKeys.push(key);
+    }
+  }
+
+  const vacias = emptyKeys.length
+    ? `\nSECCIONES VACÍAS (prioridad — llénalas si la transcripción contiene info que les corresponda): ${emptyKeys.join(', ')}`
     : '';
 
-  return `Instrucciones de Rol:
-Eres un Asistente de Documentación Clínica de alta precisión. Tu función principal es actuar como un observador pasivo pero analítico durante una teleconsulta, transformando el diálogo fluido entre médico y paciente en una estructura de historia clínica profesional y organizada.
+  const llenas = filledDetails.length
+    ? `\nSECCIONES YA LLENAS (no dupliques tal cual; solo propón actualización si hay info NUEVA y más completa):\n${filledDetails.join('\n')}`
+    : '';
 
-Directrices de Comportamiento:
-- Fidelidad Absoluta: No inventes, deduzcas ni supongas datos.
-- Neutralidad: No emitas juicios de valor ni recomendaciones médicas propias.
-- Privacidad: Trata toda la información con rigor.
+  const foco = input.activeSection ? `\nSección en foco actual: ${input.activeSection}` : '';
 
-Contexto del Paciente:
-${input.patientHistoryContext}
+  return `Paciente: ${input.patientHistoryContext.replace(/\s+/g, ' ').slice(0, 200)}${vacias}${llenas}${foco}
 
-Transcripción de la Consulta (${input.isPartial ? 'parcial' : 'segmento final'}):
+Transcripción nueva (con etiqueta de quién habla):
 ${input.transcriptionSegment}
 
-${input.currentSections ? `Estado actual de las secciones:\n${JSON.stringify(input.currentSections)}` : ''}
-${activeSectionNote}
+TAREA: Clasifica la información de la transcripción en las secciones correctas.
 
-Instrucciones de Formato (JSON):
-Debes entregar la información exclusivamente en un objeto JSON con las siguientes claves:
-- "resumen": Un resumen ejecutivo de lo discutido recientemente.
-- "propuestas": Un array de objetos { "seccion": "string", "contenido": "string" }.
-  Secciones válidas (usa preferentemente esta nomenclatura y orden clínico):
-  orden_consulta_ia, motivo_consulta, enfermedad_actual, antecedentes, revision_sistemas_alertas, resultados_laboratorio, examen_fisico_kinesiologia, analisis_plan_tratamiento, recomendaciones.
-  Compatibilidad: motivo_atencion, examen_fisico, resultados_paraclinicos, alertas_y_alergias, analisis_y_plan, diagnosticos; informacion_general, tipo_actividad_acompanamiento.
+SECCIONES VÁLIDAS (usa exactamente estas claves):
+- motivo_consulta: razón principal de la consulta en 1-2 frases (PACIENTE).
+- enfermedad_actual: cronología, intensidad, evolución del problema actual (PACIENTE).
+- antecedentes: historia PREVIA — patológicos, quirúrgicos, familiares, hábitos (PACIENTE).
+- revision_sistemas: síntomas en otros sistemas no relacionados al motivo (PACIENTE responde, MÉDICO pregunta).
+- alertas_alergias: alergias conocidas + signos de alarma (PACIENTE).
+- resultados_paraclinicos: exámenes YA REALIZADOS y sus resultados (PACIENTE menciona).
+- examen_fisico: hallazgos físicos durante la consulta — signos vitales, inspección, palpación (MÉDICO observa).
+- diagnosticos: impresiones diagnósticas mencionadas explícitamente (MÉDICO).
+- analisis_plan: razonamiento + plan (exámenes a pedir, medicación, interconsultas) (MÉDICO).
+- recomendaciones: instrucciones al paciente para casa (MÉDICO).
 
-No incluyas texto fuera del bloque JSON.`;
+REGLAS DE QUIÉN APORTA QUÉ:
+- Las PREGUNTAS del médico ("¿desde cuándo?", "¿le duele aquí?") NO se documentan — son guía.
+- Las RESPUESTAS del paciente sí se documentan, en la sección que corresponda.
+
+REGLAS GENERALES:
+1. Si una SECCIÓN VACÍA tiene información que le corresponde, DEBES proponerla.
+2. Para secciones llenas: solo propón si hay info NUEVA que las amplíe o corrija.
+3. Cada idea va en UNA sola sección (la más específica).
+4. NO inventes — solo extrae lo que está literalmente en la transcripción.
+5. Devuelve SOLO JSON, sin markdown, sin texto extra.
+
+Salida:
+{"resumen":"frase corta","propuestas":[{"seccion":"motivo_consulta","contenido":"..."}]}
+
+Si NO hay nada útil que extraer, devuelve: {"resumen":"Sin información nueva","propuestas":[]}`;
 }
 
 export function parseBedrockResponse(response: string): BedrockAgentResponse {
@@ -132,17 +184,24 @@ export function parseBedrockResponse(response: string): BedrockAgentResponse {
         const parsed = JSON.parse(jsonStr);
         if (typeof parsed.resumen === 'string') result.resumen = parsed.resumen;
         if (Array.isArray(parsed.propuestas)) {
-           result.propuestas = parsed.propuestas.filter((p: any) => 
+           result.propuestas = parsed.propuestas.filter((p: any) =>
              typeof p.seccion === 'string' && typeof p.contenido === 'string'
            );
         }
+        console.log('[BedrockService] ✓ Parsed', {
+          resumen: result.resumen?.slice(0, 100),
+          propuestasCount: result.propuestas?.length || 0,
+          secciones: (result.propuestas || []).map(p => p.seccion),
+        });
       } catch (parseErr) {
-        console.error('[BedrockService] JSON.parse falló tras limpieza. Contenido problemático:', jsonStr.substring(0, 150));
+        console.error('[BedrockService] ✗ JSON.parse falló tras limpieza. Contenido problemático:', jsonStr.substring(0, 300));
         throw parseErr;
       }
+    } else {
+      console.warn('[BedrockService] ⚠ No se encontraron llaves { } en la respuesta. Raw:', response.slice(0, 200));
     }
   } catch (err) {
-    console.error('[BedrockService] Error procesando respuesta:', err);
+    console.error('[BedrockService] ✗ Error procesando respuesta:', err);
   }
   return result;
 }
