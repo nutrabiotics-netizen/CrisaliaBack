@@ -89,7 +89,7 @@ import administrativoRoutes from './routes/administrativo';
 import externalRoutes from './routes/external';
 import publicRoutes from './routes/public/index';
 import cuidadorIARoutes from './routes/paciente/cuidador-ia';
-import { scheduleControlPreCitaJob } from './services/jobs/controlPreCitaJob';
+// import { scheduleControlPreCitaJob } from './services/jobs/controlPreCitaJob';
 // Fase 5
 import { crearLink, listarLinks, desactivarLink, listarReferidos, bonificarReferido } from './controllers/admin/linkCaptacionController';
 import { validarCodigo, invitarMedico, misReferidos } from './controllers/captacion/captacionController';
@@ -123,8 +123,10 @@ app.use('/api/public', publicRoutes);
 // Cuidador IA (ruta directa, fuera del router paciente para limpieza de path)
 app.use('/api/paciente/cuidador-ia', cuidadorIARoutes);
 
-// Iniciar job diario de pre-cita de control
-scheduleControlPreCitaJob();
+// Iniciar job diario de pre-cita de control.
+// DESHABILITADO temporalmente: descomentar cuando se quiera reactivar el envío
+// automático de WhatsApps de pre-cita en producción.
+// scheduleControlPreCitaJob();
 
 // ─── Fase 5 — Captación médica ─────────────────────────────────────────────
 // Admin: links de captación y referidos
