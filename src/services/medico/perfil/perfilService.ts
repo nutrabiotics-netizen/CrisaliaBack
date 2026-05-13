@@ -111,7 +111,7 @@ class PerfilMedicoService {
       .select('-password')
       .lean();
 
-    return medicoActualizado as IMedico;
+    return medicoActualizado as unknown as IMedico;
   }
 }
 

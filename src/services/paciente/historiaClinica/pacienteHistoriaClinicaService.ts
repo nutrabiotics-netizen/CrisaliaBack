@@ -28,7 +28,7 @@ class PacienteHistoriaClinicaService {
       .sort({ fechaRegistro: -1 })
       .lean();
 
-    return historias as IHistoriaClinica[];
+    return historias as unknown as IHistoriaClinica[];
   }
 }
 

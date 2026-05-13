@@ -65,7 +65,7 @@ class ExamenMedicoService {
       .sort({ createdAt: -1 })
       .lean();
 
-    return examenesMedicos as IExamenMedico[];
+    return examenesMedicos as unknown as IExamenMedico[];
   }
 
   async actualizarExamenMedico(

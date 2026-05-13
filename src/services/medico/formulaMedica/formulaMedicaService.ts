@@ -63,7 +63,7 @@ class FormulaMedicaService {
       .sort({ createdAt: -1 })
       .lean();
 
-    return formulas as IFormulaMedica[];
+    return formulas as unknown as IFormulaMedica[];
   }
 
   async actualizarFormulaMedica(

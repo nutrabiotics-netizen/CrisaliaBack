@@ -65,7 +65,7 @@ class AyudaDiagnosticaService {
       .sort({ createdAt: -1 })
       .lean();
 
-    return ayudasDiagnosticas as IAyudaDiagnostica[];
+    return ayudasDiagnosticas as unknown as IAyudaDiagnostica[];
   }
 
   async actualizarAyudaDiagnostica(

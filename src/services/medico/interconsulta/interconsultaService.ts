@@ -64,7 +64,7 @@ class InterconsultaService {
       .sort({ createdAt: -1 })
       .lean();
 
-    return interconsultas as IInterconsulta[];
+    return interconsultas as unknown as IInterconsulta[];
   }
 
   async actualizarInterconsulta(

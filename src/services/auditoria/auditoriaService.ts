@@ -37,16 +37,18 @@ class AuditoriaService {
   }
 
   async obtenerLogsPorEntidad(entidad: EntidadTipo, entidadId: string): Promise<IAuditoria[]> {
-    return Auditoria.find({ entidad, entidadId })
+    const logs = await Auditoria.find({ entidad, entidadId })
       .sort({ createdAt: -1 })
       .lean();
+    return logs as unknown as IAuditoria[];
   }
 
   async obtenerLogsPorUsuario(usuarioId: string, limite: number = 50): Promise<IAuditoria[]> {
-    return Auditoria.find({ usuarioId })
+    const logs = await Auditoria.find({ usuarioId })
       .sort({ createdAt: -1 })
       .limit(limite)
       .lean();
+    return logs as unknown as IAuditoria[];
   }
 
   async obtenerLogsPorAccion(accion: AccionTipo, entidad?: EntidadTipo, limite: number = 100): Promise<IAuditoria[]> {
@@ -54,11 +56,12 @@ class AuditoriaService {
     if (entidad) {
       query.entidad = entidad;
     }
-    
-    return Auditoria.find(query)
+
+    const logs = await Auditoria.find(query)
       .sort({ createdAt: -1 })
       .limit(limite)
       .lean();
+    return logs as unknown as IAuditoria[];
   }
 }
 

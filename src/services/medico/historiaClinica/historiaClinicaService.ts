@@ -70,7 +70,7 @@ class HistoriaClinicaService {
       .sort({ fechaRegistro: -1 })
       .lean();
 
-    return historias as IHistoriaClinica[];
+    return historias as unknown as IHistoriaClinica[];
   }
 
   async actualizarHistoriaClinica(

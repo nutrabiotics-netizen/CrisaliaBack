@@ -64,7 +64,7 @@ class IncapacidadService {
       .sort({ fechaExpedicion: -1 })
       .lean();
 
-    return incapacidades as IIncapacidad[];
+    return incapacidades as unknown as IIncapacidad[];
   }
 
   async actualizarIncapacidad(

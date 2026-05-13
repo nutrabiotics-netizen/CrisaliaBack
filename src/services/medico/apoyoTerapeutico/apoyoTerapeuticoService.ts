@@ -65,7 +65,7 @@ class ApoyoTerapeuticoService {
       .sort({ createdAt: -1 })
       .lean();
 
-    return apoyosTerapeuticos as IApoyoTerapeutico[];
+    return apoyosTerapeuticos as unknown as IApoyoTerapeutico[];
   }
 
   async actualizarApoyoTerapeutico(

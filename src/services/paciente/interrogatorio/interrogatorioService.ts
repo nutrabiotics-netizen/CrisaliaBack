@@ -65,7 +65,7 @@ class InterrogatorioService {
       .sort({ createdAt: -1 })
       .lean();
 
-    return interrogatorios as IInterrogatorio[];
+    return interrogatorios as unknown as IInterrogatorio[];
   }
 
   async obtenerInterrogatorioActivo(pacienteId: string, tipo?: 'primera_vez' | 'control'): Promise<IInterrogatorio | null> {

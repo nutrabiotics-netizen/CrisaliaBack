@@ -19,7 +19,7 @@ export const getMiLinkReferido = async (req: AuthRequest, res: Response): Promis
     if (!medicoId) { res.status(401).json({ mensaje: 'No autorizado.' }); return; }
 
     // Buscar link activo existente del médico
-    let link = await LinkCaptacion.findOne({
+    let link: any = await LinkCaptacion.findOne({
       medicoReferidorId: medicoId,
       tipo: 'referido',
       estado: 'activo',
@@ -30,7 +30,7 @@ export const getMiLinkReferido = async (req: AuthRequest, res: Response): Promis
     if (!link) {
       const codigo = generarCodigo();
       const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-      link = await LinkCaptacion.create({
+      const created = await LinkCaptacion.create({
         codigo,
         tipo: 'referido',
         medicoReferidorId: medicoId,
@@ -38,6 +38,7 @@ export const getMiLinkReferido = async (req: AuthRequest, res: Response): Promis
         expiresAt,
         creadoPor: 'medico'
       });
+      link = created.toObject();
     }
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
