@@ -78,6 +78,7 @@ import './models/PagoSimulado';
 import './models/CuidadorIAConversacion';
 import './models/LinkCaptacion';
 import './models/ReferidoMedico';
+import './models/AdherenciaToma';
 
 // Rutas
 import authRoutes from './routes/auth/authRoutes';
