@@ -5,7 +5,7 @@ import { generateToken } from '../../utils/jwt';
 import { UserRole } from '../../types';
 import {
   envioCodigoWhatsApp,
-  verificarCodigoWhatsApp,
+  verificarCodigoWhatsAppDetallado,
   normalizarTelefono
 } from '../../services/whatsapp/whatsappService';
 
@@ -179,9 +179,9 @@ export const validarCodigo2FA = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    const ok = verificarCodigoWhatsApp(user.telefono, codigo);
+    const resultado = await verificarCodigoWhatsAppDetallado(user.telefono, codigo);
 
-    if (ok) {
+    if (resultado.ok) {
       const token = generateToken(user.id, user.role);
       const ultimos4 = normalizarTelefono(user.telefono).slice(-4);
 
@@ -204,7 +204,28 @@ export const validarCodigo2FA = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    // Código inválido o expirado → reenviar uno nuevo automáticamente.
+    // Caso bloqueado por demasiados intentos: no reenviar automáticamente, pedir solicitar uno nuevo.
+    if (resultado.razon === 'bloqueado') {
+      res.status(429).json({
+        success: false,
+        razon: 'bloqueado',
+        message:
+          'Demasiados intentos con el código anterior. Solicita un código nuevo desde el paso anterior.'
+      });
+      return;
+    }
+
+    // Caso "código incorrecto" (aún tiene intentos): NO reenviar, informar para que reintente.
+    if (resultado.razon === 'codigo_incorrecto') {
+      res.status(401).json({
+        success: false,
+        razon: 'codigo_incorrecto',
+        message: 'Código incorrecto. Verifica e intenta de nuevo.'
+      });
+      return;
+    }
+
+    // Caso "expirado" o "sin_codigo" → reenviar uno nuevo automáticamente.
     try {
       await envioCodigoWhatsApp(user.telefono);
     } catch (e) {
@@ -219,8 +240,11 @@ export const validarCodigo2FA = async (req: Request, res: Response): Promise<voi
     res.status(410).json({
       success: false,
       reenviado: true,
+      razon: resultado.razon,
       message:
-        'El código ingresado no es válido o ya expiró. Te enviamos un código nuevo por WhatsApp.'
+        resultado.razon === 'expirado'
+          ? 'Tu código expiró. Te enviamos uno nuevo por WhatsApp.'
+          : 'No había un código vigente. Te enviamos uno nuevo por WhatsApp.'
     });
   } catch (error: any) {
     console.error('[2FA validarCodigo] error:', error);

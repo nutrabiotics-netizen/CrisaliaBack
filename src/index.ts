@@ -79,6 +79,7 @@ import './models/CuidadorIAConversacion';
 import './models/LinkCaptacion';
 import './models/ReferidoMedico';
 import './models/AdherenciaToma';
+import './models/Codigo2FA';
 
 // Rutas
 import authRoutes from './routes/auth/authRoutes';

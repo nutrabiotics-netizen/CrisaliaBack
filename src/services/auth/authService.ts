@@ -283,7 +283,7 @@ export class AuthService {
    * Verifica el código WhatsApp y devuelve token y usuario si es un paciente registrado.
    */
   async verifyWhatsAppAndLogin(celular: string, codigo: string): Promise<AuthResponse> {
-    const ok = verificarCodigoWhatsApp(celular, codigo);
+    const ok = await verificarCodigoWhatsApp(celular, codigo);
     if (!ok) {
       throw new AppError('Código inválido o expirado', 401);
     }
@@ -352,7 +352,7 @@ export class AuthService {
     if (!telefono || !telefono.trim()) {
       throw new AppError('No hay número de WhatsApp registrado', 400);
     }
-    const ok = verificarCodigoWhatsApp(telefono, codigo);
+    const ok = await verificarCodigoWhatsApp(telefono, codigo);
     if (!ok) {
       throw new AppError('Código inválido o expirado', 401);
     }

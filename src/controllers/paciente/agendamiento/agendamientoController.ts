@@ -446,3 +446,68 @@ export const cancelarCita = async (req: AuthRequest, res: Response): Promise<voi
   }
 };
 
+/**
+ * PUT /api/paciente/agendamiento/citas/:citaId/confirmar
+ *
+ * Marca una cita como `confirmada` después de un pago exitoso.
+ * Hoy el "pago" es mock desde el checkout; cuando se integre pasarela real
+ * (Wompi/PSE), idealmente este endpoint quedaría detrás de la verificación
+ * del webhook de pago en vez de ser llamado directamente por el front.
+ */
+export const confirmarPagoCita = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const pacienteId = req.userId;
+    const { citaId } = req.params;
+    const { metodoPago, aseguradora } = req.body ?? {};
+
+    if (!pacienteId) {
+      res.status(401).json({ success: false, message: 'Usuario no autenticado' });
+      return;
+    }
+
+    const cita = await Cita.findOne({ _id: citaId, pacienteId });
+    if (!cita) {
+      res.status(404).json({ success: false, message: 'Cita no encontrada' });
+      return;
+    }
+
+    if (cita.estado === 'cancelada') {
+      res.status(400).json({ success: false, message: 'No se puede confirmar una cita cancelada' });
+      return;
+    }
+    if (cita.estado === 'completada') {
+      res.status(400).json({ success: false, message: 'La cita ya está completada' });
+      return;
+    }
+
+    const estadoAnterior = cita.estado;
+    cita.estado = 'confirmada';
+    if (metodoPago) (cita as any).metodoPago = String(metodoPago);
+    if (aseguradora) (cita as any).aseguradora = String(aseguradora);
+    await cita.save();
+
+    await registrarAccion(
+      req,
+      'actualizar',
+      'Cita',
+      citaId as string,
+      { estado: estadoAnterior },
+      { estado: cita.estado, metodoPago, aseguradora },
+      'Pago confirmado por paciente'
+    );
+
+    res.json({
+      success: true,
+      message: 'Cita confirmada exitosamente',
+      data: cita
+    });
+  } catch (error: any) {
+    console.error('Error al confirmar pago de cita:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al confirmar cita',
+      error: error.message
+    });
+  }
+};
+

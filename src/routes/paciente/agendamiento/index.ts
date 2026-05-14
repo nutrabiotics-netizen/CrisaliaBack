@@ -1,6 +1,9 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../../../middleware/auth';
 import { UserRole } from '../../../types';
+// `requireCuota1` (esquema legacy de 2 cuotas) ya NO aplica para crear citas:
+// la cita se crea en estado `pendiente` y el pago se gestiona después. Lo dejamos
+// importado solo para la sala de espera (donde sí tiene sentido validar pago).
 import { requireCuota1 } from '../../../middleware/requirePago';
 import {
   obtenerMedicosDisponibles,
@@ -12,6 +15,7 @@ import {
   crearCita,
   obtenerCitasPaciente,
   cancelarCita,
+  confirmarPagoCita,
   obtenerRecordingUrl
 } from '../../../controllers/paciente/agendamiento/agendamientoController';
 import {
@@ -30,8 +34,9 @@ router.get('/medicos/:medicoId/sedes', authenticate, authorize(UserRole.PACIENTE
 router.get('/medicos/:medicoId/horarios', authenticate, authorize(UserRole.PACIENTE), obtenerHorariosDisponibles);
 router.get('/medicos/:medicoId/configuracion-flujo', authenticate, authorize(UserRole.PACIENTE), obtenerConfiguracionFlujoMedico);
 router.get('/citas', authenticate, authorize(UserRole.PACIENTE), obtenerCitasPaciente);
-router.post('/citas', authenticate, authorize(UserRole.PACIENTE), requireCuota1, crearCita);
+router.post('/citas', authenticate, authorize(UserRole.PACIENTE), crearCita);
 router.put('/citas/:citaId/cancelar', authenticate, authorize(UserRole.PACIENTE), cancelarCita);
+router.put('/citas/:citaId/confirmar', authenticate, authorize(UserRole.PACIENTE), confirmarPagoCita);
 router.get('/citas/:citaId/sala-espera', authenticate, authorize(UserRole.PACIENTE), requireCuota1, getEstadoSalaEspera);
 router.get('/citas/:citaId/recording-url', authenticate, authorize(UserRole.PACIENTE), obtenerRecordingUrl);
 
