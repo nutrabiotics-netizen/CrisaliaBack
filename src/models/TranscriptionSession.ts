@@ -57,8 +57,7 @@ const TranscriptionSessionSchema = new Schema<ITranscriptionSession>(
     citaId: {
       type: Schema.Types.ObjectId,
       ref: 'Cita',
-      required: true,
-      index: true
+      required: true
     },
     status: {
       type: String,

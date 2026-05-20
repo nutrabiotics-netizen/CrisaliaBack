@@ -25,8 +25,7 @@ const RegistroIngresoSalidaSchema = new Schema<IRegistroIngresoSalida>(
     },
     fecha: {
       type: Date,
-      required: true,
-      index: true
+      required: true
     },
     horaEntrada: {
       type: String,

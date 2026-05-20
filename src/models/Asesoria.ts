@@ -19,8 +19,7 @@ const AsesoriaSchema = new Schema<IAsesoria>(
     pacienteId: {
       type: Schema.Types.ObjectId,
       ref: 'Paciente',
-      required: true,
-      index: true
+      required: true
     },
     tema: {
       type: String,
@@ -35,8 +34,7 @@ const AsesoriaSchema = new Schema<IAsesoria>(
     estado: {
       type: String,
       enum: ['pendiente', 'asignada', 'respondida'],
-      default: 'pendiente',
-      index: true
+      default: 'pendiente'
     },
     medicoId: {
       type: Schema.Types.ObjectId,

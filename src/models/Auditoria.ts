@@ -24,8 +24,7 @@ const AuditoriaSchema = new Schema<IAuditoria>(
   {
     usuarioId: {
       type: Schema.Types.ObjectId,
-      required: true,
-      index: true
+      required: true
     },
     usuarioRol: {
       type: String,
@@ -43,14 +42,12 @@ const AuditoriaSchema = new Schema<IAuditoria>(
     accion: {
       type: String,
       enum: ['crear', 'actualizar', 'eliminar', 'cancelar', 'confirmar', 'completar'],
-      required: true,
-      index: true
+      required: true
     },
     entidad: {
       type: String,
       enum: ['Cita', 'Paciente', 'Medico', 'Anamnesis', 'Interrogatorio', 'Consulta', 'Pago', 'ConfiguracionAgenda', 'HistoriaClinica', 'FormulaMedica', 'Incapacidad', 'Interconsulta', 'ExamenMedico', 'ApoyoTerapeutico', 'AyudaDiagnostica'],
-      required: true,
-      index: true
+      required: true
     },
     entidadId: {
       type: Schema.Types.ObjectId,

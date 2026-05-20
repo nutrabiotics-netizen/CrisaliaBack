@@ -28,8 +28,7 @@ const CuidadorIAConversacionSchema = new Schema<ICuidadorIAConversacion>(
     pacienteId: {
       type: Schema.Types.ObjectId,
       ref: 'Paciente',
-      required: true,
-      index: true
+      required: true
     },
     mensajes: { type: [MensajeSchema], default: [] },
     contextoIntegrado: { type: Boolean, default: false }

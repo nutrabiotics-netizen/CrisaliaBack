@@ -21,8 +21,7 @@ const DocumentoLegalSchema = new Schema<IDocumentoLegal>(
     slug: {
       type: String,
       required: true,
-      unique: true,
-      index: true
+      unique: true
     },
     contenido: {
       type: String,

@@ -48,8 +48,7 @@ const ParaclinicoSchema = new Schema<IParaclinico>(
     pacienteId: {
       type: Schema.Types.ObjectId,
       ref: 'Paciente',
-      required: true,
-      index: true
+      required: true
     },
     nombre: {
       type: String,

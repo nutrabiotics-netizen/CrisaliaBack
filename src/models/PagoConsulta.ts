@@ -21,7 +21,7 @@ export interface IPagoConsulta extends Document {
 
 const PagoConsultaSchema = new Schema<IPagoConsulta>(
   {
-    medicoId: { type: Schema.Types.ObjectId, ref: 'Medico', required: true, index: true },
+    medicoId: { type: Schema.Types.ObjectId, ref: 'Medico', required: true },
     pacienteId: { type: Schema.Types.ObjectId, ref: 'Paciente', required: true },
     citaId: { type: Schema.Types.ObjectId, ref: 'Cita' },
     tipo: {

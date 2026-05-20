@@ -183,7 +183,7 @@ const MedicoSchema = new Schema<IMedico>(
     telefono:         { type: String, trim: true },
     whatsapp:         { type: String, trim: true },
     activo:           { type: Boolean, default: true },
-    suscripcionActiva:{ type: Boolean, default: false, index: true },
+    suscripcionActiva:{ type: Boolean, default: false },
     planPrueba:       { type: PlanPruebaSchema, default: () => ({ activo: true, pacientesUsados: 0, limite: 3 }) },
     logoUrl:          { type: String, trim: true },
     firmaUrl:         { type: String, trim: true },

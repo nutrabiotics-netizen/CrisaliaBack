@@ -32,8 +32,7 @@ const InterrogatorioSchema = new Schema<IInterrogatorio>(
     pacienteId: {
       type: Schema.Types.ObjectId,
       ref: 'Paciente',
-      required: true,
-      index: true
+      required: true
     },
     tipo: {
       type: String,

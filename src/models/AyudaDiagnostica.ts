@@ -40,25 +40,21 @@ const AyudaDiagnosticaModelSchema = new Schema<IAyudaDiagnostica>(
     pacienteId: {
       type: Schema.Types.ObjectId,
       ref: 'Paciente',
-      required: true,
-      index: true
+      required: true
     },
     medicoId: {
       type: Schema.Types.ObjectId,
       ref: 'Medico',
-      required: true,
-      index: true
+      required: true
     },
     citaId: {
       type: Schema.Types.ObjectId,
       ref: 'Cita',
-      required: true,
-      index: true
+      required: true
     },
     historiaClinicaId: {
       type: Schema.Types.ObjectId,
-      ref: 'HistoriaClinica',
-      index: true
+      ref: 'HistoriaClinica'
     },
     ayudasDiagnosticas: {
       type: [AyudaDiagnosticaSchema],

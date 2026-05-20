@@ -12,8 +12,7 @@ const cups2026Schema = new Schema<ICups2026>(
     codigo: {
       type: String,
       required: true,
-      trim: true,
-      index: true
+      trim: true
     },
     nombre: {
       type: String,

@@ -54,7 +54,6 @@ const LinkCaptacionSchema = new Schema<ILinkCaptacion>(
   { timestamps: true }
 );
 
-LinkCaptacionSchema.index({ codigo: 1 }, { unique: true });
 LinkCaptacionSchema.index({ estado: 1, expiresAt: 1 });
 
 export default mongoose.model<ILinkCaptacion>('LinkCaptacion', LinkCaptacionSchema);

@@ -15,8 +15,7 @@ const parametroNutrabioticsSchema = new Schema<IParametroNutrabiotics>(
     codigoParametro: {
       type: String,
       required: true,
-      trim: true,
-      index: true
+      trim: true
     },
     nombre: {
       type: String,

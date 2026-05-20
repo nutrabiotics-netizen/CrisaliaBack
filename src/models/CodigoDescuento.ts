@@ -36,7 +36,6 @@ const CodigoDescuentoSchema = new Schema<ICodigoDescuento>(
   { timestamps: true }
 );
 
-CodigoDescuentoSchema.index({ codigo: 1 });
 CodigoDescuentoSchema.index({ activo: 1, expiresAt: 1 });
 
 export default mongoose.model<ICodigoDescuento>('CodigoDescuento', CodigoDescuentoSchema);

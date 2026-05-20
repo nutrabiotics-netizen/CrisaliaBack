@@ -37,8 +37,7 @@ const TranscriptionSegmentSchema = new Schema<ITranscriptionSegment>(
     sessionId: {
       type: Schema.Types.ObjectId,
       ref: 'TranscriptionSession',
-      required: true,
-      index: true
+      required: true
     },
     text: { type: String, required: true, trim: true },
     speakerRole: {

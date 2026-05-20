@@ -21,8 +21,7 @@ const PagoSimuladoSchema = new Schema<IPagoSimulado>(
     pacienteId: {
       type: Schema.Types.ObjectId,
       ref: 'Paciente',
-      required: true,
-      index: true
+      required: true
     },
     cuota: {
       type: Number,

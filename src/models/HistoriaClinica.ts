@@ -136,20 +136,17 @@ const HistoriaClinicaSchema = new Schema<IHistoriaClinica>(
     pacienteId: {
       type: Schema.Types.ObjectId,
       ref: 'Paciente',
-      required: true,
-      index: true
+      required: true
     },
     medicoId: {
       type: Schema.Types.ObjectId,
       ref: 'Medico',
-      required: true,
-      index: true
+      required: true
     },
     citaId: {
       type: Schema.Types.ObjectId,
       ref: 'Cita',
-      required: true,
-      index: true
+      required: true
     },
     fechaRegistro: {
       type: Date,

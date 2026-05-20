@@ -79,9 +79,6 @@ const ConfiguracionSeguridadPacienteSchema = new Schema<IConfiguracionSeguridadP
   }
 );
 
-// Índice único para paciente
-ConfiguracionSeguridadPacienteSchema.index({ paciente: 1 }, { unique: true });
-
 export default mongoose.model<IConfiguracionSeguridadPaciente>(
   'ConfiguracionSeguridadPaciente',
   ConfiguracionSeguridadPacienteSchema

@@ -22,8 +22,7 @@ const PersonalInstitucionalSchema = new Schema<IPersonalInstitucional>(
     tipo: {
       type: String,
       enum: ['asistencial', 'administrativo'],
-      required: true,
-      index: true
+      required: true
     },
     categoria: {
       type: String,

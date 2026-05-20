@@ -197,7 +197,6 @@ const ConfiguracionAgendaSchema = new Schema<IConfiguracionAgenda>(
 );
 
 // Índice único para médico
-ConfiguracionAgendaSchema.index({ medico: 1 }, { unique: true });
 
 export default mongoose.model<IConfiguracionAgenda>('ConfiguracionAgenda', ConfiguracionAgendaSchema);
 
