@@ -8,6 +8,7 @@ import type { IncomingMessage, Server } from 'http';
 import { WebSocketServer } from 'ws';
 import { registerTranscriptionHandlers } from './transcriptionWs';
 import { registerMedicoCopilotoVozHandlers } from './medicoCopilotoVozWs';
+import { registerChatHandlers } from './chatWs';
 
 function pathnameOf(req: IncomingMessage): string {
   const u = req.url || '';
@@ -18,9 +19,11 @@ function pathnameOf(req: IncomingMessage): string {
 export function registerSharedWebSockets(server: Server): void {
   const wssTranscription = new WebSocketServer({ noServer: true });
   const wssCopiloto = new WebSocketServer({ noServer: true });
+  const wssChat = new WebSocketServer({ noServer: true });
 
   registerTranscriptionHandlers(wssTranscription);
   registerMedicoCopilotoVozHandlers(wssCopiloto);
+  registerChatHandlers(wssChat);
 
   server.on('upgrade', (request, socket, head) => {
     try {
@@ -32,6 +35,10 @@ export function registerSharedWebSockets(server: Server): void {
       } else if (p === '/api/medico/copiloto-voz-ws') {
         wssCopiloto.handleUpgrade(request, socket, head, (ws) => {
           wssCopiloto.emit('connection', ws, request);
+        });
+      } else if (p === '/api/chat-ws') {
+        wssChat.handleUpgrade(request, socket, head, (ws) => {
+          wssChat.emit('connection', ws, request);
         });
       } else {
         socket.destroy();

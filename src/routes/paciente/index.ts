@@ -15,6 +15,8 @@ import cuidadorIARoutes from './cuidador-ia';
 import invitarMedicoRoutes from './invitar-medico';
 import historiaClinicaRoutes from './historia-clinica';
 import tratamientoRoutes from './tratamiento';
+import transcriptionRoutes from './transcription';
+import chatRoutes from './chat';
 
 const router = Router();
 
@@ -34,6 +36,8 @@ router.use('/cuidador-ia', cuidadorIARoutes);
 router.use('/invitar-medico', invitarMedicoRoutes);
 router.use('/historia-clinica', historiaClinicaRoutes);
 router.use('/tratamiento', tratamientoRoutes);
+router.use('/transcription', transcriptionRoutes);
+router.use('/chat', chatRoutes);
 
 export default router;
 

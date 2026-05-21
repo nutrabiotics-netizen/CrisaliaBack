@@ -23,6 +23,7 @@ import metricasRoutes from './metricas';
 import pagoRoutes from './pago';
 import consultaRoutes from './consulta';
 import iaEntrenadaRoutes from './ia-entrenada';
+import chatRoutes from './chat';
 
 const router = Router();
 
@@ -51,6 +52,7 @@ router.use('/metricas', metricasRoutes);
 router.use('/pago', pagoRoutes);
 router.use('/consulta', consultaRoutes);
 router.use('/ia-entrenada', iaEntrenadaRoutes);
+router.use('/chat', chatRoutes);
 
 export default router;
 

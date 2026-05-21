@@ -80,6 +80,7 @@ import './models/LinkCaptacion';
 import './models/ReferidoMedico';
 import './models/AdherenciaToma';
 import './models/Codigo2FA';
+import './models/EvaluacionAlimento';
 
 // Rutas
 import authRoutes from './routes/auth/authRoutes';

@@ -169,6 +169,26 @@ export async function uploadBinaryAndGetUrl(buffer: Buffer, key: string, content
 }
 
 /**
+ * Descarga un objeto de S3 al buffer en memoria (para mandárselo a un modelo
+ * multimodal por ejemplo). NO usar para archivos grandes (>10MB).
+ */
+export async function getBinaryFromKey(s3Key: string): Promise<{ buffer: Buffer; contentType?: string }> {
+  if (!BUCKET) {
+    throw new Error('AWS_S3_DOCUMENTS_BUCKET o AWS_CHIME_S3_BUCKET_ARN no configurado');
+  }
+  const command = new GetObjectCommand({ Bucket: BUCKET, Key: s3Key });
+  const resp = await s3Client.send(command);
+  const body = resp.Body as any;
+  if (!body) throw new Error('S3 devolvió un body vacío');
+  // body es un stream readable; lo materializamos a Buffer
+  const chunks: Buffer[] = [];
+  for await (const chunk of body as AsyncIterable<Buffer | Uint8Array>) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+  return { buffer: Buffer.concat(chunks), contentType: resp.ContentType };
+}
+
+/**
  * Parsea una URI S3 (ej. s3://bucket/prefix/pipelineId/) y devuelve bucket y prefijo de clave.
  */
 export function parseS3Uri(s3Uri: string): { bucket: string; keyPrefix: string } | null {

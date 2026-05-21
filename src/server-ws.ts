@@ -8,6 +8,8 @@ import http from 'http';
 import dotenv from 'dotenv';
 import { connectDB } from './config/database';
 import { attachTranscriptionWebSocket } from './ws/transcriptionWs';
+import { WebSocketServer } from 'ws';
+import { registerChatHandlers } from './ws/chatWs';
 
 dotenv.config();
 
@@ -15,6 +17,7 @@ dotenv.config();
 import './models/Cita';
 import './models/TranscriptionSession';
 import './models/TranscriptionSegment';
+import './models/ChatMessage';
 
 const PORT = process.env.PORT || 5001;
 
@@ -32,9 +35,15 @@ async function main() {
   });
 
   attachTranscriptionWebSocket(server);
+
+  // Chat de teleconsulta (compartido por médico y paciente)
+  const wssChat = new WebSocketServer({ server, path: '/api/chat-ws' });
+  registerChatHandlers(wssChat);
+
   server.listen(PORT, () => {
     console.log(`📡 WebSocket de transcripción en puerto ${PORT}`);
-    console.log(`   Endpoint: ws://localhost:${PORT}/api/transcription-ws`);
+    console.log(`   Endpoint transcripción: ws://localhost:${PORT}/api/transcription-ws`);
+    console.log(`   Endpoint chat:          ws://localhost:${PORT}/api/chat-ws`);
   });
 }
 

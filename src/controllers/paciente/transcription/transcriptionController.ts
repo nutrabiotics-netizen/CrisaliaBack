@@ -33,8 +33,11 @@ export const getTranscriptionByCita = async (req: AuthRequest, res: Response): P
       return;
     }
 
+    // Orden por timestamp (instante real en que el ASR emitió el segmento) y como
+    // desempate por startTimeMs/createdAt. NO usamos `sequence` porque se reinicia
+    // cuando el médico reconecta el WS y mezcla segmentos viejos con nuevos.
     const segments = await TranscriptionSegment.find({ sessionId: session._id })
-      .sort({ sequence: 1, timestamp: 1 })
+      .sort({ timestamp: 1, startTimeMs: 1, createdAt: 1 })
       .lean();
 
     res.status(200).json({
@@ -47,13 +50,16 @@ export const getTranscriptionByCita = async (req: AuthRequest, res: Response): P
         startedAt: session.startedAt,
         endedAt: session.endedAt
       },
-      segments: segments.map((s) => ({
+      segments: segments.map((s: any) => ({
         _id: s._id,
         text: s.text,
         speakerRole: s.speakerRole,
         clinicalSection: s.clinicalSection,
         sequence: s.sequence,
-        timestamp: s.timestamp
+        timestamp: s.timestamp,
+        isPartial: s.isPartial,
+        startTimeMs: s.startTimeMs,
+        endTimeMs: s.endTimeMs
       }))
     });
   } catch (err) {

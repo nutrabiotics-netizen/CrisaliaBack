@@ -4,7 +4,8 @@ import { authenticate, authorize } from '../../../middleware/auth';
 import { UserRole } from '../../../types';
 import {
   subirImagenEvaluacionAlimento,
-  analizarEvaluacionAlimento
+  analizarEvaluacionAlimento,
+  listarHistorialEvaluaciones
 } from '../../../controllers/paciente/alimentoEvaluacionController';
 
 const router = Router();
@@ -38,5 +39,6 @@ router.use(authenticate, authorize(UserRole.PACIENTE));
 
 router.post('/subir', uploadImagenMiddleware, subirImagenEvaluacionAlimento);
 router.post('/analizar', analizarEvaluacionAlimento);
+router.get('/historial', listarHistorialEvaluaciones);
 
 export default router;

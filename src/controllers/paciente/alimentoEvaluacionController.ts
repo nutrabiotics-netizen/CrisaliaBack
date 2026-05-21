@@ -1,15 +1,18 @@
 import { Response } from 'express';
 import Paciente from '../../models/Paciente';
+import EvaluacionAlimento from '../../models/EvaluacionAlimento';
 import { AuthRequest } from '../../middleware/auth';
 import {
   buildAlimentoEvaluacionKey,
   prefixAlimentoEvaluacionParaPaciente,
-  uploadBinaryAndGetUrl
+  uploadBinaryAndGetUrl,
+  getBinaryFromKey
 } from '../../utils/s3Documents';
 import {
   generarAnalisisAlimentoSimulado,
   PerfilParaEvaluacionAlimento
 } from '../../services/nutricion/alimentoEvaluacionSimuladaService';
+import { analizarAlimentoConBedrock } from '../../services/nutricion/alimentoEvaluacionBedrockService';
 
 const ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
@@ -77,9 +80,7 @@ export const analizarEvaluacionAlimento = async (req: AuthRequest, res: Response
     }
 
     const paciente = await Paciente.findById(pacienteId)
-      .select(
-        'nombre apellido tipoDocumento numeroDocumento fechaNacimiento sexoBiologico eps zonasDolor'
-      )
+      .select('nombre apellido tipoDocumento numeroDocumento fechaNacimiento sexoBiologico eps zonasDolor')
       .lean();
 
     if (!paciente) {
@@ -107,15 +108,98 @@ export const analizarEvaluacionAlimento = async (req: AuthRequest, res: Response
       zonasDolor: paciente.zonasDolor
     };
 
-    const mensajes = generarAnalisisAlimentoSimulado(perfil);
+    // 1) Recuperar la imagen desde S3 para mandársela a Bedrock.
+    let mensajes: any[] = [];
+    let modeloIA: string | undefined;
+    let simulado = false;
+    let errorAnalisis: string | undefined;
+
+    console.log('[analizarEvaluacionAlimento] iniciando análisis para paciente:', pacienteId, 's3Key:', s3Key);
+    console.log('[analizarEvaluacionAlimento] ENV check → BEDROCK_VISION_MODEL_ID=',
+      process.env.BEDROCK_VISION_MODEL_ID || '(usando default)',
+      '| BEDROCK_VISION_REGION=', process.env.BEDROCK_VISION_REGION || process.env.AWS_REGION || '(default us-east-1)',
+      '| AWS_ACCESS_KEY_ID set?', !!process.env.AWS_ACCESS_KEY_ID);
+
+    try {
+      console.log('[analizarEvaluacionAlimento] descargando imagen de S3...');
+      const { buffer, contentType } = await getBinaryFromKey(s3Key);
+      console.log('[analizarEvaluacionAlimento] imagen obtenida, bytes:', buffer.length, 'contentType:', contentType);
+      console.log('[analizarEvaluacionAlimento] invocando Bedrock...');
+      const out = await analizarAlimentoConBedrock(buffer, contentType || 'image/jpeg', perfil);
+      console.log('[analizarEvaluacionAlimento] Bedrock OK, modelo:', out.modeloIA, 'mensajes:', out.mensajes.length);
+      mensajes = out.mensajes;
+      modeloIA = out.modeloIA;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const name = err instanceof Error ? err.name : 'UnknownError';
+      console.error('[analizarEvaluacionAlimento] ❌ Bedrock falló:', name, '|', msg);
+      if (err instanceof Error && err.stack) console.error(err.stack);
+      simulado = true;
+      errorAnalisis = `${name}: ${msg}`;
+      mensajes = generarAnalisisAlimentoSimulado(perfil);
+    }
+
+    // 2) Persistir el análisis para historial del paciente.
+    const edadCalc = perfil.fechaNacimiento
+      ? Math.floor((Date.now() - new Date(perfil.fechaNacimiento).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+      : undefined;
+
+    const doc = await EvaluacionAlimento.create({
+      pacienteId,
+      s3Key,
+      mensajes: mensajes.map((m: any) => ({
+        id: m.id,
+        rol: m.rol,
+        texto: m.texto,
+        creadoEn: m.creadoEn ? new Date(m.creadoEn) : new Date()
+      })),
+      perfilSnapshot: {
+        nombre: perfil.nombre,
+        apellido: perfil.apellido,
+        fechaNacimiento: perfil.fechaNacimiento ? new Date(perfil.fechaNacimiento) : undefined,
+        sexoBiologico: perfil.sexoBiologico,
+        eps: perfil.eps,
+        zonasDolor: perfil.zonasDolor,
+        edadAnios: edadCalc
+      },
+      modeloIA,
+      simulado,
+      errorAnalisis
+    });
 
     res.json({
-      simulado: true,
+      evaluacionId: String(doc._id),
+      simulado,
+      modeloIA,
       s3Key,
       mensajes
     });
   } catch (error) {
     console.error('[analizarEvaluacionAlimento]', error);
     res.status(500).json({ mensaje: 'Error al procesar el análisis' });
+  }
+};
+
+/**
+ * GET /api/paciente/alimentos/historial
+ * Lista las evaluaciones previas del paciente (más recientes primero).
+ */
+export const listarHistorialEvaluaciones = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const pacienteId = req.userId;
+    if (!pacienteId) {
+      res.status(401).json({ mensaje: 'No autorizado' });
+      return;
+    }
+
+    const evals = await EvaluacionAlimento.find({ pacienteId })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .lean();
+
+    res.json({ items: evals });
+  } catch (error) {
+    console.error('[listarHistorialEvaluaciones]', error);
+    res.status(500).json({ mensaje: 'Error al listar el historial' });
   }
 };

@@ -40,6 +40,9 @@ export const videoCallConfig = {
   maxMeetingDurationMinutes: 120,
   autoStartRecording: !!recordingBucketArn,
   autoStartTranscription: false,
-  bedrockAgentId: process.env.BEDROCK_AGENT_ID || '7HQWEUQTTS',
-  bedrockAgentAliasId: process.env.BEDROCK_AGENT_ALIAS_ID || '5GHAISC3Z9'
+  // Sin fallback hardcodeado: si BEDROCK_AGENT_ID no está seteado en .env, deja
+  // string vacío y el SDK falla con un error claro en vez de pegarle a un
+  // agente que ya no existe en otra cuenta.
+  bedrockAgentId: (process.env.BEDROCK_AGENT_ID || '').trim(),
+  bedrockAgentAliasId: (process.env.BEDROCK_AGENT_ALIAS_ID || '').trim()
 };
