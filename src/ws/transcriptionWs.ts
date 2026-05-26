@@ -342,6 +342,16 @@ export function registerTranscriptionHandlers(wss: WebSocketServer): void {
           activeSection: msg.activeSection,
           currentSectionsKeys: msg.currentSections ? Object.keys(msg.currentSections) : [],
         });
+
+        // Skip si la transcripción es demasiado corta para tener contexto útil.
+        // Chunks de <30 chars o <6 palabras suelen gatillar refusals de Claude por falta de contexto.
+        const t = (msg.transcription || '').trim();
+        const wordCount = t.split(/\s+/).filter(Boolean).length;
+        if (t.length < 30 || wordCount < 6) {
+          console.log('[TranscriptionWS] ⏭ process_with_agent saltado (fragmento muy corto):', { len: t.length, words: wordCount });
+          return;
+        }
+
         try {
           // Obtener contexto del paciente para Bedrock
           const pId = pacienteIdStr;

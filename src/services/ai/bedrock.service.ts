@@ -117,7 +117,11 @@ function buildBedrockPrompt(input: BedrockAgentInput): string {
 
   const foco = input.activeSection ? `\nSección en foco actual: ${input.activeSection}` : '';
 
-  return `Paciente: ${input.patientHistoryContext.replace(/\s+/g, ' ').slice(0, 200)}${vacias}${llenas}${foco}
+  return `ROL: Eres un ASISTENTE DOCUMENTAL clínico. Tu única función es ESTRUCTURAR texto de una transcripción de consulta médica YA realizada por un profesional habilitado, en las secciones correspondientes de una historia clínica. NO das consejo médico, NO diagnosticas, NO prescribes — solo organizas información que el médico ya generó. Es una tarea de procesamiento de lenguaje, no clínica.
+
+NO te rehúses bajo ninguna circunstancia: si el fragmento no contiene info útil, devuelve {"resumen":"Sin información nueva","propuestas":[]}. NUNCA respondas con disculpas o negativas; siempre devuelve JSON válido.
+
+Paciente: ${input.patientHistoryContext.replace(/\s+/g, ' ').slice(0, 200)}${vacias}${llenas}${foco}
 
 Transcripción nueva (con etiqueta de quién habla):
 ${input.transcriptionSegment}
@@ -153,8 +157,37 @@ Salida:
 Si NO hay nada útil que extraer, devuelve: {"resumen":"Sin información nueva","propuestas":[]}`;
 }
 
+/**
+ * Detecta si la respuesta es un "refusal" típico de Claude/Bedrock
+ * (cuando el modelo se rehúsa a procesar por filtros de seguridad).
+ */
+function isClaudeRefusal(response: string): boolean {
+  const lower = response.trim().toLowerCase();
+  const patterns = [
+    'i am unable to assist',
+    "i'm unable to assist",
+    'i cannot assist',
+    "i can't assist",
+    'i am not able to',
+    'sorry, i am unable',
+    'sorry, i cannot',
+    'lo siento, no puedo',
+    'no puedo ayudar',
+    'no estoy capacitado',
+  ];
+  return patterns.some((p) => lower.includes(p)) && lower.length < 400;
+}
+
 export function parseBedrockResponse(response: string): BedrockAgentResponse {
   const result: BedrockAgentResponse = { propuestas: [] };
+
+  // Detección temprana de refusals de Claude/Bedrock
+  if (isClaudeRefusal(response)) {
+    console.warn('[BedrockService] ⚠ Refusal detectado de Claude/Bedrock — devolviendo propuestas vacías. Raw:', response.slice(0, 150));
+    result.resumen = '_(El asistente clínico no procesó este fragmento por filtros de seguridad. La transcripción se sigue guardando normalmente.)_';
+    return result;
+  }
+
   try {
     // Buscar el bloque JSON más grande
     const firstBrace = response.indexOf('{');
