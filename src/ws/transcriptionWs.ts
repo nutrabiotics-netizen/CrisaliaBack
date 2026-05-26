@@ -420,7 +420,10 @@ export function registerTranscriptionHandlers(wss: WebSocketServer): void {
 export function attachTranscriptionWebSocket(server: import('http').Server): void {
   const wss = new WebSocketServer({
     server,
-    path: '/api/transcription-ws'
+    path: '/api/transcription-ws',
+    // perMessageDeflate: false → el proxy de Railway corrompe frames comprimidos
+    // y el browser ve "Invalid frame header" con cierre 1006.
+    perMessageDeflate: false
   });
   registerTranscriptionHandlers(wss);
 }

@@ -17,9 +17,11 @@ function pathnameOf(req: IncomingMessage): string {
 }
 
 export function registerSharedWebSockets(server: Server): void {
-  const wssTranscription = new WebSocketServer({ noServer: true });
-  const wssCopiloto = new WebSocketServer({ noServer: true });
-  const wssChat = new WebSocketServer({ noServer: true });
+  // perMessageDeflate: false → necesario detrás de proxies (Railway/Cloudflare/etc.)
+  // que corrompen frames comprimidos generando "Invalid frame header" en el cliente.
+  const wssTranscription = new WebSocketServer({ noServer: true, perMessageDeflate: false });
+  const wssCopiloto = new WebSocketServer({ noServer: true, perMessageDeflate: false });
+  const wssChat = new WebSocketServer({ noServer: true, perMessageDeflate: false });
 
   registerTranscriptionHandlers(wssTranscription);
   registerMedicoCopilotoVozHandlers(wssCopiloto);

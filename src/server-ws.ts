@@ -45,7 +45,8 @@ async function main() {
   attachTranscriptionWebSocket(server);
 
   // Chat de teleconsulta (compartido por médico y paciente)
-  const wssChat = new WebSocketServer({ server, path: '/api/chat-ws' });
+  // perMessageDeflate: false → el proxy de Railway corrompe frames comprimidos
+  const wssChat = new WebSocketServer({ server, path: '/api/chat-ws', perMessageDeflate: false });
   registerChatHandlers(wssChat);
 
   server.listen(PORT, () => {
