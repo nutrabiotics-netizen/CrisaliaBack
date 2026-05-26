@@ -7,8 +7,8 @@
 import http from 'http';
 import dotenv from 'dotenv';
 import { connectDB } from './config/database';
-import { attachTranscriptionWebSocket } from './ws/transcriptionWs';
 import { WebSocketServer } from 'ws';
+import { registerTranscriptionHandlers } from './ws/transcriptionWs';
 import { registerChatHandlers } from './ws/chatWs';
 
 dotenv.config();
@@ -42,15 +42,44 @@ async function main() {
     res.end();
   });
 
-  attachTranscriptionWebSocket(server);
-
-  // Chat de teleconsulta (compartido por médico y paciente)
-  // perMessageDeflate: false → el proxy de Railway corrompe frames comprimidos
-  const wssChat = new WebSocketServer({ server, path: '/api/chat-ws', perMessageDeflate: false });
+  // IMPORTANTE: usar { noServer: true } + un único listener de `upgrade` que enrute
+  // por pathname. Si se montan 2 WSS con { server, path }, cada uno se cuelga del
+  // mismo evento 'upgrade' y el que NO matchea llama abortHandshake → manda HTTP 400
+  // sobre un socket que ya tuvo 101 OK del otro → browser ve "Invalid frame header"
+  // y cierra con código 1006. (Mismo patrón que registerWebSockets.ts.)
+  const wssTranscription = new WebSocketServer({ noServer: true, perMessageDeflate: false });
+  const wssChat = new WebSocketServer({ noServer: true, perMessageDeflate: false });
+  registerTranscriptionHandlers(wssTranscription);
   registerChatHandlers(wssChat);
 
+  function pathnameOf(req: http.IncomingMessage): string {
+    const u = req.url || '';
+    const q = u.indexOf('?');
+    return q === -1 ? u : u.slice(0, q);
+  }
+
+  server.on('upgrade', (request, socket, head) => {
+    try {
+      const p = pathnameOf(request);
+      if (p === '/api/transcription-ws') {
+        wssTranscription.handleUpgrade(request, socket, head, (ws) => {
+          wssTranscription.emit('connection', ws, request);
+        });
+      } else if (p === '/api/chat-ws') {
+        wssChat.handleUpgrade(request, socket, head, (ws) => {
+          wssChat.emit('connection', ws, request);
+        });
+      } else {
+        socket.destroy();
+      }
+    } catch (err) {
+      console.error('[server-ws] upgrade error:', err);
+      socket.destroy();
+    }
+  });
+
   server.listen(PORT, () => {
-    console.log(`📡 WebSocket de transcripción en puerto ${PORT}`);
+    console.log(`📡 WebSocket server en puerto ${PORT}`);
     console.log(`   Endpoint transcripción: ws://localhost:${PORT}/api/transcription-ws`);
     console.log(`   Endpoint chat:          ws://localhost:${PORT}/api/chat-ws`);
   });
