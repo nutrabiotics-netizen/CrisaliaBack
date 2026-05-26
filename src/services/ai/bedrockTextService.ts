@@ -16,8 +16,15 @@ const REGION = (process.env.BEDROCK_TEXT_REGION || process.env.BEDROCK_VISION_RE
 const MODEL_ID = (
   process.env.BEDROCK_TEXT_MODEL_ID ||
   process.env.BEDROCK_VISION_MODEL_ID ||
-  'anthropic.claude-3-5-sonnet-20241022-v2:0'
+  'us.anthropic.claude-3-5-sonnet-20241022-v2:0'
 ).trim();
+
+console.log('[BedrockTextService] init', {
+  region: REGION,
+  modelId: MODEL_ID,
+  hasExplicitTextModel: !!process.env.BEDROCK_TEXT_MODEL_ID,
+  hasExplicitVisionModel: !!process.env.BEDROCK_VISION_MODEL_ID
+});
 
 const client = new BedrockRuntimeClient({
   region: REGION,
@@ -41,6 +48,7 @@ export interface BedrockTextOptions {
  * Tira excepción si Bedrock falla — el caller decide qué hacer.
  */
 export async function invokeBedrockText(userPrompt: string, opts: BedrockTextOptions = {}): Promise<string> {
+  console.log('[BedrockTextService] ▶ Converse', { modelId: MODEL_ID, promptLen: userPrompt.length });
   const command = new ConverseCommand({
     modelId: MODEL_ID,
     system: opts.system ? [{ text: opts.system }] : undefined,

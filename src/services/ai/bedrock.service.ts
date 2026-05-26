@@ -149,7 +149,7 @@ SECCIONES VÁLIDAS (usa exactamente estas claves):
 - alertas_alergias: alergias conocidas + signos de alarma (PACIENTE).
 - resultados_paraclinicos: exámenes YA REALIZADOS y sus resultados (PACIENTE menciona).
 - examen_fisico: hallazgos físicos durante la consulta — signos vitales, inspección, palpación (MÉDICO observa).
-- diagnosticos: impresiones diagnósticas mencionadas explícitamente (MÉDICO).
+- diagnosticos: impresiones diagnósticas mencionadas explícitamente (MÉDICO). VER FORMATO ESPECIAL ABAJO.
 - analisis_plan: razonamiento + plan (exámenes a pedir, medicación, interconsultas) (MÉDICO).
 - recomendaciones: instrucciones al paciente para casa (MÉDICO).
 
@@ -274,22 +274,86 @@ Cada línea de la transcripción viene etiquetada con "PACIENTE:" o "MÉDICO:". 
 - alertas_alergias: alergias conocidas + signos de alarma (PACIENTE).
 - resultados_paraclinicos: exámenes YA REALIZADOS y sus resultados (PACIENTE menciona).
 - examen_fisico: hallazgos físicos durante la consulta — signos vitales, inspección, palpación (MÉDICO observa).
-- diagnosticos: impresiones diagnósticas mencionadas explícitamente (MÉDICO).
+- diagnosticos: impresiones diagnósticas mencionadas explícitamente (MÉDICO). VER FORMATO ESPECIAL ABAJO.
 - analisis_plan: razonamiento + plan (exámenes a pedir, medicación, interconsultas) (MÉDICO).
 - recomendaciones: instrucciones al paciente para casa (MÉDICO).
+
+# FORMATO ESPECIAL PARA "diagnosticos" (CRÍTICO)
+
+Cuando el médico mencione UNO O MÁS diagnósticos, NO devuelvas un párrafo narrativo. Devuelve el "contenido" como UN JSON STRING que contiene un array de objetos con código CIE-10.
+
+Ejemplo correcto:
+{"seccion":"diagnosticos","contenido":"[{\"cie10\":\"E11.9\",\"nombre\":\"Diabetes mellitus tipo 2 sin complicaciones\"},{\"cie10\":\"I10\",\"nombre\":\"Hipertensión esencial primaria\"}]"}
+
+NUNCA mezcles narrativa con el array. NUNCA devuelvas el array sin escapar las comillas. El "contenido" debe ser un STRING parseable con JSON.parse.
+
+## Mapeo CIE-10 vigente Colombia (úsalo como referencia)
+
+Si el médico menciona el diagnóstico sin código, infiere el CIE-10 más probable. Catálogo común:
+
+- Diabetes mellitus tipo 2 sin complicaciones → E11.9
+- Diabetes mellitus tipo 2 con complicaciones → E11.8
+- Diabetes mellitus tipo 1 → E10.9
+- Hipertensión esencial primaria → I10
+- Hipertensión secundaria → I15.9
+- Hipotiroidismo no especificado → E03.9
+- Hipotiroidismo subclínico → E02
+- Hipertiroidismo → E05.9
+- Obesidad → E66.9
+- Sobrepeso → E66.3
+- Cefalea (no clasificada) → R51
+- Migraña sin aura → G43.0
+- Migraña con aura → G43.1
+- Cefalea tensional → G44.2
+- Síndrome de intestino irritable → K58.9
+- Enfermedad por reflujo gastroesofágico (ERGE) → K21.9
+- Gastritis crónica → K29.5
+- Estreñimiento → K59.0
+- Diarrea funcional → K59.1
+- Trastorno de ansiedad generalizada → F41.1
+- Trastorno de pánico → F41.0
+- Episodio depresivo no especificado → F32.9
+- Trastorno depresivo recurrente → F33.9
+- Insomnio no orgánico → F51.0
+- Insuficiencia de vitamina D → E55.9
+- Anemia ferropénica → D50.9
+- Anemia por deficiencia de B12 → D51.9
+- Mialgia → M79.1
+- Lumbalgia → M54.5
+- Dorsalgia → M54.9
+- Síndrome post-COVID → U09.9
+- Fatiga / astenia → R53
+- Síndrome de fatiga crónica → G93.3
+- Resistencia a la insulina / Síndrome metabólico → E88.81
+- Dislipidemia mixta → E78.2
+- Hipercolesterolemia pura → E78.0
+- Hipertrigliceridemia → E78.1
+- Síndrome de ovario poliquístico → E28.2
+- Endometriosis → N80.9
+- Síndrome premenstrual → N94.3
+- Disbiosis intestinal → K63.8
+- Síndrome de intestino permeable → K63.8
+- Infección urinaria → N39.0
+- Rinofaringitis aguda (resfriado común) → J00
+- Infección viral no especificada → B34.9
+- Faringitis aguda → J02.9
+
+Si el médico menciona el CÓDIGO explícitamente (ej: "diagnóstico E11.9"), úsalo tal cual.
+Si menciona varios diagnósticos en la misma frase ("hipertensión y diabetes tipo 2"), inclúyelos como elementos separados del array.
 
 # FORMATO DE SALIDA (ESTRICTO)
 
 Devuelve EXCLUSIVAMENTE un JSON válido. NO uses bloques de markdown. NO incluyas texto antes ni después. NO incluyas explicaciones, advertencias ni disculpas.
 
-Estructura:
+Estructura general:
 {"resumen":"Frase corta de lo detectado","propuestas":[{"seccion":"motivo_consulta","contenido":"..."}]}
 
 ## Reglas del array de propuestas
 - Incluye SOLO las secciones que tienen contenido REAL extraído del fragmento actual.
 - Si una sección no fue abordada, OMÍTELA del array.
 - Si no hay nada útil, devuelve: {"resumen":"Sin información nueva","propuestas":[]}
-- "resumen" debe ser una frase clínica corta, NO un mensaje meta tipo "Se ha extraído información para X".`;
+- "resumen" debe ser una frase clínica corta, NO un mensaje meta tipo "Se ha extraído información para X".
+- Para "diagnosticos" sigue el FORMATO ESPECIAL definido arriba (array JSON dentro del string contenido).`;
 
 /**
  * Detecta si la respuesta es un "refusal" típico de Claude/Bedrock

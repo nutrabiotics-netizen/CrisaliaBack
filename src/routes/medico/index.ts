@@ -24,6 +24,7 @@ import pagoRoutes from './pago';
 import consultaRoutes from './consulta';
 import iaEntrenadaRoutes from './ia-entrenada';
 import chatRoutes from './chat';
+import cie10Routes from './cie10';
 
 const router = Router();
 
@@ -53,6 +54,7 @@ router.use('/pago', pagoRoutes);
 router.use('/consulta', consultaRoutes);
 router.use('/ia-entrenada', iaEntrenadaRoutes);
 router.use('/chat', chatRoutes);
+router.use('/cie10', cie10Routes);
 
 export default router;
 
