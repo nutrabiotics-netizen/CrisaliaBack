@@ -138,6 +138,15 @@ export function registerTranscriptionHandlers(wss: WebSocketServer): void {
       const decoded = verifyToken(token);
       ctx = { userId: decoded.userId, userRole: decoded.role as UserRole };
       console.log('[TranscriptionWS] Cliente conectado', { userId: ctx.userId, role: ctx.userRole });
+
+      // Handler de errores del socket: si no lo capturamos, los errores del WS
+      // terminan el proceso silenciosamente sin logear nada útil.
+      ws.on('error', (err) => {
+        console.error('[TranscriptionWS] ws.on(error):', err);
+      });
+      ws.on('close', (code, reason) => {
+        console.log('[TranscriptionWS] ws.on(close):', { code, reason: reason?.toString() });
+      });
     } catch (err: any) {
       // Log explícito para diagnosticar mismatch de JWT_SECRET, expirado o malformado
       console.error('[TranscriptionWS] Token rechazado:', {
@@ -161,6 +170,7 @@ export function registerTranscriptionHandlers(wss: WebSocketServer): void {
     let started = false;
 
     ws.on('message', async (data: Buffer | string) => {
+      try {
       // En Node, los mensajes JSON del cliente llegan como Buffer (UTF-8). Hay que parsear siempre como texto primero.
       const str = Buffer.isBuffer(data) ? data.toString('utf8') : data;
 
@@ -371,6 +381,15 @@ export function registerTranscriptionHandlers(wss: WebSocketServer): void {
           console.error('[TranscriptionWS] ✗ Error procesando con agente:', err);
           sendJson(ws, { type: 'error', message: 'Error al procesar con el agente IA' });
         }
+      }
+      } catch (handlerErr: any) {
+        // Wrapper de seguridad para que ningún error tumbe el socket sin log
+        console.error('[TranscriptionWS] ✗ ws.on(message) crash:', {
+          name: handlerErr?.name,
+          message: handlerErr?.message,
+          stack: handlerErr?.stack?.split('\n').slice(0, 5).join(' | ')
+        });
+        try { sendJson(ws, { type: 'error', message: `Error interno: ${handlerErr?.message ?? 'unknown'}` }); } catch {}
       }
     });
 

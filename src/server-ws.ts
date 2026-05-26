@@ -13,6 +13,14 @@ import { registerChatHandlers } from './ws/chatWs';
 
 dotenv.config();
 
+// Handlers globales — sin esto, una excepción no manejada tumba el proceso silenciosamente
+process.on('unhandledRejection', (reason) => {
+  console.error('[server-ws] unhandledRejection:', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[server-ws] uncaughtException:', err);
+});
+
 // Modelos necesarios para transcripción (registrar antes de usar)
 import './models/Cita';
 import './models/TranscriptionSession';
