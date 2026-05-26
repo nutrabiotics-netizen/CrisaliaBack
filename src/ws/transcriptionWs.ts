@@ -138,8 +138,14 @@ export function registerTranscriptionHandlers(wss: WebSocketServer): void {
       const decoded = verifyToken(token);
       ctx = { userId: decoded.userId, userRole: decoded.role as UserRole };
       console.log('[TranscriptionWS] Cliente conectado', { userId: ctx.userId, role: ctx.userRole });
-    } catch {
-      sendJson(ws, { type: 'error', message: 'Token inválido' });
+    } catch (err: any) {
+      // Log explícito para diagnosticar mismatch de JWT_SECRET, expirado o malformado
+      console.error('[TranscriptionWS] Token rechazado:', {
+        name: err?.name,
+        message: err?.message,
+        tokenPrefix: token ? token.slice(0, 20) + '…' : '(vacío)'
+      });
+      sendJson(ws, { type: 'error', message: `Token inválido: ${err?.message ?? 'unknown'}` });
       ws.close(4001, 'Unauthorized');
       return;
     }

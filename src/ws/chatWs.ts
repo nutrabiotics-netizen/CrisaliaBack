@@ -73,8 +73,13 @@ export function registerChatHandlers(wss: WebSocketServer): void {
       const decoded = verifyToken(token);
       userId = decoded.userId;
       role = decoded.role as UserRole;
-    } catch {
-      sendJson(ws, { type: 'error', message: 'Token inválido' });
+    } catch (err: any) {
+      console.error('[ChatWS] Token rechazado:', {
+        name: err?.name,
+        message: err?.message,
+        tokenPrefix: token ? token.slice(0, 20) + '…' : '(vacío)'
+      });
+      sendJson(ws, { type: 'error', message: `Token inválido: ${err?.message ?? 'unknown'}` });
       ws.close(4001, 'Unauthorized');
       return;
     }
