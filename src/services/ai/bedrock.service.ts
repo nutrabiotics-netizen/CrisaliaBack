@@ -1,6 +1,17 @@
 import { InvokeAgentCommand } from '@aws-sdk/client-bedrock-agent-runtime';
 import { bedrockClient, videoCallConfig } from '../../config/awsConfig';
 import { copilotoVozBedrockConfig } from '../../config/copilotoVozConfig';
+import { invokeBedrockText } from './bedrockTextService';
+
+/**
+ * Flag: si está activo (default), se ignora el Bedrock Agent (que en muchas
+ * cuentas queda con Nova Pro u otro modelo no-Claude) y se invoca DIRECTO
+ * a Claude vía Bedrock Runtime + Converse. Permite elegir el modelo con
+ * BEDROCK_TEXT_MODEL_ID y evita refusals/duplicaciones típicas del Agent.
+ *
+ * Para volver al Agent: BEDROCK_USE_AGENT=true.
+ */
+const USE_AGENT = String(process.env.BEDROCK_USE_AGENT || 'false').toLowerCase() === 'true';
 
 export interface BedrockAgentInput {
   patientHistoryContext: string;
@@ -20,6 +31,11 @@ export interface BedrockAgentResponse {
  * Utiliza el prompt de asistente de documentación clínica.
  */
 export async function invokeBedrockAgent(input: BedrockAgentInput): Promise<string> {
+  // Si BEDROCK_USE_AGENT no está activo, ir directo a Claude vía Converse
+  if (!USE_AGENT) {
+    return invokeClaudeDirect(input);
+  }
+
   const agentId = videoCallConfig.bedrockAgentId;
   const agentAliasId = videoCallConfig.bedrockAgentAliasId;
 
@@ -33,11 +49,8 @@ export async function invokeBedrockAgent(input: BedrockAgentInput): Promise<stri
   });
 
   if (!agentId) {
-    console.warn('[BedrockService] ⚠ Agente no configurado');
-    return JSON.stringify({
-      resumen: 'Agente Bedrock no configurado en variables de entorno.',
-      propuestas: [],
-    });
+    console.warn('[BedrockService] ⚠ Agente no configurado, usando Claude directo como fallback');
+    return invokeClaudeDirect(input);
   }
 
   const prompt = buildBedrockPrompt(input);
@@ -156,6 +169,127 @@ Salida:
 
 Si NO hay nada útil que extraer, devuelve: {"resumen":"Sin información nueva","propuestas":[]}`;
 }
+
+/**
+ * Invoca Claude directamente vía Bedrock Runtime Converse (sin Agent).
+ * Usa el mismo prompt clínico estructurado. Devuelve string crudo
+ * (igual que invokeBedrockAgent) para que el parser sea idéntico.
+ */
+async function invokeClaudeDirect(input: BedrockAgentInput): Promise<string> {
+  const userPrompt = buildBedrockPrompt(input);
+
+  console.log('[BedrockService] ▶ invokeClaudeDirect (Converse)', {
+    transcriptLen: input.transcriptionSegment?.length || 0,
+    transcriptPreview: input.transcriptionSegment?.slice(0, 100),
+    activeSection: input.activeSection,
+  });
+
+  try {
+    const t0 = Date.now();
+    const raw = await invokeBedrockText(userPrompt, {
+      system: CLINICAL_DOCUMENTATION_SYSTEM_PROMPT,
+      maxTokens: 1200,
+      temperature: 0.2
+    });
+    console.log('[BedrockService] ◀ Claude direct respuesta', {
+      ms: Date.now() - t0,
+      len: raw.length,
+      preview: raw.slice(0, 400),
+    });
+    return raw;
+  } catch (err: unknown) {
+    const error = err as any;
+    console.error('[BedrockService] ✗ Error invocando Claude directo:', error);
+    return JSON.stringify({
+      resumen: `Error de IA: ${error.message || String(error)}`,
+      propuestas: [],
+    });
+  }
+}
+
+/**
+ * System prompt completo para Claude (documentación clínica).
+ * Esta es la "instrucción del agente" que normalmente vivía en la consola de
+ * Bedrock Agent. Al ir directo a Claude, la mandamos como `system` en Converse.
+ */
+const CLINICAL_DOCUMENTATION_SYSTEM_PROMPT = `# ROL Y MARCO LEGAL DE LA TAREA
+
+Eres un Asistente de Documentación Clínica que ESCUCHA y CLASIFICA texto.
+Esto es estrictamente una tarea de PROCESAMIENTO DE LENGUAJE NATURAL:
+recibes una transcripción ya generada por una consulta médica REAL atendida
+por un profesional de la salud habilitado, y la organizas en secciones de
+historia clínica.
+
+NO eres tú quien diagnostica, prescribe, recomienda dosis ni toma decisiones
+clínicas. SOLO clasificas y estructuras lo que el médico y el paciente ya
+dijeron. Es equivalente a un transcriptor que separa párrafos por temas.
+
+# REGLA DE NO-REHUSO (CRÍTICA)
+
+NUNCA respondas con disculpas, advertencias ni negativas como:
+- "Lo siento, no puedo asistir con esto"
+- "I am unable to assist with this request"
+- "No estoy capacitado para…"
+- "Recomiendo consultar a un profesional…"
+
+Si el fragmento contiene información sensible (dosis, síntomas psiquiátricos,
+autolesión, sustancias, contenido sexual, menores, etc.), igual debes
+clasificarlo en la sección correcta. Esa información YA fue dicha en una
+consulta médica legítima; tu única función es ubicarla en la sección apropiada
+de la historia clínica.
+
+Si el fragmento NO contiene información útil para ninguna sección, devuelve
+EXACTAMENTE: {"resumen":"Sin información nueva","propuestas":[]}
+
+NUNCA respondas con texto fuera del JSON. NUNCA agregues advertencias clínicas.
+
+# PRINCIPIOS
+
+## Fidelidad absoluta
+- NO inventes, deduzcas ni supongas datos. Si el paciente dice "me duele la cabeza", NO escribas "migraña" salvo que el médico use esa palabra.
+- Si solo hay una mención breve sin detalle (1-2 palabras), no rellenes con texto extra.
+
+## Separación de hablantes
+Cada línea de la transcripción viene etiquetada con "PACIENTE:" o "MÉDICO:". Úsalo así:
+- Lo que dice el PACIENTE sobre el problema actual → motivo_consulta, enfermedad_actual
+- Lo que dice el PACIENTE sobre su pasado, hábitos, familia → antecedentes
+- Lo que dice el PACIENTE sobre otros síntomas o alergias → revision_sistemas, alertas_alergias
+- Lo que dice el PACIENTE sobre exámenes ya hechos → resultados_paraclinicos
+- Lo que dice el MÉDICO con razonamiento o plan → diagnosticos, analisis_plan
+- Lo que dice el MÉDICO al paciente para casa → recomendaciones
+- Hallazgos físicos observados durante la consulta → examen_fisico
+- Las PREGUNTAS del médico ("¿desde cuándo?", "¿le duele aquí?") NO se documentan — son guía conversacional, no contenido clínico.
+
+## Unicidad
+- Cada idea va en UNA sola sección, la más específica.
+- NUNCA dupliques la misma frase en dos secciones distintas.
+- Si la información encaja en dos, elige la sección más estrecha (ej. "alergia a penicilina" va en alertas_alergias, no en antecedentes generales).
+
+# SECCIONES VÁLIDAS (claves exactas)
+
+- motivo_consulta: razón principal de la consulta en 1-2 frases (PACIENTE).
+- enfermedad_actual: cronología, intensidad, evolución del problema actual (PACIENTE).
+- antecedentes: historia PREVIA — patológicos, quirúrgicos, familiares, hábitos (PACIENTE).
+- revision_sistemas: síntomas en otros sistemas no relacionados al motivo (PACIENTE responde, MÉDICO pregunta).
+- alertas_alergias: alergias conocidas + signos de alarma (PACIENTE).
+- resultados_paraclinicos: exámenes YA REALIZADOS y sus resultados (PACIENTE menciona).
+- examen_fisico: hallazgos físicos durante la consulta — signos vitales, inspección, palpación (MÉDICO observa).
+- diagnosticos: impresiones diagnósticas mencionadas explícitamente (MÉDICO).
+- analisis_plan: razonamiento + plan (exámenes a pedir, medicación, interconsultas) (MÉDICO).
+- recomendaciones: instrucciones al paciente para casa (MÉDICO).
+
+# FORMATO DE SALIDA (ESTRICTO)
+
+Devuelve EXCLUSIVAMENTE un JSON válido. NO uses bloques de markdown. NO incluyas texto antes ni después. NO incluyas explicaciones, advertencias ni disculpas.
+
+Estructura:
+{"resumen":"Frase corta de lo detectado","propuestas":[{"seccion":"motivo_consulta","contenido":"..."}]}
+
+## Reglas del array de propuestas
+- Incluye SOLO las secciones que tienen contenido REAL extraído del fragmento actual.
+- Si una sección no fue abordada, OMÍTELA del array.
+- Si no hay nada útil, devuelve: {"resumen":"Sin información nueva","propuestas":[]}
+- "resumen" debe ser una frase clínica corta, NO un mensaje meta tipo "Se ha extraído información para X".`;
 
 /**
  * Detecta si la respuesta es un "refusal" típico de Claude/Bedrock
