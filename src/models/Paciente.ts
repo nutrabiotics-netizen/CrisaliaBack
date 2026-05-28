@@ -49,6 +49,25 @@ export interface IPaciente extends Document {
   acudiente?: IAcudienteTutor;
   // Zonas de dolor del mapa corporal (capturadas en el onboarding)
   zonasDolor?: string[];
+
+  /**
+   * Resumen integral del paciente generado por Crisal·IA Agent.
+   * Se regenera automáticamente cuando:
+   *   - se completa una cita (estado pasa a 'completada')
+   *   - se crea o actualiza una fórmula médica
+   *   - se invoca manualmente POST /tools/me/resumen/refresh
+   *
+   * Pensado para que un agente externo lo lea en una sola lectura y tenga el
+   * estado clínico completo del paciente sin tener que componer.
+   */
+  resumenIA?: {
+    texto: string;
+    actualizadoEn: Date;
+    motivoActualizacion?: 'cita_completada' | 'formula_creada' | 'formula_actualizada' | 'manual' | 'inicial';
+    citaIdReferencia?: string;
+    version: number;
+  };
+
   // Estado
   activo: boolean;
   createdAt: Date;
@@ -181,6 +200,21 @@ const PacienteSchema = new Schema<IPaciente>(
     zonasDolor: {
       type: [String],
       default: []
+    },
+    /**
+     * Resumen integral generado por Crisal·IA Agent. Se actualiza cuando
+     * se cierra una cita o cambia el tratamiento. Lo consume el agente
+     * externo vía External Tools API (/external/tools/me/resumen).
+     */
+    resumenIA: {
+      texto: { type: String },
+      actualizadoEn: { type: Date },
+      motivoActualizacion: {
+        type: String,
+        enum: ['cita_completada', 'formula_creada', 'formula_actualizada', 'manual', 'inicial']
+      },
+      citaIdReferencia: { type: String },
+      version: { type: Number, default: 1 }
     },
     activo: {
       type: Boolean,

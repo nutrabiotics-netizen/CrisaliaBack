@@ -7,6 +7,7 @@ import { uploadPDFAndGetUrl, buildCitaDocumentKey } from '../../../utils/s3Docum
 import FormulaMedica from '../../../models/FormulaMedica';
 import Paciente from '../../../models/Paciente';
 import mongoose from 'mongoose';
+import { regenerarResumenAsync } from '../../../services/paciente/resumenPacienteService';
 
 export const verificarYCrearFormulaMedica = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -126,10 +127,17 @@ export const verificarYCrearFormulaMedica = async (req: AuthRequest, res: Respon
       console.error('Error generando PDF de fórmula médica:', err);
     }
 
+    // Hook: regenerar resumen integral del paciente (fire-and-forget)
+    regenerarResumenAsync(
+      String(pacienteId),
+      sobrescribir ? 'formula_actualizada' : 'formula_creada',
+      citaId ? String(citaId) : undefined
+    );
+
     res.status(201).json({
       success: true,
-      message: sobrescribir 
-        ? 'Fórmula médica actualizada exitosamente' 
+      message: sobrescribir
+        ? 'Fórmula médica actualizada exitosamente'
         : 'Fórmula médica creada exitosamente',
       data: { ...nuevaFormula.toObject(), pdfUrl: pdfUrl ?? nuevaFormula.pdfUrl },
       pdfUrl: pdfUrl ?? nuevaFormula.pdfUrl

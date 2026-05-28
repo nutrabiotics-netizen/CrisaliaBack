@@ -1,6 +1,26 @@
 import { Router } from 'express';
 import { authenticateExternal } from '../../middleware/externalAuth';
+import { requirePhoneToken } from '../../middleware/externalPhoneAuth';
 import { aliviaWebhook } from '../../controllers/external/aliviaWebhookController';
+import {
+  postRequestOtp,
+  postVerifyOtp,
+  postRevoke
+} from '../../controllers/external/toolsAuthController';
+import {
+  getMe,
+  getMisCitas,
+  getProximaCita,
+  getMiTratamiento,
+  getMiHistoria,
+  postAgendar,
+  postCancelar,
+  getAgendaMedico,
+  getPacienteFicha,
+  getMedicosDisponibles,
+  getMiResumen,
+  postRefreshResumen
+} from '../../controllers/external/toolsController';
 import {
   // Pacientes
   obtenerTodosLosPacientes,
@@ -41,7 +61,33 @@ import {
 
 const router = Router();
 
-// Todas las rutas requieren autenticación externa
+// ─── TOOLS API (Auth por teléfono OTP) ────────────────────────────
+// Estas rutas usan phoneToken (Bearer) en lugar del EXTERNAL_API_TOKEN global.
+// Se registran ANTES del router.use(authenticateExternal) para evitar el middleware.
+
+// Auth flow
+router.post('/auth/request-otp', postRequestOtp);
+router.post('/auth/verify-otp', postVerifyOtp);
+router.post('/auth/revoke', requirePhoneToken, postRevoke);
+
+// Tools — actúan en nombre del paciente o médico autenticado
+router.get('/tools/me', requirePhoneToken, getMe);
+router.get('/tools/me/citas', requirePhoneToken, getMisCitas);
+router.get('/tools/me/citas/proxima', requirePhoneToken, getProximaCita);
+router.get('/tools/me/tratamiento', requirePhoneToken, getMiTratamiento);
+router.get('/tools/me/historia', requirePhoneToken, getMiHistoria);
+router.post('/tools/me/agendar', requirePhoneToken, postAgendar);
+router.post('/tools/me/cancelar', requirePhoneToken, postCancelar);
+router.get('/tools/me/agenda', requirePhoneToken, getAgendaMedico);
+router.get('/tools/medico/:pacienteId/ficha', requirePhoneToken, getPacienteFicha);
+router.get('/tools/medicos', requirePhoneToken, getMedicosDisponibles);
+
+// Resumen integral del paciente (generado por Crisal·IA Agent)
+router.get('/tools/me/resumen', requirePhoneToken, getMiResumen);
+router.post('/tools/me/resumen/refresh', requirePhoneToken, postRefreshResumen);
+
+// ─── RUTAS ADMIN (Bearer EXTERNAL_API_TOKEN, sin contexto de usuario) ───
+// Todas las rutas siguientes requieren el token estático de servidor
 router.use(authenticateExternal);
 
 // ==================== PACIENTES ====================

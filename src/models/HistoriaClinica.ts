@@ -98,7 +98,14 @@ export interface IHistoriaClinica extends Document {
   
   // Recomendaciones
   recomendaciones?: string;
-  
+
+  /**
+   * Cache de textos generados por el agente Crisal·IA, para no reinvocar
+   * al agente cada vez que el paciente abre el resumen de la cita.
+   */
+  iaRecomendacionesPaciente?: { texto: string; generadoEn: Date };
+  iaResumenCita?: { texto: string; generadoEn: Date };
+
   // Información del Profesional
   profesional?: {
     nombre: string;
@@ -225,6 +232,14 @@ const HistoriaClinicaSchema = new Schema<IHistoriaClinica>(
       relacionado: String
     }],
     recomendaciones: String,
+    iaRecomendacionesPaciente: {
+      texto: String,
+      generadoEn: Date
+    },
+    iaResumenCita: {
+      texto: String,
+      generadoEn: Date
+    },
     profesional: {
       nombre: String,
       apellido: String,

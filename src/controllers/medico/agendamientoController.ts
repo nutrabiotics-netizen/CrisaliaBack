@@ -8,6 +8,7 @@ import incapacidadService from '../../services/medico/incapacidad/incapacidadSer
 import interconsultaService from '../../services/medico/interconsulta/interconsultaService';
 import { registrarAccion } from '../../utils/auditoriaHelper';
 import { generateCitaResumenPdf } from '../../utils/pdfGenerator';
+import { regenerarResumenAsync } from '../../services/paciente/resumenPacienteService';
 import { uploadPDFAndGetUrl, buildCitaDocumentKey, getRecordingPlaybackUrl } from '../../utils/s3Documents';
 import Cita from '../../models/Cita';
 import Paciente from '../../models/Paciente';
@@ -491,6 +492,14 @@ export const completarCita = async (req: AuthRequest, res: Response): Promise<vo
         actualizadoPorRol: cita.actualizadoPorRol
       }
     );
+
+    // Hook: regenerar resumen integral del paciente para que el campo
+    // Paciente.resumenIA esté siempre actualizado para agentes externos.
+    // Fire-and-forget — no bloquea la respuesta.
+    const pacIdRef = (cita as any).pacienteId?._id ?? (cita as any).pacienteId;
+    if (pacIdRef) {
+      regenerarResumenAsync(String(pacIdRef), 'cita_completada', String(citaId));
+    }
 
     res.json({
       success: true,
