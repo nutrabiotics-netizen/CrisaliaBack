@@ -146,6 +146,26 @@ export async function requestOtp(
     return { sent: false, reason: 'documento_invalido' };
   }
   const found = await buscarSujetoPorDocumento(numeroDocumento);
+
+  // Helper: encuentra el teléfono del sujeto mirando varios campos comunes
+  // (algunos médicos guardan el celular en perfilVerificacion en vez de top-level).
+  const resolverTelefonoSujeto = (subject: any): { phone: string; campo: string } => {
+    const candidatos: Array<[string, any]> = [
+      ['telefono', subject?.telefono],
+      ['whatsapp', subject?.whatsapp],
+      ['celular', subject?.celular],
+      ['perfilVerificacion.celular', subject?.perfilVerificacion?.celular],
+      ['perfilVerificacion.telefono', subject?.perfilVerificacion?.telefono],
+      ['perfilVerificacion.whatsapp', subject?.perfilVerificacion?.whatsapp],
+      ['perfilVerificacion.celularContacto', subject?.perfilVerificacion?.celularContacto]
+    ];
+    for (const [campo, valor] of candidatos) {
+      const n = normalizarPhone(valor || '');
+      if (n && n.length >= 7) return { phone: n, campo };
+    }
+    return { phone: '', campo: '' };
+  };
+
   if (!found) {
     const docNorm = normalizarDocumento(numeroDocumento);
     const [pacCount, medColCount, medCedCount, pacSample, medColSample, medCedSample] = await Promise.all([
@@ -175,10 +195,34 @@ export async function requestOtp(
     };
   }
 
-  const phone = normalizarPhone(found.subject.telefono || '');
-  if (!phone || phone.length < 7) {
-    return { sent: false, reason: 'sin_telefono' };
+  const { phone, campo } = resolverTelefonoSujeto(found.subject);
+  if (!phone) {
+    console.warn('[docAuth] ⚠ sujeto encontrado pero SIN telefono — campos revisados todos vacíos');
+    return {
+      sent: false,
+      reason: 'sin_telefono',
+      diagnostico: {
+        role: found.role,
+        subjectId: String(found.subject._id),
+        camposRevisados: [
+          'telefono', 'whatsapp', 'celular',
+          'perfilVerificacion.celular',
+          'perfilVerificacion.telefono',
+          'perfilVerificacion.whatsapp',
+          'perfilVerificacion.celularContacto'
+        ],
+        valores: {
+          telefono: found.subject.telefono ?? null,
+          whatsapp: found.subject.whatsapp ?? null,
+          'perfilVerificacion.celular': found.subject.perfilVerificacion?.celular ?? null,
+          'perfilVerificacion.telefono': found.subject.perfilVerificacion?.telefono ?? null,
+          'perfilVerificacion.whatsapp': found.subject.perfilVerificacion?.whatsapp ?? null,
+          'perfilVerificacion.celularContacto': found.subject.perfilVerificacion?.celularContacto ?? null
+        }
+      } as any
+    };
   }
+  console.log('[docAuth] ✓ telefono resuelto desde campo:', campo);
 
   try {
     await envioCodigoWhatsApp(phone);
@@ -212,7 +256,21 @@ export async function verifyOtp(
   const found = await buscarSujetoPorDocumento(numeroDocumento);
   if (!found) return { ok: false, reason: 'no_registrado' };
 
-  const phone = normalizarPhone(found.subject.telefono || '');
+  // Mismo orden de búsqueda que requestOtp (telefono → whatsapp → perfilVerificacion.*)
+  const candidatos = [
+    found.subject?.telefono,
+    found.subject?.whatsapp,
+    found.subject?.celular,
+    found.subject?.perfilVerificacion?.celular,
+    found.subject?.perfilVerificacion?.telefono,
+    found.subject?.perfilVerificacion?.whatsapp,
+    found.subject?.perfilVerificacion?.celularContacto
+  ];
+  let phone = '';
+  for (const c of candidatos) {
+    const n = normalizarPhone(c || '');
+    if (n && n.length >= 7) { phone = n; break; }
+  }
   if (!phone) return { ok: false, reason: 'sin_telefono' };
 
   const verif = await verificarCodigoWhatsAppDetallado(phone, otp);
