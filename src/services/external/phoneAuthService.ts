@@ -42,22 +42,74 @@ function enmascararPhone(phone: string): string {
 }
 
 /**
+ * Construye un regex que matchea el documento ignorando puntos, espacios,
+ * guiones y prefijos/sufijos no-alfanuméricos (ej. "CC 1098765432", "1.098.765.432").
+ */
+function buildFuzzyDocRegex(doc: string): RegExp {
+  const safe = doc.split('').map((c) => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  // Acepta cualquier cantidad de chars NO-alfanuméricos antes/entre/después.
+  return new RegExp('^[^A-Za-z0-9]*' + safe.join('[^A-Za-z0-9]*') + '[^A-Za-z0-9]*$', 'i');
+}
+
+/**
  * Busca al usuario (paciente o médico) por su número de documento.
  *  - Paciente → campo `numeroDocumento`
  *  - Médico   → campo `numeroColegiatura` (su identificador de documento)
  * El usuario debe tener un teléfono registrado para poder recibir el OTP.
+ *
+ * Hace primero match exacto y, si falla, intenta un regex tolerante a
+ * formatos típicos: "1.098.765.432", "CC 1098765432", "  1098765432  ", etc.
  */
 async function buscarSujetoPorDocumento(
   documento: string
 ): Promise<{ role: 'paciente' | 'medico'; subject: any } | null> {
   const doc = normalizarDocumento(documento);
-  if (!doc) return null;
+  if (!doc) {
+    console.log('[docAuth] documento vacío tras normalizar');
+    return null;
+  }
 
-  const paciente = await Paciente.findOne({ numeroDocumento: doc }).lean();
-  if (paciente) return { role: 'paciente', subject: paciente };
+  console.log('[docAuth] buscando documento normalizado:', JSON.stringify(doc));
 
-  const medico = await Medico.findOne({ numeroColegiatura: doc }).lean();
-  if (medico) return { role: 'medico', subject: medico };
+  // 1) Match exacto contra paciente.numeroDocumento
+  let paciente = await Paciente.findOne({ numeroDocumento: doc }).lean();
+  if (paciente) {
+    console.log('[docAuth] ✓ paciente (exacto)', paciente._id);
+    return { role: 'paciente', subject: paciente };
+  }
+
+  // 2) Match exacto contra medico.numeroColegiatura
+  let medico = await Medico.findOne({ numeroColegiatura: doc }).lean();
+  if (medico) {
+    console.log('[docAuth] ✓ medico (exacto)', medico._id);
+    return { role: 'medico', subject: medico };
+  }
+
+  // 3) Match tolerante (puntos, espacios, prefijo "CC", etc.)
+  const fuzzy = buildFuzzyDocRegex(doc);
+  console.log('[docAuth] intentando match fuzzy:', fuzzy.source);
+
+  paciente = await Paciente.findOne({ numeroDocumento: fuzzy }).lean();
+  if (paciente) {
+    console.log('[docAuth] ✓ paciente (fuzzy)', paciente._id, '· stored:', JSON.stringify(paciente.numeroDocumento));
+    return { role: 'paciente', subject: paciente };
+  }
+
+  medico = await Medico.findOne({ numeroColegiatura: fuzzy }).lean();
+  if (medico) {
+    console.log('[docAuth] ✓ medico (fuzzy)', medico._id, '· stored:', JSON.stringify(medico.numeroColegiatura));
+    return { role: 'medico', subject: medico };
+  }
+
+  // Diagnóstico final: contar cuántos pacientes/médicos hay en la BD
+  const [totPac, totMed] = await Promise.all([
+    Paciente.countDocuments({ numeroDocumento: { $exists: true, $ne: null } }),
+    Medico.countDocuments({ numeroColegiatura: { $exists: true, $ne: null } })
+  ]);
+  console.warn(
+    '[docAuth] ✗ ningún match para', JSON.stringify(doc),
+    `(pacientes con numeroDocumento: ${totPac}, médicos con numeroColegiatura: ${totMed})`
+  );
 
   return null;
 }
@@ -73,14 +125,34 @@ export async function requestOtp(
   role?: 'paciente' | 'medico';
   phoneMasked?: string;
   reason?: string;
+  diagnostico?: any;
 }> {
   if (!numeroDocumento || normalizarDocumento(numeroDocumento).length < 3) {
     return { sent: false, reason: 'documento_invalido' };
   }
   const found = await buscarSujetoPorDocumento(numeroDocumento);
   if (!found) {
-    // No revelamos si el documento existe o no (security best practice).
-    return { sent: false, reason: 'no_registrado' };
+    const docNorm = normalizarDocumento(numeroDocumento);
+    const [pacCount, medCount, pacSample, medSample] = await Promise.all([
+      Paciente.countDocuments({ numeroDocumento: { $exists: true, $nin: [null, ''] } as any }),
+      Medico.countDocuments({ numeroColegiatura: { $exists: true, $nin: [null, ''] } as any }),
+      Paciente.find({ numeroDocumento: { $exists: true, $nin: [null, ''] } as any })
+        .select('numeroDocumento').limit(3).lean(),
+      Medico.find({ numeroColegiatura: { $exists: true, $nin: [null, ''] } as any })
+        .select('numeroColegiatura').limit(3).lean()
+    ]);
+    return {
+      sent: false,
+      reason: 'no_registrado',
+      diagnostico: {
+        documentoRecibido: numeroDocumento,
+        documentoNormalizado: docNorm,
+        pacientesConNumeroDocumento: pacCount,
+        medicosConNumeroColegiatura: medCount,
+        muestraPacientes: pacSample.map((p: any) => p.numeroDocumento),
+        muestraMedicos: medSample.map((m: any) => m.numeroColegiatura)
+      }
+    };
   }
 
   const phone = normalizarPhone(found.subject.telefono || '');

@@ -37,6 +37,10 @@ export interface RegisterPacienteData {
   email: string;
   password: string;
   telefono?: string;
+  /** Fecha de nacimiento ISO (YYYY-MM-DD). El servidor la persiste y permite calcular la edad. */
+  fechaNacimiento?: string;
+  /** Género auto-declarado del paciente */
+  genero?: 'masculino' | 'femenino' | 'no-binario' | 'otro' | 'prefiero-no-decir';
   acudiente?: AcudienteTutorData;
   aceptaTerminos?: boolean;
   aceptaConsentimiento?: boolean;
@@ -193,11 +197,18 @@ export class AuthService {
   }
 
   async registerPaciente(data: RegisterPacienteData): Promise<AuthResponse> {
-    const { nombre, apellido, email, password, telefono, acudiente, aceptaTerminos, aceptaConsentimiento, zonasDolor } = data;
+    const { nombre, apellido, email, password, telefono, fechaNacimiento, genero, acudiente, aceptaTerminos, aceptaConsentimiento, zonasDolor } = data;
 
     const existingPaciente = await Paciente.findOne({ email });
     if (existingPaciente) {
       throw new AppError('Este correo electrónico ya está registrado', 400);
+    }
+
+    // Parse fechaNacimiento si viene como string ISO/YYYY-MM-DD
+    let fechaNacimientoParsed: Date | undefined;
+    if (fechaNacimiento) {
+      const d = new Date(fechaNacimiento);
+      if (!isNaN(d.getTime())) fechaNacimientoParsed = d;
     }
 
     const nuevoPaciente = new Paciente({
@@ -206,6 +217,8 @@ export class AuthService {
       email,
       password,
       telefono: telefono?.trim() || undefined,
+      ...(fechaNacimientoParsed && { fechaNacimiento: fechaNacimientoParsed }),
+      ...(genero && { genero }),
       acudiente:
         acudiente?.nombre?.trim() && acudiente?.parentesco?.trim()
           ? {

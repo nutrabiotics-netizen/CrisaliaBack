@@ -35,7 +35,8 @@ export const postRequestOtp = async (req: Request, res: Response): Promise<void>
       res.status(400).json({
         success: false,
         error: r.reason ?? 'no_enviado',
-        message: map[r.reason ?? ''] ?? 'No se pudo enviar el OTP'
+        message: map[r.reason ?? ''] ?? 'No se pudo enviar el OTP',
+        diagnostico: r.diagnostico
       });
       return;
     }
