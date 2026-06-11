@@ -78,8 +78,14 @@ async function buscarSujetoPorDocumento(
     return { role: 'paciente', subject: paciente };
   }
 
-  // 2) Match exacto contra medico.numeroColegiatura
-  let medico = await Medico.findOne({ numeroColegiatura: doc }).lean();
+  // 2) Match exacto contra medico — por numeroColegiatura O por la cédula que
+  // vive en perfilVerificacion.numeroDocumento (donde el form del médico la guarda).
+  let medico = await Medico.findOne({
+    $or: [
+      { numeroColegiatura: doc },
+      { 'perfilVerificacion.numeroDocumento': doc }
+    ]
+  }).lean();
   if (medico) {
     console.log('[docAuth] ✓ medico (exacto)', medico._id);
     return { role: 'medico', subject: medico };
@@ -95,9 +101,18 @@ async function buscarSujetoPorDocumento(
     return { role: 'paciente', subject: paciente };
   }
 
-  medico = await Medico.findOne({ numeroColegiatura: fuzzy }).lean();
+  medico = await Medico.findOne({
+    $or: [
+      { numeroColegiatura: fuzzy },
+      { 'perfilVerificacion.numeroDocumento': fuzzy }
+    ]
+  }).lean();
   if (medico) {
-    console.log('[docAuth] ✓ medico (fuzzy)', medico._id, '· stored:', JSON.stringify(medico.numeroColegiatura));
+    console.log(
+      '[docAuth] ✓ medico (fuzzy)', medico._id,
+      '· numeroColegiatura:', JSON.stringify((medico as any).numeroColegiatura),
+      '· perfilVerificacion.numeroDocumento:', JSON.stringify((medico as any).perfilVerificacion?.numeroDocumento)
+    );
     return { role: 'medico', subject: medico };
   }
 
@@ -133,13 +148,16 @@ export async function requestOtp(
   const found = await buscarSujetoPorDocumento(numeroDocumento);
   if (!found) {
     const docNorm = normalizarDocumento(numeroDocumento);
-    const [pacCount, medCount, pacSample, medSample] = await Promise.all([
+    const [pacCount, medColCount, medCedCount, pacSample, medColSample, medCedSample] = await Promise.all([
       Paciente.countDocuments({ numeroDocumento: { $exists: true, $nin: [null, ''] } as any }),
       Medico.countDocuments({ numeroColegiatura: { $exists: true, $nin: [null, ''] } as any }),
+      Medico.countDocuments({ 'perfilVerificacion.numeroDocumento': { $exists: true, $nin: [null, ''] } as any }),
       Paciente.find({ numeroDocumento: { $exists: true, $nin: [null, ''] } as any })
         .select('numeroDocumento').limit(3).lean(),
       Medico.find({ numeroColegiatura: { $exists: true, $nin: [null, ''] } as any })
-        .select('numeroColegiatura').limit(3).lean()
+        .select('numeroColegiatura').limit(3).lean(),
+      Medico.find({ 'perfilVerificacion.numeroDocumento': { $exists: true, $nin: [null, ''] } as any })
+        .select('perfilVerificacion').limit(3).lean()
     ]);
     return {
       sent: false,
@@ -148,9 +166,11 @@ export async function requestOtp(
         documentoRecibido: numeroDocumento,
         documentoNormalizado: docNorm,
         pacientesConNumeroDocumento: pacCount,
-        medicosConNumeroColegiatura: medCount,
+        medicosConNumeroColegiatura: medColCount,
+        medicosConCedulaEnPerfilVerificacion: medCedCount,
         muestraPacientes: pacSample.map((p: any) => p.numeroDocumento),
-        muestraMedicos: medSample.map((m: any) => m.numeroColegiatura)
+        muestraMedicosColegiatura: medColSample.map((m: any) => m.numeroColegiatura),
+        muestraMedicosCedula: medCedSample.map((m: any) => m.perfilVerificacion?.numeroDocumento)
       }
     };
   }
