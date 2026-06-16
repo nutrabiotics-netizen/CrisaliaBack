@@ -3,7 +3,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
-import swaggerUi from 'swagger-ui-express';
 import { connectDB } from './config/database';
 import { swaggerSpec } from './config/swagger';
 
@@ -26,7 +25,16 @@ app.use(cors({
 
 // ─── Seguridad ────────────────────────────────────────────────────────────────
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'cross-origin' } // permite imágenes S3 desde el frontend
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://unpkg.com'],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://unpkg.com'],
+      imgSrc: ["'self'", 'data:', 'https:'],
+      connectSrc: ["'self'", 'https://unpkg.com'],
+    },
+  },
 }));
 
 // Rate limiting global: 200 req/15 min por IP
@@ -157,20 +165,42 @@ app.post('/api/medico/mi-link-referido/renovar', authenticate, authorize(UserRol
 app.post('/api/medico/formula-medica/:formulaId/generar-orden-alivia', authenticate, authorize(UserRole.MEDICO), generarOrdenAlivia);
 
 // ─── Swagger UI ───────────────────────────────────────────────────────────────
-// Los assets (CSS/JS) se cargan desde unpkg para que funcione en Vercel serverless
-// (Vercel no sirve archivos estáticos de node_modules)
-const SWAGGER_CSS_URL = 'https://unpkg.com/swagger-ui-dist@5/swagger-ui.css';
-const SWAGGER_JS_URL  = 'https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js';
-
-app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-  customSiteTitle: 'Crisalia API Docs',
-  customCssUrl: SWAGGER_CSS_URL,
-  customJs: SWAGGER_JS_URL,
-  customCss: '.swagger-ui .topbar { background-color: #443c92; }',
-}));
+// En Vercel (serverless) no se pueden servir archivos estáticos de node_modules,
+// así que se sirve un HTML propio que carga los assets desde unpkg CDN.
 app.get('/api/docs.json', (_req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.send(swaggerSpec);
+});
+
+app.get('/api/docs', (_req, res) => {
+  res.setHeader('Content-Type', 'text/html');
+  res.send(`<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Crisalia API Docs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+  <style>
+    .swagger-ui .topbar { background-color: #443c92; }
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script>
+    window.onload = function () {
+      SwaggerUIBundle({
+        url: '/api/docs.json',
+        dom_id: '#swagger-ui',
+        presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
+        layout: 'BaseLayout',
+        deepLinking: true,
+      });
+    };
+  </script>
+</body>
+</html>`);
 });
 
 // Ruta de prueba
