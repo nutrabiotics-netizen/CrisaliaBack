@@ -157,8 +157,15 @@ app.post('/api/medico/mi-link-referido/renovar', authenticate, authorize(UserRol
 app.post('/api/medico/formula-medica/:formulaId/generar-orden-alivia', authenticate, authorize(UserRole.MEDICO), generarOrdenAlivia);
 
 // ─── Swagger UI ───────────────────────────────────────────────────────────────
+// Los assets (CSS/JS) se cargan desde unpkg para que funcione en Vercel serverless
+// (Vercel no sirve archivos estáticos de node_modules)
+const SWAGGER_CSS_URL = 'https://unpkg.com/swagger-ui-dist@5/swagger-ui.css';
+const SWAGGER_JS_URL  = 'https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js';
+
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customSiteTitle: 'Crisalia API Docs',
+  customCssUrl: SWAGGER_CSS_URL,
+  customJs: SWAGGER_JS_URL,
   customCss: '.swagger-ui .topbar { background-color: #443c92; }',
 }));
 app.get('/api/docs.json', (_req, res) => {
