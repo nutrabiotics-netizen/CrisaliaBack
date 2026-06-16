@@ -3,12 +3,26 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import swaggerUi from 'swagger-ui-express';
 import { connectDB } from './config/database';
+import { swaggerSpec } from './config/swagger';
 
 // Cargar variables de entorno
 dotenv.config();
 
 const app = express();
+
+// ─── CORS (debe ir antes que rate limiting para que los preflights OPTIONS pasen) ─
+app.use(cors({
+  origin: [
+    'https://nutrabiotics.mozartai.com.co',
+    'https://app.nutrabiotics.mozartia.com',
+    'http://localhost:5173'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // ─── Seguridad ────────────────────────────────────────────────────────────────
 app.use(helmet({
@@ -34,18 +48,6 @@ const limiterAuth = rateLimit({
   message: { success: false, message: 'Demasiados intentos de autenticación. Intenta en 15 minutos.' }
 });
 app.use('/api/auth/', limiterAuth);
-
-// ─── CORS ─────────────────────────────────────────────────────────────────────
-app.use(cors({
-  origin: [
-    'https://nutrabiotics.mozartai.com.co',
-    'https://app.nutrabiotics.mozartia.com',
-    'http://localhost:5173'
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -153,6 +155,16 @@ app.post('/api/medico/mi-link-referido/renovar', authenticate, authorize(UserRol
 
 // Fase 7 — ALIVIA (webhook se registra en el external router)
 app.post('/api/medico/formula-medica/:formulaId/generar-orden-alivia', authenticate, authorize(UserRole.MEDICO), generarOrdenAlivia);
+
+// ─── Swagger UI ───────────────────────────────────────────────────────────────
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customSiteTitle: 'Crisalia API Docs',
+  customCss: '.swagger-ui .topbar { background-color: #443c92; }',
+}));
+app.get('/api/docs.json', (_req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
 
 // Ruta de prueba
 app.get('/api/health', (_req, res) => {
