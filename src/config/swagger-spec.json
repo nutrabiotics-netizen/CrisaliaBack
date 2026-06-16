@@ -1,0 +1,5468 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Crisalia API",
+    "version": "1.0.0",
+    "description": "API REST de la plataforma médica Crisalia (Nutrabiotics). Gestiona médicos, pacientes, citas, historia clínica, fórmulas, videollamadas e integraciones de IA."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4000",
+      "description": "Local"
+    },
+    {
+      "url": "https://crisalia-back.vercel.app",
+      "description": "Producción (Vercel)"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Token JWT obtenido en POST /api/auth/login"
+      },
+      "ExternalToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-External-Token",
+        "description": "Token estático para la API externa de solo lectura"
+      }
+    },
+    "schemas": {
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Error interno del servidor"
+          },
+          "status": {
+            "type": "string",
+            "example": "error"
+          }
+        }
+      },
+      "ValidationErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "message": {
+            "type": "string",
+            "example": "Error de validación"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "medico@crisalia.co"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 6,
+            "example": "MiPass123!"
+          }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string",
+                "example": "eyJhbGciOiJIUzI1NiIs..."
+              },
+              "user": {
+                "$ref": "#/components/schemas/UserBase"
+              }
+            }
+          }
+        }
+      },
+      "RegisterMedicoRequest": {
+        "type": "object",
+        "required": [
+          "nombre",
+          "apellido",
+          "email",
+          "password"
+        ],
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "minLength": 2,
+            "example": "Carlos"
+          },
+          "apellido": {
+            "type": "string",
+            "minLength": 2,
+            "example": "Gómez"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "carlos@crisalia.co"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "example": "MiPass123!"
+          },
+          "especialidad": {
+            "type": "string",
+            "example": "Medicina interna"
+          },
+          "whatsapp": {
+            "type": "string",
+            "example": "+573001234567"
+          }
+        }
+      },
+      "RegisterPacienteRequest": {
+        "type": "object",
+        "required": [
+          "nombre",
+          "apellido",
+          "email",
+          "password"
+        ],
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "minLength": 2,
+            "example": "Ana"
+          },
+          "apellido": {
+            "type": "string",
+            "minLength": 2,
+            "example": "Martínez"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "ana@email.com"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 6,
+            "example": "Pass123"
+          },
+          "telefono": {
+            "type": "string",
+            "example": "+573001234567"
+          },
+          "aceptaTerminos": {
+            "type": "boolean",
+            "example": true
+          },
+          "aceptaConsentimiento": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "UserBase": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "64f1a2b3c4d5e6f7a8b9c0d1"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "medico",
+              "paciente",
+              "administrativo"
+            ]
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "apellido": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Cita": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "pacienteId": {
+            "type": "string"
+          },
+          "medicoId": {
+            "type": "string"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-07-15"
+          },
+          "hora": {
+            "type": "string",
+            "example": "10:00"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "preconsulta",
+              "consulta",
+              "control"
+            ]
+          },
+          "modalidad": {
+            "type": "string",
+            "enum": [
+              "presencial",
+              "virtual"
+            ]
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "pendiente",
+              "confirmada",
+              "en_espera",
+              "en_consulta",
+              "cancelada",
+              "completada"
+            ]
+          },
+          "meetingId": {
+            "type": "string"
+          },
+          "grabacionUrl": {
+            "type": "string"
+          },
+          "motivoCancelacion": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "HistoriaClinica": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "citaId": {
+            "type": "string"
+          },
+          "pacienteId": {
+            "type": "string"
+          },
+          "medicoId": {
+            "type": "string"
+          },
+          "motivoConsulta": {
+            "type": "string"
+          },
+          "examenFisico": {
+            "type": "object"
+          },
+          "diagnostico": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "plan": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "FormulaMedica": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "citaId": {
+            "type": "string"
+          },
+          "pacienteId": {
+            "type": "string"
+          },
+          "medicoId": {
+            "type": "string"
+          },
+          "medicamentos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "nombre": {
+                  "type": "string"
+                },
+                "dosis": {
+                  "type": "string"
+                },
+                "frecuencia": {
+                  "type": "string"
+                },
+                "duracion": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Incapacidad": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "citaId": {
+            "type": "string"
+          },
+          "pacienteId": {
+            "type": "string"
+          },
+          "medicoId": {
+            "type": "string"
+          },
+          "diasIncapacidad": {
+            "type": "integer",
+            "example": 3
+          },
+          "fechaInicio": {
+            "type": "string",
+            "format": "date"
+          },
+          "diagnostico": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Autenticación y registro de usuarios"
+    },
+    {
+      "name": "Médico - Agendamiento",
+      "description": "Gestión de agenda y citas del médico"
+    },
+    {
+      "name": "Médico - Historia Clínica",
+      "description": "Creación y consulta de historias clínicas"
+    },
+    {
+      "name": "Médico - Fórmula Médica",
+      "description": "Prescripciones médicas"
+    },
+    {
+      "name": "Médico - Incapacidad",
+      "description": "Certificados de incapacidad"
+    },
+    {
+      "name": "Médico - Interconsulta",
+      "description": "Remisiones a otros especialistas"
+    },
+    {
+      "name": "Médico - Examen Médico",
+      "description": "Hallazgos del examen físico"
+    },
+    {
+      "name": "Médico - Apoyo Terapéutico",
+      "description": "Apoyos terapéuticos ordenados"
+    },
+    {
+      "name": "Médico - Ayuda Diagnóstica",
+      "description": "Órdenes de ayudas diagnósticas"
+    },
+    {
+      "name": "Médico - Videocall",
+      "description": "Gestión de videollamadas (AWS Chime)"
+    },
+    {
+      "name": "Médico - Perfil",
+      "description": "Perfil, preajustes clínicos y suscripción"
+    },
+    {
+      "name": "Médico - Métricas",
+      "description": "Dashboard y métricas del médico"
+    },
+    {
+      "name": "Médico - Chat",
+      "description": "Chat en tiempo real con pacientes"
+    },
+    {
+      "name": "Médico - CIE-10",
+      "description": "Búsqueda de códigos de diagnóstico CIE-10"
+    },
+    {
+      "name": "Médico - Copiloto de Voz",
+      "description": "Asistente de voz con IA (AWS Bedrock)"
+    },
+    {
+      "name": "Médico - Google Calendar",
+      "description": "Sincronización con Google Calendar"
+    },
+    {
+      "name": "Médico - Paraclínicos",
+      "description": "Resultados de laboratorio y paraclínicos"
+    },
+    {
+      "name": "Médico - IA",
+      "description": "Módulos de IA entrenada y simulada"
+    },
+    {
+      "name": "Médico - Pago",
+      "description": "Registro y estadísticas de pagos"
+    },
+    {
+      "name": "Paciente - Agendamiento",
+      "description": "Búsqueda de médicos y gestión de citas"
+    },
+    {
+      "name": "Paciente - Historia Clínica",
+      "description": "Consulta de historia clínica propia"
+    },
+    {
+      "name": "Paciente - Interrogatorio",
+      "description": "Cuestionario de preconsulta"
+    },
+    {
+      "name": "Paciente - Tratamiento",
+      "description": "Tratamiento activo e indicaciones"
+    },
+    {
+      "name": "Paciente - Paraclínicos",
+      "description": "Carga y consulta de paraclínicos"
+    },
+    {
+      "name": "Paciente - Cuidador IA",
+      "description": "Asistente de seguimiento con IA"
+    },
+    {
+      "name": "Paciente - Alimentos",
+      "description": "Análisis de alimentos con IA"
+    },
+    {
+      "name": "Paciente - Fórmula",
+      "description": "Consulta de fórmula vigente"
+    },
+    {
+      "name": "Paciente - Chat",
+      "description": "Chat en tiempo real con el médico"
+    },
+    {
+      "name": "Administrativo - Agenda",
+      "description": "Gestión de boxes y asignaciones"
+    },
+    {
+      "name": "Administrativo - RIPS",
+      "description": "Generación y validación de RIPS"
+    },
+    {
+      "name": "Administrativo - Terceros",
+      "description": "Aseguradoras y pagadores"
+    },
+    {
+      "name": "Administrativo - Ingreso",
+      "description": "Control de personal e ingresos"
+    },
+    {
+      "name": "Admin",
+      "description": "Operaciones de administración del sistema"
+    },
+    {
+      "name": "External - Admin",
+      "description": "API de solo lectura con token estático"
+    },
+    {
+      "name": "External - Tools",
+      "description": "API para integraciones externas con OTP"
+    },
+    {
+      "name": "Public",
+      "description": "Endpoints públicos sin autenticación"
+    }
+  ],
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Registrar médico",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterMedicoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Médico registrado exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/register-paciente": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Registrar paciente",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterPacienteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Paciente registrado exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación"
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Iniciar sesión (email + password)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login exitoso — devuelve JWT y datos del usuario",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciales incorrectas"
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Obtener usuario autenticado actual",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Datos del usuario actual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token inválido o expirado"
+          }
+        }
+      }
+    },
+    "/api/auth/whatsapp/send-code": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Enviar código de acceso por WhatsApp (pacientes)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "celular"
+                ],
+                "properties": {
+                  "celular": {
+                    "type": "string",
+                    "example": "+573001234567"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Código enviado"
+          }
+        }
+      }
+    },
+    "/api/auth/whatsapp/verify": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Verificar código WhatsApp e iniciar sesión",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "celular",
+                  "codigo"
+                ],
+                "properties": {
+                  "celular": {
+                    "type": "string",
+                    "example": "+573001234567"
+                  },
+                  "codigo": {
+                    "type": "string",
+                    "example": "123456"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login exitoso — devuelve JWT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Código inválido o expirado"
+          }
+        }
+      }
+    },
+    "/api/auth/whatsapp/send-code-2fa": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Enviar código 2FA por WhatsApp (paciente ya autenticado)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Código 2FA enviado"
+          }
+        }
+      }
+    },
+    "/api/auth/whatsapp/verify-2fa": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Verificar código 2FA por WhatsApp",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "codigo"
+                ],
+                "properties": {
+                  "codigo": {
+                    "type": "string",
+                    "example": "654321"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "2FA verificado correctamente"
+          },
+          "401": {
+            "description": "Código inválido"
+          }
+        }
+      }
+    },
+    "/api/auth/2fa/enviar": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Enviar código 2FA por documento (pre-login)",
+        "description": "Busca el usuario por número de documento y envía un código OTP por WhatsApp. Usar antes de /2fa/validar para obtener el JWT.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "documento"
+                ],
+                "properties": {
+                  "documento": {
+                    "type": "string",
+                    "example": "1234567890"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Código enviado al WhatsApp registrado"
+          },
+          "404": {
+            "description": "Usuario no encontrado"
+          }
+        }
+      }
+    },
+    "/api/auth/2fa/validar": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Validar código 2FA por documento y obtener JWT",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "documento",
+                  "codigo"
+                ],
+                "properties": {
+                  "documento": {
+                    "type": "string",
+                    "example": "1234567890"
+                  },
+                  "codigo": {
+                    "type": "string",
+                    "example": "123456"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login exitoso — devuelve JWT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Código inválido o expirado"
+          }
+        }
+      }
+    },
+    "/api/medico/agendamiento/configuracion": {
+      "get": {
+        "tags": [
+          "Médico - Agendamiento"
+        ],
+        "summary": "Obtener configuración de agenda",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Configuración de agenda del médico"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Médico - Agendamiento"
+        ],
+        "summary": "Crear configuración de agenda",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Datos de configuración de agenda (horarios, duración de cita, etc.)"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Configuración guardada"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Médico - Agendamiento"
+        ],
+        "summary": "Actualizar configuración de agenda",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Configuración actualizada"
+          }
+        }
+      }
+    },
+    "/api/medico/agendamiento/citas": {
+      "get": {
+        "tags": [
+          "Médico - Agendamiento"
+        ],
+        "summary": "Listar todas las citas del médico",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "fecha",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Filtrar por fecha (YYYY-MM-DD)"
+          },
+          {
+            "in": "query",
+            "name": "estado",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pendiente",
+                "confirmada",
+                "en_espera",
+                "en_consulta",
+                "cancelada",
+                "completada"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de citas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Cita"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/medico/agendamiento/citas/hoy": {
+      "get": {
+        "tags": [
+          "Médico - Agendamiento"
+        ],
+        "summary": "Obtener citas de hoy",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Citas del día actual"
+          }
+        }
+      }
+    },
+    "/api/medico/agendamiento/citas/{citaId}/confirmar": {
+      "put": {
+        "tags": [
+          "Médico - Agendamiento"
+        ],
+        "summary": "Confirmar una cita",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "citaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cita confirmada"
+          },
+          "404": {
+            "description": "Cita no encontrada"
+          }
+        }
+      }
+    },
+    "/api/medico/agendamiento/citas/{citaId}/cancelar": {
+      "put": {
+        "tags": [
+          "Médico - Agendamiento"
+        ],
+        "summary": "Cancelar una cita",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "citaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "motivoCancelacion": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cita cancelada"
+          }
+        }
+      }
+    },
+    "/api/medico/agendamiento/citas/{citaId}/completar": {
+      "put": {
+        "tags": [
+          "Médico - Agendamiento"
+        ],
+        "summary": "Marcar una cita como completada",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "citaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cita completada"
+          }
+        }
+      }
+    },
+    "/api/medico/agendamiento/citas/{citaId}/resumen-pdf": {
+      "post": {
+        "tags": [
+          "Médico - Agendamiento"
+        ],
+        "summary": "Generar PDF de resumen de la cita",
+        "description": "Genera un PDF con historia clínica, fórmula médica, incapacidad e interconsulta de la cita.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "citaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "URL del PDF generado"
+          }
+        }
+      }
+    },
+    "/api/medico/agendamiento/citas/{citaId}/recording-url": {
+      "get": {
+        "tags": [
+          "Médico - Agendamiento"
+        ],
+        "summary": "Obtener URL firmada de la grabación de videoconsulta",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "citaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "URL de S3 firmada para reproducir la grabación"
+          }
+        }
+      }
+    },
+    "/api/medico/agendamiento/citas/{citaId}/preconsulta": {
+      "get": {
+        "tags": [
+          "Médico - Agendamiento"
+        ],
+        "summary": "Obtener análisis de preconsulta IA",
+        "description": "Devuelve el resumen del interrogatorio del paciente generado por IA para que el médico lo revise antes de la consulta.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "citaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Análisis de preconsulta"
+          }
+        }
+      }
+    },
+    "/api/medico/historia-clinica": {
+      "post": {
+        "tags": [
+          "Médico - Historia Clínica"
+        ],
+        "summary": "Crear historia clínica",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HistoriaClinica"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Historia clínica creada"
+          },
+          "403": {
+            "description": "Límite de plan alcanzado"
+          }
+        }
+      }
+    },
+    "/api/medico/historia-clinica/cita/{citaId}": {
+      "get": {
+        "tags": [
+          "Médico - Historia Clínica"
+        ],
+        "summary": "Obtener historia clínica por cita",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "citaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Historia clínica de la cita",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoriaClinica"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/medico/historia-clinica/paciente/{pacienteId}": {
+      "get": {
+        "tags": [
+          "Médico - Historia Clínica"
+        ],
+        "summary": "Obtener todas las historias clínicas de un paciente",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pacienteId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de historias clínicas"
+          }
+        }
+      }
+    },
+    "/api/medico/historia-clinica/paciente/{pacienteId}/last-summary": {
+      "get": {
+        "tags": [
+          "Médico - Historia Clínica"
+        ],
+        "summary": "Obtener resumen de la última historia clínica del paciente",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pacienteId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resumen de la última historia"
+          }
+        }
+      }
+    },
+    "/api/medico/historia-clinica/{historiaId}": {
+      "get": {
+        "tags": [
+          "Médico - Historia Clínica"
+        ],
+        "summary": "Obtener historia clínica por ID",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "historiaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Historia clínica"
+          },
+          "404": {
+            "description": "No encontrada"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Médico - Historia Clínica"
+        ],
+        "summary": "Actualizar historia clínica",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "historiaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HistoriaClinica"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Historia actualizada"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Médico - Historia Clínica"
+        ],
+        "summary": "Eliminar historia clínica (soft delete)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "historiaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Historia eliminada"
+          }
+        }
+      }
+    },
+    "/api/medico/formula-medica/verificar-y-crear": {
+      "post": {
+        "tags": [
+          "Médico - Fórmula Médica"
+        ],
+        "summary": "Verificar y crear fórmula médica",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FormulaMedica"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Fórmula creada"
+          }
+        }
+      }
+    },
+    "/api/medico/formula-medica/cita/{citaId}": {
+      "get": {
+        "tags": [
+          "Médico - Fórmula Médica"
+        ],
+        "summary": "Obtener fórmula médica de una cita",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "citaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fórmula médica"
+          }
+        }
+      }
+    },
+    "/api/medico/formula-medica/paciente/{pacienteId}": {
+      "get": {
+        "tags": [
+          "Médico - Fórmula Médica"
+        ],
+        "summary": "Obtener fórmulas médicas de un paciente",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pacienteId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de fórmulas"
+          }
+        }
+      }
+    },
+    "/api/medico/formula-medica/{formulaId}": {
+      "get": {
+        "tags": [
+          "Médico - Fórmula Médica"
+        ],
+        "summary": "Obtener fórmula por ID",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "formulaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fórmula médica"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Médico - Fórmula Médica"
+        ],
+        "summary": "Eliminar fórmula médica",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "formulaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fórmula eliminada"
+          }
+        }
+      }
+    },
+    "/api/medico/formula-medica/{formulaId}/generar-orden-alivia": {
+      "post": {
+        "tags": [
+          "Médico - Fórmula Médica"
+        ],
+        "summary": "Generar orden de despacho en Alivia (farmacia)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "formulaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Orden generada en Alivia"
+          },
+          "503": {
+            "description": "Integración Alivia deshabilitada"
+          }
+        }
+      }
+    },
+    "/api/medico/incapacidad": {
+      "post": {
+        "tags": [
+          "Médico - Incapacidad"
+        ],
+        "summary": "Crear certificado de incapacidad",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Incapacidad"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Incapacidad creada"
+          }
+        }
+      }
+    },
+    "/api/medico/incapacidad/cita/{citaId}": {
+      "get": {
+        "tags": [
+          "Médico - Incapacidad"
+        ],
+        "summary": "Obtener incapacidad de una cita",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "citaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Incapacidad de la cita"
+          }
+        }
+      }
+    },
+    "/api/medico/incapacidad/{incapacidadId}": {
+      "get": {
+        "tags": [
+          "Médico - Incapacidad"
+        ],
+        "summary": "Obtener incapacidad por ID",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "incapacidadId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Incapacidad"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Médico - Incapacidad"
+        ],
+        "summary": "Actualizar incapacidad",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "incapacidadId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Incapacidad"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Actualizada"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Médico - Incapacidad"
+        ],
+        "summary": "Eliminar incapacidad",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "incapacidadId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Eliminada"
+          }
+        }
+      }
+    },
+    "/api/medico/videocall/meetings": {
+      "post": {
+        "tags": [
+          "Médico - Videocall"
+        ],
+        "summary": "Crear videollamada (AWS Chime)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "citaId"
+                ],
+                "properties": {
+                  "citaId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Meeting creado — devuelve meetingId y datos de Chime"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Médico - Videocall"
+        ],
+        "summary": "Listar meetings del médico",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de meetings"
+          }
+        }
+      }
+    },
+    "/api/medico/videocall/meetings/{meetingId}": {
+      "get": {
+        "tags": [
+          "Médico - Videocall"
+        ],
+        "summary": "Obtener datos de un meeting",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "meetingId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Datos del meeting"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Médico - Videocall"
+        ],
+        "summary": "Terminar meeting",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "meetingId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Meeting terminado"
+          }
+        }
+      }
+    },
+    "/api/medico/videocall/meetings/{meetingId}/attendees": {
+      "post": {
+        "tags": [
+          "Médico - Videocall"
+        ],
+        "summary": "Crear asistente en el meeting",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "meetingId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "externalUserId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Asistente creado — devuelve credenciales Chime para el cliente"
+          }
+        }
+      }
+    },
+    "/api/medico/perfil": {
+      "get": {
+        "tags": [
+          "Médico - Perfil"
+        ],
+        "summary": "Obtener perfil del médico autenticado",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Perfil del médico"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Médico - Perfil"
+        ],
+        "summary": "Actualizar perfil",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Perfil actualizado"
+          }
+        }
+      }
+    },
+    "/api/medico/perfil/suscripcion": {
+      "get": {
+        "tags": [
+          "Médico - Perfil"
+        ],
+        "summary": "Obtener estado de suscripción",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estado de suscripción y plan"
+          }
+        }
+      }
+    },
+    "/api/medico/metricas/dashboard": {
+      "get": {
+        "tags": [
+          "Médico - Métricas"
+        ],
+        "summary": "Obtener métricas del dashboard",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "KPIs del médico (citas, pacientes, ingresos)"
+          }
+        }
+      }
+    },
+    "/api/medico/metricas/tendencia": {
+      "get": {
+        "tags": [
+          "Médico - Métricas"
+        ],
+        "summary": "Obtener tendencias de métricas",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Datos de tendencia para gráficos"
+          }
+        }
+      }
+    },
+    "/api/medico/metricas/motivos-consulta": {
+      "get": {
+        "tags": [
+          "Médico - Métricas"
+        ],
+        "summary": "Obtener distribución de motivos de consulta",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Motivos de consulta agrupados"
+          }
+        }
+      }
+    },
+    "/api/medico/chat/cita/{citaId}": {
+      "get": {
+        "tags": [
+          "Médico - Chat"
+        ],
+        "summary": "Obtener mensajes del chat de una cita",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "citaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de mensajes"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Médico - Chat"
+        ],
+        "summary": "Enviar mensaje en el chat de una cita",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "citaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "texto"
+                ],
+                "properties": {
+                  "texto": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Mensaje enviado"
+          }
+        }
+      }
+    },
+    "/api/medico/cie10/search": {
+      "get": {
+        "tags": [
+          "Médico - CIE-10"
+        ],
+        "summary": "Buscar códigos de diagnóstico CIE-10",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Término de búsqueda (código o descripción)",
+            "example": "diabetes"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de códigos CIE-10 coincidentes"
+          }
+        }
+      }
+    },
+    "/api/medico/copiloto-voz/health": {
+      "get": {
+        "tags": [
+          "Médico - Copiloto de Voz"
+        ],
+        "summary": "Verificar estado del copiloto de voz",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estado del servicio"
+          }
+        }
+      }
+    },
+    "/api/medico/copiloto-voz/config": {
+      "get": {
+        "tags": [
+          "Médico - Copiloto de Voz"
+        ],
+        "summary": "Obtener configuración del copiloto de voz",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Configuración del copiloto"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Médico - Copiloto de Voz"
+        ],
+        "summary": "Actualizar configuración del copiloto de voz",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Configuración actualizada"
+          }
+        }
+      }
+    },
+    "/api/medico/copiloto-voz/sugerir-examen": {
+      "post": {
+        "tags": [
+          "Médico - Copiloto de Voz"
+        ],
+        "summary": "Solicitar sugerencia de sección de examen al copiloto IA",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "texto": {
+                    "type": "string",
+                    "description": "Fragmento de transcripción a analizar"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sección de examen sugerida"
+          }
+        }
+      }
+    },
+    "/api/medico/google-calendar/auth-url": {
+      "get": {
+        "tags": [
+          "Médico - Google Calendar"
+        ],
+        "summary": "Obtener URL de autorización OAuth2 de Google",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "URL para redirigir al médico a Google OAuth"
+          }
+        }
+      }
+    },
+    "/api/medico/google-calendar/estado": {
+      "get": {
+        "tags": [
+          "Médico - Google Calendar"
+        ],
+        "summary": "Verificar estado de conexión con Google Calendar",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estado de la conexión"
+          }
+        }
+      }
+    },
+    "/api/medico/google-calendar/sync": {
+      "post": {
+        "tags": [
+          "Médico - Google Calendar"
+        ],
+        "summary": "Sincronizar citas con Google Calendar",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sincronización completada"
+          }
+        }
+      }
+    },
+    "/api/medico/google-calendar/disconnect": {
+      "delete": {
+        "tags": [
+          "Médico - Google Calendar"
+        ],
+        "summary": "Desconectar Google Calendar",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Desconectado exitosamente"
+          }
+        }
+      }
+    },
+    "/api/paciente/agendamiento/medicos": {
+      "get": {
+        "tags": [
+          "Paciente - Agendamiento"
+        ],
+        "summary": "Listar médicos disponibles",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de médicos disponibles para agendar"
+          }
+        }
+      }
+    },
+    "/api/paciente/agendamiento/medicos-recomendados": {
+      "get": {
+        "tags": [
+          "Paciente - Agendamiento"
+        ],
+        "summary": "Obtener médicos recomendados para el paciente",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de médicos recomendados"
+          }
+        }
+      }
+    },
+    "/api/paciente/agendamiento/medicos/{medicoId}/horarios": {
+      "get": {
+        "tags": [
+          "Paciente - Agendamiento"
+        ],
+        "summary": "Obtener horarios disponibles de un médico",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "medicoId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "fecha",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Fecha para consultar disponibilidad (YYYY-MM-DD)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Slots de horario disponibles"
+          }
+        }
+      }
+    },
+    "/api/paciente/agendamiento/citas": {
+      "get": {
+        "tags": [
+          "Paciente - Agendamiento"
+        ],
+        "summary": "Listar citas del paciente",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de citas del paciente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Cita"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Paciente - Agendamiento"
+        ],
+        "summary": "Crear nueva cita",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "medicoId",
+                  "fecha",
+                  "hora",
+                  "tipo",
+                  "modalidad"
+                ],
+                "properties": {
+                  "medicoId": {
+                    "type": "string"
+                  },
+                  "fecha": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-07-20"
+                  },
+                  "hora": {
+                    "type": "string",
+                    "example": "10:00"
+                  },
+                  "tipo": {
+                    "type": "string",
+                    "enum": [
+                      "preconsulta",
+                      "consulta",
+                      "control"
+                    ]
+                  },
+                  "modalidad": {
+                    "type": "string",
+                    "enum": [
+                      "presencial",
+                      "virtual"
+                    ]
+                  },
+                  "codigoDescuento": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Cita creada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cita"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/paciente/agendamiento/citas/{citaId}/cancelar": {
+      "put": {
+        "tags": [
+          "Paciente - Agendamiento"
+        ],
+        "summary": "Cancelar cita",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "citaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "motivoCancelacion": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cita cancelada"
+          }
+        }
+      }
+    },
+    "/api/paciente/agendamiento/citas/{citaId}/sala-espera": {
+      "get": {
+        "tags": [
+          "Paciente - Agendamiento"
+        ],
+        "summary": "Obtener estado de sala de espera virtual",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "citaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estado de la sala de espera y turno estimado"
+          }
+        }
+      }
+    },
+    "/api/paciente/interrogatorio": {
+      "post": {
+        "tags": [
+          "Paciente - Interrogatorio"
+        ],
+        "summary": "Crear interrogatorio de preconsulta",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "citaId": {
+                    "type": "string"
+                  },
+                  "respuestas": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Interrogatorio creado"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Paciente - Interrogatorio"
+        ],
+        "summary": "Listar interrogatorios del paciente",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de interrogatorios"
+          }
+        }
+      }
+    },
+    "/api/paciente/interrogatorio/{interrogatorioId}/analizar": {
+      "post": {
+        "tags": [
+          "Paciente - Interrogatorio"
+        ],
+        "summary": "Generar análisis IA del interrogatorio",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "interrogatorioId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Análisis generado por IA"
+          }
+        }
+      }
+    },
+    "/api/paciente/historia-clinica": {
+      "get": {
+        "tags": [
+          "Paciente - Historia Clínica"
+        ],
+        "summary": "Listar historias clínicas propias del paciente",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de historias clínicas"
+          }
+        }
+      }
+    },
+    "/api/paciente/historia-clinica/cita/{citaId}/recomendaciones-ia": {
+      "get": {
+        "tags": [
+          "Paciente - Historia Clínica"
+        ],
+        "summary": "Obtener recomendaciones IA de la historia clínica",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "citaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recomendaciones generadas por IA"
+          }
+        }
+      }
+    },
+    "/api/paciente/historia-clinica/cita/{citaId}/preguntar": {
+      "post": {
+        "tags": [
+          "Paciente - Historia Clínica"
+        ],
+        "summary": "Hacer una pregunta al asistente IA sobre la historia clínica",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "citaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "pregunta"
+                ],
+                "properties": {
+                  "pregunta": {
+                    "type": "string",
+                    "example": "¿Qué medicamentos debo tomar?"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Respuesta del asistente IA"
+          }
+        }
+      }
+    },
+    "/api/paciente/tratamiento/activo": {
+      "get": {
+        "tags": [
+          "Paciente - Tratamiento"
+        ],
+        "summary": "Obtener tratamiento activo del paciente",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tratamiento activo con medicamentos e indicaciones"
+          }
+        }
+      }
+    },
+    "/api/paciente/tratamiento/marcar-toma": {
+      "post": {
+        "tags": [
+          "Paciente - Tratamiento"
+        ],
+        "summary": "Registrar toma de medicamento",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "medicamentoId": {
+                    "type": "string"
+                  },
+                  "fecha": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Toma registrada"
+          }
+        }
+      }
+    },
+    "/api/paciente/cuidador-ia/mensaje": {
+      "post": {
+        "tags": [
+          "Paciente - Cuidador IA"
+        ],
+        "summary": "Enviar mensaje al cuidador IA",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "mensaje"
+                ],
+                "properties": {
+                  "mensaje": {
+                    "type": "string",
+                    "example": "¿Puedo tomar el medicamento con leche?"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Respuesta del cuidador IA"
+          }
+        }
+      }
+    },
+    "/api/paciente/cuidador-ia/alertar-medico": {
+      "post": {
+        "tags": [
+          "Paciente - Cuidador IA"
+        ],
+        "summary": "Alertar al médico desde el cuidador IA",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "motivo": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Alerta enviada al médico"
+          }
+        }
+      }
+    },
+    "/api/paciente/alimentos/analizar": {
+      "post": {
+        "tags": [
+          "Paciente - Alimentos"
+        ],
+        "summary": "Analizar imagen de alimento con IA",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "imagen": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Análisis nutricional del alimento"
+          }
+        }
+      }
+    },
+    "/api/paciente/alimentos/historial": {
+      "get": {
+        "tags": [
+          "Paciente - Alimentos"
+        ],
+        "summary": "Obtener historial de evaluaciones de alimentos",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de evaluaciones anteriores"
+          }
+        }
+      }
+    },
+    "/api/administrativo/agenda/citas": {
+      "get": {
+        "tags": [
+          "Administrativo - Agenda"
+        ],
+        "summary": "Listar todas las citas (vista administrativa)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "fecha",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "medicoId",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de citas"
+          }
+        }
+      }
+    },
+    "/api/administrativo/agenda/boxes": {
+      "get": {
+        "tags": [
+          "Administrativo - Agenda"
+        ],
+        "summary": "Listar boxes/consultorios",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de boxes"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Administrativo - Agenda"
+        ],
+        "summary": "Crear box/consultorio",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "nombre"
+                ],
+                "properties": {
+                  "nombre": {
+                    "type": "string",
+                    "example": "Consultorio 1"
+                  },
+                  "capacidad": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Box creado"
+          }
+        }
+      }
+    },
+    "/api/administrativo/agenda/mapa-ocupacion": {
+      "get": {
+        "tags": [
+          "Administrativo - Agenda"
+        ],
+        "summary": "Obtener mapa de ocupación de boxes en tiempo real",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estado de ocupación de cada box"
+          }
+        }
+      }
+    },
+    "/api/administrativo/rips/consolidado": {
+      "get": {
+        "tags": [
+          "Administrativo - RIPS"
+        ],
+        "summary": "Obtener datos consolidados para RIPS",
+        "description": "RIPS (Registro Individual de Prestación de Servicios) es el sistema de facturación de salud en Colombia.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "fechaInicio",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "fechaFin",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Datos consolidados para generación de RIPS"
+          }
+        }
+      }
+    },
+    "/api/administrativo/rips/descargar": {
+      "get": {
+        "tags": [
+          "Administrativo - RIPS"
+        ],
+        "summary": "Descargar archivo RIPS generado",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Archivo ZIP con los archivos RIPS",
+            "content": {
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/administrativo/terceros": {
+      "get": {
+        "tags": [
+          "Administrativo - Terceros"
+        ],
+        "summary": "Listar aseguradoras y pagadores",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de terceros"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Administrativo - Terceros"
+        ],
+        "summary": "Crear tercero (aseguradora/pagador)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "nombre",
+                  "nit"
+                ],
+                "properties": {
+                  "nombre": {
+                    "type": "string"
+                  },
+                  "nit": {
+                    "type": "string"
+                  },
+                  "tipo": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tercero creado"
+          }
+        }
+      }
+    },
+    "/api/admin/cups2026/search": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Buscar procedimientos CUPS 2026",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Código o descripción del procedimiento",
+            "example": "consulta"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de códigos CUPS coincidentes"
+          }
+        }
+      }
+    },
+    "/api/admin/codigos-descuento": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Listar códigos de descuento",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de códigos"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Crear código de descuento",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "codigo",
+                  "descuento"
+                ],
+                "properties": {
+                  "codigo": {
+                    "type": "string",
+                    "example": "BIENVENIDO20"
+                  },
+                  "descuento": {
+                    "type": "number",
+                    "example": 20
+                  },
+                  "tipo": {
+                    "type": "string",
+                    "enum": [
+                      "porcentaje",
+                      "valor_fijo"
+                    ]
+                  },
+                  "usos_maximos": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Código creado"
+          }
+        }
+      }
+    },
+    "/api/external/pacientes": {
+      "get": {
+        "tags": [
+          "External - Admin"
+        ],
+        "summary": "Listar todos los pacientes",
+        "description": "Requiere token estático en header X-External-Token o Authorization Bearer.",
+        "security": [
+          {
+            "ExternalToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 50
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de pacientes"
+          },
+          "401": {
+            "description": "Token inválido"
+          }
+        }
+      }
+    },
+    "/api/external/medicos": {
+      "get": {
+        "tags": [
+          "External - Admin"
+        ],
+        "summary": "Listar todos los médicos",
+        "security": [
+          {
+            "ExternalToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de médicos"
+          }
+        }
+      }
+    },
+    "/api/external/medicos/{medicoId}/disponibilidad": {
+      "get": {
+        "tags": [
+          "External - Admin"
+        ],
+        "summary": "Obtener disponibilidad de un médico",
+        "security": [
+          {
+            "ExternalToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "medicoId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "fecha",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Slots disponibles del médico"
+          }
+        }
+      }
+    },
+    "/api/external/citas": {
+      "get": {
+        "tags": [
+          "External - Admin"
+        ],
+        "summary": "Listar citas con filtros",
+        "security": [
+          {
+            "ExternalToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "fechaInicio",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "fechaFin",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "estado",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de citas"
+          }
+        }
+      }
+    },
+    "/api/external/historias-clinicas/paciente/{pacienteId}/ultima": {
+      "get": {
+        "tags": [
+          "External - Admin"
+        ],
+        "summary": "Obtener última historia clínica de un paciente",
+        "security": [
+          {
+            "ExternalToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pacienteId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Última historia clínica"
+          }
+        }
+      }
+    },
+    "/api/external/alivia/webhook": {
+      "post": {
+        "tags": [
+          "External - Admin"
+        ],
+        "summary": "Webhook de confirmación de compra Alivia",
+        "description": "Endpoint llamado por Alivia para confirmar que el paciente retiró su fórmula en farmacia.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook procesado"
+          }
+        }
+      }
+    },
+    "/api/public/documentos-legales": {
+      "get": {
+        "tags": [
+          "Public"
+        ],
+        "summary": "Obtener documentos legales (términos y condiciones, consentimientos)",
+        "responses": {
+          "200": {
+            "description": "Lista de documentos legales vigentes"
+          }
+        }
+      }
+    },
+    "/api/public/registro-medico/{codigo}": {
+      "get": {
+        "tags": [
+          "Public"
+        ],
+        "summary": "Validar código de invitación para registro de médico",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "codigo",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Código válido — devuelve datos del médico invitado"
+          },
+          "404": {
+            "description": "Código inválido o expirado"
+          }
+        }
+      }
+    },
+    "/api/public/hc-publica/{token}": {
+      "get": {
+        "tags": [
+          "Public"
+        ],
+        "summary": "Ver historia clínica pública por token compartido",
+        "description": "El paciente puede compartir un enlace con token (válido 48h) para que un tercero vea su historia clínica.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Historia clínica pública"
+          },
+          "401": {
+            "description": "Token expirado o inválido"
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": [
+          "Public"
+        ],
+        "summary": "Health check del servidor",
+        "responses": {
+          "200": {
+            "description": "API funcionando",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "CRISALIA API está funcionando"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/medico/interconsulta": {
+      "post": {
+        "tags": [
+          "Médico - Interconsulta"
+        ],
+        "summary": "Crear interconsulta (remisión a otro especialista)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "citaId",
+                  "pacienteId",
+                  "especialidadDestino"
+                ],
+                "properties": {
+                  "citaId": {
+                    "type": "string"
+                  },
+                  "pacienteId": {
+                    "type": "string"
+                  },
+                  "especialidadDestino": {
+                    "type": "string"
+                  },
+                  "motivoRemision": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Interconsulta creada"
+          }
+        }
+      }
+    },
+    "/api/medico/interconsulta/cita/{citaId}": {
+      "get": {
+        "tags": [
+          "Médico - Interconsulta"
+        ],
+        "summary": "Obtener interconsulta de una cita",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "citaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Interconsulta de la cita"
+          }
+        }
+      }
+    },
+    "/api/medico/interconsulta/paciente/{pacienteId}": {
+      "get": {
+        "tags": [
+          "Médico - Interconsulta"
+        ],
+        "summary": "Obtener interconsultas de un paciente",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pacienteId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de interconsultas"
+          }
+        }
+      }
+    },
+    "/api/medico/interconsulta/{interconsultaId}": {
+      "get": {
+        "tags": [
+          "Médico - Interconsulta"
+        ],
+        "summary": "Obtener interconsulta por ID",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "interconsultaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Interconsulta"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Médico - Interconsulta"
+        ],
+        "summary": "Actualizar interconsulta",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "interconsultaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Actualizada"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Médico - Interconsulta"
+        ],
+        "summary": "Eliminar interconsulta",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "interconsultaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Eliminada"
+          }
+        }
+      }
+    },
+    "/api/medico/examen-medico": {
+      "post": {
+        "tags": [
+          "Médico - Examen Médico"
+        ],
+        "summary": "Registrar hallazgos del examen físico",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "citaId",
+                  "pacienteId"
+                ],
+                "properties": {
+                  "citaId": {
+                    "type": "string"
+                  },
+                  "pacienteId": {
+                    "type": "string"
+                  },
+                  "hallazgos": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Examen médico creado"
+          }
+        }
+      }
+    },
+    "/api/medico/examen-medico/cita/{citaId}": {
+      "get": {
+        "tags": [
+          "Médico - Examen Médico"
+        ],
+        "summary": "Obtener examen médico de una cita",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "citaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Examen médico"
+          }
+        }
+      }
+    },
+    "/api/medico/examen-medico/paciente/{pacienteId}": {
+      "get": {
+        "tags": [
+          "Médico - Examen Médico"
+        ],
+        "summary": "Obtener exámenes médicos de un paciente",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pacienteId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de exámenes"
+          }
+        }
+      }
+    },
+    "/api/medico/examen-medico/{examenMedicoId}": {
+      "get": {
+        "tags": [
+          "Médico - Examen Médico"
+        ],
+        "summary": "Obtener examen médico por ID",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "examenMedicoId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Examen médico"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Médico - Examen Médico"
+        ],
+        "summary": "Actualizar examen médico",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "examenMedicoId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Actualizado"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Médico - Examen Médico"
+        ],
+        "summary": "Eliminar examen médico",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "examenMedicoId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Eliminado"
+          }
+        }
+      }
+    },
+    "/api/medico/apoyo-terapeutico": {
+      "post": {
+        "tags": [
+          "Médico - Apoyo Terapéutico"
+        ],
+        "summary": "Crear orden de apoyo terapéutico",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "citaId",
+                  "pacienteId"
+                ],
+                "properties": {
+                  "citaId": {
+                    "type": "string"
+                  },
+                  "pacienteId": {
+                    "type": "string"
+                  },
+                  "tipo": {
+                    "type": "string",
+                    "example": "Fisioterapia"
+                  },
+                  "indicaciones": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Apoyo terapéutico creado"
+          }
+        }
+      }
+    },
+    "/api/medico/apoyo-terapeutico/cita/{citaId}": {
+      "get": {
+        "tags": [
+          "Médico - Apoyo Terapéutico"
+        ],
+        "summary": "Obtener apoyo terapéutico de una cita",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "citaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Apoyo terapéutico de la cita"
+          }
+        }
+      }
+    },
+    "/api/medico/apoyo-terapeutico/{apoyoTerapeuticoId}": {
+      "get": {
+        "tags": [
+          "Médico - Apoyo Terapéutico"
+        ],
+        "summary": "Obtener apoyo terapéutico por ID",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "apoyoTerapeuticoId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Apoyo terapéutico"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Médico - Apoyo Terapéutico"
+        ],
+        "summary": "Actualizar apoyo terapéutico",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "apoyoTerapeuticoId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Actualizado"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Médico - Apoyo Terapéutico"
+        ],
+        "summary": "Eliminar apoyo terapéutico",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "apoyoTerapeuticoId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Eliminado"
+          }
+        }
+      }
+    },
+    "/api/medico/ayuda-diagnostica": {
+      "post": {
+        "tags": [
+          "Médico - Ayuda Diagnóstica"
+        ],
+        "summary": "Crear orden de ayuda diagnóstica (laboratorios, imágenes)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "citaId",
+                  "pacienteId"
+                ],
+                "properties": {
+                  "citaId": {
+                    "type": "string"
+                  },
+                  "pacienteId": {
+                    "type": "string"
+                  },
+                  "examenes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "example": [
+                      "Hemograma",
+                      "Glucemia"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Ayuda diagnóstica creada"
+          }
+        }
+      }
+    },
+    "/api/medico/ayuda-diagnostica/cita/{citaId}": {
+      "get": {
+        "tags": [
+          "Médico - Ayuda Diagnóstica"
+        ],
+        "summary": "Obtener ayuda diagnóstica de una cita",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "citaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ayuda diagnóstica"
+          }
+        }
+      }
+    },
+    "/api/medico/ayuda-diagnostica/{ayudaDiagnosticaId}": {
+      "get": {
+        "tags": [
+          "Médico - Ayuda Diagnóstica"
+        ],
+        "summary": "Obtener ayuda diagnóstica por ID",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ayudaDiagnosticaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ayuda diagnóstica"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Médico - Ayuda Diagnóstica"
+        ],
+        "summary": "Actualizar ayuda diagnóstica",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ayudaDiagnosticaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Actualizada"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Médico - Ayuda Diagnóstica"
+        ],
+        "summary": "Eliminar ayuda diagnóstica",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ayudaDiagnosticaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Eliminada"
+          }
+        }
+      }
+    },
+    "/api/medico/paraclinicos/{pacienteId}": {
+      "get": {
+        "tags": [
+          "Médico - Paraclínicos"
+        ],
+        "summary": "Listar paraclínicos de un paciente",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pacienteId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de paraclínicos con semáforo de valores"
+          }
+        }
+      }
+    },
+    "/api/medico/paraclinicos/{pacienteId}/analisis-evolutivo": {
+      "get": {
+        "tags": [
+          "Médico - Paraclínicos"
+        ],
+        "summary": "Obtener análisis evolutivo de paraclínicos con IA",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pacienteId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Análisis de tendencias generado por IA"
+          }
+        }
+      }
+    },
+    "/api/medico/paraclinicos/{paraclinicoId}/semaforo": {
+      "put": {
+        "tags": [
+          "Médico - Paraclínicos"
+        ],
+        "summary": "Actualizar semáforo (rojo/amarillo/verde) de un paraclínico",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "paraclinicoId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "semaforo"
+                ],
+                "properties": {
+                  "semaforo": {
+                    "type": "string",
+                    "enum": [
+                      "rojo",
+                      "amarillo",
+                      "verde"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Semáforo actualizado"
+          }
+        }
+      }
+    },
+    "/api/medico/paraclinicos/{paraclinicoId}/marcar-revisado": {
+      "put": {
+        "tags": [
+          "Médico - Paraclínicos"
+        ],
+        "summary": "Marcar paraclínico como revisado por el médico",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "paraclinicoId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Marcado como revisado"
+          }
+        }
+      }
+    },
+    "/api/medico/ia-entrenada/categorias": {
+      "get": {
+        "tags": [
+          "Médico - IA"
+        ],
+        "summary": "Listar categorías del repositorio de IA entrenada",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de categorías disponibles"
+          }
+        }
+      }
+    },
+    "/api/medico/ia-entrenada": {
+      "get": {
+        "tags": [
+          "Médico - IA"
+        ],
+        "summary": "Listar contenido del repositorio de IA entrenada",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "categoria",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contenido del repositorio"
+          }
+        }
+      }
+    },
+    "/api/medico/ia-entrenada/buscar": {
+      "post": {
+        "tags": [
+          "Médico - IA"
+        ],
+        "summary": "Buscar en el repositorio de IA entrenada",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "query"
+                ],
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "example": "diabetes tipo 2 tratamiento"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Resultados de búsqueda semántica"
+          }
+        }
+      }
+    },
+    "/api/medico/ia-simulada/anamnesis-medico": {
+      "post": {
+        "tags": [
+          "Médico - IA"
+        ],
+        "summary": "Generar anamnesis simulada con IA",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Anamnesis generada"
+          }
+        }
+      }
+    },
+    "/api/medico/ia-simulada/diagnosticos": {
+      "post": {
+        "tags": [
+          "Médico - IA"
+        ],
+        "summary": "Generar diagnósticos sugeridos por IA",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Diagnósticos sugeridos"
+          }
+        }
+      }
+    },
+    "/api/medico/ia-simulada/estrategias-terapeuticas": {
+      "post": {
+        "tags": [
+          "Médico - IA"
+        ],
+        "summary": "Generar estrategias terapéuticas con IA",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Estrategias terapéuticas sugeridas"
+          }
+        }
+      }
+    },
+    "/api/medico/ia-simulada/demo/metricas-impacto": {
+      "get": {
+        "tags": [
+          "Médico - IA"
+        ],
+        "summary": "Obtener métricas de impacto demo",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Métricas de impacto para demo"
+          }
+        }
+      }
+    },
+    "/api/medico/pago/estadisticas": {
+      "get": {
+        "tags": [
+          "Médico - Pago"
+        ],
+        "summary": "Obtener estadísticas de pagos del médico",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estadísticas de ingresos y pagos"
+          }
+        }
+      }
+    },
+    "/api/medico/pago": {
+      "get": {
+        "tags": [
+          "Médico - Pago"
+        ],
+        "summary": "Listar pagos registrados",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de pagos"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Médico - Pago"
+        ],
+        "summary": "Registrar un pago",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "citaId",
+                  "monto",
+                  "metodoPago"
+                ],
+                "properties": {
+                  "citaId": {
+                    "type": "string"
+                  },
+                  "monto": {
+                    "type": "number",
+                    "example": 80000
+                  },
+                  "metodoPago": {
+                    "type": "string",
+                    "enum": [
+                      "efectivo",
+                      "transferencia",
+                      "tarjeta"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Pago registrado"
+          }
+        }
+      }
+    },
+    "/api/medico/pago/{pagoId}/estado": {
+      "put": {
+        "tags": [
+          "Médico - Pago"
+        ],
+        "summary": "Actualizar estado de un pago",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pagoId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "estado"
+                ],
+                "properties": {
+                  "estado": {
+                    "type": "string",
+                    "enum": [
+                      "pendiente",
+                      "completado",
+                      "rechazado"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Estado actualizado"
+          }
+        }
+      }
+    },
+    "/api/paciente/paraclinicos": {
+      "get": {
+        "tags": [
+          "Paciente - Paraclínicos"
+        ],
+        "summary": "Listar paraclínicos del paciente",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de paraclínicos subidos por el paciente"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Paciente - Paraclínicos"
+        ],
+        "summary": "Subir paraclínico (datos JSON)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": {
+                    "type": "string"
+                  },
+                  "valores": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Paraclínico creado"
+          }
+        }
+      }
+    },
+    "/api/paciente/paraclinicos/upload": {
+      "post": {
+        "tags": [
+          "Paciente - Paraclínicos"
+        ],
+        "summary": "Subir archivo de paraclínico (PDF/imagen)",
+        "description": "Acepta PDF, JPG, PNG o WebP. Máximo 10MB.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "archivo": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Archivo subido y procesado"
+          },
+          "400": {
+            "description": "Tipo de archivo no permitido o excede 10MB"
+          }
+        }
+      }
+    },
+    "/api/paciente/paraclinicos/analisis-evolutivo": {
+      "get": {
+        "tags": [
+          "Paciente - Paraclínicos"
+        ],
+        "summary": "Obtener análisis evolutivo de paraclínicos con IA",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Análisis de tendencias de los valores de laboratorio"
+          }
+        }
+      }
+    },
+    "/api/paciente/paraclinicos/{id}": {
+      "delete": {
+        "tags": [
+          "Paciente - Paraclínicos"
+        ],
+        "summary": "Eliminar un paraclínico",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paraclínico eliminado"
+          }
+        }
+      }
+    },
+    "/api/paciente/formula-medica/vigente": {
+      "get": {
+        "tags": [
+          "Paciente - Fórmula"
+        ],
+        "summary": "Obtener la fórmula médica (estrategia terapéutica) vigente del paciente",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fórmula médica más reciente activa",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormulaMedica"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No hay fórmula vigente"
+          }
+        }
+      }
+    },
+    "/api/paciente/chat/cita/{citaId}": {
+      "get": {
+        "tags": [
+          "Paciente - Chat"
+        ],
+        "summary": "Obtener mensajes del chat de una cita",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "citaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de mensajes del chat"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Paciente - Chat"
+        ],
+        "summary": "Enviar mensaje en el chat de una cita",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "citaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "texto"
+                ],
+                "properties": {
+                  "texto": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Mensaje enviado"
+          }
+        }
+      }
+    },
+    "/api/paciente/chat/cita/{citaId}/leido": {
+      "post": {
+        "tags": [
+          "Paciente - Chat"
+        ],
+        "summary": "Marcar mensajes del chat como leídos",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "citaId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mensajes marcados como leídos"
+          }
+        }
+      }
+    },
+    "/api/administrativo/ingreso/medicos": {
+      "get": {
+        "tags": [
+          "Administrativo - Ingreso"
+        ],
+        "summary": "Listar médicos registrados en la plataforma",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de médicos"
+          }
+        }
+      }
+    },
+    "/api/administrativo/ingreso/personal": {
+      "get": {
+        "tags": [
+          "Administrativo - Ingreso"
+        ],
+        "summary": "Listar personal institucional",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de personal"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Administrativo - Ingreso"
+        ],
+        "summary": "Crear registro de personal institucional",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "nombre",
+                  "cargo"
+                ],
+                "properties": {
+                  "nombre": {
+                    "type": "string"
+                  },
+                  "cargo": {
+                    "type": "string"
+                  },
+                  "documento": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Personal creado"
+          }
+        }
+      }
+    },
+    "/api/administrativo/ingreso/personal/{id}": {
+      "get": {
+        "tags": [
+          "Administrativo - Ingreso"
+        ],
+        "summary": "Obtener personal por ID",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Datos del personal"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Administrativo - Ingreso"
+        ],
+        "summary": "Actualizar personal",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Actualizado"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Administrativo - Ingreso"
+        ],
+        "summary": "Eliminar personal",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Eliminado"
+          }
+        }
+      }
+    },
+    "/api/administrativo/ingreso/registro": {
+      "get": {
+        "tags": [
+          "Administrativo - Ingreso"
+        ],
+        "summary": "Listar registros de ingreso/salida por fecha",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "fecha",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Registros del día"
+          }
+        }
+      }
+    },
+    "/api/administrativo/ingreso/registro/ingreso": {
+      "post": {
+        "tags": [
+          "Administrativo - Ingreso"
+        ],
+        "summary": "Registrar ingreso de personal",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "personalId"
+                ],
+                "properties": {
+                  "personalId": {
+                    "type": "string"
+                  },
+                  "hora": {
+                    "type": "string",
+                    "example": "08:00"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Ingreso registrado"
+          }
+        }
+      }
+    },
+    "/api/administrativo/ingreso/registro/{id}/salida": {
+      "put": {
+        "tags": [
+          "Administrativo - Ingreso"
+        ],
+        "summary": "Registrar salida de personal",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "hora": {
+                    "type": "string",
+                    "example": "17:00"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Salida registrada"
+          }
+        }
+      }
+    },
+    "/api/external/auth/request-otp": {
+      "post": {
+        "tags": [
+          "External - Tools"
+        ],
+        "summary": "Solicitar OTP para autenticación por teléfono",
+        "description": "Envía un código OTP al número de teléfono. Usar para obtener acceso a las rutas /tools/.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "telefono"
+                ],
+                "properties": {
+                  "telefono": {
+                    "type": "string",
+                    "example": "+573001234567"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP enviado"
+          }
+        }
+      }
+    },
+    "/api/external/auth/verify-otp": {
+      "post": {
+        "tags": [
+          "External - Tools"
+        ],
+        "summary": "Verificar OTP y obtener phoneToken",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "telefono",
+                  "codigo"
+                ],
+                "properties": {
+                  "telefono": {
+                    "type": "string"
+                  },
+                  "codigo": {
+                    "type": "string",
+                    "example": "123456"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Autenticado — devuelve phoneToken (Bearer) para rutas /tools/"
+          }
+        }
+      }
+    },
+    "/api/external/tools/me": {
+      "get": {
+        "tags": [
+          "External - Tools"
+        ],
+        "summary": "Obtener datos del usuario autenticado (paciente o médico)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Perfil del usuario"
+          }
+        }
+      }
+    },
+    "/api/external/tools/me/citas": {
+      "get": {
+        "tags": [
+          "External - Tools"
+        ],
+        "summary": "Obtener citas del usuario autenticado",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de citas"
+          }
+        }
+      }
+    },
+    "/api/external/tools/me/citas/proxima": {
+      "get": {
+        "tags": [
+          "External - Tools"
+        ],
+        "summary": "Obtener próxima cita del usuario",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Próxima cita activa"
+          }
+        }
+      }
+    },
+    "/api/external/tools/me/agendar": {
+      "post": {
+        "tags": [
+          "External - Tools"
+        ],
+        "summary": "Agendar cita desde integración externa",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "medicoId",
+                  "fecha",
+                  "hora"
+                ],
+                "properties": {
+                  "medicoId": {
+                    "type": "string"
+                  },
+                  "fecha": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "hora": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Cita agendada"
+          }
+        }
+      }
+    },
+    "/api/external/tools/me/resumen": {
+      "get": {
+        "tags": [
+          "External - Tools"
+        ],
+        "summary": "Obtener resumen integral del paciente generado por Crisal·IA Agent",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resumen clínico del paciente"
+          }
+        }
+      }
+    },
+    "/api/external/tools/me/resumen/refresh": {
+      "post": {
+        "tags": [
+          "External - Tools"
+        ],
+        "summary": "Forzar regeneración del resumen del paciente",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resumen regenerado"
+          }
+        }
+      }
+    },
+    "/api/external/tools/medicos": {
+      "get": {
+        "tags": [
+          "External - Tools"
+        ],
+        "summary": "Listar médicos disponibles para agendar",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de médicos con disponibilidad"
+          }
+        }
+      }
+    }
+  }
+}

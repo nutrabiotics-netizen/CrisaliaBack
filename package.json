@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "nodemon --exec ts-node src/server.ts",
     "dev:ws": "ts-node src/server-ws.ts",
-    "build": "tsc",
+    "build": "ts-node src/scripts/generateSwagger.ts && tsc",
     "start": "node dist/server.js",
     "start:ws": "node dist/server-ws.js",
     "create-test-medico": "ts-node src/scripts/createTestMedico.ts",

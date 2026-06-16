@@ -4,7 +4,23 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { connectDB } from './config/database';
-import { swaggerSpec } from './config/swagger';
+
+// En producción se usa el spec pre-generado en build time (compatible con Vercel serverless).
+// En desarrollo se genera dinámicamente desde los JSDoc.
+import fs from 'fs';
+import path from 'path';
+
+function loadSwaggerSpec(): object {
+  const prebuilt = path.join(__dirname, 'config/swagger-spec.json');
+  if (fs.existsSync(prebuilt)) {
+    return JSON.parse(fs.readFileSync(prebuilt, 'utf-8'));
+  }
+  // Fallback: generación dinámica (solo funciona en dev con archivos .ts presentes)
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  return require('./config/swagger').swaggerSpec;
+}
+
+const swaggerSpec = loadSwaggerSpec();
 
 // Cargar variables de entorno
 dotenv.config();
