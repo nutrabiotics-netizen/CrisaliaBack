@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "API Backend para CRISALIA - Software Médico",
   "main": "dist/server.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "dev": "nodemon --exec ts-node src/server.ts",
     "dev:ws": "ts-node src/server-ws.ts",
