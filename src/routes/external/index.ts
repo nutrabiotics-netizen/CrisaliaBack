@@ -17,6 +17,7 @@ import {
   postCancelar,
   getAgendaMedico,
   getPacienteFicha,
+  getEspecialidades,
   getMedicosDisponibles,
   getMiResumen,
   postRefreshResumen
@@ -80,6 +81,7 @@ router.post('/tools/me/agendar', requirePhoneToken, postAgendar);
 router.post('/tools/me/cancelar', requirePhoneToken, postCancelar);
 router.get('/tools/me/agenda', requirePhoneToken, getAgendaMedico);
 router.get('/tools/medico/:pacienteId/ficha', requirePhoneToken, getPacienteFicha);
+router.get('/tools/especialidades', requirePhoneToken, getEspecialidades);
 router.get('/tools/medicos', requirePhoneToken, getMedicosDisponibles);
 
 // Resumen integral del paciente (generado por Crisal·IA Agent)

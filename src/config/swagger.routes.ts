@@ -3071,12 +3071,51 @@
 
 /**
  * @swagger
+ * /api/external/tools/especialidades:
+ *   get:
+ *     tags: [External - Tools]
+ *     summary: Listar especialidades médicas disponibles
+ *     description: Devuelve las especialidades distintas de todos los médicos registrados, ordenadas alfabéticamente. Usar como primer paso del flujo de agendamiento.
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de especialidades
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: ["Medicina Interna", "Nutrición", "Pediatría"]
+ */
+
+/**
+ * @swagger
  * /api/external/tools/medicos:
  *   get:
  *     tags: [External - Tools]
  *     summary: Listar médicos disponibles para agendar
  *     security:
  *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: especialidad
+ *         schema:
+ *           type: string
+ *         description: Filtrar por especialidad exacta
+ *         example: Nutrición
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         description: Búsqueda por nombre, apellido, especialidad o motivos de consulta
  *     responses:
  *       200:
  *         description: Lista de médicos con disponibilidad

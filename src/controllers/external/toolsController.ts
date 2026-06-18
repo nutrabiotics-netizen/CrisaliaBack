@@ -470,6 +470,19 @@ export const getPacienteFicha = async (req: ExternalPhoneRequest, res: Response)
 // SHARED: catálogo de médicos disponibles (para agendar)
 // ─────────────────────────────────────────────────────────────────────
 
+export const getEspecialidades = async (_req: ExternalPhoneRequest, res: Response): Promise<void> => {
+  try {
+    const especialidades = await Medico.distinct('especialidad');
+    const filtradas = especialidades
+      .filter((e: unknown) => typeof e === 'string' && e.trim() !== '')
+      .sort();
+    res.json({ success: true, data: filtradas });
+  } catch (err) {
+    console.error('[tools.getEspecialidades]', err);
+    res.status(500).json({ success: false, error: 'server_error' });
+  }
+};
+
 export const getMedicosDisponibles = async (req: ExternalPhoneRequest, res: Response): Promise<void> => {
   try {
     const q = (req.query.q as string | undefined)?.trim();
