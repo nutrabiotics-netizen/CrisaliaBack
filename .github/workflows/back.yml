@@ -12,13 +12,24 @@ jobs:
       - name: Checkout código
         uses: actions/checkout@v3
 
+      - name: Instalar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Compilar TypeScript
+        run: npm run build
+
       - name: Copiar archivos al servidor
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "."
+          source: "dist,package.json,package-lock.json"
           target: "/home/ubuntu/CrisaliaBack"
 
       - name: Ejecutar comandos en EC2
@@ -30,18 +41,12 @@ jobs:
           script: |
             cd /home/ubuntu/CrisaliaBack
 
-            echo "Instalando dependencias..."
-            npm install
+            echo "Instalando dependencias de producción..."
+            npm ci --omit=dev
 
             echo "Reiniciando backend..."
-
             pm2 delete backend-nutrabiotics || true
-
-            pm2 start src/server.ts \
-              --name backend-nutrabiotics \
-              --interpreter npx \
-              --interpreter-args ts-node
-
+            pm2 start dist/server.js --name backend-nutrabiotics
             pm2 save
 
             echo "Deploy finalizado correctamente"
