@@ -18,7 +18,7 @@ jobs:
           node-version: "20"
 
       - name: Instalar dependencias
-        run: npm ci
+        run: npm install
 
       - name: Compilar TypeScript
         run: npm run build
@@ -42,7 +42,7 @@ jobs:
             cd /home/ubuntu/CrisaliaBack
 
             echo "Instalando dependencias de producción..."
-            npm ci --omit=dev
+            npm install --omit=dev
 
             echo "Reiniciando backend..."
             pm2 delete backend-nutrabiotics || true
