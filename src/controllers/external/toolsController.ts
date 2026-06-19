@@ -494,7 +494,7 @@ export const reagendarCita = async (req: ExternalPhoneRequest, res: Response): P
     }
 
     const citaId = String(req.params.citaId);
-    const { fecha, hora } = req.body ?? {};
+    const { fecha, hora, motivo } = req.body ?? {};
     const pacienteId = toObjectId(req.externalSubjectId!);
 
     if (!fecha || !hora) {
@@ -540,7 +540,7 @@ export const reagendarCita = async (req: ExternalPhoneRequest, res: Response): P
 
     // 4. Cancelar cita actual
     citaActual.estado = 'cancelada';
-    (citaActual as any).motivoCancelacion = 'Reagendada por el paciente';
+    (citaActual as any).motivoCancelacion = motivo?.trim() || 'Reagendada por el paciente';
     (citaActual as any).canceladoPor = pacienteId;
     (citaActual as any).canceladoPorRol = 'Paciente';
     await citaActual.save();
