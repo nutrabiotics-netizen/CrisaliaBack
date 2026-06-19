@@ -317,7 +317,7 @@ export const postAgendar = async (req: ExternalPhoneRequest, res: Response): Pro
       pacienteId,
       medicoId: medicoObjId,
       fecha: new Date(`${fecha}T${hora24}:00`),
-      hora,
+      hora: hora24,
       modalidad,
       tipo: tipo || 'consulta',
       motivo,
