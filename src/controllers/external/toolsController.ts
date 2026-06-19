@@ -298,10 +298,25 @@ export const postAgendar = async (req: ExternalPhoneRequest, res: Response): Pro
       return;
     }
 
+    // Normalizar hora a formato 24h para construir la fecha (soporta "08:00 AM", "02:00 PM" y "14:00")
+    const horaStr = String(hora).trim();
+    const ampmMatch = horaStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    let hora24: string;
+    if (ampmMatch) {
+      let h = parseInt(ampmMatch[1], 10);
+      const m = ampmMatch[2];
+      const ampm = ampmMatch[3].toUpperCase();
+      if (ampm === 'PM' && h !== 12) h += 12;
+      else if (ampm === 'AM' && h === 12) h = 0;
+      hora24 = `${h.toString().padStart(2, '0')}:${m}`;
+    } else {
+      hora24 = horaStr;
+    }
+
     const cita = await Cita.create({
       pacienteId,
       medicoId: medicoObjId,
-      fecha: new Date(`${fecha}T${hora}:00`),
+      fecha: new Date(`${fecha}T${hora24}:00`),
       hora,
       modalidad,
       tipo: tipo || 'consulta',
