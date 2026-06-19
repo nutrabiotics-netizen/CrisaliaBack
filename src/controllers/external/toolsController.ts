@@ -486,6 +486,95 @@ export const getPacienteFicha = async (req: ExternalPhoneRequest, res: Response)
 // SHARED: catálogo de médicos disponibles (para agendar)
 // ─────────────────────────────────────────────────────────────────────
 
+export const reagendarCita = async (req: ExternalPhoneRequest, res: Response): Promise<void> => {
+  try {
+    if (req.externalRole !== 'paciente') {
+      res.status(403).json({ success: false, error: 'solo_paciente' });
+      return;
+    }
+
+    const citaId = String(req.params.citaId);
+    const { fecha, hora } = req.body ?? {};
+    const pacienteId = toObjectId(req.externalSubjectId!);
+
+    if (!fecha || !hora) {
+      res.status(400).json({
+        success: false,
+        error: 'datos_incompletos',
+        message: 'Requeridos: fecha (YYYY-MM-DD) y hora (HH:mm o HH:mm AM/PM)'
+      });
+      return;
+    }
+
+    // 1. Buscar cita actual verificando que pertenece al paciente
+    const citaActual = await Cita.findOne({ _id: citaId, pacienteId });
+    if (!citaActual) {
+      res.status(404).json({ success: false, error: 'cita_no_encontrada' });
+      return;
+    }
+
+    // 2. Validar que se puede reagendar
+    if (['cancelada', 'completada'].includes(citaActual.estado)) {
+      res.status(400).json({
+        success: false,
+        error: 'cita_no_reagendable',
+        message: `No se puede reagendar una cita en estado "${citaActual.estado}"`
+      });
+      return;
+    }
+
+    // 3. Normalizar hora a 24h
+    const horaStr = String(hora).trim();
+    const ampmMatch = horaStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    let hora24: string;
+    if (ampmMatch) {
+      let h = parseInt(ampmMatch[1], 10);
+      const m = ampmMatch[2];
+      const ampm = ampmMatch[3].toUpperCase();
+      if (ampm === 'PM' && h !== 12) h += 12;
+      else if (ampm === 'AM' && h === 12) h = 0;
+      hora24 = `${h.toString().padStart(2, '0')}:${m}`;
+    } else {
+      hora24 = horaStr;
+    }
+
+    // 4. Cancelar cita actual
+    citaActual.estado = 'cancelada';
+    (citaActual as any).motivoCancelacion = 'Reagendada por el paciente';
+    (citaActual as any).canceladoPor = pacienteId;
+    (citaActual as any).canceladoPorRol = 'Paciente';
+    await citaActual.save();
+
+    // 5. Crear nueva cita con mismos datos pero nueva fecha/hora
+    const nuevaCita = await Cita.create({
+      pacienteId,
+      medicoId: citaActual.medicoId,
+      fecha: new Date(`${fecha}T${hora24}:00`),
+      hora: hora24,
+      modalidad: citaActual.modalidad,
+      tipo: citaActual.tipo,
+      motivo: (citaActual as any).motivo,
+      aseguradora: (citaActual as any).aseguradora,
+      estado: 'pendiente'
+    });
+
+    res.status(201).json({
+      success: true,
+      data: {
+        citaAnteriorId: citaId,
+        nuevaCitaId: String(nuevaCita._id),
+        fecha,
+        hora: hora24,
+        estado: nuevaCita.estado,
+        message: 'Cita reagendada exitosamente. Recuerda confirmar el pago en el portal.'
+      }
+    });
+  } catch (err) {
+    console.error('[tools.reagendarCita]', err);
+    res.status(500).json({ success: false, error: 'server_error' });
+  }
+};
+
 export const getDisponibilidadMedico = async (req: ExternalPhoneRequest, res: Response): Promise<void> => {
   try {
     const medicoId = String(req.params.medicoId);

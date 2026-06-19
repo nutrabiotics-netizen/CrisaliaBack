@@ -15,6 +15,7 @@ import {
   getMiHistoria,
   postAgendar,
   postCancelar,
+  reagendarCita,
   getAgendaMedico,
   getPacienteFicha,
   getEspecialidades,
@@ -80,6 +81,7 @@ router.get('/tools/me/tratamiento', requirePhoneToken, getMiTratamiento);
 router.get('/tools/me/historia', requirePhoneToken, getMiHistoria);
 router.post('/tools/me/agendar', requirePhoneToken, postAgendar);
 router.post('/tools/me/cancelar', requirePhoneToken, postCancelar);
+router.put('/tools/me/citas/:citaId/reagendar', requirePhoneToken, reagendarCita);
 router.get('/tools/me/agenda', requirePhoneToken, getAgendaMedico);
 router.get('/tools/medico/:pacienteId/ficha', requirePhoneToken, getPacienteFicha);
 router.get('/tools/especialidades', requirePhoneToken, getEspecialidades);
