@@ -19,6 +19,7 @@ import {
   getPacienteFicha,
   getEspecialidades,
   getMedicosDisponibles,
+  getDisponibilidadMedico,
   getMiResumen,
   postRefreshResumen
 } from '../../controllers/external/toolsController';
@@ -83,6 +84,7 @@ router.get('/tools/me/agenda', requirePhoneToken, getAgendaMedico);
 router.get('/tools/medico/:pacienteId/ficha', requirePhoneToken, getPacienteFicha);
 router.get('/tools/especialidades', requirePhoneToken, getEspecialidades);
 router.get('/tools/medicos', requirePhoneToken, getMedicosDisponibles);
+router.get('/tools/medicos/:medicoId/disponibilidad', requirePhoneToken, getDisponibilidadMedico);
 
 // Resumen integral del paciente (generado por Crisal·IA Agent)
 router.get('/tools/me/resumen', requirePhoneToken, getMiResumen);

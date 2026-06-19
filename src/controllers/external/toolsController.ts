@@ -16,6 +16,7 @@ import FormulaMedica from '../../models/FormulaMedica';
 import AdherenciaToma from '../../models/AdherenciaToma';
 import { ExternalPhoneRequest } from '../../middleware/externalPhoneAuth';
 import { regenerarResumenPaciente } from '../../services/paciente/resumenPacienteService';
+import agendamientoService from '../../services/paciente/agendamiento/agendamientoService';
 
 const toObjectId = (id: string) => new mongoose.Types.ObjectId(id);
 
@@ -469,6 +470,59 @@ export const getPacienteFicha = async (req: ExternalPhoneRequest, res: Response)
 // ─────────────────────────────────────────────────────────────────────
 // SHARED: catálogo de médicos disponibles (para agendar)
 // ─────────────────────────────────────────────────────────────────────
+
+export const getDisponibilidadMedico = async (req: ExternalPhoneRequest, res: Response): Promise<void> => {
+  try {
+    const medicoId = String(req.params.medicoId);
+    const dias = Math.min(parseInt(String(req.query.dias ?? '14'), 10) || 14, 60);
+    const pacienteId = req.externalRole === 'paciente' ? req.externalSubjectId : undefined;
+
+    const medico = await Medico.findById(medicoId).select('nombre apellido especialidad').lean();
+    if (!medico) {
+      res.status(404).json({ success: false, error: 'medico_no_encontrado' });
+      return;
+    }
+
+    const hoy = new Date();
+    const resultados: { fecha: string; slots: string[] }[] = [];
+
+    for (let i = 1; i <= dias; i++) {
+      const fecha = new Date(Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth(), hoy.getUTCDate() + i));
+      const fechaStr = fecha.toISOString().split('T')[0];
+
+      const horarios = await agendamientoService.obtenerHorariosDisponibles(
+        medicoId,
+        fechaStr,
+        undefined,
+        pacienteId
+      );
+
+      const slots = horarios
+        .filter((h: any) => h.disponible)
+        .map((h: any) => h.hora);
+
+      if (slots.length > 0) {
+        resultados.push({ fecha: fechaStr, slots });
+      }
+    }
+
+    res.json({
+      success: true,
+      medico: {
+        _id: String((medico as any)._id),
+        nombre: (medico as any).nombre,
+        apellido: (medico as any).apellido,
+        especialidad: (medico as any).especialidad,
+      },
+      diasConsultados: dias,
+      diasDisponibles: resultados.length,
+      data: resultados,
+    });
+  } catch (err) {
+    console.error('[tools.getDisponibilidadMedico]', err);
+    res.status(500).json({ success: false, error: 'server_error' });
+  }
+};
 
 export const getEspecialidades = async (_req: ExternalPhoneRequest, res: Response): Promise<void> => {
   try {
