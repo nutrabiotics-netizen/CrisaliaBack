@@ -21,6 +21,8 @@ import {
   getEspecialidades,
   getMedicosDisponibles,
   getDisponibilidadMedico,
+  guardarConversacion,
+  obtenerConversacion,
   getMiResumen,
   postRefreshResumen
 } from '../../controllers/external/toolsController';
@@ -89,6 +91,8 @@ router.get('/tools/medicos', requirePhoneToken, getMedicosDisponibles);
 router.get('/tools/medicos/:medicoId/disponibilidad', requirePhoneToken, getDisponibilidadMedico);
 
 // Resumen integral del paciente (generado por Crisal·IA Agent)
+router.post('/tools/me/conversacion', requirePhoneToken, guardarConversacion);
+router.get('/tools/me/conversacion', requirePhoneToken, obtenerConversacion);
 router.get('/tools/me/resumen', requirePhoneToken, getMiResumen);
 router.post('/tools/me/resumen/refresh', requirePhoneToken, postRefreshResumen);
 

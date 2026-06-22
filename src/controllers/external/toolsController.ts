@@ -575,6 +575,104 @@ export const reagendarCita = async (req: ExternalPhoneRequest, res: Response): P
   }
 };
 
+export const guardarConversacion = async (req: ExternalPhoneRequest, res: Response): Promise<void> => {
+  try {
+    if (req.externalRole !== 'paciente') {
+      res.status(403).json({ success: false, error: 'solo_paciente' });
+      return;
+    }
+
+    const { mensajePaciente, respuestaIA } = req.body ?? {};
+
+    if (!mensajePaciente?.trim()) {
+      res.status(400).json({
+        success: false,
+        error: 'datos_incompletos',
+        message: 'El campo mensajePaciente es requerido'
+      });
+      return;
+    }
+
+    const pacienteId = req.externalSubjectId!;
+
+    // Importar el modelo dinámicamente para no circular
+    const CuidadorIAConversacion = (await import('../../models/CuidadorIAConversacion')).default;
+
+    let conv = await CuidadorIAConversacion.findOne({ pacienteId });
+    if (!conv) {
+      conv = await CuidadorIAConversacion.create({
+        pacienteId,
+        mensajes: [],
+        contextoIntegrado: false
+      });
+    }
+
+    // Guardar mensaje del paciente
+    conv.mensajes.push({
+      rol: 'paciente',
+      contenido: mensajePaciente.trim(),
+      timestamp: new Date()
+    });
+
+    // Guardar respuesta de la IA si viene
+    if (respuestaIA?.trim()) {
+      conv.mensajes.push({
+        rol: 'cuidador',
+        contenido: respuestaIA.trim(),
+        timestamp: new Date()
+      });
+    }
+
+    // Limitar historial a 200 mensajes
+    if (conv.mensajes.length > 200) {
+      conv.mensajes = conv.mensajes.slice(-200);
+    }
+
+    await conv.save();
+
+    res.json({
+      success: true,
+      data: {
+        totalMensajes: conv.mensajes.length,
+        message: 'Conversación guardada correctamente'
+      }
+    });
+  } catch (err) {
+    console.error('[tools.guardarConversacion]', err);
+    res.status(500).json({ success: false, error: 'server_error' });
+  }
+};
+
+export const obtenerConversacion = async (req: ExternalPhoneRequest, res: Response): Promise<void> => {
+  try {
+    if (req.externalRole !== 'paciente') {
+      res.status(403).json({ success: false, error: 'solo_paciente' });
+      return;
+    }
+
+    const pacienteId = req.externalSubjectId!;
+    const limit = Math.min(parseInt(String(req.query.limit ?? '40'), 10) || 40, 200);
+
+    const CuidadorIAConversacion = (await import('../../models/CuidadorIAConversacion')).default;
+
+    const conv = await CuidadorIAConversacion.findOne({ pacienteId }).lean();
+
+    const mensajes = conv?.mensajes ?? [];
+    const ultimos = mensajes.slice(-limit);
+
+    res.json({
+      success: true,
+      data: {
+        mensajes: ultimos,
+        totalMensajes: mensajes.length
+      }
+    });
+  } catch (err) {
+    console.error('[tools.obtenerConversacion]', err);
+    res.status(500).json({ success: false, error: 'server_error' });
+  }
+};
+
 export const getDisponibilidadMedico = async (req: ExternalPhoneRequest, res: Response): Promise<void> => {
   try {
     const medicoId = String(req.params.medicoId);
