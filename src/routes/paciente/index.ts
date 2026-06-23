@@ -17,6 +17,7 @@ import historiaClinicaRoutes from './historia-clinica';
 import tratamientoRoutes from './tratamiento';
 import transcriptionRoutes from './transcription';
 import chatRoutes from './chat';
+import wearablesRoutes from './wearables';
 
 const router = Router();
 
@@ -38,6 +39,7 @@ router.use('/historia-clinica', historiaClinicaRoutes);
 router.use('/tratamiento', tratamientoRoutes);
 router.use('/transcription', transcriptionRoutes);
 router.use('/chat', chatRoutes);
+router.use('/wearables', wearablesRoutes);
 
 export default router;
 
