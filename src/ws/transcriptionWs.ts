@@ -113,11 +113,12 @@ export interface TranscriptionWsContext {
 /** Salas por citaId: cada participante (médico/paciente) se une y recibe las transcripciones de todos. */
 const roomsByCitaId = new Map<string, Set<WebSocket>>();
 
-function broadcastToCitaRoom(citaId: string, obj: object): void {
+function broadcastToCitaRoom(citaId: string, obj: object, excludeWs?: WebSocket): void {
   const set = roomsByCitaId.get(citaId);
   if (!set) return;
   const payload = JSON.stringify(obj);
   set.forEach((client) => {
+    if (client === excludeWs) return; // no reenviar al emisor
     if (client.readyState === WebSocket.OPEN) client.send(payload);
   });
 }
@@ -266,8 +267,9 @@ export function registerTranscriptionHandlers(wss: WebSocketServer): void {
                 resultId: ev.resultId,
                 speakerRole
               };
-              if (citaIdStr) broadcastToCitaRoom(citaIdStr, payload);
-              else sendJson(ws, payload);
+              // Enviar al emisor directamente + broadcast al resto de la sala
+              sendJson(ws, payload);
+              if (citaIdStr) broadcastToCitaRoom(citaIdStr, payload, ws);
               if (!ev.isPartial && ev.transcript.trim()) {
                 const sid = sessionId;
                 if (sid) {
@@ -291,12 +293,10 @@ export function registerTranscriptionHandlers(wss: WebSocketServer): void {
             onEnd(err) {
               if (err) {
                 const errPayload = { type: 'error' as const, message: err.message };
-                if (citaIdStr) broadcastToCitaRoom(citaIdStr, errPayload);
-                else sendJson(ws, errPayload);
+                sendJson(ws, errPayload);
               }
               const endPayload = { type: 'stream_ended' as const };
-              if (citaIdStr) broadcastToCitaRoom(citaIdStr, endPayload);
-              else sendJson(ws, endPayload);
+              sendJson(ws, endPayload);
             }
           }).stop;
         } catch (err) {
