@@ -9,6 +9,7 @@
  */
 
 import Codigo2FA, { hashCodigo, compararCodigo } from '../../models/Codigo2FA';
+import { enviarCodigoOtpEmail } from '../notifications/emailService';
 
 const META_PHONE_NUMBER_ID = process.env.META_WHATSAPP_PHONE_NUMBER_ID || '1038206332702116';
 const META_ACCESS_TOKEN = process.env.META_WHATSAPP_ACCESS_TOKEN || '';
@@ -43,7 +44,7 @@ function generarCodigo(): string {
  * Si ya existía un código vigente para ese teléfono, lo invalida antes de crear uno nuevo
  * (así un nuevo envío siempre deja exactamente UN código vigente).
  */
-export async function envioCodigoWhatsApp(telefono: string): Promise<{ message: string }> {
+export async function envioCodigoWhatsApp(telefono: string, email?: string): Promise<{ message: string }> {
   const formattedPhone = normalizarTelefono(telefono);
   const codigo = generarCodigo();
 
@@ -93,6 +94,11 @@ export async function envioCodigoWhatsApp(telefono: string): Promise<{ message: 
     codigoHash: await hashCodigo(codigo),
     expiresAt: new Date(Date.now() + CODIGO_EXPIRA_MINUTOS * 60 * 1000)
   });
+
+  // Enviar también por email si se proporcionó (fire-and-forget)
+  if (email?.trim()) {
+    void enviarCodigoOtpEmail(email.trim(), codigo);
+  }
 
   return { message: 'Código enviado por WhatsApp' };
 }
