@@ -23,14 +23,12 @@ import { encryptToken, decryptToken } from '../../utils/cryptoTokens';
 
 const GOOGLE_AUTH_URL  = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
-const HEALTH_API_BASE  = 'https://health.googleapis.com/v4';
+const HEALTH_API_BASE  = 'https://health.googleapis.com/v1';
 
 const SCOPES = [
   'https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly',
   'https://www.googleapis.com/auth/googlehealth.sleep.readonly',
-  'https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly',
-  'https://www.googleapis.com/auth/googlehealth.heart_rate.readonly',
-  'https://www.googleapis.com/auth/googlehealth.oxygen_saturation.readonly'
+  'https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly'
 ];
 
 function clientId(): string {
