@@ -193,11 +193,10 @@ const DATA_TYPE = {
  * @param dataType identificador en kebab-case (ej. "heart-rate-variability")
  */
 async function listarDataPoints(token: string, dataType: string, desde: Date, hasta: Date): Promise<any[]> {
-  // El campo del filtro usa snake_case (kebab → snake)
-  const filterField = dataType.replace(/-/g, '_');
+  // El filtro de Google Health API v4 usa solo "interval.start_time", sin prefijo de dataType
   const filter =
-    `${filterField}.interval.start_time >= "${desde.toISOString()}" ` +
-    `AND ${filterField}.interval.start_time < "${hasta.toISOString()}"`;
+    `interval.start_time >= "${desde.toISOString()}" ` +
+    `AND interval.start_time < "${hasta.toISOString()}"`;
 
   const puntos: any[] = [];
   let pageToken: string | undefined;
