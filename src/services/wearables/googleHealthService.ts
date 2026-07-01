@@ -28,7 +28,9 @@ const HEALTH_API_BASE  = 'https://health.googleapis.com/v4';
 const SCOPES = [
   'https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly',
   'https://www.googleapis.com/auth/googlehealth.sleep.readonly',
-  'https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly'
+  'https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly',
+  'https://www.googleapis.com/auth/googlehealth.heart_rate.readonly',
+  'https://www.googleapis.com/auth/googlehealth.oxygen_saturation.readonly'
 ];
 
 function clientId(): string {
