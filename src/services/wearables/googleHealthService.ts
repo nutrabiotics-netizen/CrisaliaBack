@@ -23,7 +23,7 @@ import { encryptToken, decryptToken } from '../../utils/cryptoTokens';
 
 const GOOGLE_AUTH_URL  = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
-const HEALTH_API_BASE  = 'https://health.googleapis.com/v1';
+const HEALTH_API_BASE  = 'https://health.googleapis.com/v4';
 
 const SCOPES = [
   'https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly',
@@ -169,15 +169,21 @@ async function obtenerAccessTokenValido(pacienteId: string): Promise<string | nu
  *   - `oxygen-saturation` es intradía; el rollup diario es `daily-oxygen-saturation`.
  */
 const DATA_TYPE = {
-  hrv:           'heart-rate-variability',     // RMSSD/SDNN entre latidos normales
-  restingHr:     'daily-resting-heart-rate',   // rollup diario de FC en reposo
-  heartRate:     'heart-rate',                  // FC intradía (bpm)
-  sleep:         'sleep',                       // sesiones de sueño con stages
-  steps:         'steps',                       // conteo de pasos
-  calories:      'active-energy-burned',        // calorías activas (kcal)
-  distance:      'distance',                    // distancia recorrida
-  weight:        'weight',                      // peso corporal
-  spo2:          'oxygen-saturation'            // saturación de oxígeno intradía
+  hrv:              'daily-heart-rate-variability', // HRV diario
+  restingHr:        'daily-resting-heart-rate',     // FC en reposo diario
+  heartRate:        'heart-rate',                   // FC intradía (bpm)
+  sleep:            'sleep',                        // sesiones de sueño con stages
+  steps:            'steps',                        // conteo de pasos
+  calories:         'active-energy-burned',         // calorías activas (kcal)
+  distance:         'distance',                     // distancia recorrida
+  weight:           'weight',                       // peso corporal
+  spo2:             'oxygen-saturation',            // saturación de oxígeno
+  spo2Daily:        'daily-oxygen-saturation',      // SpO2 diario
+  heartRateZones:   'daily-heart-rate-zones',       // zonas de FC diarias
+  vo2max:           'daily-vo2-max',                // VO2 máximo diario
+  respiratoryRate:  'daily-respiratory-rate',       // frecuencia respiratoria diaria
+  exercise:         'exercise',                     // sesiones de ejercicio
+  bloodGlucose:     'blood-glucose',                // glucosa en sangre
 };
 
 /**
@@ -192,11 +198,43 @@ const DATA_TYPE = {
  *
  * @param dataType identificador en kebab-case (ej. "heart-rate-variability")
  */
+/**
+ * Construye el filtro correcto según el dataType.
+ * Cada tipo usa un campo distinto — interval, sample_time o date.
+ */
+function buildFilter(dataType: string, desde: Date, hasta: Date): string {
+  // Tipos que usan sample_time (observaciones puntuales)
+  const sampleTimeTypes = new Set(['heart-rate', 'oxygen-saturation', 'body-temperature', 'blood-pressure', 'blood-glucose', 'respiratory-rate', 'stress', 'weight']);
+  // Tipos que usan date (agregados diarios)
+  const dateTypes = new Set(['heart-rate-variability', 'daily-heart-rate-variability', 'daily-resting-heart-rate', 'daily-oxygen-saturation', 'vo2-max', 'daily-vo2-max', 'daily-heart-rate-zones', 'daily-respiratory-rate']);
+
+  if (sampleTimeTypes.has(dataType)) {
+    const snake = dataType.replace(/-/g, '_');
+    const d1 = desde.toISOString().split('T')[0];
+    const d2 = hasta.toISOString().split('T')[0];
+    return `${snake}.sample_time.civil_time >= "${d1}" AND ${snake}.sample_time.civil_time < "${d2}"`;
+  }
+  if (dateTypes.has(dataType)) {
+    const snake = dataType.replace(/-/g, '_');
+    const d1 = desde.toISOString().split('T')[0];
+    const d2 = hasta.toISOString().split('T')[0];
+    return `${snake}.date >= "${d1}" AND ${snake}.date < "${d2}"`;
+  }
+  // Sleep usa end_time (no start_time)
+  if (dataType === 'sleep') {
+    const d1 = desde.toISOString().split('T')[0];
+    const d2 = hasta.toISOString().split('T')[0];
+    return `sleep.interval.civil_end_time >= "${d1}" AND sleep.interval.civil_end_time < "${d2}"`;
+  }
+  // Default: interval.civil_start_time (steps, distance, calories, exercise)
+  const snake = dataType.replace(/-/g, '_');
+  const d1 = desde.toISOString().split('T')[0];
+  const d2 = hasta.toISOString().split('T')[0];
+  return `${snake}.interval.civil_start_time >= "${d1}" AND ${snake}.interval.civil_start_time < "${d2}"`;
+}
+
 async function listarDataPoints(token: string, dataType: string, desde: Date, hasta: Date): Promise<any[]> {
-  // El filtro de Google Health API v4 usa solo "interval.start_time", sin prefijo de dataType
-  const filter =
-    `interval.start_time >= "${desde.toISOString()}" ` +
-    `AND interval.start_time < "${hasta.toISOString()}"`;
+  const filter = buildFilter(dataType, desde, hasta);
 
   const puntos: any[] = [];
   let pageToken: string | undefined;
@@ -318,6 +356,59 @@ async function verificarVinculacion(token: string): Promise<{ linked: boolean; m
 }
 
 /**
+ * Lista todos los dataTypes disponibles para la cuenta del paciente.
+ * Útil para diagnóstico — devuelve los IDs reales que Google Health expone.
+ */
+export async function listarDataTypesDisponibles(pacienteId: string): Promise<Record<string, string>> {
+  const token = await obtenerAccessTokenValido(pacienteId);
+  if (!token) throw new Error('Paciente no tiene conexión activa con Google Health');
+
+  // Probar todos los dataTypes conocidos y reportar cuáles existen
+  const TODOS_LOS_TIPOS = [
+    'heart-rate', 'heart-rate-variability', 'daily-heart-rate-variability',
+    'daily-resting-heart-rate', 'sleep', 'steps', 'active-energy-burned',
+    'distance', 'weight', 'oxygen-saturation', 'daily-oxygen-saturation',
+    'blood-glucose', 'vo2-max', 'daily-vo2-max', 'exercise',
+    'daily-heart-rate-zones', 'daily-respiratory-rate'
+  ];
+
+  const desde = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const hasta = new Date();
+  // Verificar identidad primero
+  const identityRes = await fetch(`${HEALTH_API_BASE}/users/me/identity`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const identityTxt = await identityRes.text().catch(() => '');
+  console.log('[GoogleHealth] identity response:', identityRes.status, identityTxt.slice(0, 300));
+
+  const resultados: Record<string, string> = {
+    '_identity_status': `${identityRes.status}: ${identityTxt.slice(0, 200)}`
+  };
+
+  await Promise.all(TODOS_LOS_TIPOS.map(async (tipo) => {
+    const u = new URL(`${HEALTH_API_BASE}/users/me/dataTypes/${tipo}/dataPoints`);
+    u.searchParams.set('filter', buildFilter(tipo, desde, hasta));
+    u.searchParams.set('pageSize', '1');
+    const res = await fetch(u.toString(), { headers: { Authorization: `Bearer ${token}` } });
+    if (res.status === 200) {
+      const json = await res.json() as { dataPoints?: any[] };
+      resultados[tipo] = json.dataPoints?.length ? `✅ con datos (${json.dataPoints.length})` : '✅ existe (sin datos en 7 días)';
+    } else {
+      const txt = await res.text().catch(() => '');
+      let parsed: any = {};
+      try { parsed = JSON.parse(txt); } catch { /* ignore */ }
+      const errMsg = parsed?.error?.message ?? txt.slice(0, 150);
+      const msg = txt.includes('FAILED_PRECONDITION') ? '❌ cuenta no vinculada'
+        : res.status === 404 ? '❌ no disponible'
+        : `⚠ ${res.status}: ${errMsg}`;
+      resultados[tipo] = msg;
+    }
+  }));
+
+  return resultados;
+}
+
+/**
  * Sync principal — últimos N días de HRV, FC reposo, sueño y pasos.
  * Idempotente por `externalId = source-type-startTime`.
  */
@@ -343,14 +434,17 @@ export async function sincronizarPaciente(pacienteId: string, dias = 7): Promise
   const desde = new Date(hasta.getTime() - dias * 86400_000);
 
   const metricas: Array<{ dataType: string; type: WearableType; unit: string }> = [
-    { dataType: DATA_TYPE.hrv,       type: 'hrv',        unit: 'ms'  },
-    { dataType: DATA_TYPE.restingHr, type: 'rhr',        unit: 'bpm' },
-    { dataType: DATA_TYPE.heartRate, type: 'heart_rate', unit: 'bpm' },
-    { dataType: DATA_TYPE.steps,     type: 'steps',      unit: 'count' },
-    { dataType: DATA_TYPE.calories,  type: 'calories',   unit: 'kcal' },
-    { dataType: DATA_TYPE.distance,  type: 'distance_m', unit: 'm' },
-    { dataType: DATA_TYPE.weight,    type: 'weight_kg',  unit: 'kg' },
-    { dataType: DATA_TYPE.spo2,      type: 'spo2',       unit: '%' }
+    { dataType: DATA_TYPE.hrv,             type: 'hrv',             unit: 'ms'    },
+    { dataType: DATA_TYPE.restingHr,       type: 'rhr',             unit: 'bpm'   },
+    { dataType: DATA_TYPE.heartRate,       type: 'heart_rate',      unit: 'bpm'   },
+    { dataType: DATA_TYPE.steps,           type: 'steps',           unit: 'count' },
+    { dataType: DATA_TYPE.calories,        type: 'calories',        unit: 'kcal'  },
+    { dataType: DATA_TYPE.distance,        type: 'distance_m',      unit: 'm'     },
+    { dataType: DATA_TYPE.weight,          type: 'weight_kg',       unit: 'kg'    },
+    { dataType: DATA_TYPE.spo2,            type: 'spo2',            unit: '%'     },
+    { dataType: DATA_TYPE.spo2Daily,       type: 'spo2',            unit: '%'     },
+    { dataType: DATA_TYPE.respiratoryRate, type: 'respiratory_rate',unit: 'bpm'   },
+    { dataType: DATA_TYPE.vo2max,          type: 'vo2_max',         unit: 'ml/kg/min' },
   ];
 
   for (const { dataType, type, unit } of metricas) {

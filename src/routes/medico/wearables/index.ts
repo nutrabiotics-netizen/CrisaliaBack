@@ -25,7 +25,8 @@ import {
   obtenerDatos,
   iniciarConexionGoogle,
   sincronizarGoogle,
-  desconectarGoogle
+  desconectarGoogle,
+  diagnosticarGoogle
 } from '../../../controllers/paciente/wearables/wearablesController';
 
 const router = Router();
@@ -37,8 +38,9 @@ router.get('/fitbit/connect', authenticate, authorize(UserRole.MEDICO), iniciarC
 router.post('/fitbit/sync',   authenticate, authorize(UserRole.MEDICO), sincronizarFitbit);
 router.delete('/fitbit',      authenticate, authorize(UserRole.MEDICO), desconectarFitbit);
 
-router.get('/google/connect', authenticate, authorize(UserRole.MEDICO), iniciarConexionGoogle);
-router.post('/google/sync',   authenticate, authorize(UserRole.MEDICO), sincronizarGoogle);
-router.delete('/google',      authenticate, authorize(UserRole.MEDICO), desconectarGoogle);
+router.get('/google/connect',    authenticate, authorize(UserRole.MEDICO), iniciarConexionGoogle);
+router.post('/google/sync',      authenticate, authorize(UserRole.MEDICO), sincronizarGoogle);
+router.get('/google/datatypes',  authenticate, authorize(UserRole.MEDICO), diagnosticarGoogle);
+router.delete('/google',         authenticate, authorize(UserRole.MEDICO), desconectarGoogle);
 
 export default router;

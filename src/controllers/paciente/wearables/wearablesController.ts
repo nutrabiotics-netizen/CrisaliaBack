@@ -16,6 +16,7 @@ import {
   exchangeCodeForToken  as ghExchangeCodeForToken,
   guardarConexion       as ghGuardarConexion,
   sincronizarPaciente   as ghSincronizarPaciente,
+  listarDataTypesDisponibles as ghListarDataTypes,
   firmarState           as ghFirmarState,
   verificarState        as ghVerificarState
 } from '../../../services/wearables/googleHealthService';
@@ -216,6 +217,18 @@ export const sincronizarGoogle = async (req: AuthRequest, res: Response): Promis
   } catch (error: any) {
     console.error('[wearables.sincronizarGoogle]', error);
     res.status(500).json({ success: false, message: error.message || 'Error al sincronizar' });
+  }
+};
+
+export const diagnosticarGoogle = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const pacienteId = req.userId;
+    if (!pacienteId) { res.status(401).json({ success: false, message: 'No autenticado' }); return; }
+    const resultados = await ghListarDataTypes(pacienteId);
+    res.json({ success: true, data: resultados });
+  } catch (error: any) {
+    console.error('[wearables.diagnosticarGoogle]', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 

@@ -28,8 +28,10 @@ export type WearableType =
   | 'active_minutes' // minutos
   | 'spo2'           // %
   | 'body_temp'      // °C
-  | 'weight_kg'      // kg
-  | 'stress';        // 0-100 (Garmin/Fitbit body battery)
+  | 'weight_kg'        // kg
+  | 'stress'           // 0-100 (Garmin/Fitbit body battery)
+  | 'respiratory_rate' // respiraciones por minuto
+  | 'vo2_max';         // ml/kg/min
 
 export interface IWearableData extends Document {
   pacienteId: mongoose.Types.ObjectId;
