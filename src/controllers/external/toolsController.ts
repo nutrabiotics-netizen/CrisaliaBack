@@ -546,6 +546,8 @@ export const reagendarCita = async (req: ExternalPhoneRequest, res: Response): P
     await citaActual.save();
 
     // 5. Crear nueva cita con mismos datos pero nueva fecha/hora
+    // Si la cita original estaba confirmada (ya pagada), la nueva hereda ese estado
+    const estadoNueva = (citaActual.estado as string) === 'confirmada' ? 'confirmada' : 'pendiente';
     const nuevaCita = await Cita.create({
       pacienteId,
       medicoId: citaActual.medicoId,
@@ -555,8 +557,13 @@ export const reagendarCita = async (req: ExternalPhoneRequest, res: Response): P
       tipo: citaActual.tipo,
       motivo: (citaActual as any).motivo,
       aseguradora: (citaActual as any).aseguradora,
-      estado: 'pendiente'
+      metodoPago: (citaActual as any).metodoPago,
+      estado: estadoNueva
     });
+
+    const message = estadoNueva === 'confirmada'
+      ? 'Cita reagendada exitosamente. El pago se mantiene confirmado.'
+      : 'Cita reagendada exitosamente. Recuerda confirmar el pago en el portal.';
 
     res.status(201).json({
       success: true,
@@ -566,7 +573,7 @@ export const reagendarCita = async (req: ExternalPhoneRequest, res: Response): P
         fecha,
         hora: hora24,
         estado: nuevaCita.estado,
-        message: 'Cita reagendada exitosamente. Recuerda confirmar el pago en el portal.'
+        message
       }
     });
   } catch (err) {
