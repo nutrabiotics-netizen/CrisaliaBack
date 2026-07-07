@@ -42,4 +42,3 @@ router.use('/chat', chatRoutes);
 router.use('/wearables', wearablesRoutes);
 
 export default router;
-

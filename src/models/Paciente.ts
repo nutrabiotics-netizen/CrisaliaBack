@@ -68,6 +68,8 @@ export interface IPaciente extends Document {
     version: number;
   };
 
+  // Onboarding
+  firstAppointment: boolean;
   // Estado
   activo: boolean;
   createdAt: Date;
@@ -215,6 +217,10 @@ const PacienteSchema = new Schema<IPaciente>(
       },
       citaIdReferencia: { type: String },
       version: { type: Number, default: 1 }
+    },
+    firstAppointment: {
+      type: Boolean,
+      default: false
     },
     activo: {
       type: Boolean,
