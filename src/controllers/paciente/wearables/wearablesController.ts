@@ -2,7 +2,7 @@ import { Response, Request } from 'express';
 import { AuthRequest } from '../../../middleware/auth';
 import mongoose from 'mongoose';
 import WearableConnection from '../../../models/WearableConnection';
-import WearableData from '../../../models/WearableData';
+import WearableData, { WearableType } from '../../../models/WearableData';
 import {
   buildAuthorizationUrl,
   exchangeCodeForToken,
@@ -152,11 +152,34 @@ export const obtenerDatos = async (req: AuthRequest, res: Response): Promise<voi
     if (type) q.type = type;
     q.timestamp = { $gte: desde, $lte: hasta };
 
-    const data = await WearableData.find(q)
-      .sort({ timestamp: 1 })
-      .select('type value unit timestamp source')
-      .limit(2000)
-      .lean();
+    // Si no se filtra por tipo específico, traer los últimos N de cada tipo
+    // para no llenar el límite con un solo tipo (ej. heart_rate intradía)
+    let data: any[];
+    if (type) {
+      data = await WearableData.find(q)
+        .sort({ timestamp: -1 })
+        .select('type value unit timestamp source')
+        .limit(5000)
+        .lean();
+    } else {
+      // Últimos 200 por tipo para cubrir todos los tipos
+      const TIPOS: WearableType[] = [
+        'hrv', 'heart_rate', 'rhr', 'sleep_total', 'sleep_deep', 'sleep_rem',
+        'sleep_light', 'sleep_awake', 'sleep_efficiency', 'steps', 'distance_m',
+        'calories', 'active_minutes', 'spo2', 'body_temp', 'weight_kg', 'stress',
+        'respiratory_rate', 'vo2_max'
+      ];
+      const resultados = await Promise.all(
+        TIPOS.map(t =>
+          WearableData.find({ ...q, type: t })
+            .sort({ timestamp: -1 })
+            .select('type value unit timestamp source')
+            .limit(200)
+            .lean()
+        )
+      );
+      data = resultados.flat();
+    }
 
     res.json({ success: true, data });
   } catch (error: any) {

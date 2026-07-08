@@ -1,5 +1,14 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
+// Convierte cualquier valor a boolean antes del cast de Mongoose.
+// Necesario porque la IA puede devolver "Sí", "sí", "true", 1, etc.
+const toBool = (v: any): boolean => {
+  if (typeof v === 'boolean') return v;
+  if (typeof v === 'number') return v !== 0;
+  const s = String(v).toLowerCase().replace(/[^a-z0-9]/g, '').trim();
+  return s === 'true' || s === '1' || s === 'si' || s === 'yes';
+};
+
 /**
  * Historia Clínica de Heridas — modelo PARALELO al `HistoriaClinica` general.
  *
@@ -133,7 +142,7 @@ export interface IHistoriaClinicaHeridas extends Document {
   // 9. Clasificaciones especializadas
   clasificaciones?: {
     wagnerPieDiabetico?: 0 | 1 | 2 | 3 | 4 | 5;
-    PEDIS?: { P?: number; E_cm2?: number; D?: number; I?: number; S?: string };
+    PEDIS?: string;
     PUSHBasal?: number;
     EVADolor?: number;
     ITBIzquierdo?: number;
@@ -168,9 +177,20 @@ export interface IHistoriaClinicaHeridas extends Document {
 
   // 13. Seguimiento evolutivo
   seguimientoEvolutivo?: {
+    fecha?: string;
+    hora?: string;
     proximoControl?: string;
-    indicacionesSeguimiento?: string[];
     incapacidadDias?: number;
+    evolucion?: 'Mejoría' | 'Igual' | 'Empeoramiento';
+    fotografiaSeguimiento?: boolean;
+    medidasActuales?: {
+      longitudCm?: number;
+      anchuraCm?: number;
+      profundidadCm?: number;
+      areaCm2?: number;
+    };
+    conducta?: string;
+    indicacionesSeguimiento?: string[];
     documentosEnPortal?: string[];
   };
 
@@ -226,7 +246,7 @@ const HistoriaClinicaHeridasSchema = new Schema<IHistoriaClinicaHeridas>(
       traumaticos:  String,
       alergicos:    [String],
       farmacologicos: [{ medicamento: String, dosis: String, frecuencia: String }],
-      tabaquismo:   { actual: Boolean, exfumador: Boolean, paquetesAnio: Number },
+      tabaquismo:   { actual: { type: Boolean, set: toBool }, exfumador: { type: Boolean, set: toBool }, paquetesAnio: Number },
       alcohol:      String,
       familiares:   [String]
     },
@@ -234,7 +254,7 @@ const HistoriaClinicaHeridasSchema = new Schema<IHistoriaClinicaHeridas>(
     valoracionRiesgoCicatrizacion: {
       estadoNutricional: {
         pesoKg: Number, tallaCm: Number, imc: Number,
-        perdidaRecientePeso: Boolean, albumina: String, hemoglobina: String
+        perdidaRecientePeso: { type: Boolean, set: toBool }, albumina: String, hemoglobina: String
       },
       riesgoCardiovascularAsociado: [String],
       riesgoVascular: {
@@ -270,7 +290,7 @@ const HistoriaClinicaHeridasSchema = new Schema<IHistoriaClinicaHeridas>(
 
     clasificaciones: {
       wagnerPieDiabetico: Number,
-      PEDIS: { P: Number, E_cm2: Number, D: Number, I: Number, S: String },
+      PEDIS: String,
       PUSHBasal: Number,
       EVADolor: Number,
       ITBIzquierdo: Number,
@@ -280,8 +300,8 @@ const HistoriaClinicaHeridasSchema = new Schema<IHistoriaClinicaHeridas>(
     },
 
     registroFotografico: {
-      fotografiaInicial: Boolean,
-      consentimiento: Boolean,
+      fotografiaInicial: { type: Boolean, set: toBool },
+      consentimiento: { type: Boolean, set: toBool },
       codigoFotografia: String,
       urls: [String]
     },
@@ -292,7 +312,7 @@ const HistoriaClinicaHeridasSchema = new Schema<IHistoriaClinicaHeridas>(
       apositos: { primario: String, secundario: String, frecuenciaCambio: String },
       descargaPresion: String,
       compresion: String,
-      antibiotico: { indicado: Boolean, esquema: String, cultivoSolicitado: Boolean, tecnica: String },
+      antibiotico: { indicado: { type: Boolean, set: toBool }, esquema: String, cultivoSolicitado: { type: Boolean, set: toBool }, tecnica: String },
       remisiones: [String],
       paraclinicosSolicitados: [String],
       controlSiguiente: String
@@ -301,9 +321,20 @@ const HistoriaClinicaHeridasSchema = new Schema<IHistoriaClinicaHeridas>(
     educacionPaciente: [String],
 
     seguimientoEvolutivo: {
+      fecha: String,
+      hora: String,
       proximoControl: String,
-      indicacionesSeguimiento: [String],
       incapacidadDias: Number,
+      evolucion: { type: String, enum: ['Mejoría', 'Igual', 'Empeoramiento'] },
+      fotografiaSeguimiento: { type: Boolean, set: toBool },
+      medidasActuales: {
+        longitudCm: Number,
+        anchuraCm: Number,
+        profundidadCm: Number,
+        areaCm2: Number
+      },
+      conducta: String,
+      indicacionesSeguimiento: [String],
       documentosEnPortal: [String]
     },
 

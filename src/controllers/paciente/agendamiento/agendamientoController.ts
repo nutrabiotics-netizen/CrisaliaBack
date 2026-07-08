@@ -168,7 +168,7 @@ export const crearCita = async (req: AuthRequest, res: Response): Promise<void> 
       return;
     }
 
-    const { medicoId, fecha, hora, tipo, modalidad } = req.body;
+    const { medicoId, fecha, hora, tipo, modalidad, modulo } = req.body;
 
     if (!medicoId || !fecha || !hora || !tipo || !modalidad) {
       res.status(400).json({
@@ -229,8 +229,9 @@ export const crearCita = async (req: AuthRequest, res: Response): Promise<void> 
       fecha: fechaObj,
       hora,
       tipo,
-      modalidad
-    }, pacienteId, 'Paciente');
+      modalidad,
+      ...(modulo && ['general', 'heridas'].includes(modulo) ? { modulo } : {})
+    } as any, pacienteId, 'Paciente');
 
     // Registrar en auditoría
     await registrarAccion(

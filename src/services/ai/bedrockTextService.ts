@@ -41,6 +41,7 @@ export interface BedrockTextOptions {
   system?: string;
   maxTokens?: number;
   temperature?: number;
+  modelId?: string;
 }
 
 /**
@@ -48,9 +49,10 @@ export interface BedrockTextOptions {
  * Tira excepción si Bedrock falla — el caller decide qué hacer.
  */
 export async function invokeBedrockText(userPrompt: string, opts: BedrockTextOptions = {}): Promise<string> {
-  console.log('[BedrockTextService] ▶ Converse', { modelId: MODEL_ID, promptLen: userPrompt.length });
+  const resolvedModel = opts.modelId ?? MODEL_ID;
+  console.log('[BedrockTextService] ▶ Converse', { modelId: resolvedModel, promptLen: userPrompt.length });
   const command = new ConverseCommand({
-    modelId: MODEL_ID,
+    modelId: resolvedModel,
     system: opts.system ? [{ text: opts.system }] : undefined,
     messages: [{ role: 'user', content: [{ text: userPrompt }] }],
     inferenceConfig: {

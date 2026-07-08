@@ -57,16 +57,17 @@ app.use(
   }),
 );
 
-// Rate limiting global: 200 req/15 min por IP
+// Rate limiting global: 200 req/15 min por IP en producción, 2000 en desarrollo
 const limiterGlobal = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
+  max: process.env.NODE_ENV === 'development' ? 2000 : 200,
   standardHeaders: true,
   legacyHeaders: false,
-  message: {
-    success: false,
-    message: "Demasiadas solicitudes. Intenta en 15 minutos.",
-  },
+  message: { success: false, message: 'Demasiadas solicitudes. Intenta en 15 minutos.' },
+  skip: (req) => {
+    const p = req.path;
+    return p.includes('/videocall/') || p.includes('/heridas') || p.includes('/heridas-ia');
+  }
 });
 app.use("/api/", limiterGlobal);
 

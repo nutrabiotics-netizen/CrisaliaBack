@@ -34,7 +34,7 @@ export const crearOActualizar = async (req: AuthRequest, res: Response): Promise
     if (!medicoId) { res.status(401).json({ success: false, message: 'No autenticado' }); return; }
     if (!mongoose.isValidObjectId(citaId)) { res.status(400).json({ success: false, message: 'citaId inválido' }); return; }
 
-    const { pacienteId, ...rest } = req.body ?? {};
+    const { pacienteId, activo, fechaRegistro, creadoPor, creadoPorRol, _id, __v, createdAt, updatedAt, ...rest } = req.body ?? {};
     if (!pacienteId || !mongoose.isValidObjectId(pacienteId)) {
       res.status(400).json({ success: false, message: 'pacienteId requerido' });
       return;

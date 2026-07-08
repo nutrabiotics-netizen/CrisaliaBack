@@ -271,7 +271,7 @@ function camelKey(dataType: string): string {
   return dataType.replace(/-([a-z])/g, (_m, c: string) => c.toUpperCase());
 }
 
-const TIME_KEYS = new Set(['interval', 'sampleTime']);
+const TIME_KEYS = new Set(['interval', 'sampleTime', 'sample_time', 'date', 'dailyRestingHeartRateMetadata']);
 const SKIP_NUM_KEYS = new Set(['startUtcOffset', 'endUtcOffset', 'utcOffset']);
 
 /**
@@ -292,19 +292,74 @@ const SKIP_NUM_KEYS = new Set(['startUtcOffset', 'endUtcOffset', 'utcOffset']);
  */
 function parseDataPoint(dp: any, dataType: string): { value: number | null; start: Date | null; end: Date | null } {
   const w = dp?.[camelKey(dataType)] ?? dp?.[dataType] ?? null;
-  if (!w || typeof w !== 'object') return { value: null, start: null, end: null };
+  if (!w || typeof w !== 'object') {
+    // Log para diagnóstico — ver el shape real del dataPoint
+    console.log(`[parseDataPoint] shape inesperado para ${dataType}:`, JSON.stringify(dp)?.slice(0, 200));
+    return { value: null, start: null, end: null };
+  }
 
-  const startIso = w.interval?.startTime ?? w.sampleTime?.physicalTime ?? null;
-  const endIso   = w.interval?.endTime ?? null;
+  // Google Health v4 puede usar snake_case o camelCase en el JSON de respuesta
+  // Tipos "daily-*" usan un campo `date` con { year, month, day }
+  const dateField = w.date;
+  let startIso: string | null =
+    w.interval?.startTime ??
+    w.interval?.start_time ??
+    w.sampleTime?.physicalTime ??
+    w.sample_time?.physical_time ??
+    w.sample_time?.civil_time ??
+    null;
+
+  if (!startIso && dateField) {
+    // Construir ISO desde { year, month, day }
+    if (typeof dateField === 'object' && dateField.year) {
+      const y = dateField.year;
+      const m = String(dateField.month).padStart(2, '0');
+      const d = String(dateField.day).padStart(2, '0');
+      startIso = `${y}-${m}-${d}T00:00:00Z`;
+    } else if (typeof dateField === 'string') {
+      startIso = `${dateField}T00:00:00Z`;
+    }
+  }
+
+  const endIso = w.interval?.endTime ?? w.interval?.end_time ?? null;
   const start = startIso ? new Date(startIso) : null;
   const end   = endIso ? new Date(endIso) : null;
 
+  // Log diagnóstico para ver el shape completo del wrapper
+  if (['heart-rate', 'daily-heart-rate-variability', 'daily-resting-heart-rate'].includes(dataType)) {
+    console.log(`[parseDataPoint] ${dataType} startIso:`, startIso, '| keys:', Object.keys(w), '| beatsPerMinute:', w.beatsPerMinute, typeof w.beatsPerMinute);
+  }
+
   let value: number | null = null;
-  for (const [k, v] of Object.entries(w)) {
-    if (TIME_KEYS.has(k) || SKIP_NUM_KEYS.has(k)) continue;
+
+  // Campos prioritarios por nombre — antes del loop genérico
+  const PRIORITY_FIELDS = [
+    'averageHeartRateVariabilityMilliseconds',  // daily-heart-rate-variability
+    'beatsPerMinute',                            // heart-rate, daily-resting-heart-rate
+    'count',                                     // steps
+    'kilocalories',                              // calories
+    'meters',                                    // distance
+    'kilograms',                                 // weight
+    'percent',                                   // spo2
+    'breathsPerMinute',                          // respiratory-rate
+    'millilitersPerKilogramPerMinute',           // vo2-max
+  ];
+  for (const field of PRIORITY_FIELDS) {
+    const v = w[field];
+    if (v === undefined || v === null) continue;
     if (typeof v === 'number') { value = v; break; }
     if (typeof v === 'string' && v.trim() !== '' && !Number.isNaN(Number(v))) { value = Number(v); break; }
   }
+
+  // Fallback: loop genérico
+  if (value === null) {
+    for (const [k, v] of Object.entries(w)) {
+      if (TIME_KEYS.has(k) || SKIP_NUM_KEYS.has(k)) continue;
+      if (typeof v === 'number') { value = v; break; }
+      if (typeof v === 'string' && v.trim() !== '' && !Number.isNaN(Number(v))) { value = Number(v); break; }
+    }
+  }
+
   return { value, start, end };
 }
 
@@ -458,7 +513,7 @@ export async function sincronizarPaciente(pacienteId: string, dias = 7): Promise
           updateOne: {
             filter: { pacienteId, source: 'google_health', externalId },
             update: {
-              $setOnInsert: {
+              $set: {
                 pacienteId, source: 'google_health', type, value: valor, unit,
                 timestamp: ts,
                 endTimestamp: end ?? undefined,
@@ -493,7 +548,7 @@ export async function sincronizarPaciente(pacienteId: string, dias = 7): Promise
         updateOne: {
           filter: { pacienteId, source: 'google_health', externalId: `sleep_total-${fechaKey}` },
           update: {
-            $setOnInsert: {
+            $set: {
               pacienteId, source: 'google_health', type: 'sleep_total' as WearableType,
               value: totalMin, unit: 'min',
               timestamp: start, endTimestamp: end,
@@ -530,7 +585,7 @@ export async function sincronizarPaciente(pacienteId: string, dias = 7): Promise
             updateOne: {
               filter: { pacienteId, source: 'google_health', externalId: `${tipo}-${fechaKey}` },
               update: {
-                $setOnInsert: {
+                $set: {
                   pacienteId, source: 'google_health', type: tipo,
                   value: valor, unit: 'min',
                   timestamp: start, endTimestamp: end,
@@ -549,13 +604,18 @@ export async function sincronizarPaciente(pacienteId: string, dias = 7): Promise
 
   let sincronizados = 0;
   if (inserts.length) {
+    console.log(`[GoogleSync] total inserts preparados: ${inserts.length}`);
     const r = await WearableData.bulkWrite(inserts, { ordered: false });
     sincronizados = (r.upsertedCount || 0) + (r.modifiedCount || 0);
+    console.log(`[GoogleSync] upserted: ${r.upsertedCount}, modified: ${r.modifiedCount}, matched: ${r.matchedCount}`);
   }
 
+  const errorMsg = errores.slice(0, 3).join(' · ') || null;
   await WearableConnection.updateOne(
     { pacienteId, source: 'google_health' },
-    { $set: { lastSyncAt: new Date(), lastErrorMessage: errores.slice(0, 3).join(' · ') || undefined } }
+    errorMsg
+      ? { $set: { lastSyncAt: new Date(), lastErrorMessage: errorMsg } }
+      : { $set: { lastSyncAt: new Date() }, $unset: { lastErrorMessage: '' } }
   );
 
   return { sincronizados, errores };
