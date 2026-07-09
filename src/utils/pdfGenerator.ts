@@ -842,3 +842,280 @@ export async function generateCitaResumenPdf(payload: {
     doc.end();
   });
 }
+
+/** Genera PDF de Historia Clínica de Heridas (14 secciones). */
+export async function generateHeridasPdf(hc: any, medico?: MedicoPdfFirma): Promise<Buffer> {
+  const logoBuffer = await getGlobalLogoBuffer();
+
+  return new Promise((resolve, reject) => {
+    const { doc, chunks } = createDocument();
+    setupPageFooter(doc);
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
+
+    const headerTitle = 'Historia Clínica de Heridas';
+    addDocumentHeader(doc, headerTitle, { logoBuffer });
+
+    const val = (v: any) => (v !== undefined && v !== null && v !== '') ? String(v) : null;
+    const arr = (v: any[]) => Array.isArray(v) && v.length ? v.join(', ') : null;
+
+    // 1. Identificación
+    if (hc.identificacion) {
+      const id = hc.identificacion;
+      addSectionTitle(doc, '1. Identificación del paciente');
+      drawKeyValueTable(doc, '1. Identificación', [
+        { label: 'Nombres y apellidos', value: val(id.nombresApellidos) },
+        { label: 'Documento', value: val(id.documento) },
+        { label: 'Fecha de nacimiento', value: val(id.fechaNacimiento) },
+        { label: 'Edad', value: val(id.edad) },
+        { label: 'Sexo', value: val(id.sexo) },
+        { label: 'EPS', value: val(id.eps) },
+        { label: 'ARL', value: val(id.arl) },
+        { label: 'Teléfono', value: val(id.telefono) },
+        { label: 'Dirección', value: val(id.direccion) },
+        { label: 'Responsable / Cuidador', value: val(id.responsable) },
+        { label: 'Parentesco', value: val(id.parentesco) },
+        { label: 'Fecha consulta', value: val(id.fechaConsulta) },
+        { label: 'Hora consulta', value: val(id.horaConsulta) },
+      ].filter(r => r.value));
+    }
+
+    // 2. Motivo
+    if (hc.motivoConsulta) {
+      ensureSpace(doc, 40, headerTitle);
+      addSectionTitle(doc, '2. Motivo de consulta');
+      addSectionMultiline(doc, 'Motivo', hc.motivoConsulta);
+    }
+
+    // 3. Enfermedad actual
+    if (hc.enfermedadActual) {
+      ensureSpace(doc, 40, headerTitle);
+      addSectionTitle(doc, '3. Enfermedad actual');
+      addSectionMultiline(doc, 'Descripción', hc.enfermedadActual);
+    }
+
+    // 4. Antecedentes
+    if (hc.antecedentes) {
+      const a = hc.antecedentes;
+      ensureSpace(doc, 40, headerTitle);
+      addSectionTitle(doc, '4. Antecedentes');
+      const farma = Array.isArray(a.farmacologicos)
+        ? a.farmacologicos.map((f: any) => typeof f === 'string' ? f : `${f.medicamento} ${f.dosis} ${f.frecuencia}`.trim()).join(', ')
+        : null;
+      drawKeyValueTable(doc, '4. Antecedentes', [
+        { label: 'Patológicos', value: arr(a.patologicos) },
+        { label: 'Quirúrgicos', value: arr(a.quirurgicos) },
+        { label: 'Traumáticos', value: val(a.traumaticos) },
+        { label: 'Alérgicos', value: arr(a.alergicos) },
+        { label: 'Farmacológicos', value: farma },
+        { label: 'Tabaquismo', value: a.tabaquismo ? `Actual: ${a.tabaquismo.actual ? 'Sí' : 'No'}, Exfumador: ${a.tabaquismo.exfumador ? 'Sí' : 'No'}${a.tabaquismo.paquetesAnio ? `, ${a.tabaquismo.paquetesAnio} paq/año` : ''}` : null },
+        { label: 'Alcohol', value: val(a.alcohol) },
+        { label: 'Familiares', value: arr(a.familiares) },
+      ].filter(r => r.value));
+    }
+
+    // 5. Valoración riesgo cicatrización
+    if (hc.valoracionRiesgoCicatrizacion) {
+      const v = hc.valoracionRiesgoCicatrizacion;
+      ensureSpace(doc, 40, headerTitle);
+      addSectionTitle(doc, '5. Valoración del riesgo de cicatrización');
+      const en = v.estadoNutricional || {};
+      const rv = v.riesgoVascular || {};
+      const cm = v.controlMetabolico || {};
+      drawKeyValueTable(doc, '5. Riesgo', [
+        { label: 'Peso (kg)', value: val(en.pesoKg) },
+        { label: 'Talla (cm)', value: val(en.tallaCm) },
+        { label: 'IMC', value: val(en.imc) },
+        { label: 'Albúmina', value: val(en.albumina) },
+        { label: 'Hemoglobina', value: val(en.hemoglobina) },
+        { label: 'Pérdida reciente peso', value: en.perdidaRecientePeso != null ? (en.perdidaRecientePeso ? 'Sí' : 'No') : null },
+        { label: 'HbA1c', value: val(cm.HbA1c) },
+        { label: 'Glicemia en ayunas', value: val(cm.glicemiaAyunas) },
+        { label: 'Pulsos', value: val(rv.pulsos) },
+        { label: 'ITB izquierdo', value: val(rv.ITBIzquierdo) },
+        { label: 'ITB derecho', value: val(rv.ITBDerecho) },
+        { label: 'Riesgo cardiovascular', value: arr(v.riesgoCardiovascularAsociado) },
+      ].filter(r => r.value));
+    }
+
+    // 6. Examen físico
+    if (hc.examenFisico) {
+      const ef = hc.examenFisico;
+      const sv = ef.signosVitales || {};
+      ensureSpace(doc, 40, headerTitle);
+      addSectionTitle(doc, '6. Examen físico general');
+      drawKeyValueTable(doc, '6. Examen físico', [
+        { label: 'TA', value: val(sv.TA) },
+        { label: 'FC', value: val(sv.FC) },
+        { label: 'FR', value: val(sv.FR) },
+        { label: 'Temperatura °C', value: val(sv.temperaturaC) },
+        { label: 'SpO2 %', value: val(sv.SpO2pct) },
+        { label: 'Glicemia capilar', value: val(sv.glicemiaCapilar) },
+        { label: 'Estado general', value: val(ef.estadoGeneral) },
+      ].filter(r => r.value));
+    }
+
+    // 7. Valoración especializada
+    if (hc.valoracionEspecializada) {
+      const ve = hc.valoracionEspecializada;
+      ensureSpace(doc, 40, headerTitle);
+      addSectionTitle(doc, '7. Valoración especializada de la herida');
+      drawKeyValueTable(doc, '7. Valoración especializada', [
+        { label: 'Diagnóstico', value: val(ve.diagnosticoHerida) },
+        { label: 'Localización', value: val(ve.localizacionAnatomica) },
+        { label: 'Tiempo de evolución', value: val(ve.tiempoEvolucion) },
+        { label: 'Número de heridas', value: val(ve.numeroHeridas) },
+      ].filter(r => r.value));
+    }
+
+    // 8. Caracterización
+    if (hc.caracterizacionHerida) {
+      const ch = hc.caracterizacionHerida;
+      const m = ch.medidas || {};
+      const l = ch.lecho || {};
+      const e = ch.exudado || {};
+      const inf = ch.infeccion || {};
+      ensureSpace(doc, 60, headerTitle);
+      addSectionTitle(doc, '8. Caracterización de la herida');
+      drawKeyValueTable(doc, '8. Caracterización', [
+        { label: 'Longitud (cm)', value: val(m.longitudCm) },
+        { label: 'Anchura (cm)', value: val(m.anchuraCm) },
+        { label: 'Profundidad (cm)', value: val(m.profundidadCm) },
+        { label: 'Socavamiento (cm)', value: val(m.socavamientoCm) },
+        { label: 'Área (cm²)', value: val(m.areaCm2) },
+        { label: 'Bordes', value: arr(ch.bordes) },
+        { label: 'Granulación %', value: val(l.granulacionPct) },
+        { label: 'Esfacelo %', value: val(l.esfaceloPct) },
+        { label: 'Necrosis %', value: val(l.necrosisPct) },
+        { label: 'Epitelización %', value: val(l.epitelizacionPct) },
+        { label: 'Exudado cantidad', value: val(e.cantidad) },
+        { label: 'Exudado tipo', value: val(e.tipo) },
+        { label: 'Color exudado', value: val(e.color) },
+        { label: 'Olor', value: val(ch.olor) },
+        { label: 'EVA curación', value: val(ch.dolorEVA?.curacion) },
+        { label: 'EVA reposo', value: val(ch.dolorEVA?.reposo) },
+        { label: 'Signos infección', value: arr(inf.signos) },
+        { label: 'Piel perilesional', value: arr(ch.pielPerilesional) },
+      ].filter(r => r.value));
+    }
+
+    // 9. Clasificaciones
+    if (hc.clasificaciones) {
+      const cl = hc.clasificaciones;
+      ensureSpace(doc, 40, headerTitle);
+      addSectionTitle(doc, '9. Clasificaciones especializadas');
+      drawKeyValueTable(doc, '9. Clasificaciones', [
+        { label: 'Wagner pie diabético', value: val(cl.wagnerPieDiabetico) },
+        { label: 'PEDIS', value: val(cl.PEDIS) },
+        { label: 'PUSH basal', value: val(cl.PUSHBasal) },
+        { label: 'EVA dolor', value: val(cl.EVADolor) },
+        { label: 'ITB', value: val(cl.ITBIzquierdo) },
+        { label: 'Lesión por presión', value: val(cl.lesionPorPresion) },
+        { label: 'CEAP venosa', value: val(cl.CEAPVenosa) },
+        { label: 'Rutherford arterial', value: val(cl.rutherfordArterial) },
+      ].filter(r => r.value));
+    }
+
+    // 10. Registro fotográfico
+    if (hc.registroFotografico) {
+      const rf = hc.registroFotografico;
+      ensureSpace(doc, 40, headerTitle);
+      addSectionTitle(doc, '10. Registro fotográfico');
+      drawKeyValueTable(doc, '10. Registro fotográfico', [
+        { label: 'Fotografía inicial', value: rf.fotografiaInicial != null ? (rf.fotografiaInicial ? 'Sí' : 'No') : null },
+        { label: 'Consentimiento', value: rf.consentimiento != null ? (rf.consentimiento ? 'Sí' : 'No') : null },
+        { label: 'Código fotografía', value: val(rf.codigoFotografia) },
+      ].filter(r => r.value));
+    }
+
+    // 11. Plan de manejo
+    if (hc.planManejo) {
+      const pm = hc.planManejo;
+      const ab = pm.antibiotico || {};
+      const ap = pm.apositos || {};
+      ensureSpace(doc, 60, headerTitle);
+      addSectionTitle(doc, '11. Plan de manejo');
+      drawKeyValueTable(doc, '11. Plan de manejo', [
+        { label: 'Limpieza', value: arr(pm.limpieza) },
+        { label: 'Desbridamiento', value: arr(pm.desbridamiento) },
+        { label: 'Apósito primario', value: val(ap.primario) },
+        { label: 'Apósito secundario', value: val(ap.secundario) },
+        { label: 'Frecuencia cambio', value: val(ap.frecuenciaCambio) },
+        { label: 'Compresión', value: val(pm.compresion) },
+        { label: 'Descarga presión', value: val(pm.descargaPresion) },
+        { label: 'Antibiótico indicado', value: ab.indicado != null ? (ab.indicado ? 'Sí' : 'No') : null },
+        { label: 'Esquema antibiótico', value: val(ab.esquema) },
+        { label: 'Remisiones', value: arr(pm.remisiones) },
+        { label: 'Paraclínicos solicitados', value: arr(pm.paraclinicosSolicitados) },
+      ].filter(r => r.value));
+    }
+
+    // 12. Educación al paciente
+    if (Array.isArray(hc.educacionPaciente) && hc.educacionPaciente.length) {
+      ensureSpace(doc, 40, headerTitle);
+      addSectionTitle(doc, '12. Educación al paciente');
+      addSectionMultiline(doc, 'Temas educados', hc.educacionPaciente.join(', '));
+    }
+
+    // 13. Seguimiento evolutivo
+    if (hc.seguimientoEvolutivo) {
+      const se = hc.seguimientoEvolutivo;
+      const ma = se.medidasActuales || {};
+      ensureSpace(doc, 40, headerTitle);
+      addSectionTitle(doc, '13. Seguimiento evolutivo');
+      drawKeyValueTable(doc, '13. Seguimiento', [
+        { label: 'Fecha', value: val(se.fecha) },
+        { label: 'Próximo control', value: val(se.proximoControl) },
+        { label: 'Evolución', value: val(se.evolucion) },
+        { label: 'Incapacidad (días)', value: val(se.incapacidadDias) },
+        { label: 'Longitud actual (cm)', value: val(ma.longitudCm) },
+        { label: 'Anchura actual (cm)', value: val(ma.anchuraCm) },
+        { label: 'Profundidad actual (cm)', value: val(ma.profundidadCm) },
+        { label: 'Área actual (cm²)', value: val(ma.areaCm2) },
+        { label: 'Conducta', value: val(se.conducta) },
+        { label: 'Indicaciones', value: arr(se.indicacionesSeguimiento) },
+      ].filter(r => r.value));
+    }
+
+    // 14. Escalas aplicadas
+    if (hc.escalasAplicadas) {
+      const ea = hc.escalasAplicadas;
+      ensureSpace(doc, 40, headerTitle);
+      addSectionTitle(doc, '14. Escalas aplicadas');
+      drawKeyValueTable(doc, '14. Escalas', [
+        { label: 'Wagner', value: val(ea.wagner) },
+        { label: 'PUSH basal', value: val(ea.PUSHBasal) },
+        { label: 'ITB', value: val(ea.ITB) },
+        { label: 'EVA', value: val(ea.EVA) },
+        { label: 'Braden', value: val(ea.braden) },
+        { label: 'Norton', value: val(ea.norton) },
+        { label: 'CEAP', value: val(ea.CEAP) },
+        { label: 'MNA', value: val(ea.MNA) },
+        { label: 'PEDIS', value: val(ea.PEDIS) },
+      ].filter(r => r.value));
+    }
+
+    // Firma del médico
+    if (medico) {
+      ensureSpace(doc, 80, headerTitle);
+      doc.moveDown(1);
+      doc.moveTo(MARGIN, doc.y).lineTo(250, doc.y).strokeColor('#D1D5DB').stroke();
+      doc.moveDown(0.3);
+      if (medico.firmaImageBuffer) {
+        try {
+          doc.image(medico.firmaImageBuffer, MARGIN, doc.y, { width: 120, height: 50 });
+          doc.y = doc.y + 55;
+        } catch { /* ignore */ }
+      }
+      doc.font('Helvetica').fontSize(10).fillColor('#111827').text(medico.nombreCompleto);
+      if (medico.numeroColegiatura) {
+        doc.font('Helvetica').fontSize(9).text(`Registro / TP: ${medico.numeroColegiatura}`);
+      }
+      doc.moveDown(0.5);
+      doc.font('Helvetica-Oblique').fontSize(8).fillColor('#4B5563')
+        .text('Documento generado electrónicamente en Crisal-iA.', { width: getPageWidth(doc) - MARGIN * 2 });
+    }
+
+    doc.end();
+  });
+}

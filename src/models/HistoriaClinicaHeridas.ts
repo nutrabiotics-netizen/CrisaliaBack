@@ -347,6 +347,7 @@ const HistoriaClinicaHeridasSchema = new Schema<IHistoriaClinicaHeridas>(
     creadoPorRol: { type: String, enum: ['Medico', 'Administrativo'] },
     actualizadoPor: { type: Schema.Types.ObjectId, ref: 'User' },
     pdfUrl: String,
+    pdfResumenUrl: String,
     activo: { type: Boolean, default: true, index: true }
   },
   { timestamps: true }
