@@ -78,10 +78,23 @@ export const createMeeting = async (req: AuthRequest, res: Response) => {
       }
     }
 
+    // Upsert: si ya existe un meeting activo para este externalMeetingId, devolver el existente
+    const extId = externalMeetingId || `Meeting-Crisalia-${Date.now()}`;
+    if (externalMeetingId) {
+      const existing = await Meeting.findOne({
+        externalMeetingId: extId,
+        status: { $in: ['created', 'active'] }
+      }).lean();
+      if (existing) {
+        console.log('[createMeeting] Meeting existente encontrado para', extId);
+        return res.status(200).json({ success: true, meeting: existing });
+      }
+    }
+
     const createMeetingCommand = new CreateMeetingCommand({
       ClientRequestToken: Date.now().toString(),
       MediaRegion: videoCallConfig.defaultRegion,
-      ExternalMeetingId: externalMeetingId || `Meeting-Crisalia-${Date.now()}`
+      ExternalMeetingId: extId
     });
     const meetingResponse = await chimeClient.send(createMeetingCommand);
 

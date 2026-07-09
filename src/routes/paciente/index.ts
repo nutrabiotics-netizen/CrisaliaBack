@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../../middleware/auth';
 import { UserRole } from '../../types';
-import { infoCitaHeridas } from '../../controllers/paciente/heridasPacienteController';
+import { infoCitaHeridas, getMeetingHeridas } from '../../controllers/paciente/heridasPacienteController';
 import perfilRoutes from './perfil';
 import agendamientoRoutes from './agendamiento';
 import interrogatorioRoutes from './interrogatorio';
@@ -45,5 +45,6 @@ router.use('/chat', chatRoutes);
 router.use('/wearables', wearablesRoutes);
 
 router.get('/heridas-cita/:citaId/info', authenticate, authorize(UserRole.PACIENTE), infoCitaHeridas);
+router.get('/heridas-cita/:citaId/meeting', authenticate, authorize(UserRole.PACIENTE), getMeetingHeridas);
 
 export default router;
