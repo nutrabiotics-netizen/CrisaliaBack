@@ -66,6 +66,7 @@ export interface AuthResponse {
     aceptaTerminos?: boolean;
     aceptaConsentimiento?: boolean;
     firstAppointment?: boolean;
+    genero?: string;
   };
 }
 
@@ -142,6 +143,7 @@ export class AuthService {
       userResponse.aceptaTerminos = configSeguridad?.aceptaTerminos ?? false;
       userResponse.aceptaConsentimiento = configSeguridad?.aceptaConsentimiento ?? false;
       userResponse.firstAppointment = (user as IPaciente).firstAppointment ?? false;
+      userResponse.genero = (user as IPaciente).genero;
     }
 
     if (userRole === UserRole.ADMINISTRATIVO && 'cargo' in user) {
@@ -269,7 +271,8 @@ export class AuthService {
       habilitado2FA: configSeguridad?.autenticacionDosFactores ?? false,
       aceptaTerminos: configSeguridad?.aceptaTerminos ?? false,
       aceptaConsentimiento: configSeguridad?.aceptaConsentimiento ?? false,
-      firstAppointment: false
+      firstAppointment: false,
+      genero: nuevoPaciente.genero
     };
 
     return {
