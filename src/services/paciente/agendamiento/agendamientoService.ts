@@ -343,6 +343,7 @@ class AgendamientoService {
         meetingId: (cita as any).meetingId,
         grabacionUrl: (cita as any).grabacionUrl,
         pdfResumenUrl: (cita as any).pdfResumenUrl,
+        modulo: (cita as any).modulo ?? 'general',
         createdAt: cita.createdAt,
         updatedAt: cita.updatedAt
       };

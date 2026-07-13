@@ -94,7 +94,8 @@ export const actualizarPerfil = async (req: AuthRequest, res: Response): Promise
       metodoNotificacion,
       aceptaTerminos,
       aceptaConsentimiento,
-      consentimientosDetalle
+      consentimientosDetalle,
+      firstAppointment
     } = req.body;
 
     // Actualizar datos del paciente
@@ -157,6 +158,7 @@ export const actualizarPerfil = async (req: AuthRequest, res: Response): Promise
     if (condicionDesplazamiento !== undefined) paciente.condicionDesplazamiento = condicionDesplazamiento.trim() || undefined;
     if (grupoEtnico !== undefined) paciente.grupoEtnico = grupoEtnico.trim() || undefined;
     if (aseguradora !== undefined) paciente.aseguradora = aseguradora.trim() || undefined;
+    if (firstAppointment !== undefined) paciente.firstAppointment = firstAppointment;
 
     await paciente.save();
 

@@ -225,7 +225,7 @@ export async function requestOtp(
   console.log('[docAuth] ✓ telefono resuelto desde campo:', campo);
 
   try {
-    await envioCodigoWhatsApp(phone);
+    await envioCodigoWhatsApp(phone, found.subject.email);
     return { sent: true, role: found.role, phoneMasked: enmascararPhone(phone) };
   } catch (err) {
     console.error('[docAuth] error enviando OTP:', err);

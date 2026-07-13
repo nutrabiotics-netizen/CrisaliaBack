@@ -1,6 +1,6 @@
 /**
  * Servicio para envío de códigos de autenticación 2FA por WhatsApp.
- * Integración con API externa Mozart AI.
+ * Integración con Meta WhatsApp Business API (Graph API).
  *
  * Los códigos se persisten en Mongo (modelo Codigo2FA) con:
  *   - hash bcrypt del código (no se guarda en plano)
@@ -9,8 +9,12 @@
  */
 
 import Codigo2FA, { hashCodigo, compararCodigo } from '../../models/Codigo2FA';
+import { enviarCodigoOtpEmail } from '../notifications/emailService';
 
-const WHATSAPP_AUTH_URL = 'https://whatsapp.mozartai.com.co/whatsapp/auth/codigo-login';
+const META_PHONE_NUMBER_ID = process.env.META_WHATSAPP_PHONE_NUMBER_ID || '1038206332702116';
+const META_ACCESS_TOKEN = process.env.META_WHATSAPP_ACCESS_TOKEN || '';
+const META_API_URL = `https://graph.facebook.com/v22.0/${META_PHONE_NUMBER_ID}/messages`;
+const META_TEMPLATE_NAME = process.env.META_WHATSAPP_TEMPLATE_NAME || 'codigo_verificacion_nutrabiotics';
 const CODIGO_EXPIRA_MINUTOS = 4;
 const MAX_INTENTOS_POR_CODIGO = 3;
 
@@ -40,7 +44,7 @@ function generarCodigo(): string {
  * Si ya existía un código vigente para ese teléfono, lo invalida antes de crear uno nuevo
  * (así un nuevo envío siempre deja exactamente UN código vigente).
  */
-export async function envioCodigoWhatsApp(telefono: string): Promise<{ message: string }> {
+export async function envioCodigoWhatsApp(telefono: string, email?: string): Promise<{ message: string }> {
   const formattedPhone = normalizarTelefono(telefono);
   const codigo = generarCodigo();
 
@@ -50,15 +54,38 @@ export async function envioCodigoWhatsApp(telefono: string): Promise<{ message: 
     { $set: { usado: true } }
   );
 
-  const response = await fetch(WHATSAPP_AUTH_URL, {
+  const response = await fetch(META_API_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ celular: formattedPhone, codigo })
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${META_ACCESS_TOKEN}`
+    },
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      to: formattedPhone,
+      type: 'template',
+      template: {
+        name: META_TEMPLATE_NAME,
+        language: { code: 'es' },
+        components: [
+          {
+            type: 'body',
+            parameters: [{ type: 'text', text: codigo }]
+          },
+          {
+            type: 'button',
+            sub_type: 'url',
+            index: '0',
+            parameters: [{ type: 'text', text: codigo }]
+          }
+        ]
+      }
+    })
   });
 
   if (!response.ok) {
     const errText = await response.text();
-    console.error('[WhatsApp] API error:', response.status, errText);
+    console.error('[WhatsApp] Meta API error:', response.status, errText);
     throw new Error('Error al enviar WhatsApp');
   }
 
@@ -67,6 +94,11 @@ export async function envioCodigoWhatsApp(telefono: string): Promise<{ message: 
     codigoHash: await hashCodigo(codigo),
     expiresAt: new Date(Date.now() + CODIGO_EXPIRA_MINUTOS * 60 * 1000)
   });
+
+  // Enviar también por email si se proporcionó (fire-and-forget)
+  if (email?.trim()) {
+    void enviarCodigoOtpEmail(email.trim(), codigo);
+  }
 
   return { message: 'Código enviado por WhatsApp' };
 }

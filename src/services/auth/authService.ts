@@ -65,6 +65,7 @@ export interface AuthResponse {
     habilitado2FA?: boolean;
     aceptaTerminos?: boolean;
     aceptaConsentimiento?: boolean;
+    firstAppointment?: boolean;
   };
 }
 
@@ -140,6 +141,7 @@ export class AuthService {
       userResponse.habilitado2FA = configSeguridad?.autenticacionDosFactores ?? false;
       userResponse.aceptaTerminos = configSeguridad?.aceptaTerminos ?? false;
       userResponse.aceptaConsentimiento = configSeguridad?.aceptaConsentimiento ?? false;
+      userResponse.firstAppointment = (user as IPaciente).firstAppointment ?? false;
     }
 
     if (userRole === UserRole.ADMINISTRATIVO && 'cargo' in user) {
@@ -211,6 +213,10 @@ export class AuthService {
       if (!isNaN(d.getTime())) fechaNacimientoParsed = d;
     }
 
+    const generosValidos = ['masculino', 'femenino', 'no-binario', 'otro', 'prefiero-no-decir'];
+    const generoNormalizado = genero ? genero.toLowerCase() as typeof genero : undefined;
+    const generoFinal = generoNormalizado && generosValidos.includes(generoNormalizado) ? generoNormalizado : undefined;
+
     const nuevoPaciente = new Paciente({
       nombre,
       apellido,
@@ -218,7 +224,7 @@ export class AuthService {
       password,
       telefono: telefono?.trim() || undefined,
       ...(fechaNacimientoParsed && { fechaNacimiento: fechaNacimientoParsed }),
-      ...(genero && { genero }),
+      ...(generoFinal && { genero: generoFinal }),
       acudiente:
         acudiente?.nombre?.trim() && acudiente?.parentesco?.trim()
           ? {
@@ -262,7 +268,8 @@ export class AuthService {
       telefono: nuevoPaciente.telefono,
       habilitado2FA: configSeguridad?.autenticacionDosFactores ?? false,
       aceptaTerminos: configSeguridad?.aceptaTerminos ?? false,
-      aceptaConsentimiento: configSeguridad?.aceptaConsentimiento ?? false
+      aceptaConsentimiento: configSeguridad?.aceptaConsentimiento ?? false,
+      firstAppointment: false
     };
 
     return {
