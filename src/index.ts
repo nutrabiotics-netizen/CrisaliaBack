@@ -308,7 +308,102 @@ app.get("/api/health", (_req, res) => {
 
 // Ruta raíz para evitar 404
 app.get("/", (_req, res) => {
-  res.json({ status: "OK", message: "CRISALIA API está funcionando" });
+  res.send(`<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Crisalia API</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%);
+      font-family: 'Segoe UI', sans-serif;
+      color: white;
+    }
+    .card {
+      text-align: center;
+      padding: 56px 64px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 24px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+      max-width: 480px;
+      width: 90%;
+    }
+    .pulse {
+      width: 72px;
+      height: 72px;
+      background: rgba(34,197,94,0.15);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 28px;
+      animation: pulse 2s infinite;
+    }
+    .pulse svg { width: 36px; height: 36px; }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+      50% { box-shadow: 0 0 0 16px rgba(34,197,94,0); }
+    }
+    h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; }
+    .subtitle { font-size: 1rem; color: rgba(255,255,255,0.5); margin-bottom: 36px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(34,197,94,0.15);
+      border: 1px solid rgba(34,197,94,0.3);
+      color: #4ade80;
+      padding: 10px 24px;
+      border-radius: 999px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 36px;
+    }
+    .dot { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; animation: blink 1.2s infinite; }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .info { display: flex; flex-direction: column; gap: 10px; }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 10px;
+      font-size: 0.875rem;
+    }
+    .info-row span:first-child { color: rgba(255,255,255,0.4); }
+    .info-row span:last-child { font-weight: 600; color: rgba(255,255,255,0.9); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="pulse">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+    </div>
+    <h1>Crisalia API</h1>
+    <p class="subtitle">Backend de la plataforma de salud Nutrabiotics</p>
+    <div class="badge">
+      <span class="dot"></span>
+      Todos los sistemas operativos
+    </div>
+    <div class="info">
+      <div class="info-row"><span>Estado</span><span>✅ Online</span></div>
+      <div class="info-row"><span>Entorno</span><span>${process.env.NODE_ENV || 'development'}</span></div>
+      <div class="info-row"><span>Versión</span><span>v1.0.0</span></div>
+    </div>
+  </div>
+</body>
+</html>`);
 });
 
 // Manejo de errores

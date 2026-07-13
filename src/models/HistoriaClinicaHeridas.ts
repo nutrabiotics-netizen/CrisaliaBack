@@ -1,12 +1,15 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from "mongoose";
 
 // Convierte cualquier valor a boolean antes del cast de Mongoose.
 // Necesario porque la IA puede devolver "Sí", "sí", "true", 1, etc.
 const toBool = (v: any): boolean => {
-  if (typeof v === 'boolean') return v;
-  if (typeof v === 'number') return v !== 0;
-  const s = String(v).toLowerCase().replace(/[^a-z0-9]/g, '').trim();
-  return s === 'true' || s === '1' || s === 'si' || s === 'yes';
+  if (typeof v === "boolean") return v;
+  if (typeof v === "number") return v !== 0;
+  const s = String(v)
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "")
+    .trim();
+  return s === "true" || s === "1" || s === "si" || s === "yes";
 };
 
 /**
@@ -63,8 +66,16 @@ export interface IHistoriaClinicaHeridas extends Document {
     quirurgicos?: string[];
     traumaticos?: string;
     alergicos?: string[];
-    farmacologicos?: Array<{ medicamento: string; dosis?: string; frecuencia?: string }>;
-    tabaquismo?: { actual?: boolean; exfumador?: boolean; paquetesAnio?: number };
+    farmacologicos?: Array<{
+      medicamento: string;
+      dosis?: string;
+      frecuencia?: string;
+    }>;
+    tabaquismo?: {
+      actual?: boolean;
+      exfumador?: boolean;
+      paquetesAnio?: number;
+    };
     alcohol?: string;
     familiares?: string[];
   };
@@ -81,7 +92,7 @@ export interface IHistoriaClinicaHeridas extends Document {
     };
     riesgoCardiovascularAsociado?: string[];
     riesgoVascular?: {
-      pulsos?: string;          // libre — texto descriptivo
+      pulsos?: string; // libre — texto descriptivo
       llenadoCapilarSeg?: string;
       ITBIzquierdo?: number;
       ITBDerecho?: number;
@@ -109,7 +120,17 @@ export interface IHistoriaClinicaHeridas extends Document {
 
   // 7. Valoración especializada de la herida
   valoracionEspecializada?: {
-    diagnosticoHerida?: 'venosa' | 'arterial' | 'mixta' | 'pie_diabetico' | 'lesion_por_presion' | 'quirurgica' | 'traumatica' | 'quemadura' | 'oncologica' | 'otra';
+    diagnosticoHerida?:
+      | "venosa"
+      | "arterial"
+      | "mixta"
+      | "pie_diabetico"
+      | "lesion_por_presion"
+      | "quirurgica"
+      | "traumatica"
+      | "quemadura"
+      | "oncologica"
+      | "otra";
     diagnosticoHeridaOtra?: string;
     localizacionAnatomica?: string;
     tiempoEvolucion?: string;
@@ -132,10 +153,18 @@ export interface IHistoriaClinicaHeridas extends Document {
       necrosisPct?: number;
       epitelizacionPct?: number;
     };
-    exudado?: { cantidad?: 'ausente' | 'escaso' | 'moderado' | 'abundante'; tipo?: 'seroso' | 'serosanguinolento' | 'purulento' | 'hematico'; color?: string };
-    olor?: 'ausente' | 'leve' | 'moderado' | 'fetido';
+    exudado?: {
+      cantidad?: "ausente" | "escaso" | "moderado" | "abundante";
+      tipo?: "seroso" | "serosanguinolento" | "purulento" | "hematico";
+      color?: string;
+    };
+    olor?: "ausente" | "leve" | "moderado" | "fetido";
     dolorEVA?: { curacion?: number; reposo?: number; nota?: string };
-    infeccion?: { signos?: string[]; celulitis?: boolean; crepitacion?: boolean };
+    infeccion?: {
+      signos?: string[];
+      celulitis?: boolean;
+      crepitacion?: boolean;
+    };
     pielPerilesional?: string[];
   };
 
@@ -146,7 +175,14 @@ export interface IHistoriaClinicaHeridas extends Document {
     PUSHBasal?: number;
     EVADolor?: number;
     ITBIzquierdo?: number;
-    lesionPorPresion?: 'I' | 'II' | 'III' | 'IV' | 'no_clasificable' | 'lesion_profunda' | null;
+    lesionPorPresion?:
+      | "I"
+      | "II"
+      | "III"
+      | "IV"
+      | "no_clasificable"
+      | "lesion_profunda"
+      | null;
     CEAPVenosa?: string | null;
     rutherfordArterial?: string | null;
   };
@@ -163,10 +199,19 @@ export interface IHistoriaClinicaHeridas extends Document {
   planManejo?: {
     limpieza?: string[];
     desbridamiento?: string[];
-    apositos?: { primario?: string; secundario?: string; frecuenciaCambio?: string };
+    apositos?: {
+      primario?: string;
+      secundario?: string;
+      frecuenciaCambio?: string;
+    };
     descargaPresion?: string;
     compresion?: string;
-    antibiotico?: { indicado?: boolean; esquema?: string; cultivoSolicitado?: boolean; tecnica?: string };
+    antibiotico?: {
+      indicado?: boolean;
+      esquema?: string;
+      cultivoSolicitado?: boolean;
+      tecnica?: string;
+    };
     remisiones?: string[];
     paraclinicosSolicitados?: string[];
     controlSiguiente?: string;
@@ -181,7 +226,7 @@ export interface IHistoriaClinicaHeridas extends Document {
     hora?: string;
     proximoControl?: string;
     incapacidadDias?: number;
-    evolucion?: 'Mejoría' | 'Igual' | 'Empeoramiento';
+    evolucion?: "Mejoría" | "Igual" | "Empeoramiento";
     fotografiaSeguimiento?: boolean;
     medidasActuales?: {
       longitudCm?: number;
@@ -209,9 +254,10 @@ export interface IHistoriaClinicaHeridas extends Document {
 
   // Auditoría / estado
   creadoPor?: mongoose.Types.ObjectId;
-  creadoPorRol?: 'Medico' | 'Administrativo';
+  creadoPorRol?: "Medico" | "Administrativo";
   actualizadoPor?: mongoose.Types.ObjectId;
   pdfUrl?: string;
+  pdfResumenUrl?: string;
   activo: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -219,9 +265,13 @@ export interface IHistoriaClinicaHeridas extends Document {
 
 const HistoriaClinicaHeridasSchema = new Schema<IHistoriaClinicaHeridas>(
   {
-    pacienteId: { type: Schema.Types.ObjectId, ref: 'Paciente', required: true },
-    medicoId:   { type: Schema.Types.ObjectId, ref: 'Medico',   required: true },
-    citaId:     { type: Schema.Types.ObjectId, ref: 'Cita',     required: true },
+    pacienteId: {
+      type: Schema.Types.ObjectId,
+      ref: "Paciente",
+      required: true,
+    },
+    medicoId: { type: Schema.Types.ObjectId, ref: "Medico", required: true },
+    citaId: { type: Schema.Types.ObjectId, ref: "Cita", required: true },
     fechaRegistro: { type: Date, default: Date.now },
 
     identificacion: {
@@ -234,58 +284,107 @@ const HistoriaClinicaHeridasSchema = new Schema<IHistoriaClinicaHeridas>(
       direccion: String,
       telefono: String,
       contactoEmergencia: String,
-      consentimientoFotografico: Boolean
+      consentimientoFotografico: Boolean,
     },
 
-    motivoConsulta:  String,
+    motivoConsulta: String,
     enfermedadActual: String,
 
     antecedentes: {
-      patologicos:  [String],
-      quirurgicos:  [String],
-      traumaticos:  String,
-      alergicos:    [String],
-      farmacologicos: [{ medicamento: String, dosis: String, frecuencia: String }],
-      tabaquismo:   { actual: { type: Boolean, set: toBool }, exfumador: { type: Boolean, set: toBool }, paquetesAnio: Number },
-      alcohol:      String,
-      familiares:   [String]
+      patologicos: [String],
+      quirurgicos: [String],
+      traumaticos: String,
+      alergicos: [String],
+      farmacologicos: [
+        { medicamento: String, dosis: String, frecuencia: String },
+      ],
+      tabaquismo: {
+        actual: { type: Boolean, set: toBool },
+        exfumador: { type: Boolean, set: toBool },
+        paquetesAnio: Number,
+      },
+      alcohol: String,
+      familiares: [String],
     },
 
     valoracionRiesgoCicatrizacion: {
       estadoNutricional: {
-        pesoKg: Number, tallaCm: Number, imc: Number,
-        perdidaRecientePeso: { type: Boolean, set: toBool }, albumina: String, hemoglobina: String
+        pesoKg: Number,
+        tallaCm: Number,
+        imc: Number,
+        perdidaRecientePeso: { type: Boolean, set: toBool },
+        albumina: String,
+        hemoglobina: String,
       },
       riesgoCardiovascularAsociado: [String],
       riesgoVascular: {
-        pulsos: String, llenadoCapilarSeg: String,
-        ITBIzquierdo: Number, ITBDerecho: Number, interpretacion: String
+        pulsos: String,
+        llenadoCapilarSeg: String,
+        ITBIzquierdo: Number,
+        ITBDerecho: Number,
+        interpretacion: String,
       },
-      controlMetabolico: { HbA1c: String, glicemiaAyunas: String, interpretacion: String }
+      controlMetabolico: {
+        HbA1c: String,
+        glicemiaAyunas: String,
+        interpretacion: String,
+      },
     },
 
     examenFisico: {
-      signosVitales: { TA: String, FC: Number, FR: Number, temperaturaC: Number, SpO2pct: Number, glicemiaCapilar: Number },
-      estadoGeneral: String
+      signosVitales: {
+        TA: String,
+        FC: Number,
+        FR: Number,
+        temperaturaC: Number,
+        SpO2pct: Number,
+        glicemiaCapilar: Number,
+      },
+      estadoGeneral: String,
     },
 
     valoracionEspecializada: {
-      diagnosticoHerida: { type: String, enum: ['venosa','arterial','mixta','pie_diabetico','lesion_por_presion','quirurgica','traumatica','quemadura','oncologica','otra'] },
+      diagnosticoHerida: {
+        type: String,
+        enum: [
+          "venosa",
+          "arterial",
+          "mixta",
+          "pie_diabetico",
+          "lesion_por_presion",
+          "quirurgica",
+          "traumatica",
+          "quemadura",
+          "oncologica",
+          "otra",
+        ],
+      },
       diagnosticoHeridaOtra: String,
       localizacionAnatomica: String,
       tiempoEvolucion: String,
-      numeroHeridas: Number
+      numeroHeridas: Number,
     },
 
     caracterizacionHerida: {
-      medidas: { longitudCm: Number, anchuraCm: Number, profundidadCm: Number, socavamientoCm: Number, areaCm2: Number },
+      medidas: {
+        longitudCm: Number,
+        anchuraCm: Number,
+        profundidadCm: Number,
+        socavamientoCm: Number,
+        areaCm2: Number,
+      },
       bordes: [String],
-      lecho:  { granulacionPct: Number, esfaceloPct: Number, necrosisPct: Number, epitelizacionPct: Number },
+      lecho: {
+        granulacionPct: Number,
+        esfaceloPct: Number,
+        necrosisPct: Number,
+        epitelizacionPct: Number,
+      },
       exudado: { cantidad: String, tipo: String, color: String },
       olor: String,
       dolorEVA: { curacion: Number, reposo: Number, nota: String },
       infeccion: { signos: [String], celulitis: Boolean, crepitacion: Boolean },
-      pielPerilesional: [String]
+      pielPerilesional: [String],
     },
 
     clasificaciones: {
@@ -296,26 +395,35 @@ const HistoriaClinicaHeridasSchema = new Schema<IHistoriaClinicaHeridas>(
       ITBIzquierdo: Number,
       lesionPorPresion: String,
       CEAPVenosa: String,
-      rutherfordArterial: String
+      rutherfordArterial: String,
     },
 
     registroFotografico: {
       fotografiaInicial: { type: Boolean, set: toBool },
       consentimiento: { type: Boolean, set: toBool },
       codigoFotografia: String,
-      urls: [String]
+      urls: [String],
     },
 
     planManejo: {
       limpieza: [String],
       desbridamiento: [String],
-      apositos: { primario: String, secundario: String, frecuenciaCambio: String },
+      apositos: {
+        primario: String,
+        secundario: String,
+        frecuenciaCambio: String,
+      },
       descargaPresion: String,
       compresion: String,
-      antibiotico: { indicado: { type: Boolean, set: toBool }, esquema: String, cultivoSolicitado: { type: Boolean, set: toBool }, tecnica: String },
+      antibiotico: {
+        indicado: { type: Boolean, set: toBool },
+        esquema: String,
+        cultivoSolicitado: { type: Boolean, set: toBool },
+        tecnica: String,
+      },
       remisiones: [String],
       paraclinicosSolicitados: [String],
-      controlSiguiente: String
+      controlSiguiente: String,
     },
 
     educacionPaciente: [String],
@@ -325,36 +433,46 @@ const HistoriaClinicaHeridasSchema = new Schema<IHistoriaClinicaHeridas>(
       hora: String,
       proximoControl: String,
       incapacidadDias: Number,
-      evolucion: { type: String, enum: ['Mejoría', 'Igual', 'Empeoramiento'] },
+      evolucion: { type: String, enum: ["Mejoría", "Igual", "Empeoramiento"] },
       fotografiaSeguimiento: { type: Boolean, set: toBool },
       medidasActuales: {
         longitudCm: Number,
         anchuraCm: Number,
         profundidadCm: Number,
-        areaCm2: Number
+        areaCm2: Number,
       },
       conducta: String,
       indicacionesSeguimiento: [String],
-      documentosEnPortal: [String]
+      documentosEnPortal: [String],
     },
 
     escalasAplicadas: {
-      wagner: Number, PEDIS: String, PUSHBasal: Number, ITB: Number, EVA: Number,
-      braden: String, norton: String, CEAP: String, MNA: String
+      wagner: Number,
+      PEDIS: String,
+      PUSHBasal: Number,
+      ITB: Number,
+      EVA: Number,
+      braden: String,
+      norton: String,
+      CEAP: String,
+      MNA: String,
     },
 
-    creadoPor: { type: Schema.Types.ObjectId, ref: 'User' },
-    creadoPorRol: { type: String, enum: ['Medico', 'Administrativo'] },
-    actualizadoPor: { type: Schema.Types.ObjectId, ref: 'User' },
+    creadoPor: { type: Schema.Types.ObjectId, ref: "User" },
+    creadoPorRol: { type: String, enum: ["Medico", "Administrativo"] },
+    actualizadoPor: { type: Schema.Types.ObjectId, ref: "User" },
     pdfUrl: String,
     pdfResumenUrl: String,
-    activo: { type: Boolean, default: true, index: true }
+    activo: { type: Boolean, default: true, index: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 HistoriaClinicaHeridasSchema.index({ citaId: 1 }, { unique: true });
 HistoriaClinicaHeridasSchema.index({ pacienteId: 1, fechaRegistro: -1 });
 HistoriaClinicaHeridasSchema.index({ medicoId: 1, fechaRegistro: -1 });
 
-export default mongoose.model<IHistoriaClinicaHeridas>('HistoriaClinicaHeridas', HistoriaClinicaHeridasSchema);
+export default mongoose.model<IHistoriaClinicaHeridas>(
+  "HistoriaClinicaHeridas",
+  HistoriaClinicaHeridasSchema,
+);
