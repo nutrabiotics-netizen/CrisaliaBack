@@ -200,6 +200,43 @@ export const guardarConfiguracion = async (req: AuthRequest, res: Response): Pro
       });
     }
 
+    // Sincronizar checkboxes 24h/2h con ConfiguracionRecordatorios
+    if (notificacionesAgendamiento) {
+      try {
+        const ConfiguracionRecordatorios = (await import('../../models/ConfiguracionRecordatorios')).default;
+        const configRec = await ConfiguracionRecordatorios.findOne({ medicoId }).lean();
+        const existentes: any[] = configRec?.recordatorios ?? [];
+
+        // Quitar los recordatorios fijos de 24h y 2h (los gestionamos desde los checkboxes)
+        const sinFijos = existentes.filter((r: any) =>
+          !(r.intervalo === 24 && r.unidad === 'horas') &&
+          !(r.intervalo === 2 && r.unidad === 'horas')
+        );
+
+        const nuevos = [...sinFijos];
+        if (notificacionesAgendamiento.recordatorio24Horas) {
+          nuevos.push({ intervalo: 24, unidad: 'horas', activo: true });
+        }
+        if (notificacionesAgendamiento.recordatorio2Horas) {
+          nuevos.push({ intervalo: 2, unidad: 'horas', activo: true });
+        }
+
+        // Deduplicar por intervalo+unidad — evita enviar dos veces si el médico
+        // puso manualmente 24h Y tiene el checkbox marcado
+        const dedup = nuevos.filter((r, i, arr) =>
+          arr.findIndex(x => x.intervalo === r.intervalo && x.unidad === r.unidad) === i
+        );
+
+        await ConfiguracionRecordatorios.findOneAndUpdate(
+          { medicoId },
+          { $set: { recordatorios: dedup } },
+          { upsert: true }
+        );
+      } catch (e) {
+        console.warn('[guardarConfiguracion] Error sincronizando recordatorios:', e);
+      }
+    }
+
     res.json({
       success: true,
       message: 'Configuración de agenda guardada exitosamente',

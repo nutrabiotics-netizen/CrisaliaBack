@@ -28,6 +28,7 @@ import iaEntrenadaRoutes from './ia-entrenada';
 import chatRoutes from './chat';
 import cie10Routes from './cie10';
 import wearablesRoutes from './wearables';
+import recordatoriosRoutes from './recordatorios';
 
 const router = Router();
 
@@ -61,6 +62,7 @@ router.use('/ia-entrenada', iaEntrenadaRoutes);
 router.use('/chat', chatRoutes);
 router.use('/cie10', cie10Routes);
 router.use('/wearables', wearablesRoutes);
+router.use('/recordatorios', recordatoriosRoutes);
 
 export default router;
 

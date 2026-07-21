@@ -19,6 +19,8 @@ export interface ICita extends Document {
   notifRecordatorio24hAt?: Date;
   /** Marca de envío de recordatorio WhatsApp (~2 h antes de la cita) */
   notifRecordatorio2hAt?: Date;
+  /** Claves de recordatorios ya enviados (ej. rec_<id>) para evitar duplicados */
+  notificacionesEnviadas?: string[];
   creadoPor?: mongoose.Types.ObjectId;
   creadoPorRol?: string;
   actualizadoPor?: mongoose.Types.ObjectId;
@@ -87,6 +89,7 @@ const CitaSchema = new Schema<ICita>(
     pdfResumenUrl: { type: String, trim: true },
     notifRecordatorio24hAt: { type: Date },
     notifRecordatorio2hAt: { type: Date },
+    notificacionesEnviadas: { type: [String], default: [] },
     motivoCancelacion: {
       type: String,
       trim: true

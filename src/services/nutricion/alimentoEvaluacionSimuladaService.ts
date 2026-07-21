@@ -8,6 +8,18 @@ export interface PerfilParaEvaluacionAlimento {
   eps?: string;
   zonasDolor?: string[];
   edadAnios?: number;
+  resumenIA?: string;
+  formulaMedica?: {
+    medicamentos?: string[];
+    diagnostico?: string;
+    indicaciones?: string;
+  };
+  historiaClinica?: {
+    motivoConsulta?: string;
+    diagnosticos?: any;
+    planTratamiento?: string;
+    antecedentes?: any;
+  };
 }
 
 export interface AlimentoChatMensaje {

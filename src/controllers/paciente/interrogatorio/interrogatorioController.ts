@@ -110,6 +110,8 @@ export const obtenerInterrogatorios = async (req: AuthRequest, res: Response): P
         tipo: i.tipo,
         estado: i.estado,
         progreso: i.progreso,
+        analisisIA: i.analisisIA,
+        respuestas: i.respuestas,
         createdAt: i.createdAt,
         updatedAt: i.updatedAt
       }))

@@ -79,9 +79,29 @@ export const analizarEvaluacionAlimento = async (req: AuthRequest, res: Response
       return;
     }
 
-    const paciente = await Paciente.findById(pacienteId)
-      .select('nombre apellido tipoDocumento numeroDocumento fechaNacimiento sexoBiologico eps zonasDolor')
-      .lean();
+    const [paciente, ultimaFormula, ultimaHC] = await Promise.all([
+      Paciente.findById(pacienteId)
+        .select('nombre apellido tipoDocumento numeroDocumento fechaNacimiento sexoBiologico eps zonasDolor resumenIA')
+        .lean(),
+      (async () => {
+        try {
+          const FormulaMedica = (await import('../../models/FormulaMedica')).default;
+          return FormulaMedica.findOne({ pacienteId })
+            .sort({ createdAt: -1 })
+            .select('medicamentos diagnostico indicaciones')
+            .lean();
+        } catch { return null; }
+      })(),
+      (async () => {
+        try {
+          const HistoriaClinica = (await import('../../models/HistoriaClinica')).default;
+          return HistoriaClinica.findOne({ pacienteId })
+            .sort({ createdAt: -1 })
+            .select('motivoConsulta diagnosticos planTratamiento antecedentes')
+            .lean();
+        } catch { return null; }
+      })()
+    ]);
 
     if (!paciente) {
       res.status(404).json({ mensaje: 'Paciente no encontrado' });
@@ -105,7 +125,22 @@ export const analizarEvaluacionAlimento = async (req: AuthRequest, res: Response
         : undefined,
       sexoBiologico: paciente.sexoBiologico,
       eps: paciente.eps,
-      zonasDolor: paciente.zonasDolor
+      zonasDolor: paciente.zonasDolor,
+      resumenIA: (paciente as any).resumenIA?.texto,
+      formulaMedica: ultimaFormula ? {
+        medicamentos: ((ultimaFormula as any).medicamentos || [])
+          .slice(0, 10)
+          .map((m: any) => `${m.nombre || m.medicamento || ''} ${m.dosis || ''} ${m.frecuencia || ''}`.trim())
+          .filter(Boolean),
+        diagnostico: (ultimaFormula as any).diagnostico,
+        indicaciones: (ultimaFormula as any).indicaciones
+      } : undefined,
+      historiaClinica: ultimaHC ? {
+        motivoConsulta: (ultimaHC as any).motivoConsulta,
+        diagnosticos: (ultimaHC as any).diagnosticos,
+        planTratamiento: (ultimaHC as any).planTratamiento,
+        antecedentes: (ultimaHC as any).antecedentes
+      } : undefined
     };
 
     // 1) Recuperar la imagen desde S3 para mandársela a Bedrock.
