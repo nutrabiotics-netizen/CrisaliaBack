@@ -129,6 +129,8 @@ import externalRoutes from "./routes/external";
 import publicRoutes from "./routes/public/index";
 import cuidadorIARoutes from "./routes/paciente/cuidador-ia";
 // import { scheduleControlPreCitaJob } from './services/jobs/controlPreCitaJob';
+import { scheduleRecordatorioCitaJob } from './services/jobs/recordatorioCitaJob';
+import './models/ConfiguracionRecordatorios';
 // Fase 5
 import {
   crearLink,
@@ -182,6 +184,7 @@ app.use("/api/paciente/cuidador-ia", cuidadorIARoutes);
 // DESHABILITADO temporalmente: descomentar cuando se quiera reactivar el envío
 // automático de WhatsApps de pre-cita en producción.
 // scheduleControlPreCitaJob();
+scheduleRecordatorioCitaJob();
 
 // ─── Fase 5 — Captación médica ─────────────────────────────────────────────
 // Admin: links de captación y referidos
