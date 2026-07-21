@@ -16,15 +16,72 @@ import Cita from '../../models/Cita';
 import Paciente from '../../models/Paciente';
 import Medico from '../../models/Medico';
 import ConfiguracionRecordatorios, { IRecordatorio } from '../../models/ConfiguracionRecordatorios';
-import { enviarMensajeCitaPaciente } from '../notifications/citaWhatsAppNotifier';
 import { combineFechaCitaConHora } from '../../utils/citaFechaHora';
+import { normalizarTelefono } from '../whatsapp/whatsappService';
 import sgMail from '@sendgrid/mail';
 
 const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'nutrabiotics@mozartai.com.co';
 if (process.env.SENDGRID_API_KEY) sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
+const META_PHONE_NUMBER_ID = process.env.META_WHATSAPP_PHONE_NUMBER_ID || '';
+const META_ACCESS_TOKEN = process.env.META_WHATSAPP_ACCESS_TOKEN || '';
+const META_API_URL = `https://graph.facebook.com/v22.0/${META_PHONE_NUMBER_ID}/messages`;
+
+async function enviarRecordatorioMetaWP(params: {
+  telefono: string;
+  nombrePaciente: string;
+  nombreMedico: string;
+  especialidad: string;
+  fecha: string;
+  hora: string;
+  lugar: string;
+}): Promise<void> {
+  if (!META_ACCESS_TOKEN || !META_PHONE_NUMBER_ID) {
+    console.warn('[RecordatorioJob] META_WHATSAPP no configurado');
+    return;
+  }
+  const to = normalizarTelefono(params.telefono);
+  const body = {
+    messaging_product: 'whatsapp',
+    to,
+    type: 'template',
+    template: {
+      name: 'nutrabiotics_recordatorio_cita',
+      language: { code: 'en' },
+      components: [
+        {
+          type: 'header',
+          parameters: [{ type: 'image', image: { link: 'https://mozartimages-1.s3.us-east-1.amazonaws.com/Crisal-IA.PNG' } }]
+        },
+        {
+          type: 'body',
+          parameters: [
+            { type: 'text', text: 'Nutrabiotics' },
+            { type: 'text', text: params.nombrePaciente },
+            { type: 'text', text: params.nombreMedico },
+            { type: 'text', text: params.especialidad },
+            { type: 'text', text: params.fecha },
+            { type: 'text', text: params.hora },
+            { type: 'text', text: params.lugar }
+          ]
+        }
+      ]
+    }
+  };
+
+  const res = await fetch(META_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${META_ACCESS_TOKEN}` },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    console.error('[RecordatorioJob] Meta WP error:', res.status, err);
+  }
+}
+
 const INTERVALO_JOB_MS = 10 * 60 * 1000; // 10 minutos
-const TOLERANCIA_MS = 5 * 60 * 1000;     // ±5 min de tolerancia
+const TOLERANCIA_MS = 5 * 60 * 1000;      // ±5 min de tolerancia
 
 function toMs(intervalo: number, unidad: 'minutos' | 'horas' | 'dias'): number {
   if (unidad === 'minutos') return intervalo * 60 * 1000;
@@ -55,26 +112,47 @@ async function procesarRecordatorio(
   const inicio = new Date(ahora + ventanaMs - TOLERANCIA_MS);
   const fin = new Date(ahora + ventanaMs + TOLERANCIA_MS);
 
-  const citas = await Cita.find({
+  // La fecha se guarda como 00:00Z y la hora en campo separado.
+  // Buscamos por rango de días y luego filtramos por fecha+hora combinada.
+  const inicioDia = new Date(inicio);
+  inicioDia.setUTCHours(0, 0, 0, 0);
+  const finDia = new Date(fin);
+  finDia.setUTCHours(23, 59, 59, 999);
+
+  const citasDelDia = await Cita.find({
     medicoId,
     estado: { $in: ['pendiente', 'confirmada'] },
-    fecha: { $gte: inicio, $lte: fin }
+    fecha: { $gte: inicioDia, $lte: finDia }
   }).lean();
+
+  const citas = citasDelDia.filter(c => {
+    try {
+      const dt = combineFechaCitaConHora(new Date((c as any).fecha), (c as any).hora);
+      return dt >= inicio && dt <= fin;
+    } catch { return false; }
+  });
 
   if (!citas.length) return;
 
-  const medico = await Medico.findById(medicoId).select('nombre apellido').lean() as any;
+  const medico = await Medico.findById(medicoId)
+    .select('nombre apellido especialidad direccionConsultorioHabilitado direccionVivienda')
+    .lean() as any;
   const nombreMed = medico ? `${medico.nombre ?? ''} ${medico.apellido ?? ''}`.trim() : 'tu médico';
+  const especialidadMed = medico?.especialidad || 'Medicina Funcional';
+  const lugarCita = medico?.direccionConsultorioHabilitado || medico?.direccionVivienda || 'Consulta virtual';
   const clave = claveRecordatorio(String(rec._id));
 
   for (const cita of citas) {
-    // Verificar que no se haya enviado ya este recordatorio para esta cita
     const yaEnviado = (cita as any).notificacionesEnviadas?.includes(clave);
     if (yaEnviado) continue;
 
     const paciente = await Paciente.findById(cita.pacienteId).select('nombre telefono email').lean() as any;
     if (!paciente?.telefono && !paciente?.email) continue;
 
+    // Formatear fecha y hora para el template
+    const dt = combineFechaCitaConHora(new Date(cita.fecha), cita.hora);
+    const fechaTemplate = dt.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: '2-digit' });
+    const horaTemplate = dt.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true });
     const fechaFmt = fmtFecha(new Date(cita.fecha), cita.hora);
     const tiempoTexto = rec.unidad === 'minutos'
       ? `${rec.intervalo} minuto${rec.intervalo !== 1 ? 's' : ''}`
@@ -82,12 +160,22 @@ async function procesarRecordatorio(
         ? `${rec.intervalo} hora${rec.intervalo !== 1 ? 's' : ''}`
         : `${rec.intervalo} día${rec.intervalo !== 1 ? 's' : ''}`;
 
-    const msg = `Recordatorio Crisal-iA: Hola${paciente.nombre ? ` ${paciente.nombre}` : ''}, tu cita con ${nombreMed} es en ${tiempoTexto} (${fechaFmt}). Modalidad: ${cita.modalidad}. ¡Te esperamos!`;
-
     try {
-      // Enviar WP
+      // Enviar WP via template Meta
       if (paciente.telefono) {
-        await enviarMensajeCitaPaciente(paciente.telefono, msg);
+        await enviarRecordatorioMetaWP({
+          telefono: paciente.telefono,
+          nombrePaciente: paciente.nombre || 'Paciente',
+          nombreMedico: nombreMed,
+          especialidad: especialidadMed,
+          fecha: fechaTemplate,
+          hora: horaTemplate,
+          lugar: cita.modalidad === 'virtual'
+            ? ((cita as any).meetingId
+                ? `${process.env.FRONTEND_URL || 'https://app.nutrabiotics.mozartia.com'}/paciente/teleconsulta/${(cita as any).meetingId}`
+                : 'Consulta virtual')
+            : lugarCita
+        });
       }
 
       // Enviar email
@@ -120,7 +208,7 @@ async function procesarRecordatorio(
   }
 }
 
-async function runRecordatorioJob(): Promise<void> {
+export async function runRecordatorioJob(): Promise<void> {
   const configs = await ConfiguracionRecordatorios.find({}).lean();
   if (!configs.length) return;
 

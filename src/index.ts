@@ -186,6 +186,7 @@ app.use("/api/paciente/cuidador-ia", cuidadorIARoutes);
 // scheduleControlPreCitaJob();
 scheduleRecordatorioCitaJob();
 
+
 // ─── Fase 5 — Captación médica ─────────────────────────────────────────────
 // Admin: links de captación y referidos
 app.post(

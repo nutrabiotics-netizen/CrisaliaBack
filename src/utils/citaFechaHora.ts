@@ -12,15 +12,17 @@ export function horaA24Horas(hora: string): string {
   return `${h.toString().padStart(2, '0')}:${m}`;
 }
 
-/** Combina la fecha de la cita (día calendario local) con la hora del turno. */
+/** Combina la fecha de la cita (día calendario UTC) con la hora del turno en hora Colombia (UTC-5). */
 export function combineFechaCitaConHora(fecha: Date, hora: string): Date {
   const d = new Date(fecha);
-  const y = d.getFullYear();
-  const mo = d.getMonth();
-  const day = d.getDate();
+  // Usar UTC para extraer el día (la fecha se guarda como 00:00 UTC)
+  const y = d.getUTCFullYear();
+  const mo = d.getUTCMonth();
+  const day = d.getUTCDate();
   const h24 = horaA24Horas(hora);
   const parts = h24.split(':');
   const hh = parseInt(parts[0], 10) || 0;
   const mm = parseInt(parts[1], 10) || 0;
-  return new Date(y, mo, day, hh, mm, 0, 0);
+  // La hora de la cita está en hora Colombia (UTC-5), convertir a UTC sumando 5 horas
+  return new Date(Date.UTC(y, mo, day, hh + 5, mm, 0, 0));
 }

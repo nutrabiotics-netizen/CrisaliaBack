@@ -154,10 +154,12 @@ export const getProximaCita = async (req: ExternalPhoneRequest, res: Response): 
     const filtro = req.externalRole === 'paciente'
       ? { pacienteId: subjectId }
       : { medicoId: subjectId };
+    const inicioDiaHoy = new Date();
+    inicioDiaHoy.setUTCHours(0, 0, 0, 0);
     const cita = await Cita.findOne({
       ...filtro,
-      estado: { $in: ['pendiente', 'confirmada', 'en_curso'] },
-      fecha: { $gte: new Date() }
+      estado: { $in: ['pendiente', 'confirmada', 'en_espera', 'en_consulta'] },
+      fecha: { $gte: inicioDiaHoy }
     })
       .populate('medicoId', 'nombre apellido especialidad telefono')
       .populate('pacienteId', 'nombre apellido telefono')
