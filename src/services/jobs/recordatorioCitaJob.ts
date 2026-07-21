@@ -80,8 +80,8 @@ async function enviarRecordatorioMetaWP(params: {
   }
 }
 
-const INTERVALO_JOB_MS = 10 * 60 * 1000; // 10 minutos
-const TOLERANCIA_MS = 5 * 60 * 1000;      // ±5 min de tolerancia
+const INTERVALO_JOB_MS = 5 * 60 * 1000;  // 5 minutos
+const TOLERANCIA_MS = 7 * 60 * 1000;      // ±7 min — cubre el intervalo del job (10 min)
 
 function toMs(intervalo: number, unidad: 'minutos' | 'horas' | 'dias'): number {
   if (unidad === 'minutos') return intervalo * 60 * 1000;
