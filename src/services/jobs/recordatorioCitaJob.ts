@@ -150,10 +150,8 @@ async function procesarRecordatorio(
     if (!paciente?.telefono && !paciente?.email) continue;
 
     // Formatear fecha y hora para el template
-    // Usar la fecha UTC y la hora del campo cita.hora directamente (ya está en hora Colombia)
-    const dt = combineFechaCitaConHora(new Date(cita.fecha), cita.hora);
     const fechaTemplate = new Date(cita.fecha).toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'UTC' });
-    const horaTemplate = String(cita.hora); // usar directamente la hora guardada en la cita
+    const horaTemplate = String(cita.hora);
     const fechaFmt = fmtFecha(new Date(cita.fecha), cita.hora);
     const tiempoTexto = rec.unidad === 'minutos'
       ? `${rec.intervalo} minuto${rec.intervalo !== 1 ? 's' : ''}`
