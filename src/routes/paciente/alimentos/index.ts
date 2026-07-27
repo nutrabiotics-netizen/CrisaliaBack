@@ -5,7 +5,11 @@ import { UserRole } from '../../../types';
 import {
   subirImagenEvaluacionAlimento,
   analizarEvaluacionAlimento,
-  listarHistorialEvaluaciones
+  listarHistorialEvaluaciones,
+  obtenerEvaluacionPorId,
+  extraerAlimentosImagen,
+  generarReportePlatoHandler,
+  guardarReportePlato,
 } from '../../../controllers/paciente/alimentoEvaluacionController';
 
 const router = Router();
@@ -37,8 +41,12 @@ function uploadImagenMiddleware(req: Request, res: Response, next: NextFunction)
 
 router.use(authenticate, authorize(UserRole.PACIENTE));
 
-router.post('/subir', uploadImagenMiddleware, subirImagenEvaluacionAlimento);
-router.post('/analizar', analizarEvaluacionAlimento);
 router.get('/historial', listarHistorialEvaluaciones);
+router.post('/subir', uploadImagenMiddleware, subirImagenEvaluacionAlimento);
+router.post('/extraer', extraerAlimentosImagen);
+router.post('/reporte', generarReportePlatoHandler);
+router.post('/guardar', guardarReportePlato);
+router.post('/analizar', analizarEvaluacionAlimento);
+router.get('/:id', obtenerEvaluacionPorId);
 
 export default router;

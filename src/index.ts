@@ -27,14 +27,25 @@ dotenv.config();
 
 const app = express();
 
+// Necesario para que express-rate-limit lea X-Forwarded-For correctamente
+// detrás de proxies (Vercel, Railway, ngrok, dev tunnels).
+app.set('trust proxy', 1);
+
 // ─── CORS (debe ir antes que rate limiting para que los preflights OPTIONS pasen) ─
 app.use(
   cors({
-    origin: [
-      "https://nutrabiotics.mozartai.com.co",
-      "https://app.nutrabiotics.mozartia.com",
-      "http://localhost:5173",
-    ],
+    origin: (origin, callback) => {
+      const allowed = [
+        "https://nutrabiotics.mozartai.com.co",
+        "https://app.nutrabiotics.mozartia.com",
+        "http://localhost:5173",
+      ];
+      if (!origin) return callback(null, true);
+      if (allowed.includes(origin)) return callback(null, true);
+      // Permitir cualquier subdominio de devtunnels.ms en desarrollo
+      if (process.env.NODE_ENV !== 'production' && origin.endsWith('.devtunnels.ms')) return callback(null, true);
+      callback(new Error(`CORS bloqueado: ${origin}`));
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -131,6 +142,7 @@ import cuidadorIARoutes from "./routes/paciente/cuidador-ia";
 // import { scheduleControlPreCitaJob } from './services/jobs/controlPreCitaJob';
 import { scheduleRecordatorioCitaJob } from './services/jobs/recordatorioCitaJob';
 import './models/ConfiguracionRecordatorios';
+// import './models/ConsultaRapida';
 // Fase 5
 import {
   crearLink,

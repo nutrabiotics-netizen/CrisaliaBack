@@ -370,3 +370,313 @@ export async function analizarAlimentoConBedrock(
     modeloIA: MODEL_ID
   };
 }
+
+// ─── Extracción estructurada de alimentos ────────────────────────────────────
+
+export type NivelConfianza   = 'alta' | 'media' | 'baja';
+export type PorcionEstimada  = 'Porción pequeña' | 'Porción media' | 'Porción alta';
+
+export interface AlimentoDetectado {
+  nombre:    string;
+  categoria: 'Proteína' | 'Carbohidrato' | 'Vegetales' | 'Grasa saludable' | 'Fruta' | 'Lácteo' | 'Otro';
+  porcion:   PorcionEstimada;
+}
+
+export interface ExtraerAlimentosResult {
+  alimentos:  AlimentoDetectado[];
+  confianza:  NivelConfianza;
+  modeloIA:   string;
+  simulado:   boolean;
+}
+
+function buildSystemPromptExtraer(): string {
+  return `Eres un asistente de nutrición de Crisalia. Tu única tarea es identificar y listar los alimentos visibles en la imagen de un plato de comida. Responde EXCLUSIVAMENTE con un objeto JSON válido, sin texto adicional, sin markdown, sin explicaciones.
+
+Formato exacto:
+{"alimentos":[{"nombre":"Pollo asado","categoria":"Proteína","porcion":"Porción pequeña"}],"confianza":"media"}
+
+Reglas:
+- "nombre": nombre común en español, sin tecnicismos.
+- "categoria": SOLO uno de: "Proteína", "Carbohidrato", "Vegetales", "Grasa saludable", "Fruta", "Lácteo", "Otro".
+- "porcion": SOLO uno de: "Porción pequeña", "Porción media", "Porción alta". Estimado visual.
+- "confianza": "alta" si imagen clara, "media" si hay dudas en algunos, "baja" si imagen confusa.
+- Máximo 10 alimentos. Solo lo claramente visible.
+- Si la imagen no es comida, devuelve {"alimentos":[],"confianza":"baja"}.`;
+}
+
+function parseExtraerRespuesta(raw: string): Omit<ExtraerAlimentosResult, 'modeloIA' | 'simulado'> | null {
+  if (!raw?.trim()) return null;
+  const stripped = raw.replace(/```(?:json)?\s*/gi, '').trim();
+  const start = stripped.indexOf('{');
+  const end   = stripped.lastIndexOf('}');
+  if (start < 0 || end <= start) return null;
+
+  try {
+    const parsed = JSON.parse(stripped.slice(start, end + 1));
+    if (!Array.isArray(parsed?.alimentos)) return null;
+
+    const CATEGORIAS = new Set(['Proteína','Carbohidrato','Vegetales','Grasa saludable','Fruta','Lácteo','Otro']);
+    const PORCIONES  = new Set(['Porción pequeña','Porción media','Porción alta']);
+    const CONFIANZAS = new Set(['alta','media','baja']);
+
+    const alimentos: AlimentoDetectado[] = parsed.alimentos
+      .filter((a: any) => typeof a?.nombre === 'string' && a.nombre.trim())
+      .slice(0, 10)
+      .map((a: any): AlimentoDetectado => ({
+        nombre:    a.nombre.trim(),
+        categoria: CATEGORIAS.has(a.categoria) ? a.categoria : 'Otro',
+        porcion:   PORCIONES.has(a.porcion)    ? a.porcion   : 'Porción media',
+      }));
+
+    const confianza: NivelConfianza = CONFIANZAS.has(parsed.confianza) ? parsed.confianza : 'media';
+    return { alimentos, confianza };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Extrae la lista estructurada de alimentos de una imagen de plato.
+ * Reutiliza el mismo cliente Bedrock y credenciales de analizarAlimentoConBedrock.
+ */
+export async function extraerAlimentosConBedrock(
+  imagenBuffer: Buffer,
+  mimeType: string
+): Promise<ExtraerAlimentosResult> {
+  const formato     = inferFormat(mimeType);
+  const imageBase64 = bytesToBase64(imagenBuffer);
+
+  const userBlocks: ContentBlock[] = [
+    {
+      image: {
+        format: formato,
+        source: { bytes: Buffer.from(imageBase64, 'base64') }
+      }
+    },
+    { text: 'Identifica todos los alimentos visibles en este plato y devuelve el JSON.' }
+  ];
+
+  const command = new ConverseCommand({
+    modelId: MODEL_ID,
+    system: [{ text: buildSystemPromptExtraer() }],
+    messages: [{ role: 'user', content: userBlocks }],
+    inferenceConfig: { maxTokens: 600, temperature: 0.2 }
+  });
+
+  try {
+    const resp      = await client.send(command);
+    const textBlock = resp.output?.message?.content?.find(c => c.text);
+    const raw       = textBlock?.text ?? '';
+    console.log('[ExtraerAlimentos] raw:', raw.slice(0, 400));
+
+    const parsed = parseExtraerRespuesta(raw);
+    if (!parsed || parsed.alimentos.length === 0) {
+      console.warn('[ExtraerAlimentos] respuesta vacía, usando simulado');
+      return { alimentos: [], confianza: 'baja', modeloIA: MODEL_ID, simulado: true };
+    }
+
+    return { ...parsed, modeloIA: MODEL_ID, simulado: false };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[ExtraerAlimentos] Bedrock falló:', msg);
+    return { alimentos: [], confianza: 'baja', modeloIA: 'simulado', simulado: true };
+  }
+}
+
+// ─── Reporte clínico del plato ────────────────────────────────────────────────
+
+export interface AjusteRecomendado {
+  tipo:  'aumentar' | 'reducir' | 'mantener' | 'confirmar';
+  texto: string;
+}
+
+export interface NutrienteRecomendado {
+  titulo: string;
+  desc:   string;
+}
+
+export interface AlertaEliminacion {
+  texto: string;
+}
+
+export interface ReportePlatoResult {
+  alineacion:          string;
+  alineacionDetalle:   string;
+  confianza:           NivelConfianza;
+  etDescripcion:       string;
+  etDietaEliminacion?: string;
+  etAlimentacionTerapeutica?: string;
+  alertasEliminacion:  AlertaEliminacion[];
+  puntosPositivos:     string[];
+  ajustes:             AjusteRecomendado[];
+  nutrientes:          NutrienteRecomendado[];
+  sugerenciaPractica:  string;
+  preguntaET:          string;
+  respuestaET:         string;
+  simulado:            boolean;
+}
+
+function buildPromptReporte(
+  descripcionPlato: string,
+  perfil: PerfilParaEvaluacionAlimento,
+  respuestaAgente: string
+): string {
+  return `Eres el asistente de nutrición de Crisalia. Debes generar un reporte estructurado en JSON basado en el análisis clínico del agente especialista.
+
+Responde EXCLUSIVAMENTE con un objeto JSON válido, sin texto adicional ni markdown.
+
+Formato exacto:
+{
+  "alineacion": "Alineación parcial con tu ET",
+  "alineacionDetalle": "Tiene buena fuente de proteína, pero podrías mejorar fibra y vegetales.",
+  "etDescripcion": "Tu médico definió una estrategia enfocada en...",
+  "etDietaEliminacion": "Revisar gluten, lácteos y azúcares refinados.",
+  "etAlimentacionTerapeutica": "Priorizar magnesio, fibra y vegetales verdes.",
+  "alertasEliminacion": [
+    {"texto": "Salsa o preparación mixta: confirma si contiene gluten o espesantes."}
+  ],
+  "puntosPositivos": [
+    "Aporta fuente de proteína",
+    "Preparación aparentemente baja en fritura"
+  ],
+  "ajustes": [
+    {"tipo": "aumentar", "texto": "Aumentar vegetales o fibra"},
+    {"tipo": "mantener", "texto": "Mantener proteína"},
+    {"tipo": "reducir",  "texto": "Reducir carbohidrato refinado"},
+    {"tipo": "confirmar","texto": "Confirmar salsa o gluten"}
+  ],
+  "nutrientes": [
+    {"titulo": "Más magnesio",     "desc": "Espinaca, semillas o almendras."},
+    {"titulo": "Más fibra",        "desc": "Vegetales verdes o ensalada."},
+    {"titulo": "Más color vegetal","desc": "Aumentar variedad de verduras."}
+  ],
+  "sugerenciaPractica": "Para una próxima comida similar...",
+  "preguntaET": "¿Por qué revisar el gluten?",
+  "respuestaET": "El gluten puede estar presente en..."
+}
+
+Reglas:
+- "alineacion": una frase corta (ej. "Alta alineación con tu ET", "Alineación parcial con tu ET", "Requiere ajuste").
+- "alineacionDetalle": 1-2 oraciones explicando el resultado.
+- "etDescripcion": descripción breve de la estrategia terapéutica del paciente (inferida del perfil clínico).
+- "etDietaEliminacion": null si no aplica.
+- "etAlimentacionTerapeutica": null si no aplica.
+- "alertasEliminacion": máx 4 alertas. Array vacío si no hay alertas.
+- "puntosPositivos": máx 4 puntos. Array vacío si no hay.
+- "ajustes": máx 4 ajustes. "tipo" debe ser exactamente uno de: "aumentar","reducir","mantener","confirmar".
+- "nutrientes": máx 3. Array vacío si no aplica.
+- "sugerenciaPractica": 2-3 oraciones concretas para la próxima comida.
+- "preguntaET": una pregunta educativa relevante al perfil del paciente.
+- "respuestaET": 2-3 oraciones respondiendo la pregunta.
+- Responde en español, tono cálido y profesional.
+
+Datos del paciente:
+${[
+  perfil.nombre ? `Nombre: ${perfil.nombre} ${perfil.apellido || ''}`.trim() : '',
+  perfil.resumenIA ? `Resumen clínico: ${perfil.resumenIA.slice(0, 400)}` : '',
+  perfil.historiaClinica?.planTratamiento ? `Plan de tratamiento: ${String(perfil.historiaClinica.planTratamiento).slice(0, 300)}` : '',
+  perfil.formulaMedica?.indicaciones ? `Indicaciones médicas: ${String(perfil.formulaMedica.indicaciones).slice(0, 200)}` : '',
+].filter(Boolean).join('\n')}
+
+Descripción del plato: ${descripcionPlato}
+${respuestaAgente ? `\nAnálisis adicional del especialista:\n${respuestaAgente}` : ''}`;
+}
+
+function parseReporteRespuesta(raw: string): Omit<ReportePlatoResult, 'simulado'> | null {
+  if (!raw?.trim()) return null;
+
+  // Quitar code fences de markdown (```json ... ```) que Claude a veces añade
+  const stripped = raw.replace(/```(?:json)?\s*/gi, '').trim();
+
+  const start = stripped.indexOf('{');
+  const end   = stripped.lastIndexOf('}');
+  if (start < 0 || end <= start) {
+    console.error('[parseReporte] No se encontró JSON. Longitud:', stripped.length, '| Últimos 100:', stripped.slice(-100));
+    return null;
+  }
+
+  try {
+    const p = JSON.parse(stripped.slice(start, end + 1));
+    const TIPOS_VALIDOS = new Set(['aumentar','reducir','mantener','confirmar']);
+
+    return {
+      alineacion:               typeof p.alineacion === 'string'         ? p.alineacion         : 'Análisis completado',
+      alineacionDetalle:        typeof p.alineacionDetalle === 'string'   ? p.alineacionDetalle  : '',
+      confianza:                'media',
+      etDescripcion:            typeof p.etDescripcion === 'string'       ? p.etDescripcion      : '',
+      etDietaEliminacion:       typeof p.etDietaEliminacion === 'string'  ? p.etDietaEliminacion : undefined,
+      etAlimentacionTerapeutica:typeof p.etAlimentacionTerapeutica === 'string' ? p.etAlimentacionTerapeutica : undefined,
+      alertasEliminacion:       Array.isArray(p.alertasEliminacion)
+        ? p.alertasEliminacion.filter((a: any) => a?.texto).slice(0, 4)
+        : [],
+      puntosPositivos:          Array.isArray(p.puntosPositivos)
+        ? p.puntosPositivos.filter((x: any) => typeof x === 'string').slice(0, 4)
+        : [],
+      ajustes:                  Array.isArray(p.ajustes)
+        ? p.ajustes.filter((a: any) => TIPOS_VALIDOS.has(a?.tipo) && a?.texto).slice(0, 4)
+        : [],
+      nutrientes:               Array.isArray(p.nutrientes)
+        ? p.nutrientes.filter((n: any) => n?.titulo && n?.desc).slice(0, 3)
+        : [],
+      sugerenciaPractica:       typeof p.sugerenciaPractica === 'string'  ? p.sugerenciaPractica : '',
+      preguntaET:               typeof p.preguntaET === 'string'          ? p.preguntaET         : '',
+      respuestaET:              typeof p.respuestaET === 'string'         ? p.respuestaET        : '',
+    };
+  } catch (e: unknown) {
+    console.error('[parseReporte] JSON.parse falló:', (e as Error)?.message, '| raw slice:', raw.slice(start, end + 1).slice(-200));
+    return null;
+  }
+}
+
+/**
+ * Genera el reporte clínico completo de un plato en una sola llamada ConverseCommand.
+ * No pasa por el Bedrock Agent (que agrega ~20-40s de latencia) — Claude tiene
+ * suficiente contexto con el perfil del paciente + lista de alimentos confirmados.
+ */
+export async function generarReportePlato(
+  alimentos: AlimentoDetectado[],
+  confianza: NivelConfianza,
+  perfil:    PerfilParaEvaluacionAlimento
+): Promise<ReportePlatoResult> {
+  const descripcionPlato = alimentos.length > 0
+    ? alimentos.map(a => `${a.nombre} (${a.categoria}, ${a.porcion})`).join(', ')
+    : 'Plato sin alimentos identificados';
+
+  console.log('[ReportePlato] descripción:', descripcionPlato);
+
+  const promptFinal = buildPromptReporte(descripcionPlato, perfil, '');
+
+  try {
+    const command = new ConverseCommand({
+      modelId: MODEL_ID,
+      messages: [{ role: 'user', content: [{ text: promptFinal }] }],
+      inferenceConfig: { maxTokens: 2000, temperature: 0.3 }
+    });
+
+    const resp   = await client.send(command);
+    const raw    = resp.output?.message?.content?.find(c => c.text)?.text ?? '';
+    console.log('[ReportePlato] raw completo:', raw);
+
+    const parsed = parseReporteRespuesta(raw);
+    console.log('[ReportePlato] parsed:', parsed ? 'OK' : 'NULL');
+    if (parsed) return { ...parsed, confianza, simulado: false };
+  } catch (err: unknown) {
+    const e = err as any;
+    console.error('[ReportePlato] ConverseCommand falló:', e?.name, '|', e?.message, '|', e?.$metadata, '|', e?.stack?.slice(0, 300));
+  }
+
+  return {
+    alineacion:         'Análisis no disponible',
+    alineacionDetalle:  'No se pudo generar el análisis en este momento. Intenta de nuevo.',
+    confianza,
+    etDescripcion:      '',
+    alertasEliminacion: [],
+    puntosPositivos:    [],
+    ajustes:            [],
+    nutrientes:         [],
+    sugerenciaPractica: '',
+    preguntaET:         '',
+    respuestaET:        '',
+    simulado:           true,
+  };
+}
