@@ -5,6 +5,7 @@ const CAMPOS_PERFIL_VERIFICACION = [
   'genero', 'fechaNacimiento', 'tipoDocumento', 'numeroDocumento', 'pais', 'ciudadVivienda',
   'direccionVivienda', 'codigoPostal', 'celularContacto', 'fotoMedicoUrl', 'fotoEntornoClinicoUrl',
   'rethusTarjetaProfesional', 'tituloUniversitario', 'tituloEspecialidad', 'formacionMedicinaFuncional',
+  'anosExperiencia', 'biografiaProfesional', 'subespecialidad', 'idiomas',
   'estiloPractica', 'modalidadesTerapeuticas', 'gruposInteres', 'motivosConsultaQueAtiende',
   'registroMinisterioSalud', 'direccionConsultorioHabilitado', 'telefonoLugarTrabajo'
 ] as const;
@@ -35,6 +36,10 @@ export interface UpdatePerfilMedicoData {
   tituloUniversitario?: string;
   tituloEspecialidad?: string;
   formacionMedicinaFuncional?: string;
+  anosExperiencia?: number;
+  biografiaProfesional?: string;
+  subespecialidad?: string;
+  idiomas?: string[];
   estiloPractica?: string;
   modalidadesTerapeuticas?: string[];
   gruposInteres?: string[];

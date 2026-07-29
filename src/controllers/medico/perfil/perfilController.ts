@@ -2,7 +2,9 @@ import { Response } from 'express';
 import { AuthRequest } from '../../../middleware/auth';
 import perfilMedicoService from '../../../services/medico/perfil/perfilService';
 import Medico from '../../../models/Medico';
+import ConfiguracionAgenda from '../../../models/ConfiguracionAgenda';
 import { handleError } from '../../../utils/errors';
+import { uploadBinary } from '../../../utils/s3Documents';
 
 export const getPerfilMedico = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -55,6 +57,7 @@ export const updatePerfilMedico = async (req: AuthRequest, res: Response): Promi
       'nombre', 'apellido', 'email', 'telefono', 'especialidad', 'numeroColegiatura', 'logoUrl', 'firmaUrl', 'indicacionesAntesConsulta',
       'genero', 'fechaNacimiento', 'tipoDocumento', 'numeroDocumento', 'pais', 'ciudadVivienda', 'direccionVivienda', 'codigoPostal', 'celularContacto',
       'fotoMedicoUrl', 'fotoEntornoClinicoUrl', 'rethusTarjetaProfesional', 'tituloUniversitario', 'tituloEspecialidad', 'formacionMedicinaFuncional',
+      'anosExperiencia', 'biografiaProfesional', 'subespecialidad', 'idiomas',
       'estiloPractica', 'modalidadesTerapeuticas', 'gruposInteres', 'motivosConsultaQueAtiende',
       'registroMinisterioSalud', 'direccionConsultorioHabilitado', 'telefonoLugarTrabajo'
     ];
@@ -111,8 +114,11 @@ export const updatePreajustes = async (req: AuthRequest, res: Response): Promise
     if (!medicoId) { res.status(401).json({ success: false, message: 'No autenticado' }); return; }
 
     const permitidos = [
-      'duracionConsultaMin', 'intervaloEntreConsultasMin', 'idioma',
-      'firmaImagenUrl', 'plantillaObservaciones', 'semaforoColores'
+      'duracionConsultaMin', 'duracionControlMin', 'intervaloEntreConsultasMin',
+      'idioma', 'idiomas',
+      'firmaImagenUrl', 'plantillaObservaciones', 'semaforoColores',
+      'modalidadesAtencion', 'direccionAtencionPresencial',
+      'anticipacionMinimaHoras', 'maximoConsultasDia', 'tiposPacientes',
     ];
     const update: Record<string, unknown> = {};
     for (const key of permitidos) {
@@ -129,6 +135,21 @@ export const updatePreajustes = async (req: AuthRequest, res: Response): Promise
       { $set: update },
       { new: true, runValidators: true }
     ).select('preajustes').lean();
+
+    // Sincronizar ConfiguracionAgenda.consultaRapida según modalidadesAtencion
+    if (req.body.modalidadesAtencion !== undefined) {
+      const modalidades: string[] = req.body.modalidadesAtencion ?? [];
+      const habilitada = modalidades.includes('Consulta rápida - Chat') || modalidades.includes('Consulta rápida - Videollamada');
+      const modalidadesConfig: ('chat' | 'teleconsulta')[] = [];
+      if (modalidades.includes('Consulta rápida - Chat')) modalidadesConfig.push('chat');
+      if (modalidades.includes('Consulta rápida - Videollamada')) modalidadesConfig.push('teleconsulta');
+
+      await ConfiguracionAgenda.findOneAndUpdate(
+        { medico: medicoId },
+        { $set: { 'consultaRapida.habilitada': habilitada, 'consultaRapida.modalidades': modalidadesConfig } },
+        { upsert: true }
+      );
+    }
 
     res.json({ success: true, data: medico?.preajustes });
   } catch (err: any) {
@@ -170,11 +191,13 @@ export const updateAliado = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
-    const { activo, userId, membresiaId } = req.body;
+    const { activo, userId, membresiaId, permisos } = req.body;
     const update: Record<string, unknown> = {};
     if (activo !== undefined) update[`aliados.${aliado}.activo`] = activo;
     if (userId !== undefined) update[`aliados.${aliado}.userId`] = userId;
     if (membresiaId !== undefined && aliado === 'amf') update[`aliados.amf.membresiaId`] = membresiaId;
+    if (permisos?.compartirDatosAdmin !== undefined) update[`aliados.${aliado}.permisos.compartirDatosAdmin`] = permisos.compartirDatosAdmin;
+    if (permisos?.compartirDocumentos !== undefined) update[`aliados.${aliado}.permisos.compartirDocumentos`] = permisos.compartirDocumentos;
 
     const medico = await Medico.findByIdAndUpdate(
       medicoId,
@@ -208,6 +231,70 @@ export const getSuscripcion = async (req: AuthRequest, res: Response): Promise<v
           : Math.max(0, (medico.planPrueba?.limite ?? 3) - (medico.planPrueba?.pacientesUsados ?? 0))
       }
     });
+  } catch (err: any) {
+    handleError(err, res);
+  }
+};
+
+/**
+ * POST /api/medico/perfil/firma
+ * Recibe imagen de firma (field: "firma"), la sube a S3 y guarda la URL en medico.firmaUrl.
+ */
+export const subirFirmaMedico = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const medicoId = req.userId;
+    if (!medicoId) { res.status(401).json({ success: false, message: 'No autenticado' }); return; }
+
+    const file = (req as any).file as Express.Multer.File | undefined;
+    if (!file) { res.status(400).json({ success: false, message: 'No se recibió ningún archivo.' }); return; }
+
+    const ext = file.mimetype === 'image/png' ? '.png' : file.mimetype === 'image/webp' ? '.webp' : '.jpg';
+    const key = `medicos/${medicoId}/firma${ext}`;
+    await uploadBinary(file.buffer, key, file.mimetype);
+
+    const bucketName = process.env.AWS_S3_DOCUMENTS_BUCKET || '';
+    const region = process.env.AWS_REGION || 'us-east-1';
+    const firmaUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${key}`;
+
+    await Medico.findByIdAndUpdate(medicoId, { $set: { firmaUrl } });
+
+    res.json({ success: true, data: { firmaUrl } });
+  } catch (err: any) {
+    handleError(err, res);
+  }
+};
+
+/**
+ * POST /api/medico/perfil/foto
+ * Recibe un archivo de imagen (field: "foto"), lo sube a S3 y guarda la URL en perfilVerificacion.fotoMedicoUrl.
+ */
+export const subirFotoMedico = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const medicoId = req.userId;
+    if (!medicoId) { res.status(401).json({ success: false, message: 'No autenticado' }); return; }
+
+    const file = (req as any).file as Express.Multer.File | undefined;
+    if (!file) { res.status(400).json({ success: false, message: 'No se recibió ningún archivo.' }); return; }
+
+    const ext = file.mimetype === 'image/png' ? '.png' : file.mimetype === 'image/webp' ? '.webp' : '.jpg';
+    const key = `medicos/${medicoId}/foto-perfil${ext}`;
+    await uploadBinary(file.buffer, key, file.mimetype);
+
+    const bucketName = process.env.AWS_S3_DOCUMENTS_BUCKET || '';
+    const region = process.env.AWS_REGION || 'us-east-1';
+    const fotoUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${key}`;
+
+    const medico = await Medico.findById(medicoId);
+    if (!medico) { res.status(404).json({ success: false, message: 'Médico no encontrado' }); return; }
+
+    const pv = (medico.perfilVerificacion && typeof medico.perfilVerificacion === 'object')
+      ? { ...medico.perfilVerificacion }
+      : {};
+    (pv as Record<string, unknown>).fotoMedicoUrl = fotoUrl;
+    medico.perfilVerificacion = pv;
+    await medico.save();
+
+    res.json({ success: true, data: { fotoUrl } });
   } catch (err: any) {
     handleError(err, res);
   }

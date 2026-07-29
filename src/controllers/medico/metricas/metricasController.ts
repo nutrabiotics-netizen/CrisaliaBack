@@ -270,3 +270,76 @@ export const getMotivoConsulta = async (req: AuthRequest, res: Response): Promis
     handleError(err, res);
   }
 };
+
+// ─── Generar reporte (CSV o PDF simple) ──────────────────────────────────────
+
+export const generarReporte = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const medicoId = new mongoose.Types.ObjectId(req.userId!);
+    const { dias = '30', formato = 'csv' } = req.body as {
+      dias?: string;
+      formato?: 'csv' | 'pdf';
+    };
+
+    const fin = new Date();
+    const inicio = new Date();
+    inicio.setDate(inicio.getDate() - Number(dias));
+
+    const citas = await Cita.find({
+      medicoId,
+      fecha: { $gte: inicio, $lte: fin },
+      activo: { $ne: false },
+    }).populate('pacienteId', 'nombre apellido email').lean();
+
+    if (formato === 'csv') {
+      const rows: string[] = [];
+      rows.push('Fecha,Estado,Tipo,Modalidad,Paciente');
+      for (const c of citas) {
+        const pac = c.pacienteId as any;
+        const nombre = pac ? `${pac.nombre ?? ''} ${pac.apellido ?? ''}`.trim() : 'N/A';
+        const fecha = new Date(c.fecha).toLocaleDateString('es-CO');
+        rows.push(`"${fecha}","${c.estado}","${c.tipo ?? ''}","${c.modalidad ?? ''}","${nombre}"`);
+      }
+      const csv = rows.join('\n');
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="reporte-crisal-${Date.now()}.csv"`);
+      res.send('﻿' + csv);
+      return;
+    }
+
+    // PDF simple con PDFKit
+    const PDFDocument = require('pdfkit');
+    const doc = new PDFDocument({ margin: 50, size: 'A4' });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="reporte-crisal-${Date.now()}.pdf"`);
+    doc.pipe(res);
+
+    doc.fontSize(20).fillColor('#2C497A').text('Reporte de actividad — Crisal-iA', { align: 'center' });
+    doc.moveDown(0.5);
+    doc.fontSize(11).fillColor('#6b7280').text(`Período: ${inicio.toLocaleDateString('es-CO')} — ${fin.toLocaleDateString('es-CO')}`, { align: 'center' });
+    doc.moveDown(1);
+
+    doc.fontSize(13).fillColor('#2C497A').text('Resumen de citas');
+    doc.moveDown(0.3);
+    doc.fontSize(10).fillColor('#374151');
+    doc.text(`Total citas: ${citas.length}`);
+    doc.text(`Completadas: ${citas.filter((c: any) => c.estado === 'completada').length}`);
+    doc.text(`Canceladas: ${citas.filter((c: any) => c.estado === 'cancelada').length}`);
+    doc.text(`Pacientes únicos: ${new Set(citas.map((c: any) => String(c.pacienteId?._id ?? c.pacienteId))).size}`);
+    doc.moveDown(1);
+
+    doc.fontSize(13).fillColor('#2C497A').text('Detalle de citas');
+    doc.moveDown(0.3);
+    doc.fontSize(9).fillColor('#374151');
+    for (const c of citas) {
+      const pac = c.pacienteId as any;
+      const nombre = pac ? `${pac.nombre ?? ''} ${pac.apellido ?? ''}`.trim() : 'N/A';
+      const fecha = new Date(c.fecha).toLocaleDateString('es-CO');
+      doc.text(`• ${fecha} | ${c.estado} | ${c.tipo ?? '-'} | ${nombre}`);
+    }
+
+    doc.end();
+  } catch (err: any) {
+    handleError(err, res);
+  }
+};
