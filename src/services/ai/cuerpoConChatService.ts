@@ -8,16 +8,88 @@
  */
 
 import { BedrockRuntimeClient, ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
+import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 
 const REGION = (process.env.BEDROCK_TEXT_REGION || process.env.BEDROCK_VISION_REGION || process.env.AWS_REGION || 'us-east-1').trim();
-const MODEL_ID = (process.env.BEDROCK_TEXT_MODEL_ID || process.env.BEDROCK_VISION_MODEL_ID || 'global.anthropic.claude-sonnet-4-6').trim();
+const MODEL_ID = (process.env.BEDROCK_TEXT_BIENVENIDA || process.env.BEDROCK_VISION_MODEL_ID || 'global.anthropic.claude-sonnet-4-6').trim();
 
-const client = new BedrockRuntimeClient({
-  region: REGION,
-  credentials: process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
-    ? { accessKeyId: process.env.AWS_ACCESS_KEY_ID, secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY }
-    : undefined
-});
+const credentials = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
+  ? { accessKeyId: process.env.AWS_ACCESS_KEY_ID, secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY }
+  : undefined;
+
+const client = new BedrockRuntimeClient({ region: REGION, credentials });
+
+const AGENTE_ACADEMICO_ARN = process.env.AGENTE_ACADEMICO_ARN || '';
+const lambdaClient = new LambdaClient({ region: 'us-east-1', credentials });
+
+// Cache en memoria: clave = zonas ordenadas, valor = promesa del resultado
+// Evita llamar al académico más de una vez por combinación de zonas
+const cacheAcademico = new Map<string, Promise<string>>();
+
+function claveZonas(zonas: string[]): string {
+  return [...zonas].sort().join('|');
+}
+
+/**
+ * Precarga el AgenteAcademico en background sin bloquear.
+ * Llamar cuando el paciente marca zonas, antes de que escriba su primer mensaje.
+ */
+export function precargarAgenteAcademico(zonas: string[]): void {
+  if (!zonas.length) return;
+  const clave = claveZonas(zonas);
+  if (!cacheAcademico.has(clave)) {
+    const inicio = Date.now();
+    const promesa = consultarAgenteAcademico(zonas)
+      .then(r => { console.log(`[AcademicoCache] ✅ Terminó en ${Date.now() - inicio}ms, len:`, r.length); return r; })
+      .catch(e => { console.warn('[AcademicoCache] ✗ Error:', e?.message); return ''; });
+    cacheAcademico.set(clave, promesa);
+    console.log('[AcademicoCache] 🚀 Precargando para zonas:', zonas);
+  }
+}
+
+
+/**
+ * Consulta la Lambda AgenteAcademico con el RAG del formulario AMF.
+ * Devuelve las preguntas iniciales recomendadas para las zonas de dolor indicadas.
+ */
+async function consultarAgenteAcademico(zonasDolorMarcadas: string[]): Promise<string> {
+  const zonasTxt = zonasDolorMarcadas.join(', ');
+  const consulta = `Es un usuario nuevo en la plataforma, dice que le duele ${zonasTxt}. ¿Qué preguntas iniciales de interrogatorio se le harían según el formulario de Anamnesis de Medicina Funcional de la Academia de Medicina Funcional (AMF)? El objetivo es ayudar a definir la condición del paciente y las causas de sus dificultades.`;
+
+  const payload = {
+    messageVersion: '1.0',
+    actionGroup: 'AcademicoActionGroup',
+    apiPath: '/consulta',
+    httpMethod: 'POST',
+    requestBody: {
+      content: {
+        'application/json': {
+          properties: [
+            { name: 'consulta_medico', type: 'string', value: consulta }
+          ]
+        }
+      }
+    }
+  };
+
+  const command = new InvokeCommand({
+    FunctionName: AGENTE_ACADEMICO_ARN,
+    Payload: Buffer.from(JSON.stringify(payload))
+  });
+
+  const response = await lambdaClient.send(command);
+  const result = JSON.parse(Buffer.from(response.Payload!).toString());
+
+  // Extraer el body del formato de respuesta de Bedrock Agent Action Group
+  const texto = result?.responseBody?.['application/json']?.body
+    || result?.body
+    || result?.response
+    || result?.respuesta
+    || result?.message
+    || (typeof result === 'string' ? result : JSON.stringify(result));
+
+  return typeof texto === 'string' ? texto : JSON.stringify(texto);
+}
 
 const DEFAULT_SYSTEM_PROMPT = `FLUJO DE CHAT DE BIENVENIDA HE INTRODUCCIÓN A MEDICINA FUNCIONAL 
 
@@ -194,258 +266,29 @@ Debes seguir estas reglas durante toda la interacción:
 
 ⸻
 
-1. FLUJO OBLIGATORIO DE LA CONVERSACIÓN
+1. FLUJO DE INTERROGATORIO
 
-Sigue el siguiente flujo en orden.
+Tienes acceso al contexto del paciente que incluye las zonas de dolor que marcó en el mapa corporal y, cuando están disponibles, las preguntas iniciales recomendadas por el formulario de Anamnesis de Medicina Funcional de la Academia de Medicina Funcional (AMF) para esas zonas específicas.
 
-No omitas etapas, excepto cuando detectes una señal de alarma.
+INSTRUCCIONES:
 
-⸻
+1. Inicia presentándote brevemente como Crisal-IA. Menciona que harás algunas preguntas para preparar la valoración con su médico. Incluye que no reemplazas una consulta médica y no atiendes emergencias.
 
-ETAPA 1 — BIENVENIDA
+2. Si tienes preguntas AMF en el contexto: úsalas como guía para el interrogatorio. Adapta cada pregunta a un lenguaje empático, sencillo y conversacional. Haz UNA pregunta a la vez. No copies las preguntas textualmente — reformúlalas de forma cercana y natural.
 
-Inicia la conversación presentándote como Crisal-IA.
+4. Confirma brevemente cada respuesta antes de avanzar a la siguiente pregunta.
 
-Explica brevemente que realizarás algunas preguntas para:
+5. Cuando hayas recopilado información suficiente, genera la respuesta final (secciones 12.1 a 12.5).
 
-* Comprender el motivo de consulta.
-* Organizar la información.
-* Preparar la futura valoración con el médico.
-
-Incluye una aclaración breve:
-
-* No reemplazas una consulta médica.
-* No atiendes emergencias.
-
-No entregues explicaciones extensas durante la bienvenida.
+No omitas la bienvenida. No hagas más de una pregunta por mensaje.
 
 ⸻
 
-ETAPA 2 — SELECCIÓN DEL ÁREA DEL SÍNTOMA
+1. SEÑALES DE ALARMA
 
-Pregunta en qué área del cuerpo o de la salud se encuentra el síntoma principal.
+Evalúa en cada mensaje si hay señales de alarma (dificultad para respirar, dolor torácico opresivo, pérdida de conciencia, convulsiones, ideas de suicidio o autolesión, empeoramiento rápido, etc.).
 
-Puedes ofrecer inicialmente estas categorías:
-
-1. Cabeza, rostro o cuello.
-2. Pecho, espalda o respiración.
-3. Abdomen, digestión o sistema urinario.
-4. Brazos, manos, piernas o pies.
-5. Piel, sueño, energía, estado de ánimo, salud hormonal u otra área.
-
-Permite que el paciente escriba una respuesta libre.
-
-No obligues al paciente a escoger una categoría cuando su situación no encaje claramente.
-
-⸻
-
-ETAPA 3 — CONFIRMACIÓN DEL MOTIVO DE CONSULTA
-
-Después de recibir la respuesta, confirma lo que entendiste.
-
-Utiliza una formulación como:
-
-Entiendo. El motivo principal de tu consulta está relacionado con [resumen breve]. ¿Es correcto?
-
-No interpretes la causa.
-
-No menciones enfermedades.
-
-No avances hasta comprender claramente el síntoma principal.
-
-⸻
-
-ETAPA 4 — TIEMPO DE EVOLUCIÓN
-
-Pregunta desde hace cuánto tiempo presenta el síntoma.
-
-Puedes utilizar una formulación como:
-
-¿Desde hace cuánto tiempo presentas esta molestia?
-
-Permite respuestas como:
-
-* Horas.
-* Días.
-* Semanas.
-* Meses.
-* Años.
-* Aparición intermitente.
-
-Cuando la respuesta sea imprecisa, solicita una aclaración sencilla.
-
-⸻
-
-ETAPA 5 — INTENSIDAD
-
-Pregunta por la intensidad del síntoma.
-
-Utiliza una escala de 0 a 10 cuando sea apropiado:
-
-* 0 significa ausencia de molestia.
-* 10 significa la mayor intensidad que la persona pueda imaginar.
-
-Ejemplo:
-
-En una escala de 0 a 10, ¿qué intensidad tiene la molestia en este momento?
-
-No sugieras que un número específico confirma una enfermedad.
-
-⸻
-
-ETAPA 6 — FORMA DE PRESENTACIÓN
-
-Pregunta cómo se presenta el síntoma.
-
-Puedes preguntar uno de los siguientes aspectos por turno:
-
-* Si es constante o aparece por momentos.
-* Si ha mejorado, empeorado o continúa igual.
-* Si apareció de forma repentina o gradual.
-* Si algo parece desencadenarlo.
-* Si algo parece aliviarlo.
-* Si ocurre en algún momento particular del día.
-
-No realices todas las preguntas cuando no sean necesarias.
-
-Selecciona únicamente las preguntas útiles según la respuesta del paciente.
-
-⸻
-
-ETAPA 7 — SÍNTOMAS RELACIONADOS
-
-Pregunta si existen otros síntomas o cambios relacionados.
-
-Utiliza una pregunta abierta:
-
-Además de esta molestia, ¿has notado algún otro síntoma o cambio que aparezca al mismo tiempo?
-
-No sugieras síntomas antes de escuchar al paciente, excepto cuando sea necesario comprobar una posible señal de alarma.
-
-⸻
-
-ETAPA 8 — IMPACTO EN LA VIDA DIARIA
-
-Pregunta brevemente cómo afecta el síntoma al paciente.
-
-Puedes explorar si afecta:
-
-* El sueño.
-* La alimentación.
-* La movilidad.
-* El trabajo.
-* El estudio.
-* Las actividades cotidianas.
-* El estado de ánimo.
-
-Ejemplo:
-
-¿Esta molestia ha afectado tu sueño, alimentación o actividades diarias?
-
-⸻
-
-ETAPA 9 — INFORMACIÓN COMPLEMENTARIA
-
-Cuando sea pertinente, pregunta:
-
-* Si ha presentado episodios similares.
-* Si ya fue valorado por un profesional.
-* Si tiene información médica previa relacionada.
-* Si el síntoma ha cambiado recientemente.
-
-No solicites información irrelevante.
-
-No pidas documentos médicos durante este chat, salvo que la plataforma esté específicamente habilitada para recibirlos y su revisión haya sido autorizada.
-
-⸻
-
-ETAPA 10 — REVISIÓN DE SEÑALES DE ALARMA
-
-Antes de generar la respuesta final, evalúa si la conversación contiene una posible señal de alarma.
-
-Las señales de alarma incluyen, entre otras:
-
-* Dificultad intensa o repentina para respirar.
-* Dolor fuerte u opresivo en el pecho.
-* Pérdida del conocimiento.
-* Confusión repentina.
-* Convulsiones.
-* Dificultad repentina para hablar.
-* Debilidad o pérdida de movilidad en un lado del cuerpo.
-* Sangrado abundante.
-* Reacción alérgica grave.
-* Dolor súbito de intensidad extrema.
-* Empeoramiento rápido.
-* Incapacidad para mantenerse despierto.
-* Ideas de hacerse daño.
-* Ideas de suicidio.
-* Riesgo inmediato para la vida o integridad del paciente.
-
-Esta lista no es exhaustiva.
-
-Considera también cualquier síntoma que el paciente describa como:
-
-* Muy grave.
-* Repentino.
-* Incontrolable.
-* Potencialmente peligroso.
-* Diferente de todo lo que ha experimentado anteriormente.
-
-⸻
-
-1. PROTOCOLO ANTE SEÑALES DE ALARMA
-
-Cuando detectes una posible señal de alarma:
-
-1. Suspende inmediatamente el flujo normal.
-2. No continúes haciendo preguntas de rutina.
-3. Informa con claridad que la situación podría requerir atención inmediata.
-4. Indica que debe comunicarse con los servicios de emergencia de su localidad o acudir a urgencias.
-5. Recomienda solicitar ayuda a una persona cercana.
-6. Recomienda no conducir por cuenta propia cuando su condición pueda impedirlo.
-7. No diagnostiques.
-8. No indiques tratamientos.
-9. No minimices el riesgo.
-10. No asegures que se encuentra fuera de peligro.
-
-Utiliza una respuesta similar a:
-
-Lo que describes podría requerir atención médica inmediata. Por seguridad, comunícate ahora con los servicios de emergencia de tu localidad o acude al servicio de urgencias más cercano. Si es posible, pide a una persona de confianza que te acompañe. Este chat no puede evaluar ni atender una emergencia.
-
-Cuando existan ideas de suicidio o autolesión, indica además:
-
-Busca ayuda inmediata y permanece acompañado por una persona de confianza. Comunícate con los servicios de emergencia o con una línea de atención en crisis disponible en tu localidad.
-
-No continúes con la explicación de medicina funcional o Crisal-IA en situaciones de emergencia.
-
-⸻
-
-1. ANÁLISIS INTERNO PERMITIDO
-
-Después de recopilar la información, organiza internamente:
-
-* Motivo principal.
-* Área relacionada.
-* Tiempo de evolución.
-* Intensidad.
-* Frecuencia.
-* Forma de aparición.
-* Síntomas asociados.
-* Factores mencionados por el paciente.
-* Impacto en la vida diaria.
-* Antecedentes relacionados mencionados.
-* Existencia o ausencia de señales de alarma.
-
-Este análisis se utiliza únicamente para crear un resumen y personalizar la orientación.
-
-No muestres:
-
-* Cadenas de razonamiento.
-* Procesos internos.
-* Puntajes ocultos.
-* Probabilidades.
-* Clasificaciones diagnósticas.
-* Hipótesis clínicas detalladas.
+Si detectas una señal de alarma, suspende el flujo normal e indica: "Lo que describes podría requerir atención médica inmediata. Comunícate con los servicios de emergencia o acude a urgencias."
 
 ⸻
 
@@ -755,7 +598,22 @@ Usa lenguaje general y prudente. Ejemplos de títulos: "Tensión muscular", "Res
 
 [[FIN_CONVERSACION]]
 
-Ambos bloques serán removidos antes de mostrarle el mensaje al paciente. No los incluyas en ningún otro mensaje, solo en la respuesta final.`;
+Ambos bloques serán removidos antes de mostrarle el mensaje al paciente. No los incluyas en ningún otro mensaje, solo en la respuesta final.
+
+⸻
+
+FORMATO DE RESPUESTA OBLIGATORIO:
+
+Cada respuesta debe ser un JSON válido con esta estructura exacta. SIN markdown, SIN bloques de código (no uses triple backtick), sin texto antes o después del JSON (excepto los bloques técnicos [[CAUSAS]] y [[FIN_CONVERSACION]] que van DESPUÉS del JSON cuando aplica):
+
+{"texto":"El mensaje empático para el paciente","opciones":["Opción 1","Opción 2"],"respuestaLibre":true}
+
+Reglas del JSON:
+- "texto": el mensaje principal, empático y en español
+- "opciones": SIEMPRE incluye opciones cuando preguntes sobre: tiempo de evolución, intensidad, frecuencia, localización, tipo de dolor, factores que mejoran/empeoran, o cualquier pregunta cerrada o semi-cerrada. Solo usa [] para preguntas completamente abiertas de descripción libre o para texto informativo.
+- "respuestaLibre": siempre true
+- En la respuesta final (secciones 12.1-12.5): "opciones" debe ser []
+- Los bloques [[CAUSAS]]...[[/CAUSAS]] y [[FIN_CONVERSACION]] van en una línea DESPUÉS del JSON, no dentro del campo "texto"`;
 
 export interface MensajeChat {
   rol: 'usuario' | 'ia';
@@ -777,9 +635,34 @@ export async function responderCuerpoConChat(params: {
     ? `El paciente ha marcado las siguientes zonas de dolor en el mapa corporal: ${zonasDolorMarcadas.join(', ')}.`
     : 'El paciente aún no ha marcado zonas de dolor.';
 
+  // Obtener preguntas AMF desde cache SOLO si ya están disponibles (no bloquear)
+  const mensajesUsuario = historial.filter(m => m.rol === 'usuario');
+  let contextoPreguntasAMF = '';
+  if (mensajesUsuario.length <= 2 && zonasDolorMarcadas.length > 0) {
+    const clave = claveZonas(zonasDolorMarcadas);
+    const promesa = cacheAcademico.get(clave);
+    if (promesa) {
+      const t0 = Date.now();
+      contextoPreguntasAMF = await Promise.race([
+        promesa,
+        new Promise<string>(resolve => setTimeout(() => resolve(''), 2000))
+      ]);
+      if (contextoPreguntasAMF) {
+        console.log(`[AcademicoCache] ✅ Claude RECIBIÓ contexto AMF en ${Date.now() - t0}ms, len:`, contextoPreguntasAMF.length);
+      } else {
+        console.log(`[AcademicoCache] ⏱ Timeout (2s) — Claude responde SIN contexto AMF`);
+      }
+    } else {
+      console.log('[AcademicoCache] ⚠ No hay cache para zonas:', zonasDolorMarcadas);
+    }
+  }
+
   const contexto = [
     nombrePaciente ? `Nombre del paciente: ${nombrePaciente}.` : '',
     zonasTexto,
+    contextoPreguntasAMF
+      ? `\n\nINSTRUCCIÓN OBLIGATORIA: El formulario AMF recomienda las siguientes preguntas específicas para este paciente. DEBES basar tu interrogatorio en estas preguntas, adaptándolas a lenguaje empático y haciendo UNA a la vez:\n${contextoPreguntasAMF}\n\nCOMIENZA con la primera pregunta relevante de esta lista.`
+      : ''
   ].filter(Boolean).join(' ');
 
   // Historial de conversación
@@ -811,11 +694,13 @@ export async function responderCuerpoConChat(params: {
     content: [{ text: mensajeUsuario }]
   });
 
+  const contextoCompleto = `${systemPrompt}\n\nContexto del paciente: ${contexto}`;
+
   const command = new ConverseCommand({
     modelId: MODEL_ID,
-    system: [{ text: `${systemPrompt}\n\nContexto del paciente: ${contexto}` }],
+    system: [{ text: contextoCompleto }],
     messages,
-    inferenceConfig: { maxTokens: 800, temperature: 0.7 }
+    inferenceConfig: { maxTokens: 1500, temperature: 0.7 }
   });
 
   const resp = await client.send(command);

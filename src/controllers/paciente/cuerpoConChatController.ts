@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { AuthRequest } from '../../middleware/auth';
-import { responderCuerpoConChat } from '../../services/ai/cuerpoConChatService';
+import { responderCuerpoConChat, precargarAgenteAcademico } from '../../services/ai/cuerpoConChatService';
 import Paciente from '../../models/Paciente';
 import Interrogatorio from '../../models/Interrogatorio';
 import { handleError } from '../../utils/errors';
@@ -10,6 +10,23 @@ import { handleError } from '../../utils/errors';
  * Body: { zonasDolorMarcadas: string[], historial: MensajeChat[], mensajeUsuario: string }
  * Devuelve la respuesta de la IA para el chat del mapa corporal.
  */
+/**
+ * POST /paciente/cuerpo-chat/precargar
+ * Body: { zonasDolorMarcadas: string[] }
+ * Dispara la precarga del AgenteAcademico en background — llamar cuando el paciente marca zonas
+ */
+export const precargar = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { zonasDolorMarcadas = [] } = req.body;
+    if (zonasDolorMarcadas?.length) {
+      precargarAgenteAcademico(zonasDolorMarcadas);
+    }
+    res.json({ success: true });
+  } catch (err: any) {
+    res.json({ success: true }); // nunca fallar — es fire-and-forget
+  }
+};
+
 export const responder = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const pacienteId = req.userId;
@@ -26,6 +43,11 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
     const paciente = await Paciente.findById(pacienteId).select('nombre').lean() as any;
     const nombrePaciente = paciente?.nombre;
 
+    // Precargar AgenteAcademico en background desde el primer mensaje con zonas
+    if (zonasDolorMarcadas?.length) {
+      precargarAgenteAcademico(zonasDolorMarcadas);
+    }
+
     const respuesta = await responderCuerpoConChat({
       zonasDolorMarcadas,
       historial,
@@ -40,13 +62,38 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
       try { causas = JSON.parse(causasMatch[1].trim()); } catch { /* ignorar */ }
     }
 
-    // Detectar fin y limpiar marcadores del texto visible
+    // Detectar fin y limpiar marcadores
     const finConversacion = respuesta.includes('[[FIN_CONVERSACION]]');
-    const respuestaLimpia = respuesta
+    const respuestaSinMarcadores = respuesta
       .replace(/\[\[CAUSAS\]\][\s\S]*?\[\[\/CAUSAS\]\]/g, '')
       .replace('[[FIN_CONVERSACION]]', '')
       .trim();
-    console.log('[cuerpoConChat] finConversacion:', finConversacion, 'causas:', causas.length);
+
+    // Limpiar fences de markdown antes de parsear
+    const respuestaClean = respuestaSinMarcadores
+      .replace(/^```(?:json)?\s*/im, '')
+      .replace(/```\s*$/m, '')
+      .trim();
+
+    // Parsear JSON estructurado { texto, opciones, respuestaLibre }
+    let textoFinal = respuestaClean;
+    let opciones: string[] = [];
+    try {
+      const jsonStart = respuestaClean.indexOf('{');
+      const jsonEnd = respuestaClean.lastIndexOf('}');
+      if (jsonStart >= 0 && jsonEnd > jsonStart) {
+        const jsonStr = respuestaClean.slice(jsonStart, jsonEnd + 1);
+        const parsed = JSON.parse(jsonStr);
+        if (parsed?.texto) {
+          // Combinar el "texto" del JSON con cualquier contenido adicional fuera del JSON
+          const afterJson = respuestaClean.slice(jsonEnd + 1).trim();
+          textoFinal = afterJson ? `${parsed.texto}\n\n${afterJson}` : parsed.texto;
+          opciones = Array.isArray(parsed.opciones) ? parsed.opciones : [];
+        }
+      }
+    } catch { /* si no es JSON válido, usar el texto completo */ }
+
+    console.log('[cuerpoConChat] finConversacion:', finConversacion, 'opciones:', opciones.length);
 
     // Si es la respuesta final, guardar zonas de dolor + conversación en Interrogatorio
     if (finConversacion) {
@@ -63,7 +110,7 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
         if (interrogatorioExistente) {
           interrogatorioExistente.estado = 'completado';
           interrogatorioExistente.progreso = 100;
-          interrogatorioExistente.analisisIA = respuestaLimpia;
+          interrogatorioExistente.analisisIA = textoFinal;
           interrogatorioExistente.respuestas = {
             zonasDolor: zonasDolorMarcadas,
             historialChat: historial,
@@ -79,7 +126,7 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
             tipo: 'primera_vez',
             estado: 'completado',
             progreso: 100,
-            analisisIA: respuestaLimpia,
+            analisisIA: textoFinal,
             respuestas: {
               zonasDolor: zonasDolorMarcadas,
               historialChat: historial,
@@ -95,7 +142,7 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
       }
     }
 
-    res.json({ success: true, data: { respuesta: respuestaLimpia, finConversacion } });
+    res.json({ success: true, data: { respuesta: textoFinal, opciones, finConversacion } });
   } catch (err: any) {
     console.error('[cuerpoConChat]', err);
     handleError(err, res);
