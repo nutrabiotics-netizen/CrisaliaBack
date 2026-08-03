@@ -11,6 +11,8 @@ import { generateCitaResumenPdf } from '../../utils/pdfGenerator';
 import { regenerarResumenAsync } from '../../services/paciente/resumenPacienteService';
 import { uploadPDFAndGetUrl, buildCitaDocumentKey, getRecordingPlaybackUrl } from '../../utils/s3Documents';
 import Cita from '../../models/Cita';
+import FormulaMedica from '../../models/FormulaMedica';
+import Paraclinico from '../../models/Paraclinico';
 import Paciente from '../../models/Paciente';
 import Medico from '../../models/Medico';
 import Meeting from '../../models/Meeting';
@@ -298,9 +300,26 @@ export const obtenerCitasHoy = async (req: AuthRequest, res: Response): Promise<
 
     const citas = await agendamientoService.obtenerCitasHoy(medicoId);
 
+    const citaIds = citas.map((c: any) => c._id?.toString());
+    const pacienteIds = citas.map((c: any) => c.pacienteId?.toString ? c.pacienteId.toString() : c.pacienteId);
+
+    const [formulas, paraclinicos] = await Promise.all([
+      FormulaMedica.find({ citaId: { $in: citaIds } }).select('citaId').lean(),
+      Paraclinico.find({ pacienteId: { $in: pacienteIds } }).select('pacienteId').lean()
+    ]);
+
+    const formulasByCita = new Set(formulas.map((f: any) => f.citaId?.toString()));
+    const paraclinicosConPaciente = new Set(paraclinicos.map((p: any) => p.pacienteId?.toString()));
+
+    const citasEnriquecidas = citas.map((cita: any) => ({
+      ...cita,
+      tieneFormula: formulasByCita.has(cita._id?.toString()),
+      tieneParaclinicos: paraclinicosConPaciente.has(cita.pacienteId?.toString ? cita.pacienteId.toString() : cita.pacienteId)
+    }));
+
     res.json({
       success: true,
-      data: citas
+      data: citasEnriquecidas
     });
   } catch (error: any) {
     console.error('Error al obtener citas de hoy:', error);

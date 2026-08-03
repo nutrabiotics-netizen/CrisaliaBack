@@ -151,7 +151,10 @@ export enum UserRole {
 - regimenAfiliacion, eps, aseguradora, numeroAfiliacion
 - `contactoEmergencia: { nombre, relacion, telefono }`
 - `acudiente: { nombre, parentesco, telefono }`
-- `resumenIA: { texto, actualizadoEn, motivoActualizacion, citaIdReferencia, version }`
+- `zonasDolor: string[]` (default []) — mapa corporal del onboarding
+- `resumenIA: { texto, actualizadoEn, motivoActualizacion (cita_completada|formula_creada|formula_actualizada|manual|inicial), citaIdReferencia, version }`
+- `firstAppointment: boolean` (default false) — false = nunca agendó, true = ya agendó primera cita
+- `activo: boolean` (default true)
 
 **Administrativo.ts** / **PersonalInstitucional.ts**
 
@@ -343,12 +346,29 @@ POST /register-paciente          Patient registration
 POST /login                      Email + password
 POST /whatsapp/send-code         Enviar OTP WhatsApp
 POST /whatsapp/verify            Verificar OTP → JWT
-POST /2fa/enviar                 2FA por documento
-POST /2fa/validar                Validar 2FA → JWT
+POST /2fa/enviar                 2FA por documento (pre-login, sin sesión)
+POST /2fa/validar                Validar 2FA por documento → JWT
 GET  /me                         Usuario actual
-POST /whatsapp/send-code-2fa     Setup 2FA paciente
-POST /whatsapp/verify-2fa        Verificar 2FA paciente
+POST /whatsapp/send-code-2fa     Enviar código 2FA (paciente autenticado)
+POST /whatsapp/verify-2fa        Verificar código 2FA (paciente autenticado)
 ```
+
+**Respuesta login y register-paciente** — campos que devuelve `data.user`:
+```json
+{
+  "_id", "email", "nombre", "apellido", "role",
+  "fechaNacimiento", "telefono", "direccion",
+  "genero",
+  "habilitado2FA", "aceptaTerminos", "aceptaConsentimiento",
+  "firstAppointment"
+}
+```
+
+**Lógica de navegación post-login/registro (frontend):**
+- `firstAppointment === false` → redirigir a `/agendamiento` (onboarding)
+- `firstAppointment === true` → redirigir a `/home` (con sidebar)
+
+**Normalización de género:** el backend acepta `"Masculino"`, `"MASCULINO"` o `"masculino"` — normaliza a minúscula automáticamente. Valores válidos: `masculino | femenino | no-binario | otro | prefiero-no-decir`.
 
 ### Médico (`/api/medico`) — authenticate + authorize(MEDICO)
 
@@ -387,9 +407,8 @@ POST /whatsapp/verify-2fa        Verificar 2FA paciente
 ### Paciente (`/api/paciente`) — authenticate + authorize(PACIENTE)
 
 ```
-/perfil                  Gestión perfil
+/perfil                  Gestión perfil (GET + PUT)
 /agendamiento            Agendar citas
-/sala-espera             Sala de espera (contenido)
 /interrogatorio          Cuestionario de salud
 /documentos              Gestión documentos
 /asesorias               Asesorías
@@ -406,7 +425,9 @@ POST /whatsapp/verify-2fa        Verificar 2FA paciente
 /tratamiento             Seguimiento tratamiento
 /transcription           Transcripción
 /chat                    Chat
-/hc-publica/generar-token Generar token QR historia
+/wearables               Wearables
+GET  /heridas-cita/:citaId/info     Info cita heridas
+GET  /heridas-cita/:citaId/meeting  Meeting cita heridas
 ```
 
 ### Administrativo (`/api/administrativo`)
@@ -507,13 +528,46 @@ POST /documentos-legales         Acceder documentos legales
 POST /encuesta                   Enviar encuesta satisfacción
 ```
 
+### Médico — Agendamiento (`/api/medico/agendamiento`)
+
+```
+GET    /configuracion                    Obtener config agenda (crea por defecto si no existe)
+POST   /configuracion                    Crear configuración
+PUT    /configuracion                    Actualizar configuración
+GET    /citas                            Citas del médico (?fechaInicio=&fechaFin=)
+GET    /citas/hoy                        Citas de hoy
+PUT    /citas/:citaId/confirmar          Confirmar cita + notifica WhatsApp paciente
+PUT    /citas/:citaId/cancelar           Cancelar cita (requiere motivoCancelacion en body)
+PUT    /citas/:citaId/completar          Completar cita + regenera resumenIA del paciente
+POST   /citas/:citaId/resumen-pdf        Generar PDF resumen (historia+fórmula+incapacidad+interconsulta) → S3
+GET    /citas/:citaId/recording-url      URL firmada grabación videoconsulta
+GET    /citas/:citaId/preconsulta        Análisis preconsulta IA (resumen interrogatorio)
+```
+
+### Perfil paciente — editar (`/api/paciente/perfil`)
+
+```
+GET  /perfil    Obtener perfil completo + configuracionSeguridad
+PUT  /perfil    Actualizar perfil (campos sueltos, no requiere todo el objeto)
+```
+
+Campos editables vía `PUT /perfil`:
+- Datos personales: nombre, apellido, tipoDocumento, numeroDocumento, fechaNacimiento, sexoBiologico, genero, estadoCivil, nacionalidad, lugarResidencia, direccion, telefono
+- Salud: grupoSanguineo, rh, escolaridad, ocupacion, condicionDesplazamiento, grupoEtnico
+- Afiliación: regimenAfiliacion, eps, aseguradora, numeroAfiliacion
+- Contacto: contactoEmergencia `{ nombre, relacion, telefono }`
+- Onboarding: `firstAppointment: boolean`
+- Seguridad: autenticacionDosFactores, recordarDispositivo, autenticacionBiometrica, tipoBiometrico, visualizarContrasena, metodoNotificacion, aceptaTerminos, aceptaConsentimiento
+
+**Regla importante:** mandar solo el campo que cambia, NO todo el objeto.
+
 ### Otros endpoints en `src/index.ts`
 
 ```
 GET /api/docs.json     Swagger JSON spec
 GET /api/docs          Swagger UI
 GET /api/health        Health check
-GET /                  Root health check
+GET /                  Landing page HTML (Crisalia API status)
 ```
 
 ---
