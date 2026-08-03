@@ -1,8 +1,8 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IEncuestaSatisfaccion extends Document {
-  citaId?: mongoose.Types.ObjectId; 
-  pacienteId?: mongoose.Types.ObjectId; 
+  citaId?: mongoose.Types.ObjectId;
+  pacienteId?: mongoose.Types.ObjectId;
   calificacionAgendamiento: number;
   calificacionPreconsultaIA: number;
   calificacionRecomendaciones: number;
@@ -11,6 +11,8 @@ export interface IEncuestaSatisfaccion extends Document {
   sugerencias?: string;
   esAnonimo: boolean;
   leidoPorAdministrador: boolean;
+  /** Datos adicionales del formulario post-pago (estructura libre según el origen) */
+  datosPostPago?: Record<string, any>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -26,7 +28,8 @@ const EncuestaSatisfaccionSchema = new Schema<IEncuestaSatisfaccion>(
     calificacionTiemposEspera: { type: Number, required: true, min: 1, max: 5 },
     sugerencias: { type: String, required: false },
     esAnonimo: { type: Boolean, required: true, default: false },
-    leidoPorAdministrador: { type: Boolean, required: true, default: false }
+    leidoPorAdministrador: { type: Boolean, required: true, default: false },
+    datosPostPago: { type: Schema.Types.Mixed, required: false }
   },
   { timestamps: true }
 );

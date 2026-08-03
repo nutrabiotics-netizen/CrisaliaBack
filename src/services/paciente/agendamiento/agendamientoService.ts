@@ -12,6 +12,8 @@ export interface MedicoDisponible {
   apellido: string;
   especialidad?: string;
   disponibilidad?: string;
+  logoUrl?: string;
+  fotoMedicoUrl?: string;
   /** Para filtros del paciente (desde perfilVerificacion) */
   genero?: string;
   pais?: string;
@@ -24,6 +26,10 @@ export interface MedicoDisponible {
   telefonoLugarTrabajo?: string;
   registroMinisterioSalud?: string;
   gruposInteres?: string[];
+  /** Desde preajustes: modalidades de atención (Presencial, Virtual, etc.) */
+  modalidadesAtencion?: string[];
+  /** Desde preajustes: tipos de pacientes que atiende (Adultos, Niños, Familia, etc.) */
+  tiposPacientes?: string[];
 }
 
 export interface HorarioDisponible {
@@ -45,7 +51,7 @@ class AgendamientoService {
     }
 
     const medicos = await Medico.find(query)
-      .select('nombre apellido especialidad perfilVerificacion')
+      .select('nombre apellido especialidad perfilVerificacion logoUrl preajustes')
       .lean();
 
     return medicos.map(medico => this.mapearMedicoDisponible(medico as any));
@@ -86,13 +92,15 @@ class AgendamientoService {
       .slice(0, 4);
   }
 
-  private mapearMedicoDisponible(medico: { _id: any; nombre: string; apellido: string; especialidad?: string; perfilVerificacion?: Record<string, any> }): MedicoDisponible {
+  private mapearMedicoDisponible(medico: { _id: any; nombre: string; apellido: string; especialidad?: string; perfilVerificacion?: Record<string, any>; logoUrl?: string; preajustes?: Record<string, any> }): MedicoDisponible {
     const pv = medico.perfilVerificacion && typeof medico.perfilVerificacion === 'object' ? medico.perfilVerificacion : {};
     return {
       _id: medico._id.toString(),
       nombre: medico.nombre,
       apellido: medico.apellido,
       especialidad: medico.especialidad,
+      logoUrl: medico.logoUrl,
+      fotoMedicoUrl: (pv as any).fotoMedicoUrl ?? undefined,
       disponibilidad: 'Consultar disponibilidad',
       genero: pv.genero,
       pais: pv.pais,
@@ -104,13 +112,15 @@ class AgendamientoService {
       direccionConsultorioHabilitado: pv.direccionConsultorioHabilitado,
       telefonoLugarTrabajo: pv.telefonoLugarTrabajo,
       registroMinisterioSalud: pv.registroMinisterioSalud,
-      gruposInteres: Array.isArray(pv.gruposInteres) ? pv.gruposInteres : undefined
+      gruposInteres: Array.isArray(pv.gruposInteres) ? pv.gruposInteres : undefined,
+      modalidadesAtencion: Array.isArray(medico.preajustes?.modalidadesAtencion) ? medico.preajustes.modalidadesAtencion : undefined,
+      tiposPacientes: Array.isArray(medico.preajustes?.tiposPacientes) ? medico.preajustes.tiposPacientes : undefined,
     };
   }
 
   async obtenerMedicoPorId(medicoId: string): Promise<MedicoDisponible | null> {
     const medico = await Medico.findById(medicoId)
-      .select('nombre apellido especialidad perfilVerificacion')
+      .select('nombre apellido especialidad perfilVerificacion logoUrl preajustes')
       .lean();
 
     if (!medico) {
@@ -307,7 +317,7 @@ class AgendamientoService {
 
   async obtenerCitasPaciente(pacienteId: string): Promise<(ICita & { pacienteNombre?: string; pacienteApellido?: string })[]> {
     const citas = await Cita.find({ pacienteId })
-      .populate('medicoId', 'nombre apellido especialidad indicacionesAntesConsulta')
+      .populate('medicoId', 'nombre apellido especialidad indicacionesAntesConsulta perfilVerificacion')
       .populate('pacienteId', 'nombre apellido')
       .sort({ fecha: 1, hora: 1 })
       .lean();
@@ -315,7 +325,7 @@ class AgendamientoService {
     return citas.map(cita => {
       const medico = cita.medicoId as any;
       let medicoIdStr: string;
-      let medicoData: { _id: string; nombre: string; apellido: string; especialidad?: string; indicacionesAntesConsulta?: string } | undefined;
+      let medicoData: { _id: string; nombre: string; apellido: string; especialidad?: string; indicacionesAntesConsulta?: string; perfilVerificacion?: Record<string, any> } | undefined;
 
       if (typeof medico === 'object' && medico !== null && '_id' in medico) {
         medicoIdStr = medico._id.toString();
@@ -324,7 +334,8 @@ class AgendamientoService {
           nombre: medico.nombre ?? '',
           apellido: medico.apellido ?? '',
           especialidad: medico.especialidad,
-          indicacionesAntesConsulta: medico.indicacionesAntesConsulta ?? ''
+          indicacionesAntesConsulta: medico.indicacionesAntesConsulta ?? '',
+          perfilVerificacion: medico.perfilVerificacion ?? undefined,
         };
       } else {
         medicoIdStr = (cita.medicoId as any).toString();

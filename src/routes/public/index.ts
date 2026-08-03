@@ -2,6 +2,7 @@ import { Router } from 'express';
 import * as documentosLegalesController from '../../controllers/public/documentosLegalesController';
 import { validarCodigo, registrarMedicoConCodigo } from '../../controllers/public/registroMedicoController';
 import { obtenerHCPublica } from '../../controllers/medico/historiaClinica/historiaClinicaController';
+import { enviarEncuestaPostPago } from '../../controllers/public/encuestaController';
 import { authenticate } from '../../middleware/auth';
 
 const router = Router();
@@ -15,5 +16,8 @@ router.post('/registro-medico', registrarMedicoConCodigo);
 
 // Historia clínica pública (QR del PDF — token de 48h)
 router.get('/hc/:token', obtenerHCPublica);
+
+// Encuesta post-pago (sin auth)
+router.post('/encuesta-post-pago', enviarEncuestaPostPago);
 
 export default router;

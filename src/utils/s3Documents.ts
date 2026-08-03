@@ -145,13 +145,18 @@ export function prefixAlimentoEvaluacionParaPaciente(numeroDocumentoOPacienteId:
 
 /**
  * Genera una URL firmada para descargar un documento (válida 7 días).
+ * unhoistableHeaders evita que x-amz-checksum-mode aparezca en la URL,
+ * lo que causaba 403 cuando el navegador cargaba la imagen directamente.
  */
 export async function getDocumentUrl(s3Key: string): Promise<string> {
   if (!BUCKET) {
     throw new Error('AWS_S3_DOCUMENTS_BUCKET o AWS_CHIME_S3_BUCKET_ARN no configurado');
   }
   const command = new GetObjectCommand({ Bucket: BUCKET, Key: s3Key });
-  return getSignedUrl(s3Client, command, { expiresIn: 604800 }); // 7 días
+  return getSignedUrl(s3Client, command, {
+    expiresIn: 604800,
+    unhoistableHeaders: new Set(['x-amz-checksum-mode']),
+  });
 }
 
 /**
@@ -166,6 +171,20 @@ export async function uploadPDFAndGetUrl(buffer: Buffer, key: string): Promise<s
 export async function uploadBinaryAndGetUrl(buffer: Buffer, key: string, contentType: string): Promise<string> {
   const s3Key = await uploadBinary(buffer, key, contentType);
   return getDocumentUrl(s3Key);
+}
+
+/**
+ * Construye la URL pública permanente de un objeto S3.
+ * Solo usar para prefijos con acceso público habilitado (ej. evaluacion-alimentos/).
+ */
+export function getPublicObjectUrl(s3Key: string): string {
+  const region = process.env.AWS_REGION || 'us-east-1';
+  return `https://${BUCKET}.s3.${region}.amazonaws.com/${s3Key}`;
+}
+
+export async function uploadBinaryAndGetPublicUrl(buffer: Buffer, key: string, contentType: string): Promise<string> {
+  await uploadBinary(buffer, key, contentType);
+  return getPublicObjectUrl(key);
 }
 
 /**

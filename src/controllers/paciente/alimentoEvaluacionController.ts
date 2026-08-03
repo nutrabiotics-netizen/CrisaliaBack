@@ -5,7 +5,7 @@ import { AuthRequest } from '../../middleware/auth';
 import {
   buildAlimentoEvaluacionKey,
   prefixAlimentoEvaluacionParaPaciente,
-  uploadBinaryAndGetUrl,
+  uploadBinaryAndGetPublicUrl,
   getBinaryFromKey
 } from '../../utils/s3Documents';
 import {
@@ -48,7 +48,7 @@ export const subirImagenEvaluacionAlimento = async (req: AuthRequest, res: Respo
     const key = buildAlimentoEvaluacionKey(numeroDoc, file.originalname || 'plato.jpg', mime);
     let urlArchivo: string;
     try {
-      urlArchivo = await uploadBinaryAndGetUrl(file.buffer, key, mime);
+      urlArchivo = await uploadBinaryAndGetPublicUrl(file.buffer, key, mime);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       console.error('[subirImagenEvaluacionAlimento] S3:', msg);
