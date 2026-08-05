@@ -222,3 +222,38 @@ export const actualizarPerfil = async (req: AuthRequest, res: Response): Promise
   }
 };
 
+export const cambiarContrasena = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const pacienteId = req.userId;
+    if (!pacienteId) { res.status(401).json({ message: 'No autorizado' }); return; }
+
+    const { contrasenaActual, nuevaContrasena } = req.body;
+    if (!contrasenaActual || !nuevaContrasena) {
+      res.status(400).json({ message: 'Se requieren la contraseña actual y la nueva contraseña' });
+      return;
+    }
+    if (nuevaContrasena.length < 6) {
+      res.status(400).json({ message: 'La nueva contraseña debe tener al menos 6 caracteres' });
+      return;
+    }
+
+    const paciente = await Paciente.findById(pacienteId).select('+password');
+    if (!paciente) { res.status(404).json({ message: 'Paciente no encontrado' }); return; }
+
+    const coincide = await paciente.comparePassword(contrasenaActual);
+    if (!coincide) {
+      res.status(400).json({ message: 'La contraseña actual no es correcta' });
+      return;
+    }
+
+    paciente.password = nuevaContrasena;
+    paciente.passwordActualizadoEn = new Date();
+    await paciente.save();
+
+    res.json({ success: true, message: 'Contraseña actualizada correctamente' });
+  } catch (error) {
+    console.error('Error al cambiar contraseña:', error);
+    res.status(500).json({ message: 'Error interno al cambiar la contraseña' });
+  }
+};
+
