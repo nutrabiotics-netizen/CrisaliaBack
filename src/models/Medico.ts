@@ -41,6 +41,10 @@ export interface IPreajustesMedico {
   maximoConsultasDia: number;
   /** Tipos de pacientes que atiende (Adultos, Niños, etc.) */
   tiposPacientes: string[];
+  precioConsultaVirtual?: number;
+  precioConsultaPresencial?: number;
+  precioControlVirtual?: number;
+  precioControlPresencial?: number;
 }
 
 export interface IFacturacionMedico {
@@ -182,6 +186,10 @@ const PreajustesMedicoSchema = new Schema<IPreajustesMedico>(
     anticipacionMinimaHoras:     { type: Number, default: 24, min: 0 },
     maximoConsultasDia:          { type: Number, default: 8, min: 1 },
     tiposPacientes:              { type: [String], default: ['Adultos'] },
+    precioConsultaVirtual:       { type: Number },
+    precioConsultaPresencial:    { type: Number },
+    precioControlVirtual:        { type: Number },
+    precioControlPresencial:     { type: Number },
   },
   { _id: false }
 );

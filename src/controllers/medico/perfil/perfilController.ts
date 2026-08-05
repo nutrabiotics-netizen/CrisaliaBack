@@ -97,7 +97,14 @@ export const getPreajustes = async (req: AuthRequest, res: Response): Promise<vo
     if (!medicoId) { res.status(401).json({ success: false, message: 'No autenticado' }); return; }
     const medico = await Medico.findById(medicoId).select('preajustes').lean();
     if (!medico) { res.status(404).json({ success: false, message: 'Médico no encontrado' }); return; }
-    res.json({ success: true, data: medico.preajustes });
+    const preajustes = {
+      ...medico.preajustes,
+      precioConsultaVirtual: medico.preajustes?.precioConsultaVirtual ?? null,
+      precioConsultaPresencial: medico.preajustes?.precioConsultaPresencial ?? null,
+      precioControlVirtual: medico.preajustes?.precioControlVirtual ?? null,
+      precioControlPresencial: medico.preajustes?.precioControlPresencial ?? null,
+    };
+    res.json({ success: true, data: preajustes });
   } catch (err: any) {
     handleError(err, res);
   }
@@ -119,6 +126,8 @@ export const updatePreajustes = async (req: AuthRequest, res: Response): Promise
       'firmaImagenUrl', 'plantillaObservaciones', 'semaforoColores',
       'modalidadesAtencion', 'direccionAtencionPresencial',
       'anticipacionMinimaHoras', 'maximoConsultasDia', 'tiposPacientes',
+      'precioConsultaVirtual', 'precioConsultaPresencial',
+      'precioControlVirtual', 'precioControlPresencial',
     ];
     const update: Record<string, unknown> = {};
     for (const key of permitidos) {
