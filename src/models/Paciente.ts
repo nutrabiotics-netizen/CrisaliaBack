@@ -70,6 +70,10 @@ export interface IPaciente extends Document {
 
   // Onboarding
   firstAppointment: boolean;
+  // Seguridad y acceso
+  ultimoAcceso?: Date;
+  dispositivoAcceso?: string;
+  passwordActualizadoEn?: Date;
   // Estado
   activo: boolean;
   createdAt: Date;
@@ -222,6 +226,9 @@ const PacienteSchema = new Schema<IPaciente>(
       type: Boolean,
       default: false
     },
+    ultimoAcceso: { type: Date },
+    dispositivoAcceso: { type: String, trim: true },
+    passwordActualizadoEn: { type: Date },
     activo: {
       type: Boolean,
       default: true

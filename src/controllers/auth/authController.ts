@@ -4,6 +4,7 @@ import { handleError } from '../../utils/errors';
 import { validationResult } from 'express-validator';
 import { AuthRequest } from '../../middleware/auth';
 import ConfiguracionSeguridadPaciente from '../../models/ConfiguracionSeguridadPaciente';
+import Paciente from '../../models/Paciente';
 
 export class AuthController {
   async login(req: AuthRequest, res: Response): Promise<void> {
@@ -21,6 +22,19 @@ export class AuthController {
 
       const credentials: LoginCredentials = req.body;
       const result = await authService.login(credentials);
+
+      // Registrar último acceso y dispositivo para pacientes
+      if (result.user.role === 'paciente') {
+        const ua = req.headers['user-agent'] ?? '';
+        let dispositivo = 'WebApp';
+        if (/mobile|android|iphone|ipad/i.test(ua)) dispositivo = 'Móvil';
+        else if (/tablet/i.test(ua)) dispositivo = 'Tablet';
+        else if (/chrome|firefox|safari|edge/i.test(ua)) dispositivo = 'Navegador web';
+        Paciente.findByIdAndUpdate(result.user._id, {
+          ultimoAcceso: new Date(),
+          dispositivoAcceso: dispositivo,
+        }).catch(() => {});
+      }
 
       res.status(200).json({
         success: true,
