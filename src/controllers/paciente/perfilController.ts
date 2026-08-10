@@ -82,6 +82,8 @@ export const actualizarPerfil = async (req: AuthRequest, res: Response): Promise
       rh,
       escolaridad,
       ocupacion,
+      profesion,
+      barrio,
       condicionDesplazamiento,
       grupoEtnico,
       aseguradora,
@@ -155,6 +157,8 @@ export const actualizarPerfil = async (req: AuthRequest, res: Response): Promise
     if (rh !== undefined) paciente.rh = rh.trim() || undefined;
     if (escolaridad !== undefined) paciente.escolaridad = escolaridad.trim() || undefined;
     if (ocupacion !== undefined) paciente.ocupacion = ocupacion.trim() || undefined;
+    if (profesion !== undefined) paciente.profesion = profesion.trim() || undefined;
+    if (barrio !== undefined) paciente.barrio = barrio.trim() || undefined;
     if (condicionDesplazamiento !== undefined) paciente.condicionDesplazamiento = condicionDesplazamiento.trim() || undefined;
     if (grupoEtnico !== undefined) paciente.grupoEtnico = grupoEtnico.trim() || undefined;
     if (aseguradora !== undefined) paciente.aseguradora = aseguradora.trim() || undefined;

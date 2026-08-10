@@ -38,6 +38,8 @@ export interface IPaciente extends Document {
   rh?: string;
   escolaridad?: string;
   ocupacion?: string;
+  profesion?: string;
+  barrio?: string;
   condicionDesplazamiento?: string;
   grupoEtnico?: string;
   // Datos de afiliación (aseguradora se obtiene de eps o campo específico)
@@ -159,6 +161,8 @@ const PacienteSchema = new Schema<IPaciente>(
     rh: { type: String, trim: true },
     escolaridad: { type: String, trim: true },
     ocupacion: { type: String, trim: true },
+    profesion: { type: String, trim: true },
+    barrio: { type: String, trim: true },
     condicionDesplazamiento: { type: String, trim: true },
     grupoEtnico: { type: String, trim: true },
     // Datos de contacto
