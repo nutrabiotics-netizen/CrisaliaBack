@@ -45,6 +45,7 @@ export interface RegisterPacienteData {
   aceptaTerminos?: boolean;
   aceptaConsentimiento?: boolean;
   zonasDolor?: string[];
+  numeroDocumento?: string;
 }
 
 export interface AuthResponse {
@@ -67,6 +68,7 @@ export interface AuthResponse {
     aceptaConsentimiento?: boolean;
     firstAppointment?: boolean;
     genero?: string;
+    numeroDocumento?: string;
   };
 }
 
@@ -201,7 +203,7 @@ export class AuthService {
   }
 
   async registerPaciente(data: RegisterPacienteData): Promise<AuthResponse> {
-    const { nombre, apellido, email, password, telefono, fechaNacimiento, genero, acudiente, aceptaTerminos, aceptaConsentimiento, zonasDolor } = data;
+    const { nombre, apellido, email, password, telefono, fechaNacimiento, genero, acudiente, aceptaTerminos, aceptaConsentimiento, zonasDolor, numeroDocumento } = data;
 
     const existingPaciente = await Paciente.findOne({ email });
     if (existingPaciente) {
@@ -237,7 +239,8 @@ export class AuthService {
           : undefined,
       role: UserRole.PACIENTE,
       activo: true,
-      ...(zonasDolor && zonasDolor.length > 0 && { zonasDolor })
+      ...(zonasDolor && zonasDolor.length > 0 && { zonasDolor }),
+      ...(numeroDocumento?.trim() && { numeroDocumento: numeroDocumento.trim() })
     });
 
     await nuevoPaciente.save();
@@ -272,7 +275,8 @@ export class AuthService {
       aceptaTerminos: configSeguridad?.aceptaTerminos ?? false,
       aceptaConsentimiento: configSeguridad?.aceptaConsentimiento ?? false,
       firstAppointment: false,
-      genero: nuevoPaciente.genero
+      genero: nuevoPaciente.genero,
+      numeroDocumento: nuevoPaciente.numeroDocumento
     };
 
     return {
