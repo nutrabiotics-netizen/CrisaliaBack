@@ -12,6 +12,7 @@ import {
   obtenerSedesMedico,
   obtenerHorariosDisponibles,
   obtenerConfiguracionFlujoMedico,
+  obtenerPreciosMedicos,
   crearCita,
   obtenerCitasPaciente,
   cancelarCita,
@@ -27,6 +28,7 @@ const router = Router();
 
 router.get('/sala-espera/contenido', authenticate, authorize(UserRole.PACIENTE), getContenidoSalaEspera);
 
+router.get('/medicos/precios', authenticate, authorize(UserRole.PACIENTE, UserRole.MEDICO), obtenerPreciosMedicos);
 router.get('/medicos', authenticate, authorize(UserRole.PACIENTE), obtenerMedicosDisponibles);
 router.get('/medicos-recomendados', authenticate, authorize(UserRole.PACIENTE), obtenerMedicosRecomendados);
 router.get('/medicos/:medicoId', authenticate, authorize(UserRole.PACIENTE), obtenerMedicoPorId);

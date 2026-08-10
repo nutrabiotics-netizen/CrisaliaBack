@@ -22,6 +22,15 @@ function horaA24Horas(hora: string): string {
   return `${h.toString().padStart(2, '0')}:${m}`;
 }
 
+export const obtenerPreciosMedicos = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const precios = await agendamientoService.obtenerPreciosMedicos();
+    res.json({ success: true, data: precios });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'Error al obtener precios', error: error.message });
+  }
+};
+
 export const obtenerMedicosDisponibles = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const busqueda = req.query.busqueda as string | undefined;

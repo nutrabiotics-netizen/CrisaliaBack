@@ -39,6 +39,19 @@ export interface HorarioDisponible {
 }
 
 class AgendamientoService {
+  async obtenerPreciosMedicos(): Promise<{ medicoId: string; nombre: string; apellido: string; precioConsultaVirtual: number | null; precioConsultaPresencial: number | null; precioControlVirtual: number | null; precioControlPresencial: number | null }[]> {
+    const medicos = await Medico.find({ activo: true }).select('nombre apellido preajustes').lean();
+    return medicos.map(m => ({
+      medicoId: m._id.toString(),
+      nombre: m.nombre,
+      apellido: m.apellido,
+      precioConsultaVirtual: m.preajustes?.precioConsultaVirtual ?? null,
+      precioConsultaPresencial: m.preajustes?.precioConsultaPresencial ?? null,
+      precioControlVirtual: m.preajustes?.precioControlVirtual ?? null,
+      precioControlPresencial: m.preajustes?.precioControlPresencial ?? null,
+    }));
+  }
+
   async obtenerMedicosDisponibles(busqueda?: string): Promise<MedicoDisponible[]> {
     const query: any = { activo: true };
     
