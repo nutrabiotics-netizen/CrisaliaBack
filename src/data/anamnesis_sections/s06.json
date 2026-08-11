@@ -1,0 +1,314 @@
+{
+  "id": "s06",
+  "number": 6,
+  "title": "Medicamentos, Suplementos y Depleción de Nutrientes",
+  "questions": [
+    {
+      "id": "s06_toma_medicamentos",
+      "text": "¿En la actualidad tomas medicamentos o suplementos con regularidad?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "si",
+          "label": "Sí"
+        }
+      ]
+    },
+    {
+      "id": "s06_detalle",
+      "text": "Detalle de lo que consumes actualmente",
+      "type": "table",
+      "columns": [
+        "Sustancia / producto / planta",
+        "Dosis",
+        "Frecuencia",
+        "Fecha de inicio",
+        "Razón de uso",
+        "¿Lo prescribió un médico?"
+      ]
+    },
+    {
+      "id": "s06_medicamentos_digestivos",
+      "text": "Medicamentos de uso actual o prolongado — Digestivos (más de 3 meses en cualquier momento)",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "ibb",
+          "label": "Inhibidores de bomba de protones (omeprazol, esomeprazol, lansoprazol)"
+        },
+        {
+          "value": "h2",
+          "label": "Antagonistas H2 (ranitidina, cimetidina)"
+        },
+        {
+          "value": "antiacidos",
+          "label": "Antiácidos o sales alcalinas"
+        },
+        {
+          "value": "antiespasmódicos",
+          "label": "Antiespasmódicos (hioscina, pinaverio, otilonio)"
+        },
+        {
+          "value": "antidiarreicos",
+          "label": "Antidiarreicos (loperamida)"
+        },
+        {
+          "value": "laxantes",
+          "label": "Laxantes"
+        },
+        {
+          "value": "procineticos",
+          "label": "Procinéticos"
+        }
+      ]
+    },
+    {
+      "id": "s06_medicamentos_antimicrobianos",
+      "text": "Medicamentos de uso actual o prolongado — Antimicrobianos y antiinflamatorios",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "antibioticos_cronicos",
+          "label": "Antibióticos de uso crónico o repetido"
+        },
+        {
+          "value": "penicilinas",
+          "label": "Penicilinas o inhibidores de betalactamasas"
+        },
+        {
+          "value": "tetraciclinas",
+          "label": "Tetraciclinas"
+        },
+        {
+          "value": "antifungicos",
+          "label": "Antifúngicos"
+        },
+        {
+          "value": "antirretrovirales",
+          "label": "Antirretrovirales"
+        },
+        {
+          "value": "aines",
+          "label": "Antiinflamatorios no esteroideos"
+        },
+        {
+          "value": "salicilatos",
+          "label": "Salicilatos / aspirina"
+        },
+        {
+          "value": "acetaminofen",
+          "label": "Acetaminofén de uso frecuente"
+        },
+        {
+          "value": "corticoides",
+          "label": "Corticoides sistémicos (prednisona, betametasona, budesonida, mometasona)"
+        },
+        {
+          "value": "inmunosupresores",
+          "label": "Inmunosupresores"
+        },
+        {
+          "value": "quimioterapeuticos",
+          "label": "Quimioterapéuticos"
+        },
+        {
+          "value": "metotrexate",
+          "label": "Metotrexate"
+        }
+      ]
+    },
+    {
+      "id": "s06_medicamentos_cardiovasculares",
+      "text": "Medicamentos de uso actual o prolongado — Cardiovasculares y metabólicos",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "estatinas",
+          "label": "Estatinas"
+        },
+        {
+          "value": "beta_bloqueadores",
+          "label": "Beta-bloqueadores"
+        },
+        {
+          "value": "antiarritmicos",
+          "label": "Antiarrítmicos"
+        },
+        {
+          "value": "ieca",
+          "label": "Inhibidores de la ECA (captopril, enalapril, lisinopril)"
+        },
+        {
+          "value": "diureticos_asa",
+          "label": "Diuréticos de asa (furosemida, bumetanida)"
+        },
+        {
+          "value": "diureticos_tiazidicos",
+          "label": "Diuréticos tiazídicos (hidroclorotiazida, indapamida, metolazona)"
+        },
+        {
+          "value": "metformina",
+          "label": "Metformina"
+        },
+        {
+          "value": "sulfonilureas",
+          "label": "Sulfonilureas"
+        },
+        {
+          "value": "levotiroxina",
+          "label": "Levotiroxina"
+        },
+        {
+          "value": "alopurinol",
+          "label": "Alopurinol"
+        }
+      ]
+    },
+    {
+      "id": "s06_medicamentos_psiquiatricos",
+      "text": "Medicamentos de uso actual o prolongado — Neurológicos, psiquiátricos y hormonales",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "antidepresivos_triciclicos",
+          "label": "Antidepresivos tricíclicos"
+        },
+        {
+          "value": "isrs",
+          "label": "Inhibidores selectivos de recaptación de serotonina"
+        },
+        {
+          "value": "benzodiacepinas",
+          "label": "Ansiolíticos o benzodiacepinas"
+        },
+        {
+          "value": "antiepilépticos",
+          "label": "Antiepilépticos"
+        },
+        {
+          "value": "antipsicoticos",
+          "label": "Antipsicóticos (haloperidol)"
+        },
+        {
+          "value": "opiaceos",
+          "label": "Opiáceos o codeína"
+        },
+        {
+          "value": "antihistaminicos",
+          "label": "Antihistamínicos"
+        },
+        {
+          "value": "metilfenidato",
+          "label": "Metilfenidato o anfetaminas de prescripción"
+        },
+        {
+          "value": "anticonceptivos_orales",
+          "label": "Anticonceptivos orales"
+        },
+        {
+          "value": "anticoncepcion_hormonal",
+          "label": "Anticoncepción inyectable, parche, implante o DIU hormonal"
+        },
+        {
+          "value": "terapia_reemplazo_hormonal",
+          "label": "Terapia de reemplazo hormonal"
+        },
+        {
+          "value": "hormonas_cancer",
+          "label": "Tratamiento hormonal para cáncer de mama o próstata"
+        }
+      ]
+    },
+    {
+      "id": "s06_suplementos",
+      "text": "Suplementos que tomas o has tomado de forma prolongada",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "hierro",
+          "label": "Hierro"
+        },
+        {
+          "value": "calcio",
+          "label": "Calcio"
+        },
+        {
+          "value": "zinc",
+          "label": "Zinc"
+        },
+        {
+          "value": "magnesio",
+          "label": "Magnesio"
+        },
+        {
+          "value": "acido_folico",
+          "label": "Ácido fólico sintético"
+        },
+        {
+          "value": "complejo_b",
+          "label": "Complejo B"
+        },
+        {
+          "value": "vitamina_d",
+          "label": "Vitamina D"
+        },
+        {
+          "value": "omega3",
+          "label": "Omega 3"
+        },
+        {
+          "value": "probioticos",
+          "label": "Probióticos"
+        },
+        {
+          "value": "melatonina",
+          "label": "Melatonina"
+        },
+        {
+          "value": "proteina_polvo",
+          "label": "Proteína en polvo"
+        },
+        {
+          "value": "creatina",
+          "label": "Creatina"
+        },
+        {
+          "value": "colageno",
+          "label": "Colágeno"
+        },
+        {
+          "value": "ninguno",
+          "label": "Ninguno"
+        }
+      ]
+    },
+    {
+      "id": "s06_suplementos_dormir",
+      "text": "¿Usas medicamentos o suplementos para dormir?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "ocasionalmente",
+          "label": "Sí, ocasionalmente"
+        },
+        {
+          "value": "casi_todas",
+          "label": "Sí, casi todas las noches"
+        }
+      ]
+    },
+    {
+      "id": "s06_suplementos_dormir_cuales",
+      "text": "¿Cuáles y desde cuándo?",
+      "type": "text"
+    }
+  ]
+}

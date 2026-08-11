@@ -1,0 +1,170 @@
+{
+  "id": "s08",
+  "number": 8,
+  "title": "Salud Hormonal Masculina — Pacientes de sexo masculino (XY)",
+  "condition": {
+    "field": "s01_sexo",
+    "value": "masculino"
+  },
+  "questions": [
+    {
+      "id": "s08_general",
+      "text": "Manifestaciones hormonales masculinas",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s08_disfuncion_erectil",
+          "label": "Disfunción eréctil",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s08_vello_corporal",
+          "label": "Disminución del vello corporal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s08_ginecomastia",
+          "label": "Aumento del tejido mamario (ginecomastia)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s08_hiperplasia_prostatica",
+          "label": "Antecedente de hiperplasia prostática benigna",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s08_cancer_prostata",
+          "label": "Antecedente de cáncer de próstata",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s08_libido",
+          "label": "Disminución de la libido",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s08_infertilidad",
+          "label": "Infertilidad",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s08_masa_muscular",
+          "label": "Pérdida de masa muscular pese a entrenar",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s08_urinarios",
+      "text": "Síntomas urinarios y prostáticos",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s08_chorro_debil",
+          "label": "Chorro urinario débil o intermitente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s08_pujar_orinar",
+          "label": "Necesidad de pujar para orinar",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s08_vaciado_incompleto",
+          "label": "Sensación de vaciado incompleto",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s08_urgencia_miccional",
+          "label": "Urgencia miccional",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s08_nocturia",
+          "label": "Levantarme más de una vez en la noche a orinar",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s08_ardor_orinar",
+          "label": "Dolor o ardor al orinar",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s08_dolor_perineal",
+          "label": "Dolor perineal o pélvico",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s08_descenso_androgenico",
+      "text": "Síntomas de descenso androgénico",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s08_fatiga",
+          "label": "Fatiga persistente sin causa clara",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s08_fuerza_muscular",
+          "label": "Pérdida de fuerza o de masa muscular",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s08_grasa_abdominal",
+          "label": "Aumento de grasa abdominal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s08_animo",
+          "label": "Ánimo bajo o irritabilidad",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s08_motivacion",
+          "label": "Pérdida de motivación y de iniciativa",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s08_concentracion",
+          "label": "Dificultad para concentrarme",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s08_sudoracion_nocturna",
+          "label": "Sudoración nocturna o sofocos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s08_insomnio",
+          "label": "Insomnio",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s08_psa",
+      "text": "¿Te has realizado alguna vez antígeno prostático específico (PSA)?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "normal",
+          "label": "Sí, normal"
+        },
+        {
+          "value": "alterado",
+          "label": "Sí, alterado"
+        },
+        {
+          "value": "no_recuerdo",
+          "label": "No recuerdo el resultado"
+        }
+      ]
+    }
+  ]
+}

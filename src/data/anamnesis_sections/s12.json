@@ -1,0 +1,323 @@
+{
+  "id": "s12",
+  "number": 12,
+  "title": "Coherencia Cardíaca y Regulación Autonómica",
+  "questions": [
+    {
+      "id": "s12_mide_vfc",
+      "text": "¿Mides tu variabilidad de la frecuencia cardíaca (VFC / HRV)?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "reloj_anillo",
+          "label": "Sí, con reloj o anillo"
+        },
+        {
+          "value": "app_banda",
+          "label": "Sí, con aplicación y banda de pecho"
+        },
+        {
+          "value": "consulta",
+          "label": "Sí, en consulta médica"
+        }
+      ]
+    },
+    {
+      "id": "s12_vfc_promedio",
+      "text": "VFC promedio de las últimas 4 semanas (ms)",
+      "type": "text"
+    },
+    {
+      "id": "s12_fc_reposo",
+      "text": "Frecuencia cardíaca en reposo (lpm)",
+      "type": "text"
+    },
+    {
+      "id": "s12_dispositivo",
+      "text": "Dispositivo utilizado",
+      "type": "text"
+    },
+    {
+      "id": "s12_cambio_vfc",
+      "text": "¿Cómo ha cambiado tu VFC en los últimos meses?",
+      "type": "single",
+      "options": [
+        {
+          "value": "aumentado",
+          "label": "Ha aumentado"
+        },
+        {
+          "value": "estable",
+          "label": "Se ha mantenido estable"
+        },
+        {
+          "value": "disminuido",
+          "label": "Ha disminuido"
+        },
+        {
+          "value": "no_mido",
+          "label": "No la mido"
+        }
+      ]
+    },
+    {
+      "id": "s12_baja_flexibilidad",
+      "text": "Signos de baja flexibilidad autonómica",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s12_fc_aumento",
+          "label": "Mi frecuencia cardíaca en reposo ha aumentado sin explicación",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s12_no_relaja",
+          "label": "No logro relajarme aunque quiera",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s12_enojo_calma",
+          "label": "Paso del enojo a la calma con mucha dificultad",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s12_reaccion_desproporcionada",
+          "label": "Reacciono desproporcionadamente ante contrariedades menores",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s12_emociones_positivas",
+          "label": "Me cuesta sentir emociones positivas (alegría, gratitud, entusiasmo)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s12_pecho_apretado",
+          "label": "Siento el pecho apretado o pesado ante emociones",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s12_palpitaciones_reposo",
+          "label": "Palpitaciones o latidos irregulares en reposo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s12_corazon_pensamiento",
+          "label": "Se me acelera el corazón al pensar en algo estresante",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s12_opresion_toracica",
+          "label": "Sensación de opresión torácica sin esfuerzo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s12_mareo_posicion",
+          "label": "Mareo o inestabilidad al cambiar de posición",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s12_intolerancia_ortostática",
+          "label": "Intolerancia ortostática (debo sentarme al estar de pie mucho tiempo)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s12_extremidades_frias",
+          "label": "Extremidades frías con cambios de coloración",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s12_sudoracion_desregulada",
+          "label": "Sudoración desregulada (mucha o muy poca)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s12_digestion_emocion",
+          "label": "Alteración de la digestión ante la emoción",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s12_respiracion_dia",
+      "text": "¿Durante el día respiras principalmente por?",
+      "type": "single",
+      "options": [
+        {
+          "value": "nariz",
+          "label": "Nariz"
+        },
+        {
+          "value": "boca",
+          "label": "Boca"
+        },
+        {
+          "value": "alterno",
+          "label": "Alterno según la actividad"
+        }
+      ]
+    },
+    {
+      "id": "s12_respiracion_noche",
+      "text": "¿Durante la noche respiras principalmente por?",
+      "type": "single",
+      "options": [
+        {
+          "value": "nariz",
+          "label": "Nariz"
+        },
+        {
+          "value": "boca",
+          "label": "Boca"
+        },
+        {
+          "value": "no_se",
+          "label": "No lo sé"
+        }
+      ]
+    },
+    {
+      "id": "s12_boca_seca",
+      "text": "¿Despiertas con la boca o la garganta muy secas?",
+      "type": "single",
+      "options": [
+        {
+          "value": "nunca",
+          "label": "Nunca"
+        },
+        {
+          "value": "ocasionalmente",
+          "label": "Ocasionalmente"
+        },
+        {
+          "value": "frecuente",
+          "label": "Con frecuencia"
+        },
+        {
+          "value": "todas_mananas",
+          "label": "Todas las mañanas"
+        }
+      ]
+    },
+    {
+      "id": "s12_patron_disfuncional",
+      "text": "Patrón respiratorio disfuncional",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s12_rapida_superficial",
+          "label": "Respiración rápida y superficial",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s12_suspiros",
+          "label": "Suspiros frecuentes",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s12_no_llena_pecho",
+          "label": "Sensación de no poder llenar el pecho de aire",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s12_bostezos",
+          "label": "Bostezos frecuentes sin sueño",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s12_respirar_profundo",
+          "label": "Necesidad de respirar profundo de forma consciente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s12_falta_aire_hablar",
+          "label": "Falta de aire al hablar o subir escaleras",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s12_audible_reposo",
+          "label": "Respiración audible en reposo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s12_contengo",
+          "label": "Contengo la respiración sin darme cuenta",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s12_tecnica_respiracion",
+      "text": "¿Practicas alguna técnica de respiración estructurada (coherencia cardíaca, respiración diafragmática, Buteyko, box breathing)?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "ocasionalmente",
+          "label": "Sí, ocasionalmente"
+        },
+        {
+          "value": "varias_semana",
+          "label": "Sí, varias veces por semana"
+        },
+        {
+          "value": "diario",
+          "label": "Sí, a diario"
+        }
+      ]
+    },
+    {
+      "id": "s12_recursos",
+      "text": "¿Cuáles de estas prácticas forman parte de tu vida? (marca todas)",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "meditacion",
+          "label": "Meditación"
+        },
+        {
+          "value": "oracion",
+          "label": "Oración"
+        },
+        {
+          "value": "yoga",
+          "label": "Yoga"
+        },
+        {
+          "value": "mindfulness",
+          "label": "Mindfulness"
+        },
+        {
+          "value": "psicoterapia",
+          "label": "Psicoterapia"
+        },
+        {
+          "value": "naturaleza",
+          "label": "Contacto con la naturaleza"
+        },
+        {
+          "value": "arte_musica",
+          "label": "Práctica artística o musical"
+        },
+        {
+          "value": "gratitud",
+          "label": "Gratitud escrita o diario"
+        },
+        {
+          "value": "comunidad",
+          "label": "Vida comunitaria o de servicio"
+        },
+        {
+          "value": "ninguna",
+          "label": "Ninguna"
+        }
+      ]
+    }
+  ]
+}

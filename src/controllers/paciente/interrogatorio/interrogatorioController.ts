@@ -4,6 +4,13 @@ import interrogatorioService from '../../../services/paciente/interrogatorio/int
 import { registrarAccion } from '../../../utils/auditoriaHelper';
 import Interrogatorio from '../../../models/Interrogatorio';
 import { AIService } from '../../../services/ai/AIService';
+import {
+  cargarSecciones,
+  cargarIndex,
+  calcularScores,
+  consultarSiguientePaso,
+  generarSintesis as generarSintesisOrchestrator,
+} from '../../../services/ai/anamnesisOrchestratorService';
 
 export const crearInterrogatorio = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -209,7 +216,7 @@ export const actualizarRespuestas = async (req: AuthRequest, res: Response): Pro
   try {
     const pacienteId = req.userId;
     const { interrogatorioId } = req.params;
-    const { respuestas } = req.body;
+    const { respuestas, historialNuevo } = req.body;
 
     if (!pacienteId) {
       res.status(401).json({
@@ -225,6 +232,14 @@ export const actualizarRespuestas = async (req: AuthRequest, res: Response): Pro
         message: 'Las respuestas son requeridas y deben ser un objeto'
       });
       return;
+    }
+
+    // Si vienen entradas nuevas al historial, las añadimos a historialChat
+    let respuestasConHistorial = { ...respuestas };
+    if (Array.isArray(historialNuevo) && historialNuevo.length > 0) {
+      const interrogatorioActual = await Interrogatorio.findById(interrogatorioId).lean() as any;
+      const historialExistente: any[] = interrogatorioActual?.respuestas?.historialChat ?? [];
+      respuestasConHistorial.historialChat = [...historialExistente, ...historialNuevo];
     }
 
     // Obtener interrogatorio anterior para auditoría
@@ -244,10 +259,10 @@ export const actualizarRespuestas = async (req: AuthRequest, res: Response): Pro
     };
 
     const interrogatorio = await interrogatorioService.actualizarRespuestas(
-      interrogatorioId as string,   
+      interrogatorioId as string,
       pacienteId,
       {
-        respuestas,
+        respuestas: respuestasConHistorial,
         actualizadoPor: pacienteId,
         actualizadoPorRol: 'Paciente'
       }
@@ -322,6 +337,174 @@ export const completarInterrogatorio = async (req: AuthRequest, res: Response): 
       message: 'Error al completar interrogatorio',
       error: error.message
     });
+  }
+};
+
+// ─── Flujo orquestado por Bedrock Agent ──────────────────────────────────────
+
+/**
+ * POST /paciente/interrogatorio/:interrogatorioId/siguiente-seccion
+ *
+ * Consulta al Agent orquestador qué secciones del cuestionario debe hacer
+ * el paciente a continuación, según el síntoma inicial y las respuestas ya guardadas.
+ *
+ * Body: { sintomaInicial: string }
+ *
+ * Respuesta:
+ *   - accion: "entrevistar" → secciones[] + estructura JSON de cada sección
+ *   - accion: "generar_s37" → indicación de que ya se puede generar la síntesis
+ *   - accion: "alerta_medica" → bandera roja detectada, suspender entrevista
+ */
+export const siguienteSeccion = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const pacienteId           = req.userId!;
+    const { interrogatorioId } = req.params;
+    const { sintomaInicial }   = req.body;
+
+    if (!sintomaInicial || typeof sintomaInicial !== 'string') {
+      res.status(400).json({ success: false, message: 'El campo sintomaInicial es requerido.' });
+      return;
+    }
+
+    const interrogatorio = await Interrogatorio.findOne({ _id: interrogatorioId, pacienteId }).lean();
+    if (!interrogatorio) {
+      res.status(404).json({ success: false, message: 'Interrogatorio no encontrado.' });
+      return;
+    }
+
+    const index  = cargarIndex();
+    const scores = calcularScores(interrogatorio.respuestas || {}, index.sections);
+
+    // Secciones ya completadas = tienen al menos 1 respuesta guardada
+    const respuestas           = interrogatorio.respuestas || {};
+    const seccionesCompletadas = index.sections
+      .filter((s: any) => {
+        const seccion = cargarSecciones([s.id])[s.id];
+        if (!seccion?.questions) return false;
+        return seccion.questions.some((q: any) => {
+          if (q.type === 'symptom_table') return q.items?.some((i: any) => respuestas[i.id] !== undefined);
+          return respuestas[q.id] !== undefined;
+        });
+      })
+      .map((s: any) => s.id);
+
+    const medicacionActual = respuestas['s06_detalle']
+      ? JSON.stringify(respuestas['s06_detalle'])
+      : undefined;
+
+    const decision = await consultarSiguientePaso(
+      { sintomaInicial, seccionesCompletadas, scores, medicacionActual },
+      { sessionId: `interrogatorio-${interrogatorioId}` }
+    );
+
+    let seccionesEstructura: Record<string, any> = {};
+    if (decision.accion === 'entrevistar') {
+      seccionesEstructura = cargarSecciones(decision.secciones);
+    }
+
+    res.json({
+      success: true,
+      data: {
+        decision,
+        seccionesEstructura,
+        scores: {
+          rojas:     scores.seccRojas,
+          amarillas: scores.seccAmarillas,
+          criticos:  scores.itemsCriticos.slice(0, 20),
+        },
+      },
+    });
+  } catch (err: any) {
+    console.error('[siguienteSeccion] error:', err);
+    res.status(500).json({ success: false, message: 'Error al consultar al agente de anamnesis.', error: err.message });
+  }
+};
+
+/**
+ * POST /paciente/interrogatorio/:interrogatorioId/generar-sintesis
+ *
+ * Genera la síntesis funcional completa (Sección 37).
+ * Guarda el resultado en analisisFisiologicoIA y recomendacionAutomatica.
+ *
+ * Body: { sintomaInicial: string }
+ */
+export const generarSintesis = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const pacienteId           = req.userId!;
+    const { interrogatorioId } = req.params;
+    const { sintomaInicial, sintesisAgent } = req.body;
+
+    if (!sintomaInicial || typeof sintomaInicial !== 'string') {
+      res.status(400).json({ success: false, message: 'El campo sintomaInicial es requerido.' });
+      return;
+    }
+
+    const interrogatorio = await Interrogatorio.findOne({ _id: interrogatorioId, pacienteId });
+    if (!interrogatorio) {
+      res.status(404).json({ success: false, message: 'Interrogatorio no encontrado.' });
+      return;
+    }
+
+    const index  = cargarIndex();
+    const scores = calcularScores(interrogatorio.respuestas || {}, index.sections);
+
+    // Si el frontend ya envió la síntesis del Agent, usarla directamente sin volver a invocar Bedrock
+    let sintesis: any;
+    if (sintesisAgent && sintesisAgent.disfunciones_probables) {
+      console.log('[generarSintesis] Usando síntesis del Agent enviada por el frontend');
+      sintesis = sintesisAgent;
+    } else {
+      const medicacionActual = interrogatorio.respuestas?.['s06_detalle']
+        ? JSON.stringify(interrogatorio.respuestas['s06_detalle'])
+        : '';
+      sintesis = await generarSintesisOrchestrator(
+        interrogatorio.respuestas || {},
+        scores,
+        sintomaInicial,
+        medicacionActual,
+        { sessionId: `interrogatorio-${interrogatorioId}` }
+      );
+    }
+
+    interrogatorio.analisisFisiologicoIA  = sintesis.disfunciones_probables;
+    interrogatorio.recomendacionAutomatica = {
+      semaforizacion:         Object.values(scores.porSeccion),
+      recomendacionesOTC:     sintesis.disfunciones_probables.flatMap((d: any) => d.productos),
+      estiloVida:             [],
+      estrategiasFuncionales: sintesis.disfunciones_probables,
+      llamadoAccion:          sintesis.nota_medico || '',
+      generadoEn:             new Date(),
+    };
+    // No marcar como completado aquí — se completa cuando el paciente confirma el resumen
+    interrogatorio.estado   = 'en_proceso';
+    interrogatorio.progreso = 100;
+    await interrogatorio.save();
+
+    await registrarAccion(
+      req,
+      'actualizar',
+      'Interrogatorio',
+      String(interrogatorioId),
+      undefined,
+      { accion: 'generar_sintesis', disfuncionesCount: sintesis.disfunciones_probables.length }
+    );
+
+    res.json({
+      success: true,
+      message: 'Síntesis funcional generada exitosamente.',
+      data: {
+        _id:                     interrogatorio._id.toString(),
+        analisisFisiologicoIA:   sintesis.disfunciones_probables,
+        paraclinicos:            sintesis.disfunciones_a_descartar_con_paraclinicos,
+        ordenAbordaje:           sintesis.orden_abordaje,
+        notaMedico:              sintesis.nota_medico,
+        banderasRojas:           sintesis.banderas_rojas,
+        recomendacionAutomatica: interrogatorio.recomendacionAutomatica,
+      },
+    });
+  } catch (err: any) {
+    console.error('[generarSintesis] error:', err);
+    res.status(500).json({ success: false, message: 'Error al generar la síntesis funcional.', error: err.message });
   }
 };
 

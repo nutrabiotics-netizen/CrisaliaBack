@@ -1,0 +1,385 @@
+{
+  "id": "s22",
+  "number": 22,
+  "title": "Glicotoxicidad, Hipoglucemia y Resistencia a la Insulina",
+  "questions": [
+    {
+      "id": "s22_hipoglucemia",
+      "text": "Síntomas de hipoglucemia",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s22_temblor",
+          "label": "Temblor fino",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_sudoracion",
+          "label": "Sudoración excesiva sin calor ni esfuerzo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_hambre_subita",
+          "label": "Hambre súbita e imperiosa",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_mareo_desmayo",
+          "label": "Mareo o sensación de que me podría desmayar",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_debilidad_repentina",
+          "label": "Debilidad repentina",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_confusion",
+          "label": "Confusión o dificultad súbita para concentrarme",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_nerviosismo_cede",
+          "label": "Nerviosismo o irritabilidad que cede al comer",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_cambios_animo_ceden",
+          "label": "Cambios bruscos del estado de ánimo que ceden al comer",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_pesadillas_madrugada",
+          "label": "Pesadillas o despertar con angustia en la madrugada",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_vision_borrosa",
+          "label": "Visión borrosa transitoria",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_palidez",
+          "label": "Palidez",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s22_momento_hipoglucemia",
+      "text": "¿En qué momento aparecen estos síntomas? (marca todos)",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "despertar",
+          "label": "Al despertar"
+        },
+        {
+          "value": "antes_desayuno",
+          "label": "Antes del desayuno"
+        },
+        {
+          "value": "media_manana",
+          "label": "A media mañana"
+        },
+        {
+          "value": "antes_almuerzo",
+          "label": "Antes del almuerzo"
+        },
+        {
+          "value": "media_tarde",
+          "label": "A media tarde"
+        },
+        {
+          "value": "antes_cena",
+          "label": "Antes de la cena"
+        },
+        {
+          "value": "madrugada",
+          "label": "En la madrugada"
+        }
+      ]
+    },
+    {
+      "id": "s22_resistencia_insulina",
+      "text": "Síntomas de resistencia a la insulina",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s22_ri_ansiedad_dulce",
+          "label": "Deseo intenso o ansiedad por comer dulce",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_ri_hambre_insaciable",
+          "label": "Hambre insaciable; nunca me siento lleno",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_ri_somnolencia",
+          "label": "Somnolencia después de comer (sobre todo después del almuerzo)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_ri_grasa_abdominal",
+          "label": "Aumento de grasa abdominal con dificultad para perder peso",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_ri_cefalea",
+          "label": "Cefalea",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_ri_fatiga",
+          "label": "Fatiga habitual",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_ri_acantosis",
+          "label": "Manchas oscuras y aterciopeladas en cuello, axilas o pliegues (acantosis nigricans)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_ri_palidez",
+          "label": "Palidez",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_ri_ta",
+          "label": "Elevación de la tensión arterial",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_ri_orina_frecuente",
+          "label": "Orino con mucha frecuencia",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_ri_retener_orina",
+          "label": "Se me dificulta retener la orina",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s22_ansiedad_dulce",
+      "text": "¿Deseas comer dulce o tienes ansiedad o adicción al dulce?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "ocasionalmente",
+          "label": "Ocasionalmente"
+        },
+        {
+          "value": "frecuente",
+          "label": "Con frecuencia"
+        },
+        {
+          "value": "todos_dias",
+          "label": "Todos los días"
+        }
+      ]
+    },
+    {
+      "id": "s22_salta_comidas",
+      "text": "¿Te saltas comidas?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "1_2_semana",
+          "label": "1-2 veces/semana"
+        },
+        {
+          "value": "3_5_semana",
+          "label": "3-5 veces/semana"
+        },
+        {
+          "value": "diario",
+          "label": "A diario"
+        }
+      ]
+    },
+    {
+      "id": "s22_cuales_salta",
+      "text": "¿Cuáles?",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "desayuno",
+          "label": "Desayuno"
+        },
+        {
+          "value": "almuerzo",
+          "label": "Almuerzo"
+        },
+        {
+          "value": "cena",
+          "label": "Cena"
+        },
+        {
+          "value": "meriendas",
+          "label": "Meriendas"
+        }
+      ]
+    },
+    {
+      "id": "s22_somnolencia_comida",
+      "text": "¿Tienes somnolencia después de comer?",
+      "type": "single",
+      "options": [
+        {
+          "value": "nunca",
+          "label": "Nunca"
+        },
+        {
+          "value": "desayuno",
+          "label": "Después del desayuno"
+        },
+        {
+          "value": "almuerzo",
+          "label": "Después del almuerzo"
+        },
+        {
+          "value": "cena",
+          "label": "Después de la cena"
+        },
+        {
+          "value": "toda_comida",
+          "label": "Después de toda comida"
+        }
+      ]
+    },
+    {
+      "id": "s22_complicaciones",
+      "text": "Complicaciones asociadas a la glicotoxicidad",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s22_c_vision_borrosa",
+          "label": "Visión borrosa o fluctuante",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_c_perdida_vision",
+          "label": "Pérdida progresiva de la visión",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_c_heridas_no_sanan",
+          "label": "Heridas que no sanan o sanan lentamente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_c_inf_bacterianas",
+          "label": "Infecciones bacterianas recurrentes",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_c_inf_hongos",
+          "label": "Infecciones por hongos recurrentes",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_c_apnea",
+          "label": "Apnea del sueño",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_c_garganta_seca",
+          "label": "Garganta muy seca al despertar",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_c_hormigueo",
+          "label": "Hormigueo o ardor en pies y manos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_c_dolor_neuropatico",
+          "label": "Dolor neuropático nocturno",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s22_c_hinchazón_piernas",
+          "label": "Hinchazón de miembros inferiores",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s22_examenes",
+      "text": "¿Te han informado alteración en alguno de estos exámenes?",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "glucosa_ayunas",
+          "label": "Glucosa en ayunas elevada"
+        },
+        {
+          "value": "hba1c",
+          "label": "Hemoglobina glicosilada elevada"
+        },
+        {
+          "value": "insulina_basal",
+          "label": "Insulina basal elevada"
+        },
+        {
+          "value": "homa_ir",
+          "label": "HOMA-IR elevado"
+        },
+        {
+          "value": "trigliceridos",
+          "label": "Triglicéridos elevados"
+        },
+        {
+          "value": "acido_urico",
+          "label": "Ácido úrico elevado"
+        },
+        {
+          "value": "ninguno",
+          "label": "Ninguno"
+        },
+        {
+          "value": "no_realizado",
+          "label": "No me los he realizado"
+        }
+      ]
+    },
+    {
+      "id": "s22_glucosa_rango",
+      "text": "Si mides glucosa capilar o usas monitor continuo, anota el rango habitual",
+      "type": "single",
+      "options": [
+        {
+          "value": "menos_70",
+          "label": "Menos de 70 mg/dL"
+        },
+        {
+          "value": "70_99",
+          "label": "70 a 99 mg/dL"
+        },
+        {
+          "value": "100_125",
+          "label": "100 a 125 mg/dL"
+        },
+        {
+          "value": "126_mas",
+          "label": "126 mg/dL o más"
+        },
+        {
+          "value": "no_mido",
+          "label": "No lo mido"
+        }
+      ]
+    }
+  ]
+}

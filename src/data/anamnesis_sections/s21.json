@@ -1,0 +1,333 @@
+{
+  "id": "s21",
+  "number": 21,
+  "title": "Permeabilidad de Mucosas y Reactividad Alimentaria",
+  "questions": [
+    {
+      "id": "s21_comida_trastornos",
+      "text": "¿Después de cuál comida presentas trastornos? (marca todas)",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "desayuno",
+          "label": "Desayuno"
+        },
+        {
+          "value": "almuerzo",
+          "label": "Almuerzo"
+        },
+        {
+          "value": "cena",
+          "label": "Cena"
+        },
+        {
+          "value": "meriendas",
+          "label": "Meriendas"
+        },
+        {
+          "value": "sin_patron",
+          "label": "Sin patrón"
+        }
+      ]
+    },
+    {
+      "id": "s21_hiperhistaminemia",
+      "text": "Síntomas de hiperhistaminemia y reactividad sistémica",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s21_congestion_nasal",
+          "label": "Congestión nasal o rinorrea sin resfriado",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s21_estornudos",
+          "label": "Estornudos en salva",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s21_prurito_ocular",
+          "label": "Prurito (picazón) ocular o lagrimeo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s21_tos_seca",
+          "label": "Tos seca o necesidad constante de aclarar la garganta",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s21_falta_aire",
+          "label": "Sensación de falta de aire o presión en el tórax",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s21_prurito_piel",
+          "label": "Prurito, enrojecimiento cutáneo o brotes",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s21_urticaria",
+          "label": "Urticaria o ronchas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s21_diarrea",
+          "label": "Diarrea",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s21_estrenimiento",
+          "label": "Estreñimiento",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s21_dolor_distension",
+          "label": "Dolor o distensión abdominal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s21_dismenorrea",
+          "label": "Dolor menstrual (dismenorrea)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s21_insomnio",
+          "label": "Insomnio",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s21_hiperactividad",
+          "label": "Dificultad de atención o hiperactividad",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s21_cefalea",
+          "label": "Cefalea",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s21_migraña",
+          "label": "Migraña",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s21_hipervigilancia",
+          "label": "Hipervigilancia o pensamiento acelerado que no se apaga",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s21_nauseas",
+          "label": "Náuseas o vómito",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s21_vertigo",
+          "label": "Vértigo o mareo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s21_ta_brusca",
+          "label": "Elevación o descenso brusco de la tensión arterial",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s21_palpitaciones",
+          "label": "Palpitaciones o arritmias",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s21_dolores_musculares",
+          "label": "Dolores musculares y óseos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s21_fatiga_cronica",
+          "label": "Fatiga crónica",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s21_alimentos_desencadenantes",
+      "text": "¿Has identificado alimentos específicos que te desencadenan síntomas? (marca todos)",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "trigo_gluten",
+          "label": "Trigo o gluten"
+        },
+        {
+          "value": "lacteos",
+          "label": "Lácteos"
+        },
+        {
+          "value": "huevo",
+          "label": "Huevo"
+        },
+        {
+          "value": "soya",
+          "label": "Soya"
+        },
+        {
+          "value": "maiz",
+          "label": "Maíz"
+        },
+        {
+          "value": "mani_frutos_secos",
+          "label": "Maní o frutos secos"
+        },
+        {
+          "value": "mariscos",
+          "label": "Mariscos"
+        },
+        {
+          "value": "pescado",
+          "label": "Pescado"
+        },
+        {
+          "value": "solanaceas",
+          "label": "Solanáceas"
+        },
+        {
+          "value": "leguminosas",
+          "label": "Leguminosas"
+        },
+        {
+          "value": "citricos",
+          "label": "Cítricos"
+        },
+        {
+          "value": "alcohol",
+          "label": "Alcohol"
+        },
+        {
+          "value": "cafe",
+          "label": "Café"
+        },
+        {
+          "value": "azucar",
+          "label": "Azúcar"
+        },
+        {
+          "value": "aditivos",
+          "label": "Aditivos o colorantes"
+        },
+        {
+          "value": "ninguno",
+          "label": "Ninguno identificado"
+        }
+      ]
+    },
+    {
+      "id": "s21_otros_alimentos",
+      "text": "Otros alimentos y qué síntomas producen",
+      "type": "text"
+    },
+    {
+      "id": "s21_tiempo_sintomas",
+      "text": "¿Cuánto tiempo después de comer aparecen los síntomas?",
+      "type": "single",
+      "options": [
+        {
+          "value": "inmediato",
+          "label": "Inmediato (minutos)"
+        },
+        {
+          "value": "30min_2h",
+          "label": "30 minutos a 2 horas"
+        },
+        {
+          "value": "2_12h",
+          "label": "2 a 12 horas"
+        },
+        {
+          "value": "dia_siguiente",
+          "label": "Al día siguiente"
+        },
+        {
+          "value": "variable",
+          "label": "Variable"
+        }
+      ]
+    },
+    {
+      "id": "s21_dieta_eliminacion",
+      "text": "¿Has realizado alguna dieta de eliminación?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "mejoria",
+          "label": "Sí, con mejoría clara"
+        },
+        {
+          "value": "sin_cambios",
+          "label": "Sí, sin cambios"
+        },
+        {
+          "value": "empeoramiento",
+          "label": "Sí, con empeoramiento"
+        }
+      ]
+    },
+    {
+      "id": "s21_eliminacion_detalle",
+      "text": "¿Qué eliminaste y qué ocurrió al reintroducir?",
+      "type": "text"
+    },
+    {
+      "id": "s21_peptidos",
+      "text": "¿Has reaccionado a alguno de estos péptidos o compuestos? (si te lo han informado o lo has notado)",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "casomorfina",
+          "label": "Casomorfina (lácteos)"
+        },
+        {
+          "value": "gluteomorfina",
+          "label": "Gluteomorfina o gliadorfina (trigo)"
+        },
+        {
+          "value": "rubiscolina",
+          "label": "Rubiscolina (espinaca)"
+        },
+        {
+          "value": "soymorfina",
+          "label": "Soymorfina (soya)"
+        },
+        {
+          "value": "orizatensina",
+          "label": "Orizatensina (arroz)"
+        },
+        {
+          "value": "lectinas",
+          "label": "Lectinas"
+        },
+        {
+          "value": "oxalatos",
+          "label": "Oxalatos"
+        },
+        {
+          "value": "salicilatos",
+          "label": "Salicilatos"
+        },
+        {
+          "value": "sulfitos",
+          "label": "Sulfitos"
+        },
+        {
+          "value": "glutamato",
+          "label": "Glutamato monosódico"
+        },
+        {
+          "value": "no_se",
+          "label": "No lo sé"
+        }
+      ]
+    }
+  ]
+}

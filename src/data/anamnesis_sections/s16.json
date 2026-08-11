@@ -1,0 +1,288 @@
+{
+  "id": "s16",
+  "number": 16,
+  "title": "Proceso Digestivo — Función Biliar, Hepática y Pancreática",
+  "questions": [
+    {
+      "id": "s16_insuficiencia_biliar",
+      "text": "Síntomas de insuficiencia biliar y colestasis",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s16_heces_claras",
+          "label": "Heces amarillentas, claras o acólicas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_esteatorrea",
+          "label": "Aceite o grasa visible en las heces (esteatorrea)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_heces_flotantes",
+          "label": "Heces flotantes",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_dificultad_grasas",
+          "label": "Dificultad para digerir aceites y grasas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_mucinas",
+          "label": "Secreciones finas tipo goteo nasal (mucinas finas)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_descamacion",
+          "label": "Descamación de dedos o palmas de manos y/o pies",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_ardor_lengua",
+          "label": "Dolor o ardor en la lengua",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_sabor_amargo",
+          "label": "Sabor amargo o metálico en la boca",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_escotomas",
+          "label": "Escotomas centelleantes: manchas brillantes, móviles, en líneas rotas o chispas de colores",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_dolor_hombro_derecho",
+          "label": "Dolor en el hombro derecho",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_prurito_anal",
+          "label": "Prurito anal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_ira",
+          "label": "Sensación de ira o irritabilidad desproporcionada",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_calculos",
+          "label": "Historia de cálculos biliares, renales, lacrimales u otolitos",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s16_insuficiencia_pancreatica",
+      "text": "Síntomas de insuficiencia pancreática exocrina",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s16_heces_voluminosas",
+          "label": "Heces voluminosas, pálidas y malolientes",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_pelicula_aceitosa",
+          "label": "Grasa visible o película aceitosa en el inodoro",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_alimentos_no_digeridos",
+          "label": "Alimentos no digeridos visibles en las heces",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_distension_grasas",
+          "label": "Distensión abdominal intensa después de comidas grasas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_perdida_peso",
+          "label": "Pérdida de peso involuntaria pese a comer bien",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_flatulencia_fetida",
+          "label": "Flatulencia abundante y fétida",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_vitaminas_liposolubles",
+          "label": "Deficiencia conocida de vitaminas liposolubles (A, D, E, K)",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s16_hepatico",
+      "text": "Síntomas de compromiso hepático y de desintoxicación",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s16_ictericia",
+          "label": "Ictericia (ojos o piel amarillos) en algún momento",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_nauseas",
+          "label": "Náuseas persistentes",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_debilidad",
+          "label": "Debilidad generalizada",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_hipersensibilidad_quimica",
+          "label": "Hipersensibilidad a productos químicos, perfumes o humo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_reacciones_farmacos",
+          "label": "Reacciones exageradas a medicamentos o a dosis bajas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_resaca",
+          "label": "Resaca desproporcionada con poca cantidad de alcohol",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_tolerancia_alcohol",
+          "label": "Tolerancia aumentada al alcohol comparada con otras personas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_intolerancia_cafeina",
+          "label": "Intolerancia a la cafeína",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_dolor_costado_derecho",
+          "label": "Dolor o pesadez en el costado derecho bajo las costillas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_manchas_piel",
+          "label": "Manchas cutáneas o cambios de coloración",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_prurito_generalizado",
+          "label": "Prurito generalizado sin lesión de piel",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_mal_aliento_dulzon",
+          "label": "Mal aliento de tipo dulzón o amoniacal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s16_orina_oscura",
+          "label": "Orina muy oscura sin deshidratación",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s16_antecedentes",
+      "text": "Antecedentes hepatobiliares",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "calculos_biliares",
+          "label": "Cálculos biliares"
+        },
+        {
+          "value": "colecistectomia",
+          "label": "Colecistectomía (extracción de la vesícula)"
+        },
+        {
+          "value": "colestasis",
+          "label": "Colestasis diagnosticada"
+        },
+        {
+          "value": "higado_graso",
+          "label": "Hígado graso"
+        },
+        {
+          "value": "hepatitis",
+          "label": "Hepatitis viral"
+        },
+        {
+          "value": "transaminasas",
+          "label": "Elevación de transaminasas"
+        },
+        {
+          "value": "pancreatitis",
+          "label": "Pancreatitis"
+        },
+        {
+          "value": "ninguno",
+          "label": "Ninguno"
+        }
+      ]
+    },
+    {
+      "id": "s16_alcohol",
+      "text": "¿Consumes bebidas alcohólicas?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "menos_1_mes",
+          "label": "Ocasionalmente (menos de 1 vez/mes)"
+        },
+        {
+          "value": "1_3_mes",
+          "label": "1 a 3 veces por mes"
+        },
+        {
+          "value": "1_2_semana",
+          "label": "1-2 veces/semana"
+        },
+        {
+          "value": "3_mas_semana",
+          "label": "3+ veces/semana"
+        },
+        {
+          "value": "diario",
+          "label": "A diario"
+        }
+      ]
+    },
+    {
+      "id": "s16_tragos_ocasion",
+      "text": "Número de tragos por ocasión",
+      "type": "text"
+    },
+    {
+      "id": "s16_anos_alcohol",
+      "text": "¿Desde hace cuántos años?",
+      "type": "text"
+    },
+    {
+      "id": "s16_tolerancia_alcohol_comparada",
+      "text": "¿Notas tolerancia aumentada al alcohol comparada con otras personas?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "si",
+          "label": "Sí"
+        }
+      ]
+    }
+  ]
+}

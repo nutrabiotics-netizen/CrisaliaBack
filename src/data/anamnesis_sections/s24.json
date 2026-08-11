@@ -1,0 +1,353 @@
+{
+  "id": "s24",
+  "number": 24,
+  "title": "Metilación y Vitaminas B6, B9 y B12",
+  "questions": [
+    {
+      "id": "s24_alimentacion_baja",
+      "text": "Tu alimentación es baja o nula en:",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "visceras",
+          "label": "Vísceras"
+        },
+        {
+          "value": "carnes_rojas",
+          "label": "Carnes rojas"
+        },
+        {
+          "value": "hortalizas_oscuras",
+          "label": "Hortalizas de hoja oscura"
+        },
+        {
+          "value": "huevos",
+          "label": "Huevos"
+        },
+        {
+          "value": "pescado",
+          "label": "Pescado"
+        },
+        {
+          "value": "vegano",
+          "label": "Alimentación vegana"
+        },
+        {
+          "value": "vegetariano",
+          "label": "Alimentación vegetariana"
+        },
+        {
+          "value": "no_baja",
+          "label": "No es baja en ninguno"
+        }
+      ]
+    },
+    {
+      "id": "s24_depletan",
+      "text": "¿Consumes o has consumido de forma prolongada alguno de estos? (marca todos)",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "acido_folico_sintetico",
+          "label": "Ácido fólico sintético"
+        },
+        {
+          "value": "alcohol",
+          "label": "Alcohol"
+        },
+        {
+          "value": "metformina",
+          "label": "Metformina"
+        },
+        {
+          "value": "antibioticos",
+          "label": "Antibióticos"
+        },
+        {
+          "value": "antiepilepticos",
+          "label": "Antiepilépticos"
+        },
+        {
+          "value": "metotrexate",
+          "label": "Metotrexate"
+        },
+        {
+          "value": "anticonceptivos",
+          "label": "Anticonceptivos orales"
+        },
+        {
+          "value": "ibb",
+          "label": "Inhibidores de bomba de protones"
+        },
+        {
+          "value": "oxido_nitroso",
+          "label": "Óxido nitroso (anestesia)"
+        },
+        {
+          "value": "ninguno",
+          "label": "Ninguno"
+        }
+      ]
+    },
+    {
+      "id": "s24_neurologicos",
+      "text": "Signos y síntomas neurológicos por compromiso de la metilación",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s24_hormigueo",
+          "label": "Hormigueo o parestesias en manos y pies",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_sensibilidad_vibratoria",
+          "label": "Pérdida de la sensibilidad vibratoria",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_marcha",
+          "label": "Alteraciones en la marcha o inestabilidad",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_ataxia",
+          "label": "Ataxia",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_espasticidad",
+          "label": "Debilidad espástica de las piernas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_rigidez",
+          "label": "Rigidez muscular",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_debilidad",
+          "label": "Debilidad muscular",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_sensibilidad_zona",
+          "label": "Alteración de la sensibilidad en cualquier zona",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_vejiga",
+          "label": "Disfunción de la vejiga (urgencia, retención, incontinencia)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_intestinal",
+          "label": "Diarrea o estreñimiento crónico o alternante",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_cognitivo",
+          "label": "Alteraciones de memoria, atención, concentración o coordinación",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_irritabilidad",
+          "label": "Irritabilidad marcada",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_depresion",
+          "label": "Depresión",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_psicosis",
+          "label": "Episodios de psicosis o desconexión de la realidad",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_insomnio",
+          "label": "Insomnio",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s24_mucocutaneas",
+      "text": "Manifestaciones mucocutáneas y generales",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s24_dermatitis",
+          "label": "Dermatitis",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_descamacion",
+          "label": "Descamación de la piel",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_glositis",
+          "label": "Inflamación o dolor de la lengua (glositis)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_ardor_boca",
+          "label": "Ardor en la boca o en la mucosa oral",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_heridas",
+          "label": "Heridas que no sanan",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_palidez",
+          "label": "Palidez",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_hipertension",
+          "label": "Hipertensión arterial",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_alergias",
+          "label": "Alergias",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_debilidad_muscular",
+          "label": "Debilidad muscular",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_vejiga_fx",
+          "label": "Cambios en la función de la vejiga",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_estres_percibido",
+          "label": "Aumento del estrés percibido",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s24_antecedentes",
+      "text": "Antecedentes relacionados",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "preeclampsia",
+          "label": "Preeclampsia"
+        },
+        {
+          "value": "tubo_neural",
+          "label": "Defectos del tubo neural en la familia"
+        },
+        {
+          "value": "desprendimiento_placenta",
+          "label": "Desprendimiento de placenta"
+        },
+        {
+          "value": "abortos_repeticion",
+          "label": "Abortos a repetición"
+        },
+        {
+          "value": "anemia_megaloblastica",
+          "label": "Anemia megaloblástica diagnosticada"
+        },
+        {
+          "value": "homocisteina",
+          "label": "Homocisteína elevada"
+        },
+        {
+          "value": "mthfr",
+          "label": "Polimorfismo MTHFR conocido"
+        },
+        {
+          "value": "ninguno",
+          "label": "Ninguno"
+        }
+      ]
+    },
+    {
+      "id": "s24_estrogenos",
+      "text": "Signos y síntomas de desequilibrio de los estrógenos (aplican a ambos sexos según corresponda)",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s24_e_acne",
+          "label": "Acné",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_e_ginecomastia",
+          "label": "Aumento del tejido mamario en el hombre",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_e_disfuncion_erectil",
+          "label": "Disfunción eréctil",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_e_alopecia",
+          "label": "Pérdida de cabello",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_e_spm",
+          "label": "Síndrome premenstrual",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_e_dismenorrea",
+          "label": "Dolor menstrual",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_e_abundante",
+          "label": "Menstruaciones muy abundantes",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_e_miomas",
+          "label": "Miomas o fibromas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_e_quistes",
+          "label": "Quistes mamarios u ováricos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_e_endometriosis",
+          "label": "Endometriosis",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_e_cancer",
+          "label": "Historia de cáncer de seno, ovario o útero",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_e_resequedad",
+          "label": "Resequedad vaginal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_e_infertilidad",
+          "label": "Infertilidad",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s24_e_densidad_osea",
+          "label": "Baja densidad ósea",
+          "type": "scale_0_3"
+        }
+      ]
+    }
+  ]
+}

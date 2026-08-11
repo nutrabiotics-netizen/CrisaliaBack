@@ -1,0 +1,207 @@
+{
+  "id": "s23",
+  "number": 23,
+  "title": "Fatiga Músculo-Cardíaca — Catabolismo de Purinas",
+  "questions": [
+    {
+      "id": "s23_sintomas",
+      "text": "Frecuencia o intensidad de cada manifestación",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s23_fatiga_ejercicio",
+          "label": "Fatiga o dolor muscular después del ejercicio",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s23_fatiga_cronica",
+          "label": "Fatiga crónica",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s23_intolerancia_ejercicio",
+          "label": "Intolerancia al ejercicio",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s23_recuperacion_lenta",
+          "label": "Recuperación lenta después del esfuerzo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s23_mialgias",
+          "label": "Mialgias",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s23_calambres",
+          "label": "Calambres",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s23_pesadez_rigidez",
+          "label": "Pesadez o rigidez después del esfuerzo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s23_dolor_musculoesqueletico",
+          "label": "Dolor musculoesquelético generalizado",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s23_tos_cronica",
+          "label": "Tos crónica",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s23_astenia",
+          "label": "Astenia y adinamia",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s23_orino_poco_hincho",
+          "label": "Orino poco y me hincho",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s23_latidos_irregulares",
+          "label": "Latidos del corazón irregulares",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s23_latidos_acelerados",
+          "label": "Latidos del corazón acelerados o muy fuertes",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s23_dolor_pecho",
+          "label": "Dolor de pecho",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s23_hipertension",
+          "label": "Historia de hipertensión arterial",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s23_disnea_pie",
+          "label": "Dificultad para respirar o falta de aire de pie",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s23_disnea_sentado",
+          "label": "Dificultad para respirar o falta de aire sentado",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s23_disnea_acostado",
+          "label": "Dificultad para respirar o falta de aire acostado",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s23_almohada",
+          "label": "Necesidad de dormir con más de una almohada",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s23_tobillos_hinchados",
+          "label": "Hinchazón de tobillos al final del día",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s23_momento_hinchazon",
+      "text": "¿Cuándo se presenta la hinchazón?",
+      "type": "single",
+      "options": [
+        {
+          "value": "manana",
+          "label": "En la mañana"
+        },
+        {
+          "value": "fin_dia",
+          "label": "Al final del día"
+        },
+        {
+          "value": "post_ejercicio",
+          "label": "Después del ejercicio"
+        },
+        {
+          "value": "calor",
+          "label": "Con el calor"
+        },
+        {
+          "value": "no_presento",
+          "label": "No presento hinchazón"
+        }
+      ]
+    },
+    {
+      "id": "s23_antecedentes",
+      "text": "Antecedentes relacionados",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "inmovilizacion",
+          "label": "Periodo largo de inmovilización"
+        },
+        {
+          "value": "sobreentrenamiento",
+          "label": "Sobreentrenamiento"
+        },
+        {
+          "value": "fibromialgia",
+          "label": "Fibromialgia"
+        },
+        {
+          "value": "insuficiencia_cardiaca",
+          "label": "Insuficiencia cardíaca"
+        },
+        {
+          "value": "cardiovascular",
+          "label": "Enfermedad cardiovascular"
+        },
+        {
+          "value": "disautonomia",
+          "label": "Disautonomía"
+        },
+        {
+          "value": "infeccion_desacondicionamiento",
+          "label": "Proceso infeccioso prolongado con desacondicionamiento"
+        },
+        {
+          "value": "dietas_hipocaoricas",
+          "label": "Dietas hipocalóricas prolongadas"
+        },
+        {
+          "value": "deporte_alto_rendimiento",
+          "label": "Práctica deportiva de alto rendimiento"
+        },
+        {
+          "value": "ninguno",
+          "label": "Ninguno"
+        }
+      ]
+    },
+    {
+      "id": "s23_acido_urico",
+      "text": "¿Te han informado ácido úrico elevado?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "si",
+          "label": "Sí"
+        },
+        {
+          "value": "no_medido",
+          "label": "No me lo he medido"
+        }
+      ]
+    }
+  ]
+}

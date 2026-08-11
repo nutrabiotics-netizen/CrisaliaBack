@@ -1,0 +1,637 @@
+{
+  "id": "s09",
+  "number": 9,
+  "title": "Nutrición y Hábitos Alimentarios",
+  "instructions": "0 = Nunca · 1 = Rara vez (menos de una vez al mes) · 2 = Ocasional (1 a 3 veces por semana) · 3 = Frecuentemente (4 o más veces por semana)",
+  "questions": [
+    {
+      "id": "s09_proteinas_animales",
+      "text": "Proteínas animales — frecuencia de consumo",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s09_visceras",
+          "label": "Vísceras (hígado, corazón, riñón, molleja)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_carne_res_pastoreo",
+          "label": "Carne de res de pastoreo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_carne_res_industrial",
+          "label": "Carne de res industrial",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_carne_cerdo",
+          "label": "Carne de cerdo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_carne_cordero",
+          "label": "Carne de cordero, conejo o pato",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_pollo_libertad",
+          "label": "Carne de pollo o gallina en libertad",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_pollo_industrial",
+          "label": "Carne de pollo industrial",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_huevos_libertad",
+          "label": "Huevos de gallina en libertad",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_huevos_industriales",
+          "label": "Huevos industriales",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_pescado_mar",
+          "label": "Pescado de mar de aguas frías",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_pescado_rio",
+          "label": "Pescado de río o de criadero",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_mariscos",
+          "label": "Mariscos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_carnes_procesadas",
+          "label": "Carnes procesadas (salchichas, embutidos, jamones)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_carne_parrilla",
+          "label": "Carne a la parrilla o carbonizada",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s09_vegetales_frutas_grasas",
+      "text": "Vegetales, frutas y grasas — frecuencia de consumo",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s09_cruciferos",
+          "label": "Vegetales crucíferos (repollo, brócoli, coliflor, col rizada, espárrago, rúgula, hoja de remolacha)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_hoja_verde",
+          "label": "Hortalizas de hoja verde oscura",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_solanaceas",
+          "label": "Solanáceas (tomate, uchuva, lulo, berenjena, pimentón, ají, papa)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_almidonados",
+          "label": "Vegetales almidonados (papa, yuca, zanahoria, remolacha)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_frutas",
+          "label": "Frutas enteras",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_especias",
+          "label": "Especias y hierbas (cúrcuma, comino, jengibre, albahaca, orégano, cilantro)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_nueces",
+          "label": "Nueces y semillas (almendra, nuez, macadamia, pecana, calabaza, ajonjolí)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_cacao",
+          "label": "Cacao puro",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_aceite_oliva",
+          "label": "Aceite de oliva extra virgen de primera presión en frío",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_aceite_coco",
+          "label": "Aceite de coco",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_mantequilla",
+          "label": "Mantequilla de vaca",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_ghee",
+          "label": "Mantequilla ghee",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_queso_maduro",
+          "label": "Queso maduro",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_fermentados",
+          "label": "Vegetales fermentados, chucrut, kéfir o natto",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s09_cereales_aceites",
+      "text": "Cereales, granos y aceites industriales — frecuencia de consumo",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s09_arroz_blanco",
+          "label": "Arroz blanco o jazmín",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_arroz_integral",
+          "label": "Arroz basmati o integral",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_leguminosas",
+          "label": "Granos y leguminosas (incluye soya y maní)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_trigo",
+          "label": "Cereales y productos de trigo (integral o refinado)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_avena",
+          "label": "Avena",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_aceites_vegetales",
+          "label": "Aceite de soya, canola, maíz, girasol o cártamo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_aceite_ajonjoli",
+          "label": "Aceite de ajonjolí",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_margarina",
+          "label": "Margarina o mantequilla vegetal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_frituras",
+          "label": "Frituras",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_endulzados",
+          "label": "Alimentos endulzados con panela, azúcar o jarabes",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_bebidas_azucaradas",
+          "label": "Bebidas azucaradas o gaseosas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_snacks",
+          "label": "Snacks de paquete y ultraprocesados",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_enlatados",
+          "label": "Enlatados y conservas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_salsas",
+          "label": "Salsas de paquete y mayonesa industrial",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s09_regimen",
+      "text": "¿Sigues actualmente algún régimen alimentario? (marca todos los que apliquen)",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "ninguno",
+          "label": "Ninguno"
+        },
+        {
+          "value": "bajo_grasa",
+          "label": "Bajo en grasa"
+        },
+        {
+          "value": "bajo_carbos",
+          "label": "Bajo en carbohidratos"
+        },
+        {
+          "value": "cetogenica",
+          "label": "Cetogénica"
+        },
+        {
+          "value": "fodmap",
+          "label": "Baja en FODMAP"
+        },
+        {
+          "value": "baja_histamina",
+          "label": "Baja en histamina"
+        },
+        {
+          "value": "bajo_proteina",
+          "label": "Bajo en proteína"
+        },
+        {
+          "value": "bajo_sodio",
+          "label": "Bajo en sodio"
+        },
+        {
+          "value": "diabetico",
+          "label": "Diabético"
+        },
+        {
+          "value": "sin_gluten",
+          "label": "Sin gluten"
+        },
+        {
+          "value": "sin_trigo",
+          "label": "Sin trigo"
+        },
+        {
+          "value": "sin_lacteos",
+          "label": "Sin lácteos"
+        },
+        {
+          "value": "vegetariano",
+          "label": "Vegetariano"
+        },
+        {
+          "value": "vegano",
+          "label": "Vegano"
+        },
+        {
+          "value": "carnivoro",
+          "label": "Carnívoro"
+        },
+        {
+          "value": "ayuno_intermitente",
+          "label": "Ayuno intermitente"
+        },
+        {
+          "value": "eliminacion",
+          "label": "Dieta de eliminación"
+        }
+      ]
+    },
+    {
+      "id": "s09_regimen_desde",
+      "text": "¿Desde cuándo sigues ese régimen?",
+      "type": "text"
+    },
+    {
+      "id": "s09_regimen_supervision",
+      "text": "¿Bajo supervisión profesional?",
+      "type": "text"
+    },
+    {
+      "id": "s09_vegano_pasado",
+      "text": "¿Has seguido alguna vez alimentación vegana o vegetariana?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "actualmente",
+          "label": "Sí, actualmente"
+        },
+        {
+          "value": "pasado",
+          "label": "Sí, en el pasado"
+        }
+      ]
+    },
+    {
+      "id": "s09_vegano_tiempo",
+      "text": "¿Durante cuánto tiempo?",
+      "type": "text"
+    },
+    {
+      "id": "s09_vegano_edad",
+      "text": "¿A qué edad?",
+      "type": "text"
+    },
+    {
+      "id": "s09_evita_alimentos",
+      "text": "¿Evitas algún alimento en específico? ¿Cuál y por qué?",
+      "type": "text"
+    },
+    {
+      "id": "s09_comidas_dia",
+      "text": "Número de comidas principales al día",
+      "type": "single",
+      "options": [
+        {
+          "value": "1",
+          "label": "1"
+        },
+        {
+          "value": "2",
+          "label": "2"
+        },
+        {
+          "value": "3",
+          "label": "3"
+        },
+        {
+          "value": "4_mas",
+          "label": "4 o más"
+        }
+      ]
+    },
+    {
+      "id": "s09_ventana_alimentacion",
+      "text": "Ventana de alimentación (horas entre la primera y la última ingesta)",
+      "type": "single",
+      "options": [
+        {
+          "value": "menos_8h",
+          "label": "Menos de 8 horas"
+        },
+        {
+          "value": "8_12h",
+          "label": "8 a 12 horas"
+        },
+        {
+          "value": "mas_12h",
+          "label": "Más de 12 horas"
+        },
+        {
+          "value": "variable",
+          "label": "Variable"
+        }
+      ]
+    },
+    {
+      "id": "s09_habitos",
+      "text": "Marca lo que aplique a tus hábitos",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "compro_alimentos",
+          "label": "Compro mis propios alimentos"
+        },
+        {
+          "value": "cocino_casa",
+          "label": "Cocino en casa la mayoría de los días"
+        },
+        {
+          "value": "leo_etiquetas",
+          "label": "Leo las etiquetas de los productos"
+        },
+        {
+          "value": "repito_alimentos",
+          "label": "Repito los mismos alimentos casi todos los días"
+        },
+        {
+          "value": "como_fuera",
+          "label": "Como más del 50% de mis comidas fuera de casa"
+        },
+        {
+          "value": "entre_comidas",
+          "label": "Como entre comidas"
+        },
+        {
+          "value": "antes_dormir",
+          "label": "Como antes de ir a dormir"
+        },
+        {
+          "value": "mitad_noche",
+          "label": "Como a mitad de la noche"
+        },
+        {
+          "value": "salto_comidas",
+          "label": "Me salto comidas con frecuencia"
+        },
+        {
+          "value": "como_rapido",
+          "label": "Como muy rápido"
+        },
+        {
+          "value": "como_demasiado",
+          "label": "Como demasiado"
+        },
+        {
+          "value": "bajo_estres",
+          "label": "Como bajo estrés"
+        },
+        {
+          "value": "muy_tarde",
+          "label": "Como hasta muy tarde"
+        },
+        {
+          "value": "erratico",
+          "label": "Patrones erráticos de alimentación"
+        },
+        {
+          "value": "no_planeo",
+          "label": "No planeo la comida ni el menú"
+        },
+        {
+          "value": "viajo_frecuente",
+          "label": "Viajo frecuentemente"
+        },
+        {
+          "value": "poco_tiempo",
+          "label": "Tengo poco tiempo para comer"
+        },
+        {
+          "value": "no_gusta_cocinar",
+          "label": "No me gusta cocinar"
+        },
+        {
+          "value": "encanta_comer",
+          "label": "Me encanta comer"
+        },
+        {
+          "value": "como_obligacion",
+          "label": "Como porque tengo que comer"
+        },
+        {
+          "value": "mala_relacion",
+          "label": "Tengo mala relación con la comida"
+        },
+        {
+          "value": "lucho_alimentacion",
+          "label": "Lucho con problemas de alimentación"
+        },
+        {
+          "value": "compulsivo",
+          "label": "Me alimento de manera compulsiva"
+        },
+        {
+          "value": "organicos",
+          "label": "Consumo alimentos orgánicos con regularidad"
+        }
+      ]
+    },
+    {
+      "id": "s09_salto_comidas",
+      "text": "¿Cuáles comidas te saltas semanalmente y por qué?",
+      "type": "text"
+    },
+    {
+      "id": "s09_pesticidas",
+      "text": "¿Con qué frecuencia consumes los alimentos más contaminados con pesticidas (fresa, espinaca, manzana, uva, durazno, cereza, pera, tomate, apio, kale, arándano) si no son orgánicos?",
+      "type": "single",
+      "options": [
+        {
+          "value": "nunca",
+          "label": "Nunca"
+        },
+        {
+          "value": "1_2_semana",
+          "label": "1-2 veces/semana"
+        },
+        {
+          "value": "3_5_semana",
+          "label": "3-5 veces/semana"
+        },
+        {
+          "value": "diario",
+          "label": "A diario"
+        }
+      ]
+    },
+    {
+      "id": "s09_reacciones_comer",
+      "text": "¿Con qué frecuencia presentas reacciones adversas después de comer (piel, digestión, cognición, ánimo)?",
+      "type": "single",
+      "options": [
+        {
+          "value": "nunca",
+          "label": "Nunca"
+        },
+        {
+          "value": "rara_vez",
+          "label": "Rara vez"
+        },
+        {
+          "value": "semanalmente",
+          "label": "Semanalmente"
+        },
+        {
+          "value": "casi_todos_dias",
+          "label": "Casi todos los días"
+        }
+      ]
+    },
+    {
+      "id": "s09_comida_sintomas",
+      "text": "¿Después de cuál comida aparecen tus síntomas?",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "desayuno",
+          "label": "Desayuno"
+        },
+        {
+          "value": "almuerzo",
+          "label": "Almuerzo"
+        },
+        {
+          "value": "cena",
+          "label": "Cena"
+        },
+        {
+          "value": "meriendas",
+          "label": "Meriendas"
+        },
+        {
+          "value": "sin_patron",
+          "label": "No hay un patrón"
+        }
+      ]
+    },
+    {
+      "id": "s09_sintomas_poscomer",
+      "text": "¿Qué síntomas presentas después de comer?",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s09_sp_distension",
+          "label": "Distensión o pesadez abdominal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_sp_somnolencia",
+          "label": "Somnolencia marcada",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_sp_cefalea",
+          "label": "Dolor de cabeza",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_sp_palpitaciones",
+          "label": "Palpitaciones",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_sp_emociones",
+          "label": "Emociones lesivas, irritabilidad o tristeza",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_sp_niebla",
+          "label": "Niebla mental",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_sp_congestion",
+          "label": "Congestión nasal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_sp_piel",
+          "label": "Picazón o brote en la piel",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s09_sp_evacuar",
+          "label": "Necesidad urgente de evacuar",
+          "type": "scale_0_3"
+        }
+      ]
+    }
+  ]
+}

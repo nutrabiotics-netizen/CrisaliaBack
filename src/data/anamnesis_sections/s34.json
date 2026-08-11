@@ -1,0 +1,441 @@
+{
+  "id": "s34",
+  "number": 34,
+  "title": "Función Neurológica, Neurodegeneración y Excitotoxicidad",
+  "questions": [
+    {
+      "id": "s34_cognitivo",
+      "text": "Funciones cognitivas y signos de neurodegeneración",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s34_memoria_reciente",
+          "label": "Declino de la memoria reciente (olvido conversaciones, compromisos, dónde dejo los objetos)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_nombres",
+          "label": "Dificultad para recordar nombres, palabras, caras o números",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_tres_objetos",
+          "label": "Dificultad para recordar tres objetos después de cinco minutos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_orientacion",
+          "label": "Pérdida del sentido de orientación o de la memoria de direcciones y lugares",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_fechas",
+          "label": "Confusión con fechas, con el paso del tiempo o con los lugares",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_atencion",
+          "label": "Corta duración de la atención; me distraigo con facilidad",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_concentracion",
+          "label": "Dificultad para concentrarme o sostener una lectura",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_matematicas",
+          "label": "Dificultad con el pensamiento analítico, las matemáticas o los números",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_secuencia",
+          "label": "Dificultad para poner ideas, acciones o palabras en secuencia lógica",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_planear",
+          "label": "Dificultad para planear, organizar, decidir o cambiar de plan",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_tareas",
+          "label": "Dificultad para iniciar y terminar tareas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_impulsos",
+          "label": "Dificultad para controlar impulsos o deseos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_verbalizar",
+          "label": "Dificultad para verbalizar; se me traban o pierdo las palabras",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_simbolos",
+          "label": "Dificultad para reconocer símbolos, formas o interpretar mapas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_creatividad",
+          "label": "Dificultad para la imaginación, la intuición, la creatividad o el disfrute del arte y la música",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_perseveracion",
+          "label": "Repito palabras, ideas o temas durante la conversación (perseveración)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_personalidad",
+          "label": "Cambios notorios en mi personalidad señalados por otras personas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_altibajos",
+          "label": "Altibajos emocionales bruscos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_apatia",
+          "label": "Falta de motivación, entusiasmo e interés (apatía)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_niebla",
+          "label": "Sensación de niebla mental o de pensar en cámara lenta",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s34_polineuropatia",
+      "text": "Síntomas de polineuropatía sensitiva, motora y autonómica",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s34_hormigueo",
+          "label": "Hormigueo o adormecimiento en manos, pies o zonas distales",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_sensibilidad_perdida",
+          "label": "Disminución de la sensibilidad en alguna parte del cuerpo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_hiperestesia",
+          "label": "Aumento anormal de la sensibilidad (hiperestesia) o dolor al roce",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_quemante_electrico",
+          "label": "Dolores quemantes o cortantes, tipo corrientazo eléctrico",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_frio_calor",
+          "label": "Sensación de frío o calor intensos en una zona sin causa externa",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_banda_apretada",
+          "label": "Sensación de compresión o de banda apretada, sobre todo en la noche",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_debilidad",
+          "label": "Debilidad en brazos, piernas u otra parte del cuerpo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_caminar",
+          "label": "Dificultad para caminar; caídas o tropiezos frecuentes",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_manos",
+          "label": "Dificultad para usar adecuadamente las manos o los dedos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_temblor",
+          "label": "Temblor en alguna parte del cuerpo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_rigidez",
+          "label": "Rigidez en alguna parte del cuerpo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_tragar",
+          "label": "Dificultad para tragar alimentos o líquidos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_incontinencia",
+          "label": "Pérdida involuntaria de orina o de materia fecal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_vibracion",
+          "label": "Pérdida de la sensibilidad vibratoria (no siento vibraciones en pies o manos)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_ataxia_oscuridad",
+          "label": "Inestabilidad o ataxia al caminar en la oscuridad o con ojos cerrados",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s34_excitotoxicidad",
+      "text": "Signos de excitotoxicidad",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s34_migraña",
+          "label": "Migraña",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_ansiedad",
+          "label": "Ansiedad de fondo permanente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_insomnio",
+          "label": "Insomnio de conciliación",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_hiperactividad",
+          "label": "Hiperactividad o inquietud motora",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_pensamiento_acelerado",
+          "label": "Pensamiento acelerado que no se detiene",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_ruido",
+          "label": "Hipersensibilidad al ruido",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_luz",
+          "label": "Hipersensibilidad a la luz",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_sobresalto",
+          "label": "Sobresalto exagerado",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_convulsiones",
+          "label": "Convulsiones o episodios de ausencia",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_tics",
+          "label": "Tics o movimientos involuntarios",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_zumbido",
+          "label": "Sensación de zumbido interno o vibración corporal",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s34_sentidos",
+      "text": "Alteración de los sentidos",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s34_vision",
+          "label": "Visión (borrosa, fluctuante, pérdida de campo)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_audicion",
+          "label": "Audición (zumbido, pérdida auditiva, hiperacusia)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_olfato",
+          "label": "Olfato (disminución o distorsión)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_gusto",
+          "label": "Gusto (disminución o sabor metálico)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_tacto",
+          "label": "Tacto (disminución o hipersensibilidad)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s34_propiocepcion",
+          "label": "Propiocepción (sensación de dónde está el cuerpo)",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s34_bajones_ciclicos",
+      "text": "¿Sueles sentir bajones emocionales cíclicos?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "si",
+          "label": "Sí"
+        }
+      ]
+    },
+    {
+      "id": "s34_temporada",
+      "text": "¿En qué temporada del año?",
+      "type": "single",
+      "options": [
+        {
+          "value": "primera_mitad",
+          "label": "Primera mitad del año"
+        },
+        {
+          "value": "segunda_mitad",
+          "label": "Segunda mitad del año"
+        },
+        {
+          "value": "lluviosas",
+          "label": "Épocas lluviosas"
+        },
+        {
+          "value": "secas",
+          "label": "Épocas secas"
+        },
+        {
+          "value": "sin_patron",
+          "label": "Sin patrón"
+        }
+      ]
+    },
+    {
+      "id": "s34_momento_ciclo",
+      "text": "¿En qué momento del ciclo o del mes?",
+      "type": "single",
+      "options": [
+        {
+          "value": "premenstrual",
+          "label": "Premenstrual"
+        },
+        {
+          "value": "durante_menstruacion",
+          "label": "Durante la menstruación"
+        },
+        {
+          "value": "mitad_ciclo",
+          "label": "Mitad del ciclo"
+        },
+        {
+          "value": "sin_relacion",
+          "label": "Sin relación con el ciclo"
+        }
+      ]
+    },
+    {
+      "id": "s34_dia_semana",
+      "text": "¿Qué días de la semana?",
+      "type": "single",
+      "options": [
+        {
+          "value": "lunes",
+          "label": "Lunes"
+        },
+        {
+          "value": "entre_semana",
+          "label": "Entre semana"
+        },
+        {
+          "value": "viernes",
+          "label": "Viernes"
+        },
+        {
+          "value": "fin_semana",
+          "label": "Fin de semana"
+        },
+        {
+          "value": "sin_patron",
+          "label": "Sin patrón"
+        }
+      ]
+    },
+    {
+      "id": "s34_momento_dia",
+      "text": "¿En qué momento del día?",
+      "type": "single",
+      "options": [
+        {
+          "value": "despertar",
+          "label": "Al despertar"
+        },
+        {
+          "value": "media_manana",
+          "label": "Media mañana"
+        },
+        {
+          "value": "post_almuerzo",
+          "label": "Después del almuerzo"
+        },
+        {
+          "value": "media_tarde",
+          "label": "Media tarde"
+        },
+        {
+          "value": "anochecer",
+          "label": "Al anochecer"
+        },
+        {
+          "value": "madrugada",
+          "label": "En la madrugada"
+        }
+      ]
+    },
+    {
+      "id": "s34_glutamato",
+      "text": "¿Consumes con frecuencia glutamato monosódico, aspartame o alimentos ultraprocesados con potenciadores de sabor?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "ocasionalmente",
+          "label": "Ocasionalmente"
+        },
+        {
+          "value": "frecuente",
+          "label": "Con frecuencia"
+        },
+        {
+          "value": "diario",
+          "label": "A diario"
+        }
+      ]
+    }
+  ]
+}

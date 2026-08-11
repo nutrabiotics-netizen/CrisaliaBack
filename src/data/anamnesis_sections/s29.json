@@ -1,0 +1,400 @@
+{
+  "id": "s29",
+  "number": 29,
+  "title": "Vitaminas D3 y K2 — Salud Ósea y Calcificación",
+  "questions": [
+    {
+      "id": "s29_sol",
+      "text": "¿Expones tu piel al sol?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "si",
+          "label": "Sí"
+        }
+      ]
+    },
+    {
+      "id": "s29_horas_sol",
+      "text": "¿Cuántas horas a la semana de exposición efectiva (brazos y piernas descubiertos)?",
+      "type": "single",
+      "options": [
+        {
+          "value": "menos_1",
+          "label": "Menos de 1 h"
+        },
+        {
+          "value": "1_2",
+          "label": "1 a 2 h"
+        },
+        {
+          "value": "3_5",
+          "label": "3 a 5 h"
+        },
+        {
+          "value": "6_10",
+          "label": "6 a 10 h"
+        },
+        {
+          "value": "mas_10",
+          "label": "Más de 10 h"
+        }
+      ]
+    },
+    {
+      "id": "s29_sedentario",
+      "text": "¿Eres una persona sedentaria?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "moderado",
+          "label": "Sí, moderadamente"
+        },
+        {
+          "value": "marcado",
+          "label": "Sí, marcadamente"
+        }
+      ]
+    },
+    {
+      "id": "s29_fuentes_k2",
+      "text": "¿Consumes con frecuencia estas fuentes de vitamina K2?",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "quesos",
+          "label": "Quesos madurados"
+        },
+        {
+          "value": "natto",
+          "label": "Natto"
+        },
+        {
+          "value": "chucrut",
+          "label": "Chucrut"
+        },
+        {
+          "value": "kefir",
+          "label": "Kéfir"
+        },
+        {
+          "value": "yemas",
+          "label": "Yemas de huevo"
+        },
+        {
+          "value": "higado",
+          "label": "Hígado"
+        },
+        {
+          "value": "mantequilla",
+          "label": "Mantequilla de vaca"
+        },
+        {
+          "value": "acelgas",
+          "label": "Acelgas"
+        },
+        {
+          "value": "rugula",
+          "label": "Rúgula"
+        },
+        {
+          "value": "hortalizas_oscuras",
+          "label": "Otras hortalizas oscuras"
+        },
+        {
+          "value": "ninguna",
+          "label": "Ninguna"
+        }
+      ]
+    },
+    {
+      "id": "s29_fuentes_d3",
+      "text": "¿Consumes fuentes de vitamina D3 (piel, ojos o vísceras de pescado, pescado graso, hígado)?",
+      "type": "single",
+      "options": [
+        {
+          "value": "nunca",
+          "label": "Nunca"
+        },
+        {
+          "value": "rara_vez",
+          "label": "Rara vez"
+        },
+        {
+          "value": "semanalmente",
+          "label": "Semanalmente"
+        },
+        {
+          "value": "varias_semana",
+          "label": "Varias/semana"
+        }
+      ]
+    },
+    {
+      "id": "s29_evita_colesterol",
+      "text": "¿Evitas alimentos altos en colesterol (mariscos, huevos, grasa bovina o porcina, leche entera)?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "algunos",
+          "label": "Sí, algunos"
+        },
+        {
+          "value": "todos",
+          "label": "Sí, todos"
+        }
+      ]
+    },
+    {
+      "id": "s29_oseas_musculares",
+      "text": "Manifestaciones óseas y musculares",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s29_dolor_oseo",
+          "label": "Dolor óseo difuso (esternal, tibial)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s29_debilidad_proximal",
+          "label": "Debilidad muscular proximal (dificultad para subir escaleras o levantarme de una silla)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s29_calambres",
+          "label": "Calambres",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s29_tetania",
+          "label": "Tetania intermitente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s29_espasmos",
+          "label": "Espasmos musculares",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s29_fracturas",
+          "label": "Fracturas de bajo impacto",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s29_caidas",
+          "label": "Caídas frecuentes",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s29_perdida_estatura",
+          "label": "Pérdida de estatura",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s29_dolor_espalda",
+          "label": "Dolor de espalda persistente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s29_dolor_articular",
+          "label": "Dolor articular difuso",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s29_calcificaciones",
+      "text": "¿Has tenido calcificaciones o cálculos?",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "renales",
+          "label": "Renales"
+        },
+        {
+          "value": "biliares",
+          "label": "Biliares"
+        },
+        {
+          "value": "lacrimales",
+          "label": "Lacrimales"
+        },
+        {
+          "value": "otolitos",
+          "label": "Otolitos (vértigo posicional)"
+        },
+        {
+          "value": "tendones",
+          "label": "Calcificación de tendones o ligamentos"
+        },
+        {
+          "value": "espolon",
+          "label": "Espolón calcáneo u osteofitos"
+        },
+        {
+          "value": "arterial",
+          "label": "Calcificación arterial informada en un estudio"
+        },
+        {
+          "value": "ninguno",
+          "label": "Ninguno"
+        }
+      ]
+    },
+    {
+      "id": "s29_coagula",
+      "text": "¿Coagulas rápidamente cuando sangras?",
+      "type": "single",
+      "options": [
+        {
+          "value": "si",
+          "label": "Sí, normalmente"
+        },
+        {
+          "value": "no",
+          "label": "No, tardo mucho en coagular"
+        },
+        {
+          "value": "no_se",
+          "label": "No lo sé"
+        }
+      ]
+    },
+    {
+      "id": "s29_hematomas",
+      "text": "¿Tienes hematomas a repetición o sangrado nasal (fragilidad capilar)?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "hematomas",
+          "label": "Hematomas fáciles"
+        },
+        {
+          "value": "nasal",
+          "label": "Sangrado nasal"
+        },
+        {
+          "value": "ambos",
+          "label": "Ambos"
+        }
+      ]
+    },
+    {
+      "id": "s29_vision",
+      "text": "¿Tienes visión borrosa o te han diagnosticado cataratas?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "borrosa",
+          "label": "Visión borrosa"
+        },
+        {
+          "value": "cataratas",
+          "label": "Cataratas diagnosticadas"
+        },
+        {
+          "value": "cirugia",
+          "label": "Cirugía de cataratas"
+        }
+      ]
+    },
+    {
+      "id": "s29_condiciones",
+      "text": "Condiciones actuales que aumentan tu requerimiento",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "estres_cronico",
+          "label": "Estrés crónico"
+        },
+        {
+          "value": "fatiga",
+          "label": "Fatiga"
+        },
+        {
+          "value": "infecciones",
+          "label": "Infecciones recurrentes"
+        },
+        {
+          "value": "lactancia_embarazo",
+          "label": "Lactancia materna o embarazo"
+        },
+        {
+          "value": "obesidad",
+          "label": "Sobrepeso u obesidad"
+        },
+        {
+          "value": "piel_oscura",
+          "label": "Piel oscura"
+        },
+        {
+          "value": "mayor_70",
+          "label": "Edad mayor de 70 años"
+        },
+        {
+          "value": "renal_cronica",
+          "label": "Enfermedad renal crónica"
+        },
+        {
+          "value": "hepatica",
+          "label": "Insuficiencia hepática"
+        },
+        {
+          "value": "corticoides_antiepilepticos",
+          "label": "Uso de corticoides o antiepilépticos"
+        },
+        {
+          "value": "ninguna",
+          "label": "Ninguna"
+        }
+      ]
+    },
+    {
+      "id": "s29_nivel_d",
+      "text": "¿Conoces tu nivel de vitamina D en sangre?",
+      "type": "single",
+      "options": [
+        {
+          "value": "menos_20",
+          "label": "Menos de 20 ng/mL"
+        },
+        {
+          "value": "20_30",
+          "label": "20 a 30 ng/mL"
+        },
+        {
+          "value": "30_50",
+          "label": "30 a 50 ng/mL"
+        },
+        {
+          "value": "mas_50",
+          "label": "Más de 50 ng/mL"
+        },
+        {
+          "value": "no_se",
+          "label": "No lo sé"
+        }
+      ]
+    }
+  ]
+}

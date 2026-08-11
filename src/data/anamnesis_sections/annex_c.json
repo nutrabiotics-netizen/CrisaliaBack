@@ -1,0 +1,59 @@
+{
+  "id": "annex_c",
+  "title": "Instrucciones para el Análisis Asistido por Inteligencia Artificial",
+  "for_ai_only": true,
+  "steps": [
+    {
+      "step": 1,
+      "title": "Digitalización y codificación",
+      "description": "Cada ítem con escala se codifica como entero 0-3. Cada casilla de verificación como 0 (no marcada) o 1 (marcada). Los campos de texto libre se conservan íntegros. Los ítems sin respuesta se codifican como dato faltante y NUNCA como 0."
+    },
+    {
+      "step": 2,
+      "title": "Cálculo del puntaje por sección",
+      "description": "Para cada sección se calcula el porcentaje del máximo posible: suma de los valores obtenidos dividida entre el número de ítems respondidos multiplicado por tres.",
+      "thresholds": {
+        "green": {
+          "label": "Verde",
+          "condition": "< 20%"
+        },
+        "yellow": {
+          "label": "Amarillo",
+          "condition": "20% – 45%"
+        },
+        "red": {
+          "label": "Rojo",
+          "condition": "> 45%"
+        }
+      },
+      "note": "Los ítems marcados con valor 3 se señalan de forma individual aunque el puntaje global de la sección sea bajo."
+    },
+    {
+      "step": 3,
+      "title": "Agregación por disfunción",
+      "description": "Se agrupan las secciones según el Anexo A. Una disfunción se considera probable cuando al menos dos de sus secciones alimentadoras superan el 30% del máximo, o cuando se cumple una de las combinaciones discriminantes del Anexo B. Se debe reportar el nivel de certeza y las secciones que lo sustentan."
+    },
+    {
+      "step": 4,
+      "title": "Jerarquización por etapas",
+      "description": "Las disfunciones de etapa 1 se abordan primero: coherencia cardíaca, hormesis, eje HPA, sistema endocannabinoide, balance hidroelectrolítico, insuficiencias digestivas, disbiosis, permeabilidad de mucosas, glicotoxicidad, catabolismo de purinas, vitaminas del complejo B y hierro. Las de etapa 2 se abordan una vez las anteriores estén en proceso de recuperación."
+    },
+    {
+      "step": 5,
+      "title": "Propuesta de estrategia funcional",
+      "description": "Para cada disfunción priorizada se proponen las estrategias del Anexo A, indicando cuáles son comunes a varias disfunciones simultáneas (mayor rendimiento terapéutico) y cuáles son específicas. Toda propuesta debe presentarse como sugerencia para revisión del profesional tratante, nunca como prescripción autónoma."
+    },
+    {
+      "step": 6,
+      "title": "Verificación obligatoria",
+      "description": "Antes de emitir cualquier conclusión se debe verificar: la coherencia interna del formulario (respuestas contradictorias); las contraindicaciones e interacciones con la medicación registrada en s06; las banderas rojas que exigen valoración médica inmediata; y la necesidad de paraclínicos confirmatorios.",
+      "red_flags": [
+        "Sangrado digestivo",
+        "Pérdida de peso involuntaria",
+        "Dolor torácico de esfuerzo",
+        "Síntomas neurológicos focales de aparición reciente",
+        "Ideación de autolesión"
+      ]
+    }
+  ]
+}

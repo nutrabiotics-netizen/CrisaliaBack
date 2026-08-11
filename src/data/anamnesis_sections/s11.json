@@ -1,0 +1,574 @@
+{
+  "id": "s11",
+  "number": 11,
+  "title": "Tolerancia al Estrés y Eje Hipotálamo-Hipófisis-Adrenal",
+  "questions": [
+    {
+      "id": "s11_nivel_estres",
+      "text": "En una escala de 0 a 10, ¿cuánto estrés consideras que tienes en tu vida? (0 = nada, 10 = extremo)",
+      "type": "scale",
+      "min": 0,
+      "max": 10
+    },
+    {
+      "id": "s11_manejo_estres",
+      "text": "¿Consideras que puedes manejar el estrés con facilidad?",
+      "type": "single",
+      "options": [
+        {
+          "value": "si",
+          "label": "Sí"
+        },
+        {
+          "value": "parcialmente",
+          "label": "Parcialmente"
+        },
+        {
+          "value": "no",
+          "label": "No"
+        }
+      ]
+    },
+    {
+      "id": "s11_recuperacion_estres",
+      "text": "¿Cuánto tiempo tardas en recuperar la tranquilidad después de un incidente estresante?",
+      "type": "single",
+      "options": [
+        {
+          "value": "minutos",
+          "label": "Minutos"
+        },
+        {
+          "value": "menos_1h",
+          "label": "Menos de 1 hora"
+        },
+        {
+          "value": "varias_horas",
+          "label": "Varias horas"
+        },
+        {
+          "value": "todo_el_dia",
+          "label": "Todo el día"
+        },
+        {
+          "value": "dias_semanas",
+          "label": "Días o semanas"
+        }
+      ]
+    },
+    {
+      "id": "s11_estres_sin_peligro",
+      "text": "¿Te estresas en situaciones que no representan un peligro real?",
+      "type": "single",
+      "options": [
+        {
+          "value": "nunca",
+          "label": "Nunca"
+        },
+        {
+          "value": "a_veces",
+          "label": "A veces"
+        },
+        {
+          "value": "frecuente",
+          "label": "Con frecuencia"
+        },
+        {
+          "value": "casi_siempre",
+          "label": "Casi siempre"
+        }
+      ]
+    },
+    {
+      "id": "s11_carga_dominios",
+      "text": "Califica la carga de estrés en cada dominio de tu vida",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s11_estres_trabajo",
+          "label": "Trabajo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_estres_familia",
+          "label": "Familia",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_estres_pareja",
+          "label": "Relación de pareja",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_estres_social",
+          "label": "Vida social",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_estres_finanzas",
+          "label": "Finanzas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_estres_salud_propia",
+          "label": "Salud propia",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_estres_salud_familiar",
+          "label": "Salud de un familiar",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_estres_estudio",
+          "label": "Estudio o formación",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_estres_pais",
+          "label": "Situación del país o del entorno",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s11_como_maneja",
+      "text": "¿Cómo manejas tu estrés principalmente?",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "solitario",
+          "label": "De manera solitaria"
+        },
+        {
+          "value": "familia",
+          "label": "Con el apoyo de familia"
+        },
+        {
+          "value": "amigos",
+          "label": "Con el apoyo de amigos"
+        },
+        {
+          "value": "colegas",
+          "label": "Con el apoyo de colegas"
+        },
+        {
+          "value": "profesional",
+          "label": "Con apoyo profesional (psicoterapia)"
+        },
+        {
+          "value": "no_manejo",
+          "label": "No lo manejo"
+        }
+      ]
+    },
+    {
+      "id": "s11_disfuncion_hpa",
+      "text": "Síntomas de disfunción del eje hipotálamo-hipófisis-adrenal",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s11_cansancio_despertar",
+          "label": "Cansancio al despertar, aunque haya dormido suficiente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_dificultad_levantarse",
+          "label": "Dificultad importante para levantarme en las mañanas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_cafe_arrancar",
+          "label": "Necesito café o estimulantes para arrancar el día",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_energia_baja_manana",
+          "label": "Energía baja en la mañana que mejora en la noche",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_bajon_tarde",
+          "label": "Bajón marcado de energía entre las 15:00 y las 17:00",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_segundo_aire",
+          "label": "Segundo aire nocturno: me activo después de las 21:00",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_cansancio_post_estres",
+          "label": "Cansancio desproporcionado después de un evento estresante",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_tolerancia_disminuida",
+          "label": "Disminución de mi tolerancia al estrés respecto a años previos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_fatiga_mental",
+          "label": "Fatiga mental",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_bruxismo",
+          "label": "Bruxismo (aprieto o rechino los dientes)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_deseo_sal",
+          "label": "Deseo intenso de sal o alimentos salados",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_deseo_azucar",
+          "label": "Deseo intenso de azúcar",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_mareo_pie",
+          "label": "Mareo al ponerme de pie rápidamente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_intolerancia_pie",
+          "label": "Intolerancia a permanecer de pie mucho tiempo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_agotamiento_durmiendo",
+          "label": "Sensación de agotamiento pese a dormir suficientes horas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_infecciones_estres",
+          "label": "Aumento de infecciones cuando estoy estresado",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_empeoramiento_presion",
+          "label": "Empeoramiento de mis síntomas al estar bajo presión",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s11_hiperactivacion_simpatica",
+      "text": "Signos de hiperactivación simpática o adrenérgica",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s11_mareo_levantarse",
+          "label": "Mareo al levantarme rápido",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_lagrimeo",
+          "label": "Lagrimeo de los ojos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_vision_tunel",
+          "label": "Visión en túnel",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_sudoracion",
+          "label": "Sudoración excesiva",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_manos_frias",
+          "label": "Manos frías",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_pies_frios",
+          "label": "Pies fríos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_mente_no_silencia",
+          "label": "Dificultad para silenciar la mente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_nauseas_nervios",
+          "label": "Náuseas por nerviosismo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_digestivos_estres",
+          "label": "Síntomas digestivos ante el estrés",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_palpitaciones",
+          "label": "Palpitaciones",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_nudo",
+          "label": "Sensación de nudo en el estómago o en la garganta",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_temblor_manos",
+          "label": "Temblor fino de manos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_sobresalto",
+          "label": "Sobresalto exagerado ante ruidos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_intolerancia_ruido",
+          "label": "Intolerancia al ruido o a los ambientes con mucha gente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_tension_mandibular",
+          "label": "Tensión mandibular o cervical permanente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_respiracion_corta",
+          "label": "Respiración corta y superficial",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s11_alteraciones_emocionales",
+      "text": "Alteraciones emocionales y del ánimo",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s11_intranquilidad",
+          "label": "Intranquilidad o angustia",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_miedo_sin_causa",
+          "label": "Miedo o sensación de amenaza sin causa",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_panico",
+          "label": "Crisis de pánico",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_agresividad",
+          "label": "Agresividad o reacciones desproporcionadas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_irritabilidad",
+          "label": "Irritabilidad",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_tristeza",
+          "label": "Tristeza profunda o melancolía",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_oscilaciones",
+          "label": "Oscilaciones marcadas entre euforia y tristeza",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_negativismo",
+          "label": "Negativismo y rumiación de ideas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_preocupacion_futuro",
+          "label": "Preocupación constante por el futuro",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_sin_proposito",
+          "label": "Sensación de falta de propósito",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s11_pensamientos_negativos",
+          "label": "Pensamientos negativos constantes",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s11_historia_emocional",
+      "text": "Marca lo que aplique a tu historia emocional",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "trauma_infancia",
+          "label": "Historia de trauma en la infancia (de cualquier tipo)"
+        },
+        {
+          "value": "relaciones_dañinas",
+          "label": "Exposición actual a relaciones dañinas"
+        },
+        {
+          "value": "estres_laboral",
+          "label": "Estrés laboral elevado sostenido"
+        },
+        {
+          "value": "carencia_afectiva",
+          "label": "Carencia afectiva"
+        },
+        {
+          "value": "rechazo_afectivo",
+          "label": "Rechazo afectivo"
+        },
+        {
+          "value": "rechazo_sexualidad",
+          "label": "Rechazo de la sexualidad"
+        },
+        {
+          "value": "trabajo_nocturno",
+          "label": "Trabajo nocturno o por turnos"
+        },
+        {
+          "value": "privacion_sueno",
+          "label": "Privación de sueño consciente y sostenida"
+        },
+        {
+          "value": "ejercicio_excesivo",
+          "label": "Ejercicio físico excesivo sin recuperación"
+        }
+      ]
+    },
+    {
+      "id": "s11_meditacion",
+      "text": "¿Practicas meditación o técnicas de relajación?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "si",
+          "label": "Sí"
+        }
+      ]
+    },
+    {
+      "id": "s11_tecnicas",
+      "text": "¿Cuáles? (marca todas)",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "yoga",
+          "label": "Yoga"
+        },
+        {
+          "value": "meditacion",
+          "label": "Meditación"
+        },
+        {
+          "value": "respiracion",
+          "label": "Ejercicios de respiración"
+        },
+        {
+          "value": "visualizacion",
+          "label": "Visualización"
+        },
+        {
+          "value": "rezo",
+          "label": "Rezo u oración"
+        },
+        {
+          "value": "mindfulness",
+          "label": "Mindfulness"
+        },
+        {
+          "value": "psicoterapia",
+          "label": "Psicoterapia"
+        },
+        {
+          "value": "coherencia_cardiaca",
+          "label": "Coherencia cardíaca guiada"
+        },
+        {
+          "value": "otras",
+          "label": "Otras"
+        }
+      ]
+    },
+    {
+      "id": "s11_frecuencia_tecnicas",
+      "text": "¿Con qué frecuencia las practicas?",
+      "type": "single",
+      "options": [
+        {
+          "value": "nunca",
+          "label": "Nunca"
+        },
+        {
+          "value": "ocasionalmente",
+          "label": "Ocasionalmente"
+        },
+        {
+          "value": "1_2_semana",
+          "label": "1-2 veces/semana"
+        },
+        {
+          "value": "3_5_semana",
+          "label": "3-5 veces/semana"
+        },
+        {
+          "value": "diario",
+          "label": "A diario"
+        }
+      ]
+    },
+    {
+      "id": "s11_estimulantes",
+      "text": "¿Consumes o has consumido estimulantes o sustancias psicoactivas de forma crónica?",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "cafeina",
+          "label": "Cafeína en dosis altas"
+        },
+        {
+          "value": "nicotina",
+          "label": "Nicotina"
+        },
+        {
+          "value": "cocaina",
+          "label": "Cocaína"
+        },
+        {
+          "value": "metanfetamina",
+          "label": "Metanfetamina o anfetaminas"
+        },
+        {
+          "value": "metilfenidato",
+          "label": "Metilfenidato"
+        },
+        {
+          "value": "mdma",
+          "label": "MDMA / éxtasis"
+        },
+        {
+          "value": "otras",
+          "label": "Otras"
+        }
+      ]
+    }
+  ]
+}

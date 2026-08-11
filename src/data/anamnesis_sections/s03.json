@@ -1,0 +1,173 @@
+{
+  "id": "s03",
+  "number": 3,
+  "title": "Motivo de Consulta y Padecimiento Actual",
+  "questions": [
+    {
+      "id": "s03_sintomas_tabla",
+      "text": "Enumera los síntomas y trastornos que quieres manejar, en orden de prioridad",
+      "type": "table",
+      "columns": [
+        "Síntoma o trastorno principal",
+        "Intensidad (1-10)",
+        "Frecuencia (veces/semana)",
+        "Tiempo de evolución",
+        "¿A qué hora o qué día se agrava?",
+        "¿Cómo apareció?",
+        "Factores agravantes",
+        "Factores que lo alivian"
+      ]
+    },
+    {
+      "id": "s03_limitacion",
+      "text": "¿En qué medida estos síntomas limitan tu vida diaria?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no_limitan",
+          "label": "No la limitan"
+        },
+        {
+          "value": "poco",
+          "label": "La limitan poco"
+        },
+        {
+          "value": "moderada",
+          "label": "La limitan de forma moderada"
+        },
+        {
+          "value": "importante",
+          "label": "La limitan de forma importante"
+        },
+        {
+          "value": "impiden_trabajar",
+          "label": "Me impiden trabajar o funcionar"
+        }
+      ]
+    },
+    {
+      "id": "s03_ultima_vez_bien",
+      "text": "¿Cuándo fue la última vez o época de tu vida en la que te sentiste bien?",
+      "type": "text"
+    },
+    {
+      "id": "s03_que_hacías_bien",
+      "text": "¿Qué hacías en esa época que te permitía sentirte así de bien?",
+      "type": "text"
+    },
+    {
+      "id": "s03_evento_inicio",
+      "text": "¿Con qué evento coincidió el inicio o el empeoramiento de tu condición? (marca todos los que apliquen)",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "infeccion_aguda",
+          "label": "Una infección aguda"
+        },
+        {
+          "value": "cirugia",
+          "label": "Una cirugía"
+        },
+        {
+          "value": "embarazo_posparto",
+          "label": "Un embarazo o posparto"
+        },
+        {
+          "value": "trauma_fisico",
+          "label": "Un trauma físico o accidente"
+        },
+        {
+          "value": "perdida_duelo",
+          "label": "Una pérdida o duelo"
+        },
+        {
+          "value": "ruptura_relacional",
+          "label": "Una ruptura o conflicto relacional"
+        },
+        {
+          "value": "cambio_trabajo",
+          "label": "Un cambio de trabajo o desempleo"
+        },
+        {
+          "value": "viaje_mudanza",
+          "label": "Un viaje o cambio de residencia"
+        },
+        {
+          "value": "antibiotico_prolongado",
+          "label": "Un tratamiento antibiótico prolongado"
+        },
+        {
+          "value": "corticoides_quimio",
+          "label": "Un ciclo de corticoides o quimioterapia"
+        },
+        {
+          "value": "anticoncepcion_hormonal",
+          "label": "Inicio o suspensión de anticoncepción hormonal"
+        },
+        {
+          "value": "intoxicacion_alimentaria",
+          "label": "Una intoxicación alimentaria"
+        },
+        {
+          "value": "vacuna",
+          "label": "Una vacuna"
+        },
+        {
+          "value": "moho",
+          "label": "Una mudanza a vivienda con humedad o moho"
+        },
+        {
+          "value": "estres_extremo",
+          "label": "Un periodo de estrés extremo sostenido"
+        },
+        {
+          "value": "ningun_evento",
+          "label": "No lo relaciono con ningún evento"
+        }
+      ]
+    },
+    {
+      "id": "s03_objetivo_a",
+      "text": "Objetivo de bienestar a",
+      "type": "text"
+    },
+    {
+      "id": "s03_objetivo_b",
+      "text": "Objetivo de bienestar b",
+      "type": "text"
+    },
+    {
+      "id": "s03_objetivo_c",
+      "text": "Objetivo de bienestar c",
+      "type": "text"
+    },
+    {
+      "id": "s03_objetivo_d",
+      "text": "Objetivo de bienestar d",
+      "type": "text"
+    },
+    {
+      "id": "s03_disposicion",
+      "text": "¿Cuál es tu grado de disposición para modificar hábitos (alimentación, sueño, ejercicio, manejo del estrés)?",
+      "type": "single",
+      "options": [
+        {
+          "value": "muy_alto",
+          "label": "Muy alto: puedo cambiar todo lo necesario"
+        },
+        {
+          "value": "alto",
+          "label": "Alto: puedo hacer cambios importantes"
+        },
+        {
+          "value": "medio",
+          "label": "Medio: puedo hacer cambios graduales"
+        },
+        {
+          "value": "bajo",
+          "label": "Bajo: me cuesta mucho cambiar hábitos"
+        }
+      ]
+    }
+  ]
+}

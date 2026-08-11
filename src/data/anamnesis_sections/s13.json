@@ -1,0 +1,357 @@
+{
+  "id": "s13",
+  "number": 13,
+  "title": "Sueño y Ritmo Circadiano",
+  "questions": [
+    {
+      "id": "s13_horas_sueno",
+      "text": "¿Cuántas horas de sueño logras por noche? (no cuentan las horas acostado sin dormir)",
+      "type": "single",
+      "options": [
+        {
+          "value": "menos_5h",
+          "label": "Menos de 5 h"
+        },
+        {
+          "value": "5_6h",
+          "label": "5 a 6 h"
+        },
+        {
+          "value": "6_7h",
+          "label": "6 a 7 h"
+        },
+        {
+          "value": "7_9h",
+          "label": "7 a 9 h"
+        },
+        {
+          "value": "mas_9h",
+          "label": "Más de 9 h"
+        }
+      ]
+    },
+    {
+      "id": "s13_hora_acostarse",
+      "text": "Hora habitual de acostarte",
+      "type": "text"
+    },
+    {
+      "id": "s13_hora_levantarse",
+      "text": "Hora habitual de levantarte",
+      "type": "text"
+    },
+    {
+      "id": "s13_hora_dormirse",
+      "text": "Hora a la que te duermes realmente",
+      "type": "text"
+    },
+    {
+      "id": "s13_tiempo_conciliar",
+      "text": "¿Cuánto tiempo tardas en quedarte dormido?",
+      "type": "single",
+      "options": [
+        {
+          "value": "menos_5",
+          "label": "Menos de 5 min"
+        },
+        {
+          "value": "5_15",
+          "label": "5 a 15 min"
+        },
+        {
+          "value": "15_30",
+          "label": "15 a 30 min"
+        },
+        {
+          "value": "30_60",
+          "label": "30 a 60 min"
+        },
+        {
+          "value": "mas_60",
+          "label": "Más de 60 min"
+        }
+      ]
+    },
+    {
+      "id": "s13_despertares",
+      "text": "¿Cuántas veces te despiertas durante la noche?",
+      "type": "single",
+      "options": [
+        {
+          "value": "ninguna",
+          "label": "Ninguna"
+        },
+        {
+          "value": "1",
+          "label": "1 vez"
+        },
+        {
+          "value": "2",
+          "label": "2 veces"
+        },
+        {
+          "value": "3",
+          "label": "3 veces"
+        },
+        {
+          "value": "4_mas",
+          "label": "4 o más veces"
+        }
+      ]
+    },
+    {
+      "id": "s13_hora_despertar",
+      "text": "Si despiertas en la noche, ¿a qué hora suele ocurrir?",
+      "type": "single",
+      "options": [
+        {
+          "value": "23_01",
+          "label": "Entre 23:00 y 01:00"
+        },
+        {
+          "value": "01_03",
+          "label": "Entre 01:00 y 03:00"
+        },
+        {
+          "value": "03_05",
+          "label": "Entre 03:00 y 05:00"
+        },
+        {
+          "value": "sin_patron",
+          "label": "Sin patrón definido"
+        },
+        {
+          "value": "no_despierto",
+          "label": "No despierto"
+        }
+      ]
+    },
+    {
+      "id": "s13_vuelve_dormirse",
+      "text": "¿Logras volver a dormirte?",
+      "type": "single",
+      "options": [
+        {
+          "value": "inmediato",
+          "label": "Sí, de inmediato"
+        },
+        {
+          "value": "menos_30",
+          "label": "Sí, en menos de 30 minutos"
+        },
+        {
+          "value": "mas_30",
+          "label": "Tardo más de 30 minutos"
+        },
+        {
+          "value": "no",
+          "label": "No vuelvo a dormirme"
+        }
+      ]
+    },
+    {
+      "id": "s13_manifestaciones",
+      "text": "Manifestaciones durante el sueño y al despertar",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s13_despierto_sudando",
+          "label": "Despierto sudando",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s13_despierto_taquicardia",
+          "label": "Despierto con agitación o taquicardia",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s13_despierto_falta_aire",
+          "label": "Despierto con falta de aire",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s13_despierto_angustia",
+          "label": "Despierto con angustia o pensamiento acelerado",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s13_despierto_hambre",
+          "label": "Despierto con hambre o temblor",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s13_descansado",
+          "label": "Me levanto bien descansado",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s13_pesadillas",
+          "label": "Tengo pesadillas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s13_ronco",
+          "label": "Ronco",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s13_pausas_respiracion",
+          "label": "Alguien me ha dicho que hago pausas en la respiración mientras duermo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s13_piernas_inquietas",
+          "label": "Tengo las piernas inquietas en la noche",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s13_sacudidas",
+          "label": "Sacudidas o movimientos bruscos al conciliar el sueño",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s13_bruxismo",
+          "label": "Bruxismo nocturno",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s13_orinar_noche",
+          "label": "Me levanto a orinar en la noche",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s13_no_reparador",
+          "label": "Sueño no reparador pese a dormir suficiente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s13_somnolencia_diurna",
+          "label": "Somnolencia diurna excesiva",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s13_siestas",
+          "label": "Necesito siestas para funcionar",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s13_ritmo_invertido",
+          "label": "Duermo de día y estoy despierto de noche (ritmo invertido)",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s13_suplementos_dormir",
+      "text": "¿Usas medicamentos o suplementos para dormir?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "ocasionalmente",
+          "label": "Sí, ocasionalmente"
+        },
+        {
+          "value": "mayoria_noches",
+          "label": "Sí, la mayoría de las noches"
+        },
+        {
+          "value": "todas_noches",
+          "label": "Sí, todas las noches"
+        }
+      ]
+    },
+    {
+      "id": "s13_suplementos_dormir_cuales",
+      "text": "¿Cuáles y desde cuándo?",
+      "type": "text"
+    },
+    {
+      "id": "s13_higiene",
+      "text": "Higiene del sueño y exposición lumínica — Marca lo que aplique",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "pantallas_antes",
+          "label": "Uso pantallas en la hora previa a dormir"
+        },
+        {
+          "value": "luz_encendida",
+          "label": "Duermo con luz encendida o televisor"
+        },
+        {
+          "value": "celular_mesa",
+          "label": "Duermo con el celular en la mesa de noche"
+        },
+        {
+          "value": "no_oscura",
+          "label": "Mi habitación no queda completamente oscura"
+        },
+        {
+          "value": "ruido_ambiental",
+          "label": "Duermo con ruido ambiental"
+        },
+        {
+          "value": "cena_tarde",
+          "label": "Ceno menos de dos horas antes de acostarme"
+        },
+        {
+          "value": "cafeina_tarde",
+          "label": "Consumo cafeína después del mediodía"
+        },
+        {
+          "value": "alcohol_noche",
+          "label": "Consumo alcohol en la noche"
+        },
+        {
+          "value": "ejercicio_noche",
+          "label": "Entreno intensamente en la noche"
+        },
+        {
+          "value": "luz_solar_manana",
+          "label": "Recibo luz solar en la primera hora del día"
+        },
+        {
+          "value": "horarios_constantes",
+          "label": "Mantengo horarios de sueño constantes, incluso los fines de semana"
+        },
+        {
+          "value": "cables_cabecera",
+          "label": "Tengo cables o tomas eléctricas a la cabecera de la cama"
+        }
+      ]
+    },
+    {
+      "id": "s13_turnos_nocturnos",
+      "text": "¿Trabajas o has trabajado en turnos nocturnos o rotativos?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "actualmente",
+          "label": "Sí, actualmente"
+        },
+        {
+          "value": "pasado",
+          "label": "Sí, en el pasado"
+        }
+      ]
+    },
+    {
+      "id": "s13_turnos_anos",
+      "text": "¿Durante cuántos años?",
+      "type": "text"
+    },
+    {
+      "id": "s13_turnos_noches_mes",
+      "text": "¿Cuántas noches al mes?",
+      "type": "text"
+    }
+  ]
+}

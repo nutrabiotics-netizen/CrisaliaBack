@@ -1,0 +1,395 @@
+{
+  "id": "s28",
+  "number": 28,
+  "title": "Dolor Crónico, Somatización y Sistema Endocannabinoide",
+  "questions": [
+    {
+      "id": "s28_dolor_cronico",
+      "text": "¿Presentas dolor crónico (más de tres meses)?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "si",
+          "label": "Sí"
+        }
+      ]
+    },
+    {
+      "id": "s28_localizacion",
+      "text": "Localización del dolor (marca todas)",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "cabeza",
+          "label": "Cabeza"
+        },
+        {
+          "value": "cuello",
+          "label": "Cuello"
+        },
+        {
+          "value": "hombros",
+          "label": "Hombros"
+        },
+        {
+          "value": "espalda_alta",
+          "label": "Espalda alta"
+        },
+        {
+          "value": "lumbar",
+          "label": "Espalda baja o lumbar"
+        },
+        {
+          "value": "cadera",
+          "label": "Cadera"
+        },
+        {
+          "value": "rodillas",
+          "label": "Rodillas"
+        },
+        {
+          "value": "manos_munecas",
+          "label": "Manos o muñecas"
+        },
+        {
+          "value": "pies_tobillos",
+          "label": "Pies o tobillos"
+        },
+        {
+          "value": "torax",
+          "label": "Tórax"
+        },
+        {
+          "value": "abdomen",
+          "label": "Abdomen"
+        },
+        {
+          "value": "pelvis",
+          "label": "Pelvis"
+        },
+        {
+          "value": "generalizado",
+          "label": "Dolor generalizado sin localización clara"
+        }
+      ]
+    },
+    {
+      "id": "s28_intensidad",
+      "text": "Intensidad promedio del dolor (0 = ninguno, 10 = máximo imaginable)",
+      "type": "scale",
+      "min": 0,
+      "max": 10
+    },
+    {
+      "id": "s28_caracter",
+      "text": "Carácter del dolor",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "punzante",
+          "label": "Punzante"
+        },
+        {
+          "value": "quemante",
+          "label": "Quemante"
+        },
+        {
+          "value": "electrico",
+          "label": "Eléctrico"
+        },
+        {
+          "value": "opresivo",
+          "label": "Opresivo"
+        },
+        {
+          "value": "pulsatil",
+          "label": "Pulsátil"
+        },
+        {
+          "value": "sordo",
+          "label": "Sordo o profundo"
+        },
+        {
+          "value": "calambre",
+          "label": "Tipo calambre"
+        },
+        {
+          "value": "migratorio",
+          "label": "Migratorio (cambia de lugar)"
+        }
+      ]
+    },
+    {
+      "id": "s28_asociadas",
+      "text": "Manifestaciones asociadas al dolor crónico",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s28_despierta",
+          "label": "El dolor me despierta en la noche",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s28_estres",
+          "label": "El dolor empeora con el estrés",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s28_clima",
+          "label": "El dolor empeora con el clima frío o húmedo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s28_puntos_presion",
+          "label": "Puntos dolorosos a la presión en varias zonas del cuerpo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s28_estimulos",
+          "label": "Sensación de dolor ante estímulos que no deberían doler",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s28_rigidez",
+          "label": "Rigidez generalizada al levantarme",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s28_analgesicos",
+          "label": "Necesito analgésicos casi a diario",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s28_tolerancia_analgesicos",
+          "label": "Los analgésicos ya no me hacen el mismo efecto",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s28_limita_fisica",
+          "label": "El dolor limita mi actividad física",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s28_limita_animo",
+          "label": "El dolor afecta mi estado de ánimo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s28_limita_relaciones",
+          "label": "El dolor afecta mis relaciones",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s28_endocannabinoide",
+      "text": "Indicadores de deficiencia funcional del sistema endocannabinoide",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s28_e_dolor_difuso",
+          "label": "Dolor difuso sin causa estructural demostrada",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s28_e_ansiedad",
+          "label": "Ansiedad basal permanente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s28_e_insomnio",
+          "label": "Insomnio de conciliación",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s28_e_baja_tolerancia",
+          "label": "Baja tolerancia al estrés",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s28_e_nauseas",
+          "label": "Náusea o inapetencia frecuentes",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s28_e_apetito",
+          "label": "Apetito desregulado (mucho o muy poco)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s28_e_placer",
+          "label": "Dificultad para experimentar placer o recompensa",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s28_e_recompensa_ejercicio",
+          "label": "Sensación de falta de recompensa tras el ejercicio",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s28_e_migraña",
+          "label": "Migraña recurrente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s28_e_colon",
+          "label": "Colon irritable",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s28_e_fibromialgia",
+          "label": "Fibromialgia diagnosticada",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s28_e_insensibilidad",
+          "label": "Deficiencia o insensibilidad afectiva",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s28_e_desconexion",
+          "label": "Sensación de desconexión emocional",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s28_cannabis",
+      "text": "¿Consumes cannabis o derivados?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "fumada",
+          "label": "Fumada"
+        },
+        {
+          "value": "gotas",
+          "label": "Ingerida (extracto en gotas)"
+        },
+        {
+          "value": "vaporizada",
+          "label": "Vaporizada"
+        },
+        {
+          "value": "topica",
+          "label": "Tópica"
+        }
+      ]
+    },
+    {
+      "id": "s28_cannabis_tipo",
+      "text": "Si consumes, ¿qué tipo?",
+      "type": "single",
+      "options": [
+        {
+          "value": "thc",
+          "label": "THC"
+        },
+        {
+          "value": "cbd",
+          "label": "CBD"
+        },
+        {
+          "value": "thc_cbd",
+          "label": "THC + CBD"
+        },
+        {
+          "value": "no_se",
+          "label": "No lo sé"
+        }
+      ]
+    },
+    {
+      "id": "s28_cannabis_frecuencia",
+      "text": "¿Con qué frecuencia?",
+      "type": "single",
+      "options": [
+        {
+          "value": "nunca",
+          "label": "Nunca"
+        },
+        {
+          "value": "ocasionalmente",
+          "label": "Ocasionalmente"
+        },
+        {
+          "value": "semanalmente",
+          "label": "Semanalmente"
+        },
+        {
+          "value": "diario",
+          "label": "A diario"
+        }
+      ]
+    },
+    {
+      "id": "s28_reaccion_consumir",
+      "text": "¿Tienes alguna reacción al consumirla?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "favorable",
+          "label": "Sí, favorable"
+        },
+        {
+          "value": "adversa",
+          "label": "Sí, adversa"
+        }
+      ]
+    },
+    {
+      "id": "s28_reaccion_suspender",
+      "text": "¿Tienes alguna reacción al suspenderla?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "si",
+          "label": "Sí"
+        },
+        {
+          "value": "no_suspendido",
+          "label": "No he suspendido"
+        }
+      ]
+    },
+    {
+      "id": "s28_convulsiones",
+      "text": "¿Has presentado convulsiones o episodios de pérdida de conciencia?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "infancia",
+          "label": "Sí, en la infancia"
+        },
+        {
+          "value": "actualmente",
+          "label": "Sí, actualmente"
+        },
+        {
+          "value": "epilepsia",
+          "label": "Epilepsia diagnosticada"
+        }
+      ]
+    }
+  ]
+}

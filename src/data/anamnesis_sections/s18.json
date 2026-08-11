@@ -1,0 +1,187 @@
+{
+  "id": "s18",
+  "number": 18,
+  "title": "Salud Oral y Periodontal",
+  "questions": [
+    {
+      "id": "s18_manifestaciones",
+      "text": "Manifestaciones en boca, encías y garganta",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s18_sangrado_encias",
+          "label": "Sangrado de las encías al cepillarme",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s18_encias_inflamadas",
+          "label": "Encías rojas, inflamadas o retraídas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s18_sarro",
+          "label": "Cálculos dentales o sarro abundante",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s18_halitosis",
+          "label": "Halitosis (mal aliento)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s18_sabor_metalico",
+          "label": "Sabor metálico o desagradable en la boca",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s18_boca_seca",
+          "label": "Boca seca",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s18_ardor_boca",
+          "label": "Ardor en la boca o en la mucosa oral",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s18_dolor_lengua",
+          "label": "Inflamación o dolor de la lengua",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s18_lengua_saburral",
+          "label": "Lengua con capa blanca o saburral",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s18_aftas",
+          "label": "Aftas o llagas bucales recurrentes",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s18_odinofagia",
+          "label": "Odinofagia (dolor al tragar)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s18_amigdalitis",
+          "label": "Amigdalitis o faringitis a repetición",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s18_caries",
+          "label": "Caries frecuentes",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s18_sensibilidad",
+          "label": "Sensibilidad dental",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s18_atm",
+          "label": "Dolor o chasquido de la articulación temporomandibular",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s18_bruxismo",
+          "label": "Bruxismo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s18_retraccion",
+          "label": "Retracción de encías con exposición de raíces",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s18_antecedentes",
+      "text": "Antecedentes odontológicos (marca todos)",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "amalgamas_actuales",
+          "label": "Amalgamas dentales actuales"
+        },
+        {
+          "value": "amalgamas_removidas",
+          "label": "Amalgamas removidas"
+        },
+        {
+          "value": "endodoncias",
+          "label": "Endodoncias (tratamiento de conducto)"
+        },
+        {
+          "value": "implantes",
+          "label": "Implantes dentales"
+        },
+        {
+          "value": "ortodoncia",
+          "label": "Ortodoncia (brackets)"
+        },
+        {
+          "value": "coronas",
+          "label": "Coronas o prótesis fijas"
+        },
+        {
+          "value": "cordales",
+          "label": "Extracción de cordales"
+        },
+        {
+          "value": "periodontal",
+          "label": "Cirugía periodontal"
+        },
+        {
+          "value": "blanqueamiento",
+          "label": "Blanqueamiento dental"
+        },
+        {
+          "value": "ninguno",
+          "label": "Ninguno"
+        }
+      ]
+    },
+    {
+      "id": "s18_num_amalgamas",
+      "text": "Número de amalgamas actuales",
+      "type": "text"
+    },
+    {
+      "id": "s18_ultima_visita",
+      "text": "Año de la última visita odontológica",
+      "type": "text"
+    },
+    {
+      "id": "s18_higiene_oral",
+      "text": "Frecuencia de higiene oral",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "cepillado_1",
+          "label": "Cepillado 1 vez al día"
+        },
+        {
+          "value": "cepillado_2",
+          "label": "Cepillado 2 veces al día"
+        },
+        {
+          "value": "cepillado_3",
+          "label": "Cepillado 3 o más veces al día"
+        },
+        {
+          "value": "seda_dental",
+          "label": "Uso de seda dental diario"
+        },
+        {
+          "value": "clorhexidina",
+          "label": "Uso de enjuague con clorhexidina o alcohol"
+        },
+        {
+          "value": "limpieza_anual",
+          "label": "Limpieza profesional anual"
+        }
+      ]
+    }
+  ]
+}

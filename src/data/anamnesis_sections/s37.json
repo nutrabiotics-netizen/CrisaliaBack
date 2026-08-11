@@ -1,0 +1,55 @@
+{
+  "id": "s37",
+  "number": 37,
+  "title": "Síntesis — Uso Exclusivo de Crisal-IA",
+  "for_ai_only": true,
+  "questions": [
+    {
+      "id": "s37_semaforización",
+      "text": "Semaforización ponderada por sección",
+      "type": "table",
+      "columns": [
+        "Sección",
+        "Σ(resp × peso)",
+        "Σ(3 × peso)",
+        "I(D) %",
+        "P(D) = I × factor",
+        "Semáforo"
+      ]
+    },
+    {
+      "id": "s37_disfunciones",
+      "text": "Disfunciones fisiológicas identificadas y jerarquizadas",
+      "type": "table",
+      "columns": [
+        "#",
+        "Disfunción fisiológica",
+        "Evidencia en la anamnesis (secciones e ítems)",
+        "Etapa (1 o 2)",
+        "Estrategia funcional propuesta",
+        "Fecha de inicio"
+      ]
+    },
+    {
+      "id": "s37_paraclinicos",
+      "text": "Paraclínicos solicitados para confirmar o descartar",
+      "type": "table",
+      "columns": [
+        "Marcador",
+        "Justificación (disfunción sospechada)",
+        "Resultado",
+        "Fecha"
+      ]
+    },
+    {
+      "id": "s37_impresion",
+      "text": "Impresión diagnóstica funcional integrada",
+      "type": "text"
+    },
+    {
+      "id": "s37_plan",
+      "text": "Plan terapéutico por etapas (etapa 1: función; etapa 2: reaprovisionamiento y desintoxicación)",
+      "type": "text"
+    }
+  ]
+}

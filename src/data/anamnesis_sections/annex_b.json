@@ -1,0 +1,284 @@
+{
+  "id": "annex_b",
+  "title": "Claves Clínicas Discriminantes por Disfunción",
+  "for_ai_only": true,
+  "patterns": [
+    {
+      "dysfunction": "Eje HPA / estrés",
+      "key_combo": "Cansancio al despertar · dificultad para levantarse · bajón de las 15:00-17:00 · segundo aire nocturno · deseo de sal · bruxismo · baja tolerancia al estrés · mareo ortostático",
+      "items": [
+        "s11_cansancio_despertar",
+        "s11_dificultad_levantarse",
+        "s11_bajon_tarde",
+        "s11_segundo_aire",
+        "s11_deseo_sal",
+        "s11_bruxismo"
+      ]
+    },
+    {
+      "dysfunction": "Coherencia cardíaca",
+      "key_combo": "VFC descendente · FC en reposo en ascenso · dificultad para relajarse · anhedonia · intolerancia ortostática · respiración bucal",
+      "items": [
+        "s12_cambio_vfc",
+        "s12_fc_aumento",
+        "s12_no_relaja",
+        "s12_intolerancia_ortostática"
+      ]
+    },
+    {
+      "dysfunction": "Hormesis",
+      "key_combo": "Ausencia de exposición solar, de frío, de calor y de ayuno · sedentarismo · intolerancia al ejercicio · recuperación mayor a 48 h",
+      "items": [
+        "s10_exposicion_sol",
+        "s10_banos_frios",
+        "s10_calor",
+        "s10_ayuno",
+        "s10_re_intolerancia",
+        "s10_re_recuperacion"
+      ]
+    },
+    {
+      "dysfunction": "Insuficiencia gástrica",
+      "key_combo": "Llenura precoz · eructos · halitosis · alimentos no digeridos · prurito anal · reflujo paradójico · aversión a la proteína",
+      "items": [
+        "s15_llenura",
+        "s15_eructos",
+        "s15_halitosis",
+        "s15_alimentos_no_digeridos",
+        "s15_prurito_anal",
+        "s15_aversion_proteina"
+      ]
+    },
+    {
+      "dysfunction": "Insuficiencia biliar",
+      "key_combo": "Heces amarillentas o flotantes · esteatorrea · escotomas centelleantes · sabor amargo · descamación de palmas · dolor en hombro derecho",
+      "items": [
+        "s16_heces_claras",
+        "s16_heces_flotantes",
+        "s16_esteatorrea",
+        "s16_escotomas",
+        "s16_sabor_amargo",
+        "s16_dolor_hombro_derecho"
+      ]
+    },
+    {
+      "dysfunction": "SIBO por hidrógeno",
+      "key_combo": "Distensión 30-90 min posprandial · diarrea · empeoramiento con fibra y probióticos · flatulencia abundante",
+      "items": [
+        "s19_b_distension_30_90",
+        "s19_b_diarrea",
+        "s19_b_empeora_fibra",
+        "s19_b_flatulencias"
+      ]
+    },
+    {
+      "dysfunction": "IMO (metanógenos)",
+      "key_combo": "Estreñimiento predominante · Bristol 1-2 · gas atrapado con poca flatulencia · dependencia de laxantes",
+      "items": [
+        "s19_i_estrenimiento",
+        "s19_i_bristol_1_2",
+        "s19_i_gas_atrapado",
+        "s19_i_laxantes"
+      ]
+    },
+    {
+      "dysfunction": "SIFO / Candida",
+      "key_combo": "Antojo intenso de azúcar · lengua saburral · micosis recurrente · empeoramiento con levaduras y alcohol",
+      "items": [
+        "s19_f_antojo_azucar",
+        "s19_f_lengua_blanca",
+        "s19_f_onicomicosis",
+        "s19_f_empeora_azucar"
+      ]
+    },
+    {
+      "dysfunction": "Parasitosis",
+      "key_combo": "Patrón episódico (mejoría 3 días y recaída) · prurito anal nocturno · bruxismo · anemia ferropénica · geofagia",
+      "items": [
+        "s19_p_episodicos",
+        "s19_p_prurito_anal",
+        "s19_p_bruxismo",
+        "s19_p_anemia",
+        "s19_p_geofagia"
+      ]
+    },
+    {
+      "dysfunction": "Permeabilidad de mucosas",
+      "key_combo": "Hiperhistaminemia multisistémica · reacción alimentaria diferida 2-12 h · cefalea sin causa · fatiga posprandial",
+      "items": [
+        "s21_congestion_nasal",
+        "s21_cefalea",
+        "s21_tiempo_sintomas"
+      ]
+    },
+    {
+      "dysfunction": "Válvula ileocecal",
+      "key_combo": "Halitosis con mal olor corporal · mareo vespertino · tinnitus · dolor de hombro derecho · pseudo túnel del carpo",
+      "items": [
+        "s20_v_halitosis",
+        "s20_v_olor_corporal",
+        "s20_v_mareo_tarde",
+        "s20_v_tinnitus",
+        "s20_v_hombro_derecho",
+        "s20_v_tunel_carpo"
+      ]
+    },
+    {
+      "dysfunction": "Resistencia a la insulina",
+      "key_combo": "Somnolencia posprandial · deseo de dulce · acantosis nigricans · grasa abdominal resistente · TG/HDL mayor a 3",
+      "items": [
+        "s22_ri_somnolencia",
+        "s22_ri_ansiedad_dulce",
+        "s22_ri_acantosis",
+        "s22_ri_grasa_abdominal"
+      ]
+    },
+    {
+      "dysfunction": "Hipoglucemia reactiva",
+      "key_combo": "Temblor y sudor que ceden al comer · despertar de madrugada con angustia · pesadillas · irritabilidad prandial",
+      "items": [
+        "s22_temblor",
+        "s22_sudoracion",
+        "s22_nerviosismo_cede",
+        "s22_pesadillas_madrugada"
+      ]
+    },
+    {
+      "dysfunction": "Catabolismo de purinas",
+      "key_combo": "Fatiga post ejercicio desproporcionada · tos crónica · oliguria con edema · disnea posicional · ácido úrico elevado",
+      "items": [
+        "s23_fatiga_ejercicio",
+        "s23_tos_cronica",
+        "s23_orino_poco_hincho",
+        "s23_disnea_sentado",
+        "s23_acido_urico"
+      ]
+    },
+    {
+      "dysfunction": "Metilación / B12-B9",
+      "key_combo": "Parestesias con pérdida de sensibilidad vibratoria · ataxia · glositis · psicosis o irritabilidad · dominancia estrogénica",
+      "items": [
+        "s24_hormigueo",
+        "s24_sensibilidad_vibratoria",
+        "s24_ataxia",
+        "s24_glositis",
+        "s24_psicosis"
+      ]
+    },
+    {
+      "dysfunction": "Deficiencia de hierro",
+      "key_combo": "Pica (hielo, tierra) · piernas inquietas · fragilidad ungueal · caída de cabello · tinnitus con taquicardia",
+      "items": [
+        "s25_pica",
+        "s25_piernas_inquietas",
+        "s25_unas",
+        "s25_caida_cabello",
+        "s25_tinnitus",
+        "s25_taquicardia"
+      ]
+    },
+    {
+      "dysfunction": "Inflamación crónica",
+      "key_combo": "Rigidez matutina mayor a 30 min · dolor migratorio · infecciones recurrentes · perímetro abdominal aumentado",
+      "items": [
+        "s26_rigidez_matutina",
+        "s26_artralgias",
+        "s26_perimetro_abdominal"
+      ]
+    },
+    {
+      "dysfunction": "Autoinmunidad",
+      "key_combo": "Agudización con alimento, químico, infección, estrés o temporada · brotes de más de 2-3 semanas · anticuerpos positivos",
+      "items": [
+        "s27_agudizacion",
+        "s27_agudizacion_duracion",
+        "s27_anticuerpos"
+      ]
+    },
+    {
+      "dysfunction": "Sistema endocannabinoide",
+      "key_combo": "Dolor difuso sin causa estructural + ansiedad + insomnio + baja tolerancia al estrés de forma simultánea",
+      "items": [
+        "s28_e_dolor_difuso",
+        "s28_e_ansiedad",
+        "s28_e_insomnio",
+        "s28_e_baja_tolerancia"
+      ]
+    },
+    {
+      "dysfunction": "Déficit de D3 / K2",
+      "key_combo": "Dolor óseo esternal o tibial · debilidad proximal · calcificaciones y litiasis · fragilidad capilar",
+      "items": [
+        "s29_dolor_oseo",
+        "s29_debilidad_proximal",
+        "s29_calcificaciones",
+        "s29_hematomas"
+      ]
+    },
+    {
+      "dysfunction": "Déficit de omega 3",
+      "key_combo": "Ojo seco · queratosis pilar · sanación lenta · descoordinación · sofocos",
+      "items": [
+        "s30_ojo_seco",
+        "s30_queratosis",
+        "s30_sanacion_lenta",
+        "s30_descoordinacion",
+        "s30_sofocos"
+      ]
+    },
+    {
+      "dysfunction": "Carga tóxica",
+      "key_combo": "Hipersensibilidad química · reacción a dosis bajas de fármacos · empeoramiento al desintoxicar · intolerancia a suplementos",
+      "items": [
+        "s32_hipersensibilidad_quimica",
+        "s32_dosis_bajas",
+        "s32_empeora_detox",
+        "s32_intolerancia_suplementos"
+      ]
+    },
+    {
+      "dysfunction": "Disfunción mitocondrial",
+      "key_combo": "Fatiga post esfuerzo desproporcionada · recuperación lenta · inflexibilidad metabólica · intolerancia al ayuno",
+      "items": [
+        "s33_fatiga_esfuerzo",
+        "s33_recuperacion_lenta",
+        "s33_inflexibilidad",
+        "s33_dieta_baja_carbos"
+      ]
+    },
+    {
+      "dysfunction": "Hipoxia",
+      "key_combo": "Cianosis · bostezos frecuentes · piernas inquietas · mala adaptación a la altura · niebla mental con disnea",
+      "items": [
+        "s33_cianosis",
+        "s33_bostezos",
+        "s33_piernas_inquietas",
+        "s33_altura",
+        "s33_dificultad_respirar"
+      ]
+    },
+    {
+      "dysfunction": "Excitotoxicidad",
+      "key_combo": "Migraña + ansiedad + insomnio de conciliación + hipersensibilidad al ruido y a la luz",
+      "items": [
+        "s34_migraña",
+        "s34_ansiedad",
+        "s34_insomnio",
+        "s34_ruido",
+        "s34_luz"
+      ]
+    },
+    {
+      "dysfunction": "Hipofunción tiroidea",
+      "key_combo": "Intolerancia al frío · caída masiva de cabello · estreñimiento · calambres nocturnos · dolor migratorio · voz ronca",
+      "items": [
+        "s35_intolerancia_frio",
+        "s35_caida_cabello",
+        "s35_estrenimiento",
+        "s35_calambres",
+        "s35_artralgias",
+        "s35_ronquera"
+      ]
+    }
+  ]
+}

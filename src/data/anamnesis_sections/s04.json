@@ -1,0 +1,302 @@
+{
+  "id": "s04",
+  "number": 4,
+  "title": "Antecedentes Familiares y Perinatales",
+  "questions": [
+    {
+      "id": "s04_enfermedades_familia",
+      "text": "Marca las enfermedades presentes en padres, hermanos, tíos y abuelos",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "cancer",
+          "label": "Cáncer (especifica tipo)"
+        },
+        {
+          "value": "cardiovascular",
+          "label": "Enfermedad cardiovascular o infarto"
+        },
+        {
+          "value": "acv",
+          "label": "Infarto cerebral / ACV"
+        },
+        {
+          "value": "hipertension",
+          "label": "Hipertensión arterial"
+        },
+        {
+          "value": "dm2",
+          "label": "Diabetes mellitus tipo 2"
+        },
+        {
+          "value": "dm1",
+          "label": "Diabetes mellitus tipo 1"
+        },
+        {
+          "value": "obesidad",
+          "label": "Obesidad"
+        },
+        {
+          "value": "dislipidemia",
+          "label": "Dislipidemia"
+        },
+        {
+          "value": "autoinmune",
+          "label": "Enfermedades autoinmunes"
+        },
+        {
+          "value": "hashimoto",
+          "label": "Tiroiditis de Hashimoto u otra tiroidopatía"
+        },
+        {
+          "value": "celiaca",
+          "label": "Enfermedad celíaca"
+        },
+        {
+          "value": "eii",
+          "label": "Enfermedad inflamatoria intestinal"
+        },
+        {
+          "value": "neurodegenerativa",
+          "label": "Enfermedades neurodegenerativas (Alzheimer, Parkinson, demencia)"
+        },
+        {
+          "value": "psiquiatrica",
+          "label": "Enfermedades psiquiátricas"
+        },
+        {
+          "value": "trastorno_hormonal",
+          "label": "Trastornos hormonales"
+        },
+        {
+          "value": "alergica_atopia",
+          "label": "Enfermedades alérgicas / atopia"
+        },
+        {
+          "value": "osteoporosis",
+          "label": "Osteoporosis"
+        },
+        {
+          "value": "tubo_neural",
+          "label": "Defectos del tubo neural"
+        },
+        {
+          "value": "coagulacion",
+          "label": "Trastornos de la coagulación o trombosis"
+        },
+        {
+          "value": "renal_cronica",
+          "label": "Enfermedad renal crónica"
+        },
+        {
+          "value": "litiasis",
+          "label": "Litiasis renal o biliar"
+        },
+        {
+          "value": "adicciones",
+          "label": "Adicciones"
+        }
+      ]
+    },
+    {
+      "id": "s04_cancer_tipo",
+      "text": "Especifica los tipos de cáncer y el parentesco",
+      "type": "text"
+    },
+    {
+      "id": "s04_madre_antes_embarazo",
+      "text": "Salud de la madre — antes del embarazo",
+      "type": "text"
+    },
+    {
+      "id": "s04_madre_durante_embarazo",
+      "text": "Salud de la madre — durante el embarazo (incluye infecciones, medicamentos, estrés, tabaquismo, diabetes gestacional, preeclampsia)",
+      "type": "text"
+    },
+    {
+      "id": "s04_madre_despues_embarazo",
+      "text": "Salud de la madre — después del embarazo (incluye depresión posparto)",
+      "type": "text"
+    },
+    {
+      "id": "s04_madre_ahora",
+      "text": "Salud de la madre — ahora (si vive)",
+      "type": "text"
+    },
+    {
+      "id": "s04_tipo_parto",
+      "text": "Naciste por parto:",
+      "type": "single",
+      "options": [
+        {
+          "value": "vaginal_natural",
+          "label": "Vaginal natural"
+        },
+        {
+          "value": "vaginal_peridural",
+          "label": "Vaginal con anestesia peridural"
+        },
+        {
+          "value": "vaginal_inducido",
+          "label": "Vaginal inducido con oxitocina u otro"
+        },
+        {
+          "value": "vaginal_forceps",
+          "label": "Vaginal con fórceps o ventosa"
+        },
+        {
+          "value": "cesarea_programada",
+          "label": "Cesárea programada"
+        },
+        {
+          "value": "cesarea_urgencia",
+          "label": "Cesárea de urgencia"
+        },
+        {
+          "value": "no_se",
+          "label": "No lo sé"
+        }
+      ]
+    },
+    {
+      "id": "s04_prematuro",
+      "text": "¿Fuiste prematuro?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No, a término"
+        },
+        {
+          "value": "si",
+          "label": "Sí, prematuro"
+        },
+        {
+          "value": "no_se",
+          "label": "No lo sé"
+        }
+      ]
+    },
+    {
+      "id": "s04_peso_nacer",
+      "text": "Peso al nacer (g)",
+      "type": "text"
+    },
+    {
+      "id": "s04_semanas_gestacion",
+      "text": "Semanas de gestación",
+      "type": "text"
+    },
+    {
+      "id": "s04_uci_neonatal",
+      "text": "¿Requeriste UCI neonatal?",
+      "type": "text"
+    },
+    {
+      "id": "s04_complicaciones_parto",
+      "text": "¿Tu madre tuvo complicaciones durante el parto?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "si",
+          "label": "Sí"
+        },
+        {
+          "value": "no_se",
+          "label": "No lo sé"
+        }
+      ]
+    },
+    {
+      "id": "s04_complicaciones_parto_cuales",
+      "text": "¿Cuáles?",
+      "type": "text"
+    },
+    {
+      "id": "s04_lactancia",
+      "text": "¿Durante cuántos meses fuiste amamantado?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No fui amamantado"
+        },
+        {
+          "value": "menos_1",
+          "label": "Menos de 1 mes"
+        },
+        {
+          "value": "1_3",
+          "label": "1 a 3 meses"
+        },
+        {
+          "value": "4_6",
+          "label": "4 a 6 meses"
+        },
+        {
+          "value": "7_12",
+          "label": "7 a 12 meses"
+        },
+        {
+          "value": "mas_12",
+          "label": "Más de 12 meses"
+        },
+        {
+          "value": "no_se",
+          "label": "No lo sé"
+        }
+      ]
+    },
+    {
+      "id": "s04_primera_infancia",
+      "text": "En tu primera infancia (marca las que apliquen)",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "formula_infantil",
+          "label": "Recibí fórmula infantil desde el nacimiento"
+        },
+        {
+          "value": "antibioticos_primer_año",
+          "label": "Recibí antibióticos antes del primer año"
+        },
+        {
+          "value": "antibioticos_repetidos",
+          "label": "Recibí antibióticos repetidos en la infancia"
+        },
+        {
+          "value": "colicos",
+          "label": "Tuve cólicos importantes"
+        },
+        {
+          "value": "dermatitis_atopica",
+          "label": "Tuve dermatitis atópica o eccema"
+        },
+        {
+          "value": "otitis",
+          "label": "Tuve otitis a repetición"
+        },
+        {
+          "value": "amigdalitis",
+          "label": "Tuve amigdalitis a repetición"
+        },
+        {
+          "value": "asma_bronquiolitis",
+          "label": "Tuve asma o bronquiolitis"
+        },
+        {
+          "value": "bajo_crecimiento",
+          "label": "Fui un niño de bajo crecimiento"
+        },
+        {
+          "value": "no_recuerdo",
+          "label": "No recuerdo ni tengo información"
+        }
+      ]
+    }
+  ]
+}

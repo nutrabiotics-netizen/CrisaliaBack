@@ -1,0 +1,107 @@
+{
+  "id": "s02",
+  "number": 2,
+  "title": "Alergias, Intolerancias y Reacciones Adversas",
+  "questions": [
+    {
+      "id": "s02_reacciones_tabla",
+      "text": "Reacciones conocidas",
+      "type": "table",
+      "columns": [
+        "Sustancia (medicamento / alimento / suplemento / ambiental)",
+        "Tipo de reacción",
+        "Edad de aparición",
+        "¿Confirmada por prueba?"
+      ]
+    },
+    {
+      "id": "s02_manifestaciones",
+      "text": "Tipo de manifestación que has presentado ante alguna sustancia (marca todas)",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "urticaria",
+          "label": "Urticaria o ronchas"
+        },
+        {
+          "value": "angioedema",
+          "label": "Angioedema (hinchazón de labios, párpados o lengua)"
+        },
+        {
+          "value": "anafilaxia",
+          "label": "Anafilaxia"
+        },
+        {
+          "value": "broncoespasmo",
+          "label": "Broncoespasmo o crisis de asma"
+        },
+        {
+          "value": "rinitis",
+          "label": "Rinitis o congestión"
+        },
+        {
+          "value": "dermatitis_contacto",
+          "label": "Dermatitis de contacto"
+        },
+        {
+          "value": "sintomas_digestivos",
+          "label": "Síntomas digestivos"
+        },
+        {
+          "value": "cefalea_migraña",
+          "label": "Cefalea o migraña"
+        },
+        {
+          "value": "sintomas_neurologicos",
+          "label": "Síntomas neurológicos o cognitivos"
+        },
+        {
+          "value": "dolor_articular",
+          "label": "Dolor articular o muscular"
+        },
+        {
+          "value": "fatiga",
+          "label": "Fatiga marcada"
+        },
+        {
+          "value": "cambios_animo",
+          "label": "Cambios del estado de ánimo"
+        }
+      ]
+    },
+    {
+      "id": "s02_intolerancia_olores",
+      "text": "¿Tienes intolerancia a olores fuertes como gasolina, perfumes, humo o productos de limpieza?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "leve",
+          "label": "Sí, leve"
+        },
+        {
+          "value": "marcada",
+          "label": "Sí, marcada (me obliga a retirarme del lugar)"
+        }
+      ]
+    },
+    {
+      "id": "s02_hipersensibilidad_quimica",
+      "text": "¿Has notado hipersensibilidad química múltiple (varios químicos no relacionados te producen síntomas)?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "si",
+          "label": "Sí"
+        }
+      ]
+    }
+  ]
+}

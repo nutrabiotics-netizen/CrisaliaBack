@@ -1,0 +1,677 @@
+{
+  "id": "s19",
+  "number": 19,
+  "title": "Microorganismos — Disbiosis, SIBO, IMO y SIFO",
+  "questions": [
+    {
+      "id": "s19_factores_riesgo",
+      "text": "Factores de riesgo — Marca todos los que apliquen a tu historia",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "cirugias_abdominales",
+          "label": "Cirugías abdominales previas"
+        },
+        {
+          "value": "cirugia_ginecologica",
+          "label": "Cirugía ginecológica o laparotomía exploratoria"
+        },
+        {
+          "value": "reseccion_ileocecal",
+          "label": "Resección de la válvula ileocecal"
+        },
+        {
+          "value": "diverticulitis",
+          "label": "Diverticulitis"
+        },
+        {
+          "value": "peritonitis",
+          "label": "Peritonitis"
+        },
+        {
+          "value": "endometriosis",
+          "label": "Endometriosis en cavidad peritoneal"
+        },
+        {
+          "value": "pseudoobstruccion",
+          "label": "Pseudoobstrucción intestinal"
+        },
+        {
+          "value": "antibioticos",
+          "label": "Uso reciente o repetido de antibióticos"
+        },
+        {
+          "value": "ibb",
+          "label": "Uso crónico de inhibidores de bomba de protones"
+        },
+        {
+          "value": "opiaceos_antidepresivos",
+          "label": "Uso de opiáceos o antidepresivos tricíclicos"
+        },
+        {
+          "value": "corticoides",
+          "label": "Uso de corticoides sistémicos"
+        },
+        {
+          "value": "anticonceptivos",
+          "label": "Uso de anticonceptivos orales"
+        },
+        {
+          "value": "dieta_ultraprocesados",
+          "label": "Dieta alta en ultraprocesados y azúcares"
+        },
+        {
+          "value": "dieta_baja_fibra",
+          "label": "Dieta muy baja en fibra (cetogénica, carnívora, baja en FODMAP prolongada)"
+        },
+        {
+          "value": "disbiosis_sibo",
+          "label": "Antecedente de disbiosis o SIBO tratado o no tratado"
+        },
+        {
+          "value": "intoxicacion_alimentaria",
+          "label": "Antecedente de intoxicación alimentaria"
+        },
+        {
+          "value": "hipoclorhidria",
+          "label": "Historia de hipoclorhidria gástrica"
+        },
+        {
+          "value": "viajes_saneamiento",
+          "label": "Viajes a zonas de saneamiento deficiente"
+        },
+        {
+          "value": "agua_no_tratada",
+          "label": "Consumo de agua no tratada"
+        },
+        {
+          "value": "hipotiroidismo",
+          "label": "Hipotiroidismo"
+        },
+        {
+          "value": "diabetes",
+          "label": "Diabetes mellitus"
+        },
+        {
+          "value": "parkinson",
+          "label": "Enfermedad de Parkinson"
+        },
+        {
+          "value": "esclerodermia",
+          "label": "Esclerodermia"
+        },
+        {
+          "value": "lyme",
+          "label": "Enfermedad de Lyme"
+        }
+      ]
+    },
+    {
+      "id": "s19_animales",
+      "text": "¿Has vivido o vives con animales?",
+      "type": "single",
+      "options": [
+        {
+          "value": "nunca",
+          "label": "Nunca"
+        },
+        {
+          "value": "pasado",
+          "label": "Viví con animales en el pasado"
+        },
+        {
+          "value": "actualmente",
+          "label": "Vivo con animales actualmente"
+        }
+      ]
+    },
+    {
+      "id": "s19_animales_cuales",
+      "text": "¿Cuáles y desde cuándo?",
+      "type": "text"
+    },
+    {
+      "id": "s19_moho",
+      "text": "¿Tienes humedad o moho visible en la casa o en el trabajo?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "leve",
+          "label": "Sí, leve"
+        },
+        {
+          "value": "importante",
+          "label": "Sí, importante"
+        },
+        {
+          "value": "pasado",
+          "label": "Lo hubo en el pasado"
+        }
+      ]
+    },
+    {
+      "id": "s19_probioticos_antibioticos",
+      "text": "¿Consumes probióticos o alimentos fermentados durante y después de los ciclos de antibióticos?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "a_veces",
+          "label": "A veces"
+        },
+        {
+          "value": "siempre",
+          "label": "Siempre"
+        },
+        {
+          "value": "no_antibioticos",
+          "label": "No he usado antibióticos"
+        }
+      ]
+    },
+    {
+      "id": "s19_parasitaria",
+      "text": "Síntomas sugestivos de infección parasitaria (protozoos o helmintos)",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s19_p_episodicos",
+          "label": "Síntomas digestivos episódicos: mejoría por varios días y agravación posterior",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_p_colicos",
+          "label": "Cólicos abdominales",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_p_diarrea",
+          "label": "Diarrea o disentería",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_p_distension",
+          "label": "Distensión abdominal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_p_dolor",
+          "label": "Dolor abdominal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_p_gusanos",
+          "label": "Expulsión de gusanos o segmentos en las heces",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_p_prurito_anal",
+          "label": "Prurito anal, sobre todo nocturno",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_p_bruxismo",
+          "label": "Bruxismo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_p_cefaleas",
+          "label": "Cefaleas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_p_alergias",
+          "label": "Alergias",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_p_alopecia",
+          "label": "Alopecia",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_p_anemia",
+          "label": "Anemia ferropénica",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_p_geofagia",
+          "label": "Geofagia o deseo de comer tierra, hielo o algo no comestible",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_p_inapetencia",
+          "label": "Inapetencia",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_p_indigestion",
+          "label": "Indigestión",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_p_variaciones_peso",
+          "label": "Variaciones marcadas del peso corporal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_p_prurito_general",
+          "label": "Prurito generalizado",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_p_urticaria",
+          "label": "Urticaria",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_p_tos",
+          "label": "Tos sin causa respiratoria clara",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_p_espalda",
+          "label": "Dolor de espalda",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_p_vaginitis",
+          "label": "Vaginitis recurrente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_p_hepatoesplenomegalia",
+          "label": "Hepatoesplenomegalia diagnosticada",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s19_bacteriana",
+      "text": "Síntomas sugestivos de infección o sobrecrecimiento bacteriano",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s19_b_fiebre",
+          "label": "Fiebre de difícil manejo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_b_diarrea",
+          "label": "Diarrea aguda o persistente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_b_distension_dia",
+          "label": "Distensión abdominal que aumenta a lo largo del día",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_b_dolor",
+          "label": "Dolor abdominal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_b_flatulencias",
+          "label": "Flatulencias abundantes",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_b_nauseas",
+          "label": "Náuseas y vómito",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_b_deshidratacion",
+          "label": "Deshidratación",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_b_distension_30_90",
+          "label": "Distensión que aparece a los 30-90 minutos de comer",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_b_empeora_fibra",
+          "label": "Empeoramiento con fibra, prebióticos o probióticos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_b_eructos",
+          "label": "Eructos abundantes",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s19_imo",
+      "text": "Síntomas sugestivos de sobrecrecimiento de metanógenos (IMO)",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s19_i_estrenimiento",
+          "label": "Estreñimiento predominante y persistente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_i_distension_poca_flatulencia",
+          "label": "Distensión abdominal con poca flatulencia",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_i_gas_atrapado",
+          "label": "Sensación de gas atrapado que no logro expulsar",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_i_laxantes",
+          "label": "Necesidad de laxantes para evacuar",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_i_bristol_1_2",
+          "label": "Heces Bristol tipo 1 o 2 habituales",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s19_sifo",
+      "text": "Síntomas sugestivos de sobrecrecimiento fúngico o candidiasis (SIFO)",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s19_f_antojo_azucar",
+          "label": "Antojo intenso de azúcar y carbohidratos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_f_alternancia",
+          "label": "Estreñimiento o diarrea alternantes",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_f_distension",
+          "label": "Distensión y dolor abdominal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_f_sensibilidad_gluten",
+          "label": "Sensibilidad al trigo o a la gliadina",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_f_lengua_blanca",
+          "label": "Lengua con capa blanca",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_f_candidiasis",
+          "label": "Candidiasis vaginal o balanitis recurrente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_f_onicomicosis",
+          "label": "Onicomicosis (hongos en las uñas)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_f_pie_atleta",
+          "label": "Pie de atleta o micosis cutánea recurrente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_f_prurito",
+          "label": "Prurito anal o genital",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_f_migraña",
+          "label": "Migraña o cefalea",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_f_fatiga",
+          "label": "Fatiga marcada",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_f_trastornos_emocionales",
+          "label": "Trastornos emocionales asociados a la alimentación",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_f_empeora_azucar",
+          "label": "Empeoramiento tras consumo de azúcar, levaduras o alcohol",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s19_viral",
+      "text": "Síntomas sugestivos de infección viral crónica o reactivada",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s19_v_fatiga_esfuerzo",
+          "label": "Fatiga profunda que empeora tras el esfuerzo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_v_adenopatias",
+          "label": "Adenopatías (ganglios inflamados) recurrentes",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_v_faringitis",
+          "label": "Faringitis recurrente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_v_fiebre",
+          "label": "Fiebre o febrículas intermitentes",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_v_cefalea",
+          "label": "Cefalea persistente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_v_erupcion",
+          "label": "Erupción cutánea o exantema",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_v_conjuntivitis",
+          "label": "Conjuntivitis o uveítis",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_v_dermatitis",
+          "label": "Dermatitis recurrente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_v_herpes",
+          "label": "Herpes labial o genital recurrente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_v_gastroenteritis",
+          "label": "Gastroenteritis a repetición",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_v_respiratorio",
+          "label": "Enfermedades respiratorias frecuentes",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_v_dolor_difuso",
+          "label": "Dolor muscular y articular difuso",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s19_infecciones_virales_dx",
+      "text": "¿Te han diagnosticado alguna de estas infecciones virales?",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "sars_cov2",
+          "label": "SARS-CoV-2"
+        },
+        {
+          "value": "covid_prolongado",
+          "label": "COVID prolongado"
+        },
+        {
+          "value": "hhv6",
+          "label": "Herpes humano tipo 6"
+        },
+        {
+          "value": "cmv",
+          "label": "Citomegalovirus"
+        },
+        {
+          "value": "ebv",
+          "label": "Virus de Epstein-Barr / mononucleosis"
+        },
+        {
+          "value": "herpes_simple",
+          "label": "Herpes simple"
+        },
+        {
+          "value": "vph",
+          "label": "Virus del papiloma humano"
+        },
+        {
+          "value": "hepatitis_bc",
+          "label": "Hepatitis B o C"
+        },
+        {
+          "value": "vih",
+          "label": "VIH"
+        },
+        {
+          "value": "ninguna",
+          "label": "Ninguna"
+        }
+      ]
+    },
+    {
+      "id": "s19_cronicos_localizacion",
+      "text": "Cuadros infecciosos crónicos o recurrentes por localización",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s19_c_respiratorio",
+          "label": "Respiratorio (bronquitis, neumonía)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_c_sinusitis",
+          "label": "Senos paranasales (sinusitis)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_c_nariz",
+          "label": "Nariz",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_c_garganta",
+          "label": "Garganta y amígdalas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_c_oidos",
+          "label": "Oídos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_c_ojos",
+          "label": "Ojos (pegajosos, enrojecidos, con picazón o hinchados)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_c_boca",
+          "label": "Boca y encías",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_c_llagas",
+          "label": "Llagas bucales",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_c_gastrico",
+          "label": "Gástrico o intestinal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_c_piel",
+          "label": "Piel",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_c_unas",
+          "label": "Uñas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_c_urinario",
+          "label": "Tracto urinario",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_c_sexual",
+          "label": "Órganos sexuales",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s19_c_ganglios",
+          "label": "Ganglios",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s19_antibioticos_2anos",
+      "text": "¿Has usado antibióticos en los últimos dos años?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "1_ciclo",
+          "label": "1 ciclo"
+        },
+        {
+          "value": "2_3_ciclos",
+          "label": "2 a 3 ciclos"
+        },
+        {
+          "value": "4_mas",
+          "label": "4 o más ciclos"
+        }
+      ]
+    },
+    {
+      "id": "s19_antibioticos_cuales",
+      "text": "¿Cuáles y cuándo?",
+      "type": "text"
+    }
+  ]
+}

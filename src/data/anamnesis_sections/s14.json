@@ -1,0 +1,459 @@
+{
+  "id": "s14",
+  "number": 14,
+  "title": "Hidratación, Electrolitos y Balance Sodio-Volumen",
+  "questions": [
+    {
+      "id": "s14_vasos_agua",
+      "text": "¿Cuántos vasos de agua pura tomas al día?",
+      "type": "single",
+      "options": [
+        {
+          "value": "menos_2",
+          "label": "Menos de 2"
+        },
+        {
+          "value": "2_4",
+          "label": "2 a 4"
+        },
+        {
+          "value": "5_6",
+          "label": "5 a 6"
+        },
+        {
+          "value": "7_8",
+          "label": "7 a 8"
+        },
+        {
+          "value": "mas_8",
+          "label": "Más de 8"
+        }
+      ]
+    },
+    {
+      "id": "s14_fuente_agua",
+      "text": "¿De qué fuente proviene el agua que consumes?",
+      "type": "single",
+      "options": [
+        {
+          "value": "grifo",
+          "label": "Del grifo sin tratar"
+        },
+        {
+          "value": "botella",
+          "label": "De botella plástica"
+        },
+        {
+          "value": "garrafon",
+          "label": "De garrafón"
+        },
+        {
+          "value": "filtrada",
+          "label": "Filtrada en casa"
+        },
+        {
+          "value": "manantial",
+          "label": "Agua de manantial"
+        },
+        {
+          "value": "alcalinizada",
+          "label": "Alcalinizada"
+        }
+      ]
+    },
+    {
+      "id": "s14_tipo_sal",
+      "text": "¿Qué tipo de sal consumes?",
+      "type": "single",
+      "options": [
+        {
+          "value": "comercial_refinada",
+          "label": "Sal comercial refinada"
+        },
+        {
+          "value": "comercial_fluor",
+          "label": "Sal comercial con flúor"
+        },
+        {
+          "value": "comercial_yodato",
+          "label": "Sal comercial con yodato"
+        },
+        {
+          "value": "marina",
+          "label": "Sal marina sin refinar"
+        },
+        {
+          "value": "mina_himalaya",
+          "label": "Sal de mina o del Himalaya"
+        },
+        {
+          "value": "no_sal",
+          "label": "No consumo sal añadida"
+        },
+        {
+          "value": "no_se",
+          "label": "No lo sé"
+        }
+      ]
+    },
+    {
+      "id": "s14_restriccion_sal",
+      "text": "¿Restringes conscientemente el consumo de sal?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "medica",
+          "label": "Sí, por indicación médica"
+        },
+        {
+          "value": "propia",
+          "label": "Sí, por decisión propia"
+        }
+      ]
+    },
+    {
+      "id": "s14_electrolitos_agua",
+      "text": "¿Adicionas bicarbonato de sodio, sal o electrolitos al agua que tomas?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "ocasionalmente",
+          "label": "Sí, ocasionalmente"
+        },
+        {
+          "value": "diario",
+          "label": "Sí, a diario"
+        }
+      ]
+    },
+    {
+      "id": "s14_electrolitos_cuales",
+      "text": "¿Cuáles?",
+      "type": "text"
+    },
+    {
+      "id": "s14_estimulantes",
+      "text": "¿Consumes a diario alguno de estos estimulantes? (marca todos)",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "cafe",
+          "label": "Café"
+        },
+        {
+          "value": "te_negro",
+          "label": "Té negro"
+        },
+        {
+          "value": "te_verde",
+          "label": "Té verde"
+        },
+        {
+          "value": "mate",
+          "label": "Mate"
+        },
+        {
+          "value": "guarana",
+          "label": "Guaraná"
+        },
+        {
+          "value": "hoja_coca",
+          "label": "Hoja de coca"
+        },
+        {
+          "value": "te_coca",
+          "label": "Té de coca"
+        },
+        {
+          "value": "mambe",
+          "label": "Mambe"
+        },
+        {
+          "value": "cacao",
+          "label": "Cacao"
+        },
+        {
+          "value": "energizantes",
+          "label": "Bebidas energizantes"
+        },
+        {
+          "value": "ninguno",
+          "label": "Ninguno"
+        }
+      ]
+    },
+    {
+      "id": "s14_porciones_dia",
+      "text": "Número de tazas o porciones al día",
+      "type": "text"
+    },
+    {
+      "id": "s14_ultima_toma",
+      "text": "Hora de la última toma",
+      "type": "text"
+    },
+    {
+      "id": "s14_efecto_estimulantes",
+      "text": "Si tomas o dejas de tomar estos estimulantes, ¿sientes algo?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "al_consumir",
+          "label": "Sí, al consumirlos"
+        },
+        {
+          "value": "al_suspender",
+          "label": "Sí, al suspenderlos"
+        },
+        {
+          "value": "ambos",
+          "label": "Sí, en ambos casos"
+        }
+      ]
+    },
+    {
+      "id": "s14_que_siente",
+      "text": "¿Qué sientes?",
+      "type": "text"
+    },
+    {
+      "id": "s14_sintomas_neuromusculares",
+      "text": "Síntomas neuromusculares y de balance hidroelectrolítico",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s14_calambres",
+          "label": "Calambres (pies, piernas, muslos, abdomen)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_calambres_nocturnos",
+          "label": "Calambres nocturnos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_fasciculaciones",
+          "label": "Fasciculaciones o tics nerviosos (párpado, labio, músculo)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_contracturas",
+          "label": "Contracturas musculares",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_dolor_muscular",
+          "label": "Dolor muscular (pies, piernas, pelvis, espalda, hombros, brazos, manos)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_poca_flexibilidad",
+          "label": "Movimiento limitado o poca flexibilidad",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_rigidez",
+          "label": "Rigidez o pesadez muscular",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_espasmos",
+          "label": "Espasmos o tetania intermitente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_piernas_inquietas",
+          "label": "Piernas inquietas en la noche",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_cefaleas",
+          "label": "Cefaleas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_colicos_intestinales",
+          "label": "Cólicos intestinales",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_colicos_menstruales",
+          "label": "Cólicos menstruales",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_estrenimiento",
+          "label": "Estreñimiento",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_palpitaciones",
+          "label": "Palpitaciones o latidos irregulares",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_variabilidad_ta",
+          "label": "Variabilidad marcada de la tensión arterial",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_hipertension",
+          "label": "Hipertensión arterial",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_hipotension",
+          "label": "Hipotensión o desmayos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_mareo_pie",
+          "label": "Mareo al ponerte de pie (intolerancia ortostática)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_sed_insaciable",
+          "label": "Sed insaciable",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_deseo_sal",
+          "label": "Deseo intenso de sal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_antojo_carbos",
+          "label": "Antojo de carbohidratos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_niebla_mental",
+          "label": "Niebla mental",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_fatiga",
+          "label": "Fatiga persistente sin causa clara",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_bajo_rendimiento",
+          "label": "Bajo rendimiento físico y recuperación deficiente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_orina_frecuente",
+          "label": "Orino con mucha frecuencia",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_despertares_orinar",
+          "label": "Despertares nocturnos para orinar",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_retencion",
+          "label": "Retención de líquidos o hinchazón",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_orino_poco_hincho",
+          "label": "Orino poco y me hincho",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s14_diuretico",
+      "text": "¿Tomas medicamento diurético?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "si",
+          "label": "Sí"
+        }
+      ]
+    },
+    {
+      "id": "s14_trabajo_fisico",
+      "text": "¿Tu trabajo o deporte exige movimientos repetitivos o sudoración profusa?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "movimientos_repetitivos",
+          "label": "Sí, movimientos repetitivos"
+        },
+        {
+          "value": "sudoracion_profusa",
+          "label": "Sí, sudoración profusa"
+        },
+        {
+          "value": "ambos",
+          "label": "Ambos"
+        }
+      ]
+    },
+    {
+      "id": "s14_describe_trabajo",
+      "text": "Describe",
+      "type": "text"
+    },
+    {
+      "id": "s14_cutaneas_respiratorias",
+      "text": "Manifestaciones cutáneas y respiratorias asociadas",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s14_piel_seca",
+          "label": "Piel seca",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_caspa",
+          "label": "Caspa",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_tos_humeda",
+          "label": "Tos crónica húmeda o necesidad constante de aclarar la garganta",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_tos_seca",
+          "label": "Tos crónica seca",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_energia_baja",
+          "label": "Bajo nivel de energía o desgano",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s14_cansancio",
+          "label": "Cansancio o fatiga generalizada",
+          "type": "scale_0_3"
+        }
+      ]
+    }
+  ]
+}

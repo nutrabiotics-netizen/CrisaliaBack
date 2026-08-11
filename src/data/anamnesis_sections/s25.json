@@ -1,0 +1,363 @@
+{
+  "id": "s25",
+  "number": 25,
+  "title": "Deficiencia de Hierro",
+  "questions": [
+    {
+      "id": "s25_consumo_visceras",
+      "text": "¿Tu consumo de vísceras y carnes rojas es bajo o nulo?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No, consumo con regularidad"
+        },
+        {
+          "value": "bajo",
+          "label": "Bajo"
+        },
+        {
+          "value": "nulo",
+          "label": "Nulo"
+        }
+      ]
+    },
+    {
+      "id": "s25_sangrados",
+      "text": "¿Tienes sangrados frecuentes?",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "menstruacion",
+          "label": "Menstruación abundante"
+        },
+        {
+          "value": "nasal",
+          "label": "Sangrado nasal"
+        },
+        {
+          "value": "intestinal",
+          "label": "Sangrado intestinal"
+        },
+        {
+          "value": "gingival",
+          "label": "Sangrado gingival"
+        },
+        {
+          "value": "donacion",
+          "label": "Donación frecuente de sangre"
+        },
+        {
+          "value": "otro",
+          "label": "Otro"
+        }
+      ]
+    },
+    {
+      "id": "s25_compiten_absorcion",
+      "text": "¿Consumes con frecuencia alimentos que compiten con la absorción del hierro (oxalatos, fitatos, taninos, minerales)?",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "cafe",
+          "label": "Café"
+        },
+        {
+          "value": "te_negro",
+          "label": "Té negro"
+        },
+        {
+          "value": "te_verde",
+          "label": "Té verde"
+        },
+        {
+          "value": "mate",
+          "label": "Yerba mate"
+        },
+        {
+          "value": "cacao",
+          "label": "Cacao"
+        },
+        {
+          "value": "vino",
+          "label": "Vino"
+        },
+        {
+          "value": "cerveza",
+          "label": "Cerveza"
+        },
+        {
+          "value": "cereales_integrales",
+          "label": "Cereales integrales"
+        },
+        {
+          "value": "salvado",
+          "label": "Salvado de arroz, trigo u otros"
+        },
+        {
+          "value": "leguminosas",
+          "label": "Granos y leguminosas"
+        },
+        {
+          "value": "espinaca",
+          "label": "Espinaca"
+        },
+        {
+          "value": "almendras",
+          "label": "Almendras"
+        },
+        {
+          "value": "miso",
+          "label": "Miso"
+        },
+        {
+          "value": "aceitunas",
+          "label": "Aceitunas"
+        },
+        {
+          "value": "tomate_arbol",
+          "label": "Tomate de árbol"
+        },
+        {
+          "value": "calcio_suplemento",
+          "label": "Suplemento de calcio"
+        },
+        {
+          "value": "zinc_suplemento",
+          "label": "Suplemento de zinc"
+        },
+        {
+          "value": "ninguno",
+          "label": "Ninguno"
+        }
+      ]
+    },
+    {
+      "id": "s25_junto_comidas",
+      "text": "¿Consumes esos alimentos junto con las comidas principales?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "a_veces",
+          "label": "A veces"
+        },
+        {
+          "value": "casi_siempre",
+          "label": "Sí, casi siempre"
+        }
+      ]
+    },
+    {
+      "id": "s25_medicamentos",
+      "text": "¿Consumes alguno de estos medicamentos?",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "levotiroxina",
+          "label": "Levotiroxina"
+        },
+        {
+          "value": "alopurinol",
+          "label": "Alopurinol"
+        },
+        {
+          "value": "antibioticos",
+          "label": "Antibióticos"
+        },
+        {
+          "value": "ibb",
+          "label": "Inhibidores de bomba de protones"
+        },
+        {
+          "value": "aines",
+          "label": "Antiinflamatorios no esteroideos"
+        },
+        {
+          "value": "ninguno",
+          "label": "Ninguno"
+        }
+      ]
+    },
+    {
+      "id": "s25_anemia",
+      "text": "Síntomas de anemia y deficiencia de hierro",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s25_palidez",
+          "label": "Palidez de piel o mucosas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s25_manos_pies_frios",
+          "label": "Manos y pies fríos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s25_mareo",
+          "label": "Mareo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s25_ortostatismo",
+          "label": "Ortostatismo (mareo al ponerse de pie)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s25_taquicardia",
+          "label": "Taquicardia",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s25_palpitaciones",
+          "label": "Palpitaciones",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s25_disnea",
+          "label": "Disnea o falta de aire con esfuerzos leves",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s25_cansancio",
+          "label": "Cansancio y fatiga",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s25_hipotension",
+          "label": "Hipotensión",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s25_caida_cabello",
+          "label": "Caída de cabello",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s25_unas",
+          "label": "Fragilidad ungueal o uñas en cuchara",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s25_tinnitus",
+          "label": "Tinnitus",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s25_piernas_inquietas",
+          "label": "Piernas inquietas en la noche",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s25_pica",
+          "label": "Deseo de comer hielo, tierra, tiza o algo no comestible",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s25_cefalea",
+          "label": "Cefalea",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s25_concentracion",
+          "label": "Dificultad para concentrarse",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s25_intolerancia_frio",
+          "label": "Intolerancia al frío",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s25_grietas_labios",
+          "label": "Grietas en las comisuras de los labios",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s25_gastrica",
+      "text": "Síntomas de insuficiencia gástrica asociada (dificultan la absorción del hierro)",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s25_g_distension",
+          "label": "Distensión",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s25_g_gases",
+          "label": "Gases",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s25_g_estrenimiento",
+          "label": "Estreñimiento",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s25_g_diarrea",
+          "label": "Diarrea",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s25_g_acidez",
+          "label": "Acidez",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s25_g_reflujo",
+          "label": "Reflujo",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s25_examenes",
+      "text": "¿Te han informado alteración en alguno de estos exámenes?",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "hemoglobina_baja",
+          "label": "Hemoglobina baja"
+        },
+        {
+          "value": "ferritina_baja",
+          "label": "Ferritina baja"
+        },
+        {
+          "value": "ferritina_alta",
+          "label": "Ferritina alta"
+        },
+        {
+          "value": "transferrina_baja",
+          "label": "Saturación de transferrina baja"
+        },
+        {
+          "value": "vcm_bajo",
+          "label": "Volumen corpuscular medio bajo"
+        },
+        {
+          "value": "vcm_alto",
+          "label": "Volumen corpuscular medio alto"
+        },
+        {
+          "value": "ninguno",
+          "label": "Ninguno"
+        },
+        {
+          "value": "no_realizado",
+          "label": "No me los he realizado"
+        }
+      ]
+    }
+  ]
+}

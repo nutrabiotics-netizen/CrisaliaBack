@@ -1,0 +1,279 @@
+{
+  "id": "s15",
+  "number": 15,
+  "title": "Proceso Digestivo — Función Gástrica",
+  "questions": [
+    {
+      "id": "s15_insuficiencia_gastrica",
+      "text": "Síntomas sugestivos de insuficiencia gástrica o hipoclorhidria",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s15_acidez_reflujo",
+          "label": "Sensación de acidez o reflujo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s15_punzadas",
+          "label": "Punzadas gástricas (sensación de cuchillo en el estómago)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s15_ardor_sordo",
+          "label": "Ardor o dolor sordo entre el esternón y el ombligo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s15_llenura",
+          "label": "Llenura y pesadez después de comer con poca cantidad",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s15_distension",
+          "label": "Distensión abdominal después de comer",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s15_eructos",
+          "label": "Eructos anormales o repetidos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s15_gases_fetidos",
+          "label": "Gases y flatulencias fétidas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s15_nauseas_matutinas",
+          "label": "Náuseas matutinas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s15_halitosis",
+          "label": "Halitosis (mal aliento)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s15_alimentos_no_digeridos",
+          "label": "Alimentos no digeridos en las heces",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s15_prurito_anal",
+          "label": "Prurito anal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s15_colicos",
+          "label": "Cólicos abdominales",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s15_rinitis",
+          "label": "Rinitis alérgica",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s15_otros_gastricos",
+      "text": "Otros síntomas gástricos",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s15_pirosis",
+          "label": "Ardor retroesternal (pirosis)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s15_regurgitacion",
+          "label": "Regurgitación de alimento o de líquido ácido",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s15_globo",
+          "label": "Sensación de globo o nudo en la garganta",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s15_dolor_mejora_comer",
+          "label": "Dolor que mejora al comer",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s15_dolor_empeora_comer",
+          "label": "Dolor que empeora al comer",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s15_vomito",
+          "label": "Vómito",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s15_sangrado",
+          "label": "Sangrado digestivo o vómito con sangre",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s15_saciedad_temprana",
+          "label": "Saciedad muy temprana",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s15_aversion_proteina",
+          "label": "Aversión a la carne o a las proteínas",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s15_dificultad_digestion",
+      "text": "¿Se te dificulta digerir alguno de estos alimentos? (marca todos)",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "carne_roja",
+          "label": "Carne roja"
+        },
+        {
+          "value": "pollo",
+          "label": "Pollo"
+        },
+        {
+          "value": "pescado",
+          "label": "Pescado"
+        },
+        {
+          "value": "huevo",
+          "label": "Huevo"
+        },
+        {
+          "value": "frituras",
+          "label": "Frituras"
+        },
+        {
+          "value": "grasas_saludables",
+          "label": "Grasas saludables (aguacate, mantequilla, aceite de oliva)"
+        },
+        {
+          "value": "lacteos",
+          "label": "Lácteos"
+        },
+        {
+          "value": "gluten",
+          "label": "Gluten y trigo"
+        },
+        {
+          "value": "leguminosas",
+          "label": "Leguminosas"
+        },
+        {
+          "value": "cruciferos",
+          "label": "Vegetales crucíferos"
+        },
+        {
+          "value": "cebolla_ajo",
+          "label": "Cebolla y ajo"
+        },
+        {
+          "value": "ninguno",
+          "label": "Ninguno"
+        }
+      ]
+    },
+    {
+      "id": "s15_dificultan_digestion",
+      "text": "¿Consumes habitualmente estos elementos que dificultan la digestión?",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "liquidos_frios",
+          "label": "Líquidos fríos o al clima con las comidas"
+        },
+        {
+          "value": "gran_volumen",
+          "label": "Grandes volúmenes de líquido durante la comida"
+        },
+        {
+          "value": "cereales_alta",
+          "label": "Cereales y granos en alta cantidad"
+        },
+        {
+          "value": "vegetales_no_organicos",
+          "label": "Vegetales no orgánicos"
+        },
+        {
+          "value": "colorantes",
+          "label": "Colorantes artificiales"
+        },
+        {
+          "value": "pesticidas",
+          "label": "Alimentos con pesticidas"
+        },
+        {
+          "value": "sales_alcalinas",
+          "label": "Sales alcalinas o antiácidos"
+        },
+        {
+          "value": "ibb",
+          "label": "Inhibidores de la bomba de protones (omeprazol)"
+        },
+        {
+          "value": "h2",
+          "label": "Antagonistas H2 (ranitidina)"
+        },
+        {
+          "value": "ninguno",
+          "label": "Ninguno"
+        }
+      ]
+    },
+    {
+      "id": "s15_prueba_hcl",
+      "text": "¿Te has realizado prueba de titulación con dióxido de carbono y ácido clorhídrico?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "normal",
+          "label": "Sí, resultado normal"
+        },
+        {
+          "value": "disminuido",
+          "label": "Sí, resultado disminuido (alcalinidad)"
+        },
+        {
+          "value": "no_recuerdo",
+          "label": "No recuerdo"
+        }
+      ]
+    },
+    {
+      "id": "s15_h_pylori",
+      "text": "¿Te han diagnosticado Helicobacter pylori?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "tratado",
+          "label": "Sí, tratado"
+        },
+        {
+          "value": "no_tratado",
+          "label": "Sí, no tratado"
+        },
+        {
+          "value": "recurrente",
+          "label": "Sí, recurrente"
+        }
+      ]
+    }
+  ]
+}

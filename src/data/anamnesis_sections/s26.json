@@ -1,0 +1,262 @@
+{
+  "id": "s26",
+  "number": 26,
+  "title": "Inflamación Crónica de Bajo Grado",
+  "questions": [
+    {
+      "id": "s26_sistemica",
+      "text": "Manifestaciones de inflamación sistémica",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s26_dolores_sin_causa",
+          "label": "Dolores recurrentes sin causa clara",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_dolor_cronico",
+          "label": "Dolor crónico",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_mialgias",
+          "label": "Mialgias (dolor muscular difuso)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_artralgias",
+          "label": "Artralgias (dolor articular)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_rigidez_matutina",
+          "label": "Rigidez matutina de más de 30 minutos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_inflamacion_osteoarticular",
+          "label": "Inflamación osteoarticular visible",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_rigidez_postural",
+          "label": "Rigidez postural",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_cefalea",
+          "label": "Cefalea recurrente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_fatiga",
+          "label": "Fatiga persistente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_niebla_mental",
+          "label": "Niebla mental o cambios en la agudeza mental",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_memoria",
+          "label": "Alteraciones de la memoria",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_depresion",
+          "label": "Depresión",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_sueno",
+          "label": "Trastornos del sueño",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_obesidad",
+          "label": "Sobrepeso u obesidad",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_dificultad_perder_peso",
+          "label": "Dificultad para perder peso",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_perimetro_abdominal",
+          "label": "Aumento del perímetro abdominal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_hinchazon",
+          "label": "Hinchazón o retención de líquidos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_calor_articular",
+          "label": "Sensación de calor o enrojecimiento en articulaciones",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s26_densidad_osea",
+      "text": "¿Tienes baja densidad ósea u osteoporosis diagnosticada?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "osteopenia",
+          "label": "Osteopenia"
+        },
+        {
+          "value": "osteoporosis",
+          "label": "Osteoporosis"
+        },
+        {
+          "value": "no_evaluado",
+          "label": "No me lo he evaluado"
+        }
+      ]
+    },
+    {
+      "id": "s26_infecciones_cronicas",
+      "text": "Infecciones crónicas o recurrentes (fuente de inflamación persistente)",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s26_i_respiratoria",
+          "label": "Respiratoria",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_i_boca",
+          "label": "Boca o garganta",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_i_encias",
+          "label": "Encías (periodontitis)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_i_caries",
+          "label": "Caries",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_i_sinusitis",
+          "label": "Senos paranasales (sinusitis)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_i_nariz",
+          "label": "Nariz",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_i_oidos",
+          "label": "Oídos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_i_ojos",
+          "label": "Ojos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_i_gastrica",
+          "label": "Gástrica",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_i_intestinal",
+          "label": "Intestinal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_i_piel",
+          "label": "Piel",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_i_unas",
+          "label": "Uñas (onicomicosis)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_i_urinario",
+          "label": "Tracto urinario",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s26_i_vagina_prostata",
+          "label": "Vagina o próstata",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s26_coagulacion",
+      "text": "¿Tienes problemas de coagulación (sangrados que no ceden o hematomas recurrentes)?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "hematomas",
+          "label": "Hematomas fáciles"
+        },
+        {
+          "value": "sangrados",
+          "label": "Sangrados que no ceden"
+        },
+        {
+          "value": "ambos",
+          "label": "Ambos"
+        }
+      ]
+    },
+    {
+      "id": "s26_marcadores",
+      "text": "¿Te han informado alteración en alguno de estos marcadores?",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "pcr",
+          "label": "Proteína C reactiva ultrasensible elevada"
+        },
+        {
+          "value": "vsg",
+          "label": "Velocidad de sedimentación elevada"
+        },
+        {
+          "value": "ferritina_alta",
+          "label": "Ferritina elevada"
+        },
+        {
+          "value": "fibrinogeno",
+          "label": "Fibrinógeno elevado"
+        },
+        {
+          "value": "neutrofilo_linfocito",
+          "label": "Relación neutrófilo/linfocito elevada"
+        },
+        {
+          "value": "ninguno",
+          "label": "Ninguno"
+        },
+        {
+          "value": "no_realizado",
+          "label": "No me los he realizado"
+        }
+      ]
+    }
+  ]
+}

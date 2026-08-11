@@ -1,0 +1,235 @@
+{
+  "id": "s17",
+  "number": 17,
+  "title": "Patrón de Evacuación",
+  "instructions": "Escala de Bristol: 1 = bolitas duras separadas · 2 = forma de salchicha grumosa · 3 = salchicha con grietas · 4 = salchicha lisa y blanda · 5 = trozos blandos con bordes definidos · 6 = trozos pastosos con bordes irregulares · 7 = completamente líquida.",
+  "questions": [
+    {
+      "id": "s17_frecuencia",
+      "text": "Frecuencia de las evacuaciones",
+      "type": "single",
+      "options": [
+        {
+          "value": "3_mas_dia",
+          "label": "3 o más veces al día"
+        },
+        {
+          "value": "1_2_dia",
+          "label": "1 a 2 veces al día"
+        },
+        {
+          "value": "cada_2_dias",
+          "label": "1 vez cada 2 días"
+        },
+        {
+          "value": "cada_3_dias",
+          "label": "1 vez cada 3 días"
+        },
+        {
+          "value": "menos_2_semana",
+          "label": "<2 veces/semana"
+        }
+      ]
+    },
+    {
+      "id": "s17_consistencia",
+      "text": "Consistencia habitual según la escala de Bristol",
+      "type": "single",
+      "options": [
+        {
+          "value": "tipo_1",
+          "label": "Tipo 1 — bolitas duras separadas"
+        },
+        {
+          "value": "tipo_2",
+          "label": "Tipo 2 — forma de salchicha grumosa"
+        },
+        {
+          "value": "tipo_3",
+          "label": "Tipo 3 — salchicha con grietas"
+        },
+        {
+          "value": "tipo_4",
+          "label": "Tipo 4 — salchicha lisa y blanda"
+        },
+        {
+          "value": "tipo_5",
+          "label": "Tipo 5 — trozos blandos con bordes definidos"
+        },
+        {
+          "value": "tipo_6",
+          "label": "Tipo 6 — trozos pastosos con bordes irregulares"
+        },
+        {
+          "value": "tipo_7",
+          "label": "Tipo 7 — completamente líquida"
+        },
+        {
+          "value": "alterna",
+          "label": "Alterna entre extremos"
+        }
+      ]
+    },
+    {
+      "id": "s17_momento",
+      "text": "Momento del día en que evacuas",
+      "type": "single",
+      "options": [
+        {
+          "value": "despertar",
+          "label": "Al despertar"
+        },
+        {
+          "value": "post_desayuno",
+          "label": "Después del desayuno"
+        },
+        {
+          "value": "media_manana",
+          "label": "A media mañana"
+        },
+        {
+          "value": "post_almuerzo",
+          "label": "Después del almuerzo"
+        },
+        {
+          "value": "noche",
+          "label": "En la noche"
+        },
+        {
+          "value": "sin_horario",
+          "label": "Sin horario definido"
+        }
+      ]
+    },
+    {
+      "id": "s17_caracteristicas",
+      "text": "Características de la evacuación",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s17_estrenimiento",
+          "label": "Estreñimiento",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s17_pujo",
+          "label": "Necesidad de pujo excesivo para defecar",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s17_incompleto",
+          "label": "Sensación de evacuación incompleta",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s17_maniobras",
+          "label": "Necesidad de maniobras manuales para evacuar",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s17_diarrea",
+          "label": "Diarrea",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s17_alternancia",
+          "label": "Alternancia entre diarrea y estreñimiento",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s17_urgencia",
+          "label": "Urgencia defecatoria",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s17_flotantes",
+          "label": "Heces flotantes",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s17_moco",
+          "label": "Heces con moco",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s17_fetidas",
+          "label": "Heces con olor especialmente fétido",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s17_dolor_secas",
+          "label": "Defecación dolorosa con heces secas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s17_colicos_anales",
+          "label": "Cólicos anales",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s17_sangre_roja",
+          "label": "Sangre fresca (roja) en las heces",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s17_sangre_negra",
+          "label": "Sangre digerida (heces negras)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s17_prurito_anal",
+          "label": "Prurito anal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s17_escape",
+          "label": "Escape involuntario de gases o heces",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s17_asociacion_alimento",
+      "text": "¿Tu estreñimiento o tu diarrea se asocian a algún alimento?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "si",
+          "label": "Sí"
+        }
+      ]
+    },
+    {
+      "id": "s17_alimento_cual",
+      "text": "¿A cuál?",
+      "type": "text"
+    },
+    {
+      "id": "s17_tiempo_evolucion",
+      "text": "Tiempo de evolución del trastorno de la evacuación",
+      "type": "single",
+      "options": [
+        {
+          "value": "agudo",
+          "label": "Agudo (días a pocas semanas)"
+        },
+        {
+          "value": "subagudo",
+          "label": "Subagudo (semanas a meses)"
+        },
+        {
+          "value": "cronico",
+          "label": "Crónico (más de 6 meses)"
+        },
+        {
+          "value": "toda_la_vida",
+          "label": "Toda la vida"
+        }
+      ]
+    }
+  ]
+}

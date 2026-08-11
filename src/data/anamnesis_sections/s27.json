@@ -1,0 +1,284 @@
+{
+  "id": "s27",
+  "number": 27,
+  "title": "Condición Autoinmune y Pérdida de Tolerancia Inmune",
+  "questions": [
+    {
+      "id": "s27_diagnostico",
+      "text": "¿Has recibido el diagnóstico de alguna enfermedad autoinmune?",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "artritis_reumatoide",
+          "label": "Artritis reumatoide"
+        },
+        {
+          "value": "lupus",
+          "label": "Lupus eritematoso sistémico"
+        },
+        {
+          "value": "hashimoto",
+          "label": "Tiroiditis de Hashimoto"
+        },
+        {
+          "value": "graves",
+          "label": "Enfermedad de Graves"
+        },
+        {
+          "value": "em",
+          "label": "Esclerosis múltiple"
+        },
+        {
+          "value": "crohn",
+          "label": "Enfermedad de Crohn"
+        },
+        {
+          "value": "colitis",
+          "label": "Colitis ulcerativa"
+        },
+        {
+          "value": "celiaca",
+          "label": "Enfermedad celíaca"
+        },
+        {
+          "value": "sjogren",
+          "label": "Síndrome de Sjögren"
+        },
+        {
+          "value": "esclerodermia",
+          "label": "Esclerodermia"
+        },
+        {
+          "value": "dermatomiositis",
+          "label": "Dermatomiositis"
+        },
+        {
+          "value": "artritis_psoriasica",
+          "label": "Artritis psoriásica"
+        },
+        {
+          "value": "psoriasis",
+          "label": "Psoriasis"
+        },
+        {
+          "value": "vitiligo",
+          "label": "Vitíligo"
+        },
+        {
+          "value": "dm1",
+          "label": "Diabetes tipo 1"
+        },
+        {
+          "value": "purpura",
+          "label": "Púrpura trombocitopénica"
+        },
+        {
+          "value": "anemia_perniciosa",
+          "label": "Anemia perniciosa"
+        },
+        {
+          "value": "otra",
+          "label": "Otra"
+        }
+      ]
+    },
+    {
+      "id": "s27_otra_cual",
+      "text": "¿Cuál y desde cuándo?",
+      "type": "text"
+    },
+    {
+      "id": "s27_anticuerpos",
+      "text": "¿Te han informado anticuerpos positivos sin diagnóstico establecido?",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "anas",
+          "label": "ANAs positivos"
+        },
+        {
+          "value": "anti_tpo",
+          "label": "Anti-TPO o antitiroglobulina"
+        },
+        {
+          "value": "factor_reumatoideo",
+          "label": "Factor reumatoideo"
+        },
+        {
+          "value": "anti_transglutaminasa",
+          "label": "Anti-transglutaminasa"
+        },
+        {
+          "value": "otros",
+          "label": "Otros"
+        },
+        {
+          "value": "no_realizado",
+          "label": "No me los he realizado"
+        }
+      ]
+    },
+    {
+      "id": "s27_agudizacion",
+      "text": "¿Con qué frecuencia se agudizan tus síntomas después de cada situación?",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s27_a_alimento",
+          "label": "Comer algo específico",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s27_a_cosmeticos",
+          "label": "Contacto con cosméticos, joyería o productos de limpieza personal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s27_a_infeccion",
+          "label": "Una infección",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s27_a_estres",
+          "label": "Situaciones de estrés",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s27_a_estado_emocional",
+          "label": "Un estado emocional determinado",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s27_a_planta",
+          "label": "Exposición a una planta o pasto recién cortado",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s27_a_animal",
+          "label": "Contacto con un animal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s27_a_moho",
+          "label": "Exposición a moho",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s27_a_clima",
+          "label": "Cambio de temporada o de clima",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s27_a_sol",
+          "label": "Exposición al sol",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s27_a_sueno",
+          "label": "Falta de sueño",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s27_a_ejercicio",
+          "label": "Ejercicio intenso",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s27_a_premenstrual",
+          "label": "El periodo premenstrual",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s27_estado_emocional",
+      "text": "Si hay un estado emocional que agudiza tus síntomas, ¿cuál es?",
+      "type": "text"
+    },
+    {
+      "id": "s27_agudizacion_duracion",
+      "text": "¿Has tenido alguna agudización de tus síntomas con duración mayor a 2 o 3 semanas?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "una_vez",
+          "label": "Sí, una vez"
+        },
+        {
+          "value": "varias",
+          "label": "Sí, varias veces"
+        },
+        {
+          "value": "patron_habitual",
+          "label": "Sí, es mi patrón habitual"
+        }
+      ]
+    },
+    {
+      "id": "s27_agudizacion_detalle",
+      "text": "¿Cuáles síntomas y qué la desencadenó?",
+      "type": "text"
+    },
+    {
+      "id": "s27_toxicos",
+      "text": "¿Has estado expuesto a tóxicos como glifosato, agroquímicos, pesticidas o colorantes?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "ocasionalmente",
+          "label": "Sí, ocasionalmente"
+        },
+        {
+          "value": "sostenido",
+          "label": "Sí, de forma sostenida"
+        }
+      ]
+    },
+    {
+      "id": "s27_vacunas",
+      "text": "Vacunas recibidas",
+      "type": "table",
+      "columns": [
+        "Vacuna",
+        "¿Cuántas dosis?",
+        "¿Cuándo?",
+        "¿Reacción posterior?"
+      ]
+    },
+    {
+      "id": "s27_cambios_vacuna",
+      "text": "¿Notaste cambios en tu salud después de alguna vacuna?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "transitorios",
+          "label": "Sí, transitorios"
+        },
+        {
+          "value": "persistentes",
+          "label": "Sí, persistentes"
+        }
+      ]
+    }
+  ]
+}

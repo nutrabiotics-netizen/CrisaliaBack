@@ -1,0 +1,572 @@
+{
+  "id": "s05",
+  "number": 5,
+  "title": "Historia Médica Personal",
+  "questions": [
+    {
+      "id": "s05_linea_tiempo",
+      "text": "Línea de tiempo de traumas y eventos de salud (en orden cronológico)",
+      "type": "table",
+      "columns": [
+        "Año",
+        "Edad",
+        "Tipo (físico / emocional / quirúrgico / infeccioso / tóxico / farmacológico)",
+        "Descripción del evento",
+        "Tratamiento recibido",
+        "¿Persisten secuelas?"
+      ]
+    },
+    {
+      "id": "s05_dx_metabolicas",
+      "text": "Diagnósticos — Metabólicas y endocrinas",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "hipoglucemia",
+          "label": "Hipoglucemia"
+        },
+        {
+          "value": "resistencia_insulina",
+          "label": "Resistencia a la insulina"
+        },
+        {
+          "value": "prediabetes",
+          "label": "Prediabetes"
+        },
+        {
+          "value": "dm2",
+          "label": "Diabetes mellitus tipo 2"
+        },
+        {
+          "value": "dm1",
+          "label": "Diabetes mellitus tipo 1"
+        },
+        {
+          "value": "sindrome_metabolico",
+          "label": "Síndrome metabólico"
+        },
+        {
+          "value": "obesidad",
+          "label": "Obesidad"
+        },
+        {
+          "value": "sobrepeso",
+          "label": "Sobrepeso"
+        },
+        {
+          "value": "dislipidemia",
+          "label": "Dislipidemia"
+        },
+        {
+          "value": "higado_graso",
+          "label": "Hígado graso"
+        },
+        {
+          "value": "hipotiroidismo",
+          "label": "Hipotiroidismo"
+        },
+        {
+          "value": "hipertiroidismo",
+          "label": "Hipertiroidismo"
+        },
+        {
+          "value": "hashimoto",
+          "label": "Tiroiditis de Hashimoto"
+        },
+        {
+          "value": "sop",
+          "label": "Síndrome de ovario poliquístico"
+        },
+        {
+          "value": "infertilidad",
+          "label": "Infertilidad"
+        },
+        {
+          "value": "osteopenia",
+          "label": "Osteopenia"
+        },
+        {
+          "value": "osteoporosis",
+          "label": "Osteoporosis"
+        },
+        {
+          "value": "hiperuricemia",
+          "label": "Hiperuricemia o gota"
+        },
+        {
+          "value": "ninguno",
+          "label": "Ninguno"
+        }
+      ]
+    },
+    {
+      "id": "s05_dx_cardiovascular",
+      "text": "Diagnósticos — Cardiovasculares y respiratorias",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "hipertension",
+          "label": "Hipertensión arterial"
+        },
+        {
+          "value": "coronaria",
+          "label": "Enfermedad coronaria"
+        },
+        {
+          "value": "infarto_miocardio",
+          "label": "Infarto de miocardio"
+        },
+        {
+          "value": "insuficiencia_cardiaca",
+          "label": "Insuficiencia cardíaca"
+        },
+        {
+          "value": "arritmias",
+          "label": "Arritmias"
+        },
+        {
+          "value": "acv",
+          "label": "Enfermedad cerebrovascular / ACV"
+        },
+        {
+          "value": "arterial_periferica",
+          "label": "Enfermedad arterial periférica"
+        },
+        {
+          "value": "trombosis_venosa",
+          "label": "Trombosis venosa"
+        },
+        {
+          "value": "disautonomia",
+          "label": "Disautonomía"
+        },
+        {
+          "value": "epoc",
+          "label": "EPOC"
+        },
+        {
+          "value": "asma",
+          "label": "Asma"
+        },
+        {
+          "value": "apnea_sueno",
+          "label": "Apnea del sueño"
+        },
+        {
+          "value": "fibrosis_quistica",
+          "label": "Fibrosis quística"
+        },
+        {
+          "value": "obstruccion_retina",
+          "label": "Obstrucción de arteria central de la retina"
+        }
+      ]
+    },
+    {
+      "id": "s05_dx_digestivas",
+      "text": "Diagnósticos — Digestivas",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "reflujo",
+          "label": "Reflujo gastroesofágico"
+        },
+        {
+          "value": "gastritis_cronica",
+          "label": "Gastritis crónica"
+        },
+        {
+          "value": "gastritis_erosiva",
+          "label": "Gastritis erosiva o úlcera gástrica"
+        },
+        {
+          "value": "h_pylori",
+          "label": "Infección por Helicobacter pylori"
+        },
+        {
+          "value": "ibs",
+          "label": "Síndrome de intestino irritable"
+        },
+        {
+          "value": "sibo_imo_sifo",
+          "label": "SIBO / IMO / SIFO"
+        },
+        {
+          "value": "celiaca",
+          "label": "Enfermedad celíaca"
+        },
+        {
+          "value": "crohn",
+          "label": "Enfermedad de Crohn"
+        },
+        {
+          "value": "colitis_ulcerativa",
+          "label": "Colitis ulcerativa"
+        },
+        {
+          "value": "diverticulitis",
+          "label": "Diverticulitis"
+        },
+        {
+          "value": "calculos_biliares",
+          "label": "Cálculos biliares"
+        },
+        {
+          "value": "colecistectomia",
+          "label": "Colecistectomía"
+        },
+        {
+          "value": "pancreatitis",
+          "label": "Pancreatitis"
+        },
+        {
+          "value": "hepatitis_viral",
+          "label": "Hepatitis viral"
+        },
+        {
+          "value": "insuficiencia_hepatica",
+          "label": "Insuficiencia hepática"
+        },
+        {
+          "value": "estrenimiento_cronico",
+          "label": "Estreñimiento crónico"
+        },
+        {
+          "value": "diarrea_cronica",
+          "label": "Diarrea crónica"
+        },
+        {
+          "value": "hemorroides",
+          "label": "Hemorroides o fisura anal"
+        }
+      ]
+    },
+    {
+      "id": "s05_dx_neurologicas",
+      "text": "Diagnósticos — Neurológicas y psiquiátricas",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "migraña",
+          "label": "Migraña"
+        },
+        {
+          "value": "cefalea_tensional",
+          "label": "Cefalea tensional"
+        },
+        {
+          "value": "epilepsia",
+          "label": "Epilepsia"
+        },
+        {
+          "value": "epilepsia_refractaria",
+          "label": "Epilepsia refractaria"
+        },
+        {
+          "value": "neuropatia_periferica",
+          "label": "Neuropatía periférica"
+        },
+        {
+          "value": "neuropatia_diabetica",
+          "label": "Neuropatía diabética"
+        },
+        {
+          "value": "neuralgia_posherpetica",
+          "label": "Neuralgia posherpética"
+        },
+        {
+          "value": "sdrc",
+          "label": "Síndrome de dolor regional complejo"
+        },
+        {
+          "value": "alzheimer",
+          "label": "Enfermedad de Alzheimer"
+        },
+        {
+          "value": "parkinson",
+          "label": "Enfermedad de Parkinson"
+        },
+        {
+          "value": "esclerosis_multiple",
+          "label": "Esclerosis múltiple"
+        },
+        {
+          "value": "deterioro_cognitivo_leve",
+          "label": "Deterioro cognitivo leve"
+        },
+        {
+          "value": "depresion_mayor",
+          "label": "Depresión mayor"
+        },
+        {
+          "value": "depresion_melancolica",
+          "label": "Depresión melancólica"
+        },
+        {
+          "value": "bipolar",
+          "label": "Trastorno bipolar"
+        },
+        {
+          "value": "ansiedad",
+          "label": "Trastorno de ansiedad"
+        },
+        {
+          "value": "panico",
+          "label": "Trastorno de pánico"
+        },
+        {
+          "value": "psicosis",
+          "label": "Esquizofrenia o psicosis"
+        },
+        {
+          "value": "autismo",
+          "label": "Autismo"
+        },
+        {
+          "value": "tdah",
+          "label": "TDAH"
+        },
+        {
+          "value": "insomnio_cronico",
+          "label": "Insomnio crónico"
+        },
+        {
+          "value": "piernas_inquietas",
+          "label": "Síndrome de piernas inquietas"
+        },
+        {
+          "value": "adiccion_psicoacivos",
+          "label": "Adicción a sustancias psicoactivas"
+        }
+      ]
+    },
+    {
+      "id": "s05_dx_inmunologicas",
+      "text": "Diagnósticos — Inmunológicas, inflamatorias y musculoesqueléticas",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "artritis_reumatoide",
+          "label": "Artritis reumatoide"
+        },
+        {
+          "value": "lupus",
+          "label": "Lupus eritematoso sistémico"
+        },
+        {
+          "value": "sjogren",
+          "label": "Síndrome de Sjögren"
+        },
+        {
+          "value": "esclerodermia",
+          "label": "Esclerodermia"
+        },
+        {
+          "value": "dermatomiositis",
+          "label": "Dermatomiositis"
+        },
+        {
+          "value": "artritis_psoriasica",
+          "label": "Artritis psoriásica"
+        },
+        {
+          "value": "psoriasis",
+          "label": "Psoriasis"
+        },
+        {
+          "value": "vitiligo",
+          "label": "Vitíligo"
+        },
+        {
+          "value": "rosasea",
+          "label": "Acné rosácea"
+        },
+        {
+          "value": "fibromialgia",
+          "label": "Fibromialgia"
+        },
+        {
+          "value": "osteoartritis",
+          "label": "Osteoartritis de rodilla, cadera o manos"
+        },
+        {
+          "value": "lumbalgia_cronica",
+          "label": "Lumbalgia crónica"
+        },
+        {
+          "value": "hernia_discal",
+          "label": "Hernia discal"
+        },
+        {
+          "value": "estenosis_canal",
+          "label": "Estenosis del canal"
+        },
+        {
+          "value": "radiculopatia",
+          "label": "Radiculopatía"
+        },
+        {
+          "value": "tendinitis",
+          "label": "Tendinitis, bursitis o capsulitis"
+        },
+        {
+          "value": "dolor_miofascial",
+          "label": "Síndrome de dolor miofascial"
+        },
+        {
+          "value": "cistitis_intersticial",
+          "label": "Cistitis intersticial"
+        },
+        {
+          "value": "vih",
+          "label": "VIH"
+        },
+        {
+          "value": "cancer",
+          "label": "Cáncer activo o en remisión"
+        }
+      ]
+    },
+    {
+      "id": "s05_dx_otras",
+      "text": "Diagnósticos — Otras condiciones relevantes",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "anemia_ferropenica",
+          "label": "Anemia ferropénica"
+        },
+        {
+          "value": "anemia_megaloblastica",
+          "label": "Anemia megaloblástica"
+        },
+        {
+          "value": "metahemoglobinemia",
+          "label": "Metahemoglobinemia"
+        },
+        {
+          "value": "renal_cronica",
+          "label": "Enfermedad renal crónica"
+        },
+        {
+          "value": "litiasis_renal",
+          "label": "Litiasis renal"
+        },
+        {
+          "value": "cataratas",
+          "label": "Cataratas"
+        },
+        {
+          "value": "glaucoma",
+          "label": "Glaucoma"
+        },
+        {
+          "value": "retinopatia",
+          "label": "Retinopatía"
+        },
+        {
+          "value": "uveitis",
+          "label": "Uveítis"
+        },
+        {
+          "value": "cancer_hepatico_cavum",
+          "label": "Cáncer hepático o de cavum"
+        },
+        {
+          "value": "linfoma",
+          "label": "Linfoma"
+        },
+        {
+          "value": "mononucleosis",
+          "label": "Mononucleosis"
+        },
+        {
+          "value": "lyme",
+          "label": "Enfermedad de Lyme"
+        },
+        {
+          "value": "preeclampsia",
+          "label": "Preeclampsia"
+        },
+        {
+          "value": "coagulacion",
+          "label": "Trastorno de la coagulación"
+        }
+      ]
+    },
+    {
+      "id": "s05_cirugias",
+      "text": "Cirugías que te han practicado (marca todas)",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "apendicectomia",
+          "label": "Apendicectomía"
+        },
+        {
+          "value": "colecistectomia",
+          "label": "Colecistectomía"
+        },
+        {
+          "value": "ginecologica",
+          "label": "Cirugía ginecológica (histerectomía, ooforectomía, miomectomía)"
+        },
+        {
+          "value": "cesarea",
+          "label": "Cesárea"
+        },
+        {
+          "value": "laparotomia",
+          "label": "Laparotomía exploratoria"
+        },
+        {
+          "value": "reseccion_intestinal",
+          "label": "Resección intestinal o de válvula ileocecal"
+        },
+        {
+          "value": "bariatrica",
+          "label": "Cirugía bariátrica"
+        },
+        {
+          "value": "amigdalectomia",
+          "label": "Amigdalectomía"
+        },
+        {
+          "value": "columna",
+          "label": "Cirugía de columna"
+        },
+        {
+          "value": "cardiovascular",
+          "label": "Cirugía cardiovascular"
+        },
+        {
+          "value": "mamoplastia",
+          "label": "Mamoplastia de aumento"
+        },
+        {
+          "value": "osteosintesis",
+          "label": "Osteosíntesis o prótesis articular"
+        },
+        {
+          "value": "dental_mayor",
+          "label": "Cirugía dental mayor"
+        },
+        {
+          "value": "ninguna",
+          "label": "Ninguna"
+        }
+      ]
+    },
+    {
+      "id": "s05_hospitalizaciones",
+      "text": "Hospitalizaciones relevantes",
+      "type": "table",
+      "columns": [
+        "Año",
+        "Motivo",
+        "Duración",
+        "Secuelas"
+      ]
+    }
+  ]
+}

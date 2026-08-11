@@ -1,0 +1,213 @@
+{
+  "id": "s01",
+  "number": 1,
+  "title": "Información General",
+  "questions": [
+    {
+      "id": "s01_nombre",
+      "text": "Nombre completo",
+      "type": "text"
+    },
+    {
+      "id": "s01_nacimiento",
+      "text": "Fecha de nacimiento (DD/MM/AAAA)",
+      "type": "text"
+    },
+    {
+      "id": "s01_edad",
+      "text": "Edad",
+      "type": "text"
+    },
+
+    {
+      "id": "s01_sexo",
+      "text": "Sexo biológico",
+      "type": "single",
+      "options": [
+        {
+          "value": "masculino",
+          "label": "Masculino (XY)"
+        },
+        {
+          "value": "femenino",
+          "label": "Femenino (XX)"
+        },
+        {
+          "value": "intersexual",
+          "label": "Intersexual / otra condición cromosómica"
+        }
+      ]
+    },
+    {
+      "id": "s01_ocupacion",
+      "text": "Ocupación actual",
+      "type": "text"
+    },
+    {
+      "id": "s01_anos_ocupacion",
+      "text": "Años en esa ocupación",
+      "type": "text"
+    },
+    {
+      "id": "s01_jornada",
+      "text": "Tipo de jornada laboral",
+      "type": "single",
+      "options": [
+        {
+          "value": "diurna_fija",
+          "label": "Diurna fija"
+        },
+        {
+          "value": "nocturna_fija",
+          "label": "Nocturna fija"
+        },
+        {
+          "value": "turnos_rotativos",
+          "label": "Turnos rotativos"
+        },
+        {
+          "value": "remoto",
+          "label": "Trabajo remoto"
+        },
+        {
+          "value": "sin_actividad",
+          "label": "Sin actividad laboral actual"
+        },
+        {
+          "value": "jubilado",
+          "label": "Jubilado"
+        }
+      ]
+    },
+    {
+      "id": "s01_talla",
+      "text": "Talla (cm)",
+      "type": "text"
+    },
+    {
+      "id": "s01_peso_actual",
+      "text": "Peso actual (kg)",
+      "type": "text"
+    },
+    {
+      "id": "s01_peso_habitual",
+      "text": "Peso habitual (kg)",
+      "type": "text"
+    },
+    {
+      "id": "s01_peso_deseado",
+      "text": "Peso deseado (kg)",
+      "type": "text"
+    },
+    {
+      "id": "s01_peso_max",
+      "text": "Peso máximo alcanzado (kg)",
+      "type": "text"
+    },
+    {
+      "id": "s01_peso_max_edad",
+      "text": "¿A qué edad?",
+      "type": "text"
+    },
+    {
+      "id": "s01_peso_min",
+      "text": "Peso mínimo (kg)",
+      "type": "text"
+    },
+    {
+      "id": "s01_peso_min_edad",
+      "text": "¿A qué edad?",
+      "type": "text"
+    },
+    {
+      "id": "s01_grasa_corporal",
+      "text": "Porcentaje de grasa corporal",
+      "type": "text"
+    },
+    {
+      "id": "s01_masa_muscular",
+      "text": "Porcentaje de masa muscular",
+      "type": "text"
+    },
+    {
+      "id": "s01_perimetro_abdominal",
+      "text": "Perímetro abdominal (cm)",
+      "type": "text"
+    },
+    {
+      "id": "s01_metodo_medicion",
+      "text": "Método de medición",
+      "type": "text"
+    },
+    {
+      "id": "s01_peso_12meses",
+      "text": "En los últimos 12 meses mi peso:",
+      "type": "single",
+      "options": [
+        {
+          "value": "estable",
+          "label": "Se ha mantenido estable"
+        },
+        {
+          "value": "aumento_5kg",
+          "label": "Ha aumentado más de 5 kg"
+        },
+        {
+          "value": "disminuido_5kg",
+          "label": "Ha disminuido más de 5 kg"
+        },
+        {
+          "value": "fluctuado",
+          "label": "Ha fluctuado repetidamente (efecto rebote)"
+        }
+      ]
+    },
+    {
+      "id": "s01_dispositivos",
+      "text": "Dispositivos de monitoreo que utilizas (marca los que uses de forma regular)",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "reloj_deportivo",
+          "label": "Reloj deportivo (Garmin, Polar, Suunto)"
+        },
+        {
+          "value": "apple_watch",
+          "label": "Apple Watch"
+        },
+        {
+          "value": "whoop",
+          "label": "WHOOP"
+        },
+        {
+          "value": "oura",
+          "label": "Oura Ring"
+        },
+        {
+          "value": "bascula_bioimpedancia",
+          "label": "Báscula de bioimpedancia"
+        },
+        {
+          "value": "glucometro_capilar",
+          "label": "Glucómetro capilar"
+        },
+        {
+          "value": "monitor_glucosa_continuo",
+          "label": "Monitor continuo de glucosa"
+        },
+        {
+          "value": "tensiometro",
+          "label": "Tensiómetro domiciliario"
+        },
+        {
+          "value": "oximetro",
+          "label": "Oxímetro de pulso"
+        },
+        {
+          "value": "ninguno",
+          "label": "Ninguno"
+        }
+      ]
+    }
+  ]
+}

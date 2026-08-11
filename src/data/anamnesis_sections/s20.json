@@ -1,0 +1,302 @@
+{
+  "id": "s20",
+  "number": 20,
+  "title": "Aminas Biógenas y Válvula Ileocecal",
+  "questions": [
+    {
+      "id": "s20_fuentes_histamina",
+      "text": "Consumo de fuentes de histamina y tiramina (marca las que consumes con frecuencia)",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "carnes_procesadas",
+          "label": "Carnes pasadas, procesadas, ahumadas, marinadas o fermentadas"
+        },
+        {
+          "value": "cerdo",
+          "label": "Cerdo (excepto jamón crudo)"
+        },
+        {
+          "value": "chocolate",
+          "label": "Chocolate"
+        },
+        {
+          "value": "alcohol",
+          "label": "Bebidas alcohólicas"
+        },
+        {
+          "value": "vino_tinto",
+          "label": "Vino tinto"
+        },
+        {
+          "value": "cerveza",
+          "label": "Cerveza"
+        },
+        {
+          "value": "quesos_maduros",
+          "label": "Quesos maduros (excepto ricotta y cottage)"
+        },
+        {
+          "value": "fermentados",
+          "label": "Vegetales fermentados y chucrut"
+        },
+        {
+          "value": "kombucha",
+          "label": "Kombucha"
+        },
+        {
+          "value": "pasta_camarones",
+          "label": "Pasta de camarones"
+        },
+        {
+          "value": "aguacate_maduro",
+          "label": "Aguacate muy maduro"
+        },
+        {
+          "value": "soya_miso",
+          "label": "Salsa de soya, miso, edamame, teriyaki"
+        },
+        {
+          "value": "habichuelas",
+          "label": "Habichuelas"
+        },
+        {
+          "value": "banano",
+          "label": "Banano"
+        },
+        {
+          "value": "piña",
+          "label": "Piña"
+        },
+        {
+          "value": "berenjena",
+          "label": "Berenjena"
+        },
+        {
+          "value": "brevas",
+          "label": "Brevas"
+        },
+        {
+          "value": "ciruelas",
+          "label": "Ciruelas"
+        },
+        {
+          "value": "frambuesas",
+          "label": "Frambuesas"
+        },
+        {
+          "value": "mani",
+          "label": "Maní"
+        },
+        {
+          "value": "nuez_brasil",
+          "label": "Nuez de Brasil"
+        },
+        {
+          "value": "coco",
+          "label": "Coco"
+        },
+        {
+          "value": "espinaca",
+          "label": "Espinaca"
+        },
+        {
+          "value": "tomate",
+          "label": "Tomate"
+        },
+        {
+          "value": "citricos",
+          "label": "Cítricos"
+        },
+        {
+          "value": "ninguno",
+          "label": "Ninguno de estos"
+        }
+      ]
+    },
+    {
+      "id": "s20_intolerancia_aminas",
+      "text": "Síntomas de intolerancia a las aminas biógenas",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s20_nauseas",
+          "label": "Náuseas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_vomito",
+          "label": "Vómito",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_diarrea",
+          "label": "Diarrea",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_dolor_abdominal",
+          "label": "Dolor abdominal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_sarpullido",
+          "label": "Sarpullido o brote",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_comezón",
+          "label": "Comezón generalizada",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_cefalea",
+          "label": "Cefalea o migraña tras el consumo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_flushing",
+          "label": "Enrojecimiento facial o del cuello (flushing)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_congestion",
+          "label": "Congestión nasal tras el consumo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_hipertension",
+          "label": "Hipertensión tras el consumo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_palpitaciones",
+          "label": "Palpitaciones tras el consumo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_estres",
+          "label": "Aumento del estrés percibido",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_baja_tolerancia",
+          "label": "Baja tolerancia al estrés",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_insomnio",
+          "label": "Insomnio tras cenas con estos alimentos",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s20_valvula_ileocecal",
+      "text": "Signos y síntomas de descoordinación de la válvula ileocecal",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s20_v_halitosis",
+          "label": "Mal aliento (halitosis)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_v_olor_corporal",
+          "label": "Mal olor corporal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_v_mareo_tarde",
+          "label": "Mareo, sobre todo en las tardes",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_v_vertigo",
+          "label": "Vértigo o sensación de giro (pseudo enfermedad de Ménière)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_v_tinnitus",
+          "label": "Tinnitus (zumbido de oídos)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_v_cervical",
+          "label": "Tensiones cervicales o dolor de cuello recurrente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_v_espalda",
+          "label": "Dolor recurrente en la espalda",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_v_hombro_derecho",
+          "label": "Dolor en el hombro derecho sin lesión conocida",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_v_tunel_carpo",
+          "label": "Dolor, pérdida de fuerza o adormecimiento en muñecas o manos (túnel del carpo)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_v_migraña",
+          "label": "Migrañas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_v_palpitaciones",
+          "label": "Palpitaciones en el pecho",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_v_dolor_toracico",
+          "label": "Dolor torácico provocado por la actividad",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_v_dolores_generalizados",
+          "label": "Dolores generalizados sin causa clara",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_v_debilidad",
+          "label": "Debilidad generalizada",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_v_retencion",
+          "label": "Retención de líquidos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_v_deshidratacion",
+          "label": "Deshidratación pese a tomar líquidos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_v_sed",
+          "label": "Sed insaciable o repentina",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_v_congestion",
+          "label": "Congestión o escurrimiento nasal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_v_ojeras",
+          "label": "Ojeras marcadas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s20_v_nauseas",
+          "label": "Náuseas",
+          "type": "scale_0_3"
+        }
+      ]
+    }
+  ]
+}

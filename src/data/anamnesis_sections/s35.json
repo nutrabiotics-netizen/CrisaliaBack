@@ -1,0 +1,357 @@
+{
+  "id": "s35",
+  "number": 35,
+  "title": "Glándula Tiroides",
+  "questions": [
+    {
+      "id": "s35_hipofuncion",
+      "text": "Síntomas de hipofunción tiroidea",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s35_fatiga",
+          "label": "Fatiga persistente",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s35_somnolencia",
+          "label": "Somnolencia diurna",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s35_intolerancia_frio",
+          "label": "Intolerancia al frío; manos y pies fríos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s35_piel_seca",
+          "label": "Piel seca",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s35_caida_cabello",
+          "label": "Gran caída del cabello",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s35_unas",
+          "label": "Uñas quebradizas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s35_estrenimiento",
+          "label": "Estreñimiento",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s35_calambres",
+          "label": "Calambres nocturnos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s35_artralgias",
+          "label": "Dolor migratorio o artralgias",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s35_depresion",
+          "label": "Depresión o ánimo bajo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s35_ejercicio",
+          "label": "Baja tolerancia al ejercicio",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s35_ciclo",
+          "label": "Irregularidad del ciclo menstrual",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s35_peso",
+          "label": "Aumento de peso sin cambio en la alimentación",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s35_ronquera",
+          "label": "Voz ronca o hinchazón facial matutina",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s35_infecciones",
+          "label": "Sinusitis o infecciones recurrentes",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s35_hiperfuncion",
+      "text": "Síntomas de hiperfunción tiroidea",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s35_perdida_peso",
+          "label": "Pérdida de peso sin proponérmelo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s35_intolerancia_calor",
+          "label": "Intolerancia al calor",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s35_sudoracion",
+          "label": "Sudoración excesiva",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s35_palpitaciones",
+          "label": "Palpitaciones o taquicardia",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s35_temblor",
+          "label": "Temblor fino de manos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s35_ansiedad",
+          "label": "Ansiedad o nerviosismo marcado",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s35_insomnio",
+          "label": "Insomnio",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s35_diarrea",
+          "label": "Deposiciones frecuentes o diarrea",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s35_debilidad",
+          "label": "Debilidad muscular proximal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s35_ojos",
+          "label": "Ojos prominentes o irritados",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s35_apetito",
+          "label": "Aumento del apetito",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s35_medicamentos",
+      "text": "¿Cuáles de estos medicamentos has utilizado?",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "anticonceptivos",
+          "label": "Anticonceptivos orales"
+        },
+        {
+          "value": "metformina",
+          "label": "Metformina"
+        },
+        {
+          "value": "corticoides",
+          "label": "Corticoides"
+        },
+        {
+          "value": "beta_bloqueadores",
+          "label": "Beta-bloqueadores"
+        },
+        {
+          "value": "amiodarona",
+          "label": "Antiarrítmicos (amiodarona)"
+        },
+        {
+          "value": "quimioterapeuticos",
+          "label": "Quimioterapéuticos"
+        },
+        {
+          "value": "litio",
+          "label": "Litio"
+        },
+        {
+          "value": "levotiroxina",
+          "label": "Levotiroxina"
+        },
+        {
+          "value": "ninguno",
+          "label": "Ninguno"
+        }
+      ]
+    },
+    {
+      "id": "s35_alimentos_bociogenos",
+      "text": "¿Cuáles de estos alimentos consumes con frecuencia?",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "soya",
+          "label": "Soya y derivados"
+        },
+        {
+          "value": "cruciferos_crudos",
+          "label": "Crucíferos crudos (col, brócoli, coliflor)"
+        },
+        {
+          "value": "gluten",
+          "label": "Gluten (trigo, centeno, cebada, triticale, avena procesada cerca de trigo)"
+        },
+        {
+          "value": "yuca_cruda",
+          "label": "Mandioca o yuca cruda"
+        },
+        {
+          "value": "mijo",
+          "label": "Mijo"
+        },
+        {
+          "value": "ninguno",
+          "label": "Ninguno"
+        }
+      ]
+    },
+    {
+      "id": "s35_familia_tiroidea",
+      "text": "¿Tienes historia familiar de tiroiditis o enfermedad tiroidea?",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "madre",
+          "label": "Sí, madre"
+        },
+        {
+          "value": "padre",
+          "label": "Sí, padre"
+        },
+        {
+          "value": "hermanos",
+          "label": "Sí, hermanos"
+        },
+        {
+          "value": "abuelos",
+          "label": "Sí, abuelos o tíos"
+        }
+      ]
+    },
+    {
+      "id": "s35_estres",
+      "text": "¿Consideras que vives bajo una carga elevada de estrés?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "moderada",
+          "label": "Moderada"
+        },
+        {
+          "value": "alta",
+          "label": "Alta"
+        },
+        {
+          "value": "extrema",
+          "label": "Extrema"
+        }
+      ]
+    },
+    {
+      "id": "s35_examenes",
+      "text": "¿Te han informado alteración en alguno de estos exámenes?",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "tsh_alta",
+          "label": "TSH elevada"
+        },
+        {
+          "value": "tsh_baja",
+          "label": "TSH baja"
+        },
+        {
+          "value": "t4_baja",
+          "label": "T4 libre baja"
+        },
+        {
+          "value": "t3_baja",
+          "label": "T3 libre baja"
+        },
+        {
+          "value": "t3_reversa",
+          "label": "T3 reversa elevada"
+        },
+        {
+          "value": "anti_tpo",
+          "label": "Anti-TPO positivos"
+        },
+        {
+          "value": "antitiroglobulina",
+          "label": "Antitiroglobulina positivos"
+        },
+        {
+          "value": "nodulo",
+          "label": "Nódulo tiroideo"
+        },
+        {
+          "value": "bocio",
+          "label": "Bocio"
+        },
+        {
+          "value": "ninguno",
+          "label": "Ninguno"
+        },
+        {
+          "value": "no_realizado",
+          "label": "No me los he realizado"
+        }
+      ]
+    },
+    {
+      "id": "s35_tratamiento",
+      "text": "¿Has recibido tratamiento para la tiroides?",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "levotiroxina",
+          "label": "Levotiroxina"
+        },
+        {
+          "value": "t3_desecada",
+          "label": "T3 o tiroides desecada"
+        },
+        {
+          "value": "antitiroideos",
+          "label": "Antitiroideos"
+        },
+        {
+          "value": "yodo_radiactivo",
+          "label": "Yodo radiactivo"
+        },
+        {
+          "value": "tiroidectomia",
+          "label": "Tiroidectomía"
+        }
+      ]
+    }
+  ]
+}

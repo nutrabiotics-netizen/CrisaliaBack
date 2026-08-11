@@ -1,0 +1,344 @@
+{
+  "id": "annex_a",
+  "title": "Mapa de Disfunciones Fisiológicas, Secciones del Formulario y Estrategias",
+  "for_ai_only": true,
+  "dysfunctions": [
+    {
+      "id": 1,
+      "name": "Disminución de la coherencia cardíaca",
+      "sections": [
+        "s12",
+        "s11",
+        "s36"
+      ],
+      "strategies": [
+        "Meditación",
+        "Oración",
+        "Yoga",
+        "Mindfulness",
+        "Psicoterapia"
+      ],
+      "stage": 1
+    },
+    {
+      "id": 2,
+      "name": "Inhibición de la hormesis",
+      "sections": [
+        "s10",
+        "s33",
+        "s23",
+        "s13"
+      ],
+      "strategies": [
+        "Ketoessens",
+        "Quintessens",
+        "Bluessens"
+      ],
+      "stage": 1
+    },
+    {
+      "id": 3,
+      "name": "Disfunción del eje hipotálamo-hipófisis-adrenal",
+      "sections": [
+        "s11",
+        "s13",
+        "s12",
+        "s36",
+        "s03"
+      ],
+      "strategies": [
+        "Adaptessens",
+        "Calmessens",
+        "Bluessens",
+        "Remsol",
+        "Nalden"
+      ],
+      "stage": 1
+    },
+    {
+      "id": 4,
+      "name": "Disfunción del sistema endocannabinoide",
+      "sections": [
+        "s28",
+        "s13",
+        "s11",
+        "s26"
+      ],
+      "strategies": [
+        "Remsol",
+        "Omegassens",
+        "Multiessens Minerales"
+      ],
+      "stage": 1
+    },
+    {
+      "id": 5,
+      "name": "Desequilibrio hidroelectrolítico",
+      "sections": [
+        "s14",
+        "s17",
+        "s23"
+      ],
+      "strategies": [
+        "Myoessens",
+        "Laxessens",
+        "Seassens"
+      ],
+      "stage": 1
+    },
+    {
+      "id": 6,
+      "name": "Insuficiencias digestivas",
+      "sections": [
+        "s15",
+        "s16",
+        "s17",
+        "s09"
+      ],
+      "strategies": [
+        "Gastroessens",
+        "Vegezym"
+      ],
+      "stage": 1
+    },
+    {
+      "id": 7,
+      "name": "Disbiosis / SIBO / IMO / SIFO / infecciones",
+      "sections": [
+        "s19",
+        "s18",
+        "s20",
+        "s17",
+        "s26"
+      ],
+      "strategies": [
+        "P-cide",
+        "V-cide",
+        "S-cide",
+        "Vegezym",
+        "Inmunoplex",
+        "Probioessens",
+        "Butirex",
+        "Nalden"
+      ],
+      "stage": 1
+    },
+    {
+      "id": 8,
+      "name": "Permeabilidad aumentada de mucosas",
+      "sections": [
+        "s21",
+        "s20",
+        "s19",
+        "s27",
+        "s09"
+      ],
+      "strategies": [
+        "Enteroplex",
+        "Inmunoplex",
+        "DK Mulsion",
+        "Omegassens",
+        "Butirex",
+        "Nalden"
+      ],
+      "stage": 1
+    },
+    {
+      "id": 9,
+      "name": "Glicotoxicidad y toxicidad metabólica",
+      "sections": [
+        "s22",
+        "s09",
+        "s33",
+        "s34"
+      ],
+      "strategies": [
+        "A-Lipor",
+        "Pancreogen",
+        "Multiessens Minerales",
+        "Ketoessens",
+        "Compon X"
+      ],
+      "stage": 1
+    },
+    {
+      "id": 10,
+      "name": "Aumento del catabolismo de purinas",
+      "sections": [
+        "s23",
+        "s10",
+        "s33"
+      ],
+      "strategies": [
+        "Mitoessens"
+      ],
+      "stage": 1
+    },
+    {
+      "id": 11,
+      "name": "Disminución de vitaminas B6, B9 y B12",
+      "sections": [
+        "s24",
+        "s34",
+        "s25",
+        "s07"
+      ],
+      "strategies": [
+        "Coraessens",
+        "Neuressens",
+        "Hemogest"
+      ],
+      "stage": 1
+    },
+    {
+      "id": 12,
+      "name": "Disminución de hierro",
+      "sections": [
+        "s25",
+        "s15",
+        "s07",
+        "s19"
+      ],
+      "strategies": [
+        "Hemogest"
+      ],
+      "stage": 1
+    },
+    {
+      "id": 13,
+      "name": "Inflamación crónica de bajo grado",
+      "sections": [
+        "s26",
+        "s28",
+        "s18",
+        "s19",
+        "s21"
+      ],
+      "strategies": [
+        "Curcetin",
+        "Harpagossens",
+        "Glutaceon",
+        "Vegezym",
+        "Remsol",
+        "Nalden"
+      ],
+      "stage": 1
+    },
+    {
+      "id": 14,
+      "name": "Autoinmunidad y pérdida de tolerancia inmune",
+      "sections": [
+        "s27",
+        "s21",
+        "s19",
+        "s26",
+        "s02"
+      ],
+      "strategies": [
+        "Vegezym",
+        "Glutaceon",
+        "Curcetin",
+        "Harpagossens",
+        "Enteroplex",
+        "DK Mulsion",
+        "Butirex",
+        "Nalden"
+      ],
+      "stage": 2
+    },
+    {
+      "id": 15,
+      "name": "Disminución de vitaminas D3 y K2",
+      "sections": [
+        "s29",
+        "s10",
+        "s26",
+        "s27"
+      ],
+      "strategies": [
+        "DK Mulsion"
+      ],
+      "stage": 2
+    },
+    {
+      "id": 16,
+      "name": "Alteración de la relación omega 3 / omega 6",
+      "sections": [
+        "s30",
+        "s09",
+        "s26"
+      ],
+      "strategies": [
+        "Omegassens"
+      ],
+      "stage": 2
+    },
+    {
+      "id": 17,
+      "name": "Dislipidemia",
+      "sections": [
+        "s31",
+        "s22",
+        "s35",
+        "s09"
+      ],
+      "strategies": [
+        "Colessens",
+        "Quintessens"
+      ],
+      "stage": 2
+    },
+    {
+      "id": 18,
+      "name": "Desequilibrio en senderos de biotransformación",
+      "sections": [
+        "s32",
+        "s16",
+        "s34",
+        "s33"
+      ],
+      "strategies": [
+        "Nutraclear",
+        "Glutaceon",
+        "A-Lipor"
+      ],
+      "stage": 2
+    },
+    {
+      "id": 19,
+      "name": "Disfunción mitocondrial y estrés oxidativo",
+      "sections": [
+        "s33",
+        "s23",
+        "s10",
+        "s34"
+      ],
+      "strategies": [
+        "Compon X",
+        "Multiessens Minerales",
+        "Multiessens Vitaminas",
+        "Glutaceon",
+        "A-Lipor",
+        "Quintessens",
+        "Bluessens",
+        "Remsol"
+      ],
+      "stage": 2
+    },
+    {
+      "id": 20,
+      "name": "Disminución de la función tiroidea",
+      "sections": [
+        "s35",
+        "s09",
+        "s32",
+        "s11"
+      ],
+      "strategies": [
+        "Metabessens",
+        "Glutaceon"
+      ],
+      "stage": 2
+    }
+  ]
+}

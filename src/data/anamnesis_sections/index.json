@@ -1,0 +1,59 @@
+{
+  "generated": "2026-08-09T00:00:00.000Z",
+  "sections": [
+    { "id": "s01", "title": "Información General", "for_ai_only": false },
+    { "id": "s02", "title": "Alergias, Intolerancias y Reacciones Adversas", "for_ai_only": false },
+    { "id": "s03", "title": "Motivo de Consulta y Padecimiento Actual", "for_ai_only": false },
+    { "id": "s04", "title": "Antecedentes Familiares y Perinatales", "for_ai_only": false },
+    { "id": "s05", "title": "Historia Médica Personal", "for_ai_only": false },
+    { "id": "s06", "title": "Medicamentos, Suplementos y Depleción de Nutrientes", "for_ai_only": false },
+    { "id": "s07", "title": "Historia Gineco-Obstétrica y Equilibrio Estrogénico — Pacientes de sexo femenino (XX)", "for_ai_only": false },
+    { "id": "s08", "title": "Salud Hormonal Masculina — Pacientes de sexo masculino (XY)", "for_ai_only": false },
+    { "id": "s09", "title": "Nutrición y Hábitos Alimentarios", "for_ai_only": false },
+    { "id": "s10", "title": "Estrés Positivo y Hormesis", "for_ai_only": false },
+    { "id": "s11", "title": "Tolerancia al Estrés y Eje Hipotálamo-Hipófisis-Adrenal", "for_ai_only": false },
+    { "id": "s12", "title": "Coherencia Cardíaca y Regulación Autonómica", "for_ai_only": false },
+    { "id": "s13", "title": "Sueño y Ritmo Circadiano", "for_ai_only": false },
+    { "id": "s14", "title": "Hidratación, Electrolitos y Balance Sodio-Volumen", "for_ai_only": false },
+    { "id": "s15", "title": "Proceso Digestivo — Función Gástrica", "for_ai_only": false },
+    { "id": "s16", "title": "Proceso Digestivo — Función Biliar, Hepática y Pancreática", "for_ai_only": false },
+    { "id": "s17", "title": "Patrón de Evacuación", "for_ai_only": false },
+    { "id": "s18", "title": "Salud Oral y Periodontal", "for_ai_only": false },
+    { "id": "s19", "title": "Microorganismos — Disbiosis, SIBO, IMO y SIFO", "for_ai_only": false },
+    { "id": "s20", "title": "Aminas Biógenas y Válvula Ileocecal", "for_ai_only": false },
+    { "id": "s21", "title": "Permeabilidad de Mucosas y Reactividad Alimentaria", "for_ai_only": false },
+    { "id": "s22", "title": "Glicotoxicidad, Hipoglucemia y Resistencia a la Insulina", "for_ai_only": false },
+    { "id": "s23", "title": "Fatiga Músculo-Cardíaca — Catabolismo de Purinas", "for_ai_only": false },
+    { "id": "s24", "title": "Metilación y Vitaminas B6, B9 y B12", "for_ai_only": false },
+    { "id": "s25", "title": "Deficiencia de Hierro", "for_ai_only": false },
+    { "id": "s26", "title": "Inflamación Crónica de Bajo Grado", "for_ai_only": false },
+    { "id": "s27", "title": "Condición Autoinmune y Pérdida de Tolerancia Inmune", "for_ai_only": false },
+    { "id": "s28", "title": "Dolor Crónico, Somatización y Sistema Endocannabinoide", "for_ai_only": false },
+    { "id": "s29", "title": "Vitaminas D3 y K2 — Salud Ósea y Calcificación", "for_ai_only": false },
+    { "id": "s30", "title": "Relación Omega 3 / Omega 6", "for_ai_only": false },
+    { "id": "s31", "title": "Colesterol, Dislipidemia y Riesgo Cardiovascular", "for_ai_only": false },
+    { "id": "s32", "title": "Carga Tóxica y Senderos de Biotransformación", "for_ai_only": false },
+    { "id": "s33", "title": "Energía Celular, Función Mitocondrial e Hipoxia", "for_ai_only": false },
+    { "id": "s34", "title": "Función Neurológica, Neurodegeneración y Excitotoxicidad", "for_ai_only": false },
+    { "id": "s35", "title": "Glándula Tiroides", "for_ai_only": false },
+    { "id": "s36", "title": "Dimensión Social, Emocional y Espiritual", "for_ai_only": false },
+    { "id": "s37", "title": "Síntesis — Uso Exclusivo de Crisal-IA", "for_ai_only": true }
+  ],
+  "annexes": [
+    {
+      "id": "annex_a",
+      "title": "Mapa de Disfunciones Fisiológicas, Secciones del Formulario y Estrategias",
+      "file": "annex_a.json"
+    },
+    {
+      "id": "annex_b",
+      "title": "Claves Clínicas Discriminantes por Disfunción",
+      "file": "annex_b.json"
+    },
+    {
+      "id": "annex_c",
+      "title": "Instrucciones para el Análisis Asistido por Inteligencia Artificial",
+      "file": "annex_c.json"
+    }
+  ]
+}

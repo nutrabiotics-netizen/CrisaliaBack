@@ -1,0 +1,590 @@
+{
+  "id": "s32",
+  "number": 32,
+  "title": "Carga Tóxica y Senderos de Biotransformación",
+  "questions": [
+    {
+      "id": "s32_exposiciones",
+      "text": "Exposiciones tóxicas a lo largo de tu vida (marca todas las que apliquen)",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "polución_trabajo",
+          "label": "Polución química en el lugar de trabajo (flores, minería, metalurgia, baterías, soldadura, fundición, pinturas, plásticos, cemento)"
+        },
+        {
+          "value": "limpieza_quimicos",
+          "label": "Trabajo en área de limpieza con exposición constante a productos químicos"
+        },
+        {
+          "value": "ambientadores",
+          "label": "Uso diario en casa de ambientadores eléctricos o en aerosol"
+        },
+        {
+          "value": "cosméticos_diarios",
+          "label": "Uso diario de perfumes, desodorantes, esmalte de uñas, protector solar o cremas con fragancia"
+        },
+        {
+          "value": "maquillaje_metales",
+          "label": "Uso de maquillaje o labial con posible contenido de plomo o mercurio"
+        },
+        {
+          "value": "pasta_fluor",
+          "label": "Uso de crema dental con flúor"
+        },
+        {
+          "value": "amalgamas_actuales",
+          "label": "Amalgamas dentales de mercurio actuales"
+        },
+        {
+          "value": "remocion_amalgamas",
+          "label": "Remoción de amalgamas dentales (con o sin protocolo de aislamiento)"
+        },
+        {
+          "value": "endodoncias_implantes",
+          "label": "Endodoncias, implantes u ortodoncia (brackets)"
+        },
+        {
+          "value": "pintura_plomo",
+          "label": "Vivienda o construcción antigua con pintura con plomo"
+        },
+        {
+          "value": "humo_cigarro",
+          "label": "Exposición a humo de cigarrillo (activo o pasivo)"
+        },
+        {
+          "value": "alcohol_cronoco",
+          "label": "Consumo crónico actual o pasado de alcohol"
+        },
+        {
+          "value": "tatuajes",
+          "label": "Tatuajes (pigmentos intradérmicos)"
+        },
+        {
+          "value": "osteosintesis",
+          "label": "Material de osteosíntesis, prótesis fijas o implantes"
+        },
+        {
+          "value": "protesis_mamarias",
+          "label": "Prótesis mamarias de silicona"
+        },
+        {
+          "value": "agua_contaminada",
+          "label": "Consumo diario de agua no filtrada, de botella plástica o de fuente contaminada"
+        },
+        {
+          "value": "tuberias_plomo",
+          "label": "Vivienda con tuberías de plomo, pozo o cercanía a zona minera"
+        },
+        {
+          "value": "sal_refinada",
+          "label": "Consumo de sal refinada o comercial"
+        },
+        {
+          "value": "pescado_depredador",
+          "label": "Consumo de pescados depredadores grandes (atún rojo, pez espada, tiburón, caballa real)"
+        },
+        {
+          "value": "pescado_rio",
+          "label": "Consumo de pescado de río o de criadero (bagre, bocachico, mojarra, trucha, capaz, payara)"
+        },
+        {
+          "value": "frutas_fumigadas",
+          "label": "Consumo de frutas o vegetales fumigados no orgánicos"
+        },
+        {
+          "value": "ultraprocesados",
+          "label": "Consumo habitual de alimentos ultraprocesados"
+        },
+        {
+          "value": "teflon",
+          "label": "Cocina en sartenes de teflón, cerámica o aluminio"
+        },
+        {
+          "value": "papel_antiadherente",
+          "label": "Uso de papel antiadherente o moldes de silicona"
+        },
+        {
+          "value": "plastico_alimentos",
+          "label": "Almacenamiento de alimentos en recipientes plásticos"
+        },
+        {
+          "value": "envases_plasticos",
+          "label": "Come o bebe en envases plásticos"
+        },
+        {
+          "value": "herbicidas",
+          "label": "Exposición a herbicidas, insecticidas o pesticidas"
+        },
+        {
+          "value": "glifosato",
+          "label": "Exposición a glifosato o agroquímicos"
+        },
+        {
+          "value": "ropa_sintetica",
+          "label": "Uso habitual de ropa sintética"
+        },
+        {
+          "value": "asbesto",
+          "label": "Exposición a asbesto o polvo de cemento"
+        },
+        {
+          "value": "moho_vivienda",
+          "label": "Exposición a moho o humedad en casa o trabajo"
+        },
+        {
+          "value": "campos_electromagneticos",
+          "label": "Exposición a campos electromagnéticos (wifi, microondas, uso prolongado de celular)"
+        },
+        {
+          "value": "cables_cama",
+          "label": "Cables o tomas eléctricas a la cabecera de la cama"
+        }
+      ]
+    },
+    {
+      "id": "s32_horas_pantalla",
+      "text": "Horas de pantalla al día",
+      "type": "text"
+    },
+    {
+      "id": "s32_horas_pantalla_noche",
+      "text": "Horas de pantalla en la noche",
+      "type": "text"
+    },
+    {
+      "id": "s32_adicciones",
+      "text": "Adicciones que reconoces",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "ninguna",
+          "label": "Ninguna"
+        },
+        {
+          "value": "tabaco",
+          "label": "Tabaco"
+        },
+        {
+          "value": "alcohol",
+          "label": "Alcohol"
+        },
+        {
+          "value": "cannabis",
+          "label": "Cannabis"
+        },
+        {
+          "value": "cocaina",
+          "label": "Cocaína u otras sustancias"
+        },
+        {
+          "value": "azucar",
+          "label": "Azúcar"
+        },
+        {
+          "value": "cafeina",
+          "label": "Cafeína"
+        },
+        {
+          "value": "pantallas",
+          "label": "Pantallas o redes sociales"
+        },
+        {
+          "value": "juego",
+          "label": "Juego"
+        },
+        {
+          "value": "compras",
+          "label": "Compras"
+        },
+        {
+          "value": "trabajo",
+          "label": "Trabajo"
+        },
+        {
+          "value": "otra",
+          "label": "Otra"
+        }
+      ]
+    },
+    {
+      "id": "s32_reacciones_sustancias",
+      "text": "Reacciones adversas ante sustancias específicas",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s32_glutamato",
+          "label": "Glutamato monosódico",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s32_aspartame",
+          "label": "Aspartame u otros edulcorantes artificiales",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s32_cafeina",
+          "label": "Cafeína",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s32_ajo",
+          "label": "Ajo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s32_queso",
+          "label": "Queso",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s32_chocolate",
+          "label": "Chocolate",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s32_sulfitos",
+          "label": "Sulfitos (vino, fruta deshidratada)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s32_conservantes",
+          "label": "Conservantes (benzoato de sodio, nitritos, sorbato, parabenos)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s32_colorantes",
+          "label": "Colorantes artificiales",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s32_limpieza",
+          "label": "Productos de limpieza y detergentes",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s32_perfumes",
+          "label": "Perfumes y fragancias",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s32_dental",
+          "label": "Productos odontológicos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s32_humo",
+          "label": "Humo de cigarrillo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s32_solventes",
+          "label": "Pintura fresca o solventes",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s32_fluoruros",
+      "text": "Contacto con cloruros y fluoruros",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "acueducto",
+          "label": "Agua tratada del acueducto"
+        },
+        {
+          "value": "piscinas",
+          "label": "Piscinas"
+        },
+        {
+          "value": "sal_fluor",
+          "label": "Sal comercial fluorada"
+        },
+        {
+          "value": "pasta_fluor",
+          "label": "Pasta dental con flúor"
+        },
+        {
+          "value": "enjuague_fluor",
+          "label": "Enjuague bucal con flúor"
+        },
+        {
+          "value": "ninguno",
+          "label": "Ninguno"
+        }
+      ]
+    },
+    {
+      "id": "s32_alcohol_frec",
+      "text": "Consumo de bebidas alcohólicas",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No consumo"
+        },
+        {
+          "value": "menos_1_mes",
+          "label": "<1 vez/mes"
+        },
+        {
+          "value": "1_3_mes",
+          "label": "1-3 veces/mes"
+        },
+        {
+          "value": "1_2_semana",
+          "label": "1-2 veces/semana"
+        },
+        {
+          "value": "3_mas",
+          "label": "3+ veces/semana"
+        },
+        {
+          "value": "diario",
+          "label": "A diario"
+        }
+      ]
+    },
+    {
+      "id": "s32_gaseosas",
+      "text": "Consumo de gaseosas o refrescos",
+      "type": "single",
+      "options": [
+        {
+          "value": "nunca",
+          "label": "Nunca"
+        },
+        {
+          "value": "ocasionalmente",
+          "label": "Ocasionalmente"
+        },
+        {
+          "value": "semanalmente",
+          "label": "Semanalmente"
+        },
+        {
+          "value": "diario",
+          "label": "A diario"
+        }
+      ]
+    },
+    {
+      "id": "s32_margarina",
+      "text": "Consumo de margarina, mantequilla vegetal o productos elaborados con estas",
+      "type": "single",
+      "options": [
+        {
+          "value": "nunca",
+          "label": "Nunca"
+        },
+        {
+          "value": "ocasionalmente",
+          "label": "Ocasionalmente"
+        },
+        {
+          "value": "semanalmente",
+          "label": "Semanalmente"
+        },
+        {
+          "value": "diario",
+          "label": "A diario"
+        }
+      ]
+    },
+    {
+      "id": "s32_contaminacion_ciudad",
+      "text": "¿La ciudad donde vives está clasificada con nivel de contaminación?",
+      "type": "single",
+      "options": [
+        {
+          "value": "bajo",
+          "label": "Bajo"
+        },
+        {
+          "value": "moderado",
+          "label": "Moderado"
+        },
+        {
+          "value": "alto",
+          "label": "Alto"
+        },
+        {
+          "value": "no_se",
+          "label": "No lo sé"
+        }
+      ]
+    },
+    {
+      "id": "s32_cerca_de",
+      "text": "¿Vives cerca de alguno de estos lugares?",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "zona_industrial",
+          "label": "Zona industrial"
+        },
+        {
+          "value": "mina",
+          "label": "Mina"
+        },
+        {
+          "value": "aeropuerto",
+          "label": "Aeropuerto"
+        },
+        {
+          "value": "via_trafico",
+          "label": "Vía de alto tráfico"
+        },
+        {
+          "value": "cultivo_fumigacion",
+          "label": "Cultivo con fumigación aérea"
+        },
+        {
+          "value": "relleno",
+          "label": "Relleno sanitario"
+        },
+        {
+          "value": "ninguno",
+          "label": "Ninguno"
+        }
+      ]
+    },
+    {
+      "id": "s32_organicos",
+      "text": "¿Consumes vegetales orgánicos?",
+      "type": "single",
+      "options": [
+        {
+          "value": "nunca",
+          "label": "Nunca"
+        },
+        {
+          "value": "1_2_semana",
+          "label": "1-2 veces/semana"
+        },
+        {
+          "value": "3_5_semana",
+          "label": "3-5 veces/semana"
+        },
+        {
+          "value": "diario",
+          "label": "A diario"
+        }
+      ]
+    },
+    {
+      "id": "s32_parrilla",
+      "text": "¿Consumes carne a la parrilla o carbonizada?",
+      "type": "single",
+      "options": [
+        {
+          "value": "nunca",
+          "label": "Nunca"
+        },
+        {
+          "value": "ocasionalmente",
+          "label": "Ocasionalmente"
+        },
+        {
+          "value": "semanalmente",
+          "label": "Semanalmente"
+        },
+        {
+          "value": "varias_semana",
+          "label": "Varias/semana"
+        }
+      ]
+    },
+    {
+      "id": "s32_sobrecarga_toxica",
+      "text": "Síntomas sugestivos de sobrecarga tóxica y falla en la biotransformación",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s32_hipersensibilidad_quimica",
+          "label": "Hipersensibilidad a olores químicos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s32_dosis_bajas",
+          "label": "Reacciones exageradas a dosis bajas de medicamentos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s32_fatiga_cerrado",
+          "label": "Fatiga que empeora en ambientes cerrados o con químicos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s32_cefalea_perfumes",
+          "label": "Cefalea al exponerme a perfumes o productos de limpieza",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s32_niebla_mental",
+          "label": "Niebla mental fluctuante",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s32_sudoracion_fuerte",
+          "label": "Sudoración con olor inusualmente fuerte",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s32_erupciones",
+          "label": "Erupciones cutáneas sin causa clara",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s32_intoxicacion_ejercicio",
+          "label": "Sensación de intoxicación tras el ejercicio intenso",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s32_empeora_detox",
+          "label": "Empeoramiento de síntomas al iniciar una desintoxicación o ayuno",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s32_intolerancia_suplementos",
+          "label": "Intolerancia a suplementos que antes tolerabas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s32_retencion_liquidos",
+          "label": "Retención de líquidos sin causa cardíaca o renal",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s32_dificultad_peso",
+          "label": "Dificultad para perder peso pese a dieta y ejercicio",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s32_protocolo_detox",
+      "text": "¿Has realizado alguna vez un protocolo de desintoxicación o quelación?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "mejoria",
+          "label": "Sí, con mejoría"
+        },
+        {
+          "value": "sin_cambios",
+          "label": "Sí, sin cambios"
+        },
+        {
+          "value": "empeoramiento",
+          "label": "Sí, con empeoramiento"
+        }
+      ]
+    }
+  ]
+}

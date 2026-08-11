@@ -1,0 +1,350 @@
+{
+  "id": "s36",
+  "number": 36,
+  "title": "Dimensión Social, Emocional y Espiritual",
+  "questions": [
+    {
+      "id": "s36_dificultad_antes",
+      "text": "¿Consideras que hubo alguna dificultad notable (emocional, laboral, familiar, personal) antes de que tu salud se deteriorara?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "si",
+          "label": "Sí"
+        }
+      ]
+    },
+    {
+      "id": "s36_dificultad_cual",
+      "text": "¿Cuál?",
+      "type": "text"
+    },
+    {
+      "id": "s36_cinco_incidentes",
+      "text": "Describe los cinco incidentes más difíciles que has vivido, en orden cronológico",
+      "type": "text"
+    },
+    {
+      "id": "s36_acciones_impulsivas",
+      "text": "¿Qué acciones sueles tomar de manera impulsiva cuando estás bajo la influencia de emociones como pesar, enojo o rabia?",
+      "type": "text"
+    },
+    {
+      "id": "s36_emociones_negativas",
+      "text": "¿Con qué frecuencia sientes estas emociones?",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s36_culpa",
+          "label": "Culpa",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_lastima",
+          "label": "Lástima",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_apatia",
+          "label": "Apatía",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_desesperanza",
+          "label": "Desesperanza",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_victima",
+          "label": "Sensación de ser víctima",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_pesar",
+          "label": "Pesar",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_insensibilidad",
+          "label": "Insensibilidad",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_terror",
+          "label": "Terror",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_miedo",
+          "label": "Miedo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_ansiedad",
+          "label": "Ansiedad",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_hostilidad",
+          "label": "Hostilidad",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_resentimiento",
+          "label": "Resentimiento",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_odio",
+          "label": "Odio",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_frustracion",
+          "label": "Frustración",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_aburrimiento",
+          "label": "Aburrimiento",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_desinteres",
+          "label": "Desinterés",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_vergüenza",
+          "label": "Vergüenza",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_soledad",
+          "label": "Soledad",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s36_emociones_positivas",
+      "text": "¿Con qué frecuencia sientes estas emociones positivas?",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s36_interes_moderado",
+          "label": "Interés moderado",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_interes_intenso",
+          "label": "Interés intenso",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_alegria",
+          "label": "Alegría",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_entusiasmo",
+          "label": "Entusiasmo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_estetico",
+          "label": "Sentido estético o creatividad",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_jubilo",
+          "label": "Júbilo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_accion",
+          "label": "Deseo de acción",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_juego",
+          "label": "Deseo de juego",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_serenidad",
+          "label": "Serenidad",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_gratitud",
+          "label": "Gratitud",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_asombro",
+          "label": "Asombro",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s36_compasion",
+          "label": "Compasión",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s36_frustracion_reciente",
+      "text": "Describe una ocasión reciente en la que sentiste frustración",
+      "type": "text"
+    },
+    {
+      "id": "s36_personas_opresivas",
+      "text": "Describe las personas opresivas con las que has tenido que relacionarte. ¿Qué consideras que hacían ellas que te hacía daño?",
+      "type": "text"
+    },
+    {
+      "id": "s36_objetivos_fallidos",
+      "text": "Historia de objetivos y propósitos fallidos",
+      "type": "text"
+    },
+    {
+      "id": "s36_temores",
+      "text": "¿Cuáles son tus temores?",
+      "type": "text"
+    },
+    {
+      "id": "s36_emociones_positivas_acceso",
+      "text": "Describe situaciones que suelen ayudarte a acceder a las emociones positivas",
+      "type": "text"
+    },
+    {
+      "id": "s36_comunidad",
+      "text": "¿Con quién cuentas en tu comunidad cercana?",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "pareja",
+          "label": "Pareja"
+        },
+        {
+          "value": "hijos",
+          "label": "Hijos"
+        },
+        {
+          "value": "padres",
+          "label": "Padres"
+        },
+        {
+          "value": "hermanos",
+          "label": "Hermanos"
+        },
+        {
+          "value": "amigos",
+          "label": "Amigos cercanos"
+        },
+        {
+          "value": "colegas",
+          "label": "Colegas"
+        },
+        {
+          "value": "fe",
+          "label": "Comunidad de fe"
+        },
+        {
+          "value": "grupo_deportivo",
+          "label": "Grupo deportivo o de interés"
+        },
+        {
+          "value": "terapeuta",
+          "label": "Terapeuta"
+        },
+        {
+          "value": "nadie",
+          "label": "Siento que no cuento con nadie"
+        }
+      ]
+    },
+    {
+      "id": "s36_frecuencia_contacto",
+      "text": "¿Con qué frecuencia tienes contacto significativo con esas personas?",
+      "type": "single",
+      "options": [
+        {
+          "value": "diario",
+          "label": "A diario"
+        },
+        {
+          "value": "varias_semana",
+          "label": "Varias/semana"
+        },
+        {
+          "value": "semanalmente",
+          "label": "Semanalmente"
+        },
+        {
+          "value": "mensualmente",
+          "label": "Mensualmente"
+        },
+        {
+          "value": "rara_vez",
+          "label": "Rara vez"
+        }
+      ]
+    },
+    {
+      "id": "s36_pasiones",
+      "text": "Describe tus pasiones",
+      "type": "text"
+    },
+    {
+      "id": "s36_motivacion",
+      "text": "Describe tus fuentes de motivación",
+      "type": "text"
+    },
+    {
+      "id": "s36_proposito",
+      "text": "¿Cuál es tu principal propósito en la vida?",
+      "type": "text"
+    },
+    {
+      "id": "s36_espiritual",
+      "text": "¿Practicas alguna forma de vida espiritual o contemplativa?",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "oracion",
+          "label": "Oración"
+        },
+        {
+          "value": "meditacion",
+          "label": "Meditación"
+        },
+        {
+          "value": "fe_comunidad",
+          "label": "Vida comunitaria de fe"
+        },
+        {
+          "value": "naturaleza",
+          "label": "Contacto con la naturaleza"
+        },
+        {
+          "value": "servicio",
+          "label": "Servicio a otros"
+        },
+        {
+          "value": "otra",
+          "label": "Otra"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,237 @@
+{
+  "id": "s30",
+  "number": 30,
+  "title": "Relación Omega 3 / Omega 6",
+  "questions": [
+    {
+      "id": "s30_omega3",
+      "text": "¿Con qué frecuencia consumes alimentos ricos en omega 3?",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s30_o3_pastoreo",
+          "label": "Carne, vísceras, quesos y mantequilla de animales de libre pastoreo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_o3_pescado",
+          "label": "Pescados y mariscos de aguas frías",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_o3_huevos",
+          "label": "Huevos de gallinas en libertad",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_o3_aove",
+          "label": "Aceite de oliva extra virgen de primera presión en frío",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_o3_semillas",
+          "label": "Semillas de linaza o chía",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_o3_nueces",
+          "label": "Nueces",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s30_omega6",
+      "text": "¿Con qué frecuencia consumes alimentos ricos en omega 6?",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s30_o6_mani",
+          "label": "Maní",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_o6_huevos_ind",
+          "label": "Huevos industriales",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_o6_carnes_cereales",
+          "label": "Carnes de animales alimentados con cereales, granos y maíz",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_o6_procesadas",
+          "label": "Carnes procesadas",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_o6_aceites_vegetales",
+          "label": "Aceites vegetales amarillos (soya, girasol, maíz, canola, cártamo)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_o6_frituras",
+          "label": "Frituras",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_o6_margarina",
+          "label": "Margarina",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_o6_ultraprocesados",
+          "label": "Alimentos ultraprocesados",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s30_deficiencia_omega3",
+      "text": "Síntomas de deficiencia de omega 3",
+      "type": "symptom_table",
+      "items": [
+        {
+          "id": "s30_piel_seca",
+          "label": "Piel seca o áspera",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_ojo_seco",
+          "label": "Ojo seco",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_sanacion_lenta",
+          "label": "Retraso en la sanación de heridas y lesiones",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_debilidad",
+          "label": "Debilidad",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_descoordinacion",
+          "label": "Descoordinación",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_entumecimiento",
+          "label": "Entumecimiento de manos y pies",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_edema",
+          "label": "Edema o hinchazón",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_infecciones",
+          "label": "Infecciones recurrentes",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_aprendizaje",
+          "label": "Dificultad de aprendizaje o de comportamiento",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_vision",
+          "label": "Miopía, astigmatismo o presbicia",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_sofocos",
+          "label": "Sofocos menopáusicos",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_crecimiento",
+          "label": "Retraso del crecimiento (en menores)",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_cabello",
+          "label": "Cabello quebradizo",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_unas",
+          "label": "Uñas frágiles",
+          "type": "scale_0_3"
+        },
+        {
+          "id": "s30_queratosis",
+          "label": "Queratosis pilar (piel de gallina en brazos)",
+          "type": "scale_0_3"
+        }
+      ]
+    },
+    {
+      "id": "s30_dislipidemia",
+      "text": "¿Has recibido diagnóstico de dislipidemia?",
+      "type": "checkbox",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "col_total",
+          "label": "Colesterol total elevado"
+        },
+        {
+          "value": "ldl",
+          "label": "LDL elevado"
+        },
+        {
+          "value": "hdl_bajo",
+          "label": "HDL bajo"
+        },
+        {
+          "value": "trigliceridos",
+          "label": "Triglicéridos elevados"
+        },
+        {
+          "value": "lipoproteina_a",
+          "label": "Lipoproteína (a) elevada"
+        },
+        {
+          "value": "no_evaluado",
+          "label": "No me lo he evaluado"
+        }
+      ]
+    },
+    {
+      "id": "s30_suplementa_omega3",
+      "text": "¿Suplementas omega 3?",
+      "type": "single",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "ocasionalmente",
+          "label": "Sí, ocasionalmente"
+        },
+        {
+          "value": "diario",
+          "label": "Sí, a diario"
+        }
+      ]
+    },
+    {
+      "id": "s30_dosis_epa_dha",
+      "text": "Dosis diaria de EPA + DHA (mg)",
+      "type": "text"
+    },
+    {
+      "id": "s30_marca",
+      "text": "Marca o presentación",
+      "type": "text"
+    }
+  ]
+}
