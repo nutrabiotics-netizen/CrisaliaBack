@@ -26,7 +26,7 @@ import tratamientoRoutes from './tratamiento';
 import transcriptionRoutes from './transcription';
 import chatRoutes from './chat';
 import wearablesRoutes from './wearables';
-import consultaRapidaRoutes from './consulta-rapida';
+// import consultaRapidaRoutes from './consulta-rapida';
 
 const router = Router();
 
