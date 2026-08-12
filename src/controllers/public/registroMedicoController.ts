@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import LinkCaptacion from '../../models/LinkCaptacion';
 import ReferidoMedico from '../../models/ReferidoMedico';
+import Medico from '../../models/Medico';
 import authService from '../../services/auth/authService';
 
 /**
@@ -36,6 +37,53 @@ export const validarCodigo = async (req: Request, res: Response): Promise<void> 
   } catch (err) {
     console.error('[RegistroMedico] validarCodigo:', err);
     res.status(500).json({ mensaje: 'Error al validar el código.' });
+  }
+};
+
+/**
+ * GET /api/public/medico-por-colegiatura/:numero
+ * Busca un médico por su número de colegiatura y devuelve su perfil público.
+ */
+export const obtenerMedicoPorColegiatura = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { numero } = req.params;
+
+    const medico = await Medico.findOne({ numeroColegiatura: String(numero).trim() })
+      .select('nombre apellido especialidad perfilVerificacion logoUrl preajustes')
+      .lean();
+
+    if (!medico) {
+      res.status(404).json({ success: false, mensaje: 'No se encontró ningún médico con ese número de colegiatura.' });
+      return;
+    }
+
+    const pv: Record<string, any> = (medico.perfilVerificacion && typeof medico.perfilVerificacion === 'object')
+      ? medico.perfilVerificacion as Record<string, any>
+      : {};
+    const preajustes: Record<string, any> = (medico.preajustes && typeof medico.preajustes === 'object')
+      ? medico.preajustes as Record<string, any>
+      : {};
+
+    res.json({
+      success: true,
+      data: {
+        _id: (medico as any)._id.toString(),
+        nombre: medico.nombre,
+        apellido: medico.apellido,
+        especialidad: medico.especialidad,
+        fotoMedicoUrl: pv.fotoMedicoUrl ?? undefined,
+        motivosConsultaQueAtiende: Array.isArray(pv.motivosConsultaQueAtiende) ? pv.motivosConsultaQueAtiende : undefined,
+        direccionAtencionPresencial: preajustes.direccionAtencionPresencial ?? undefined,
+        modalidadesAtencion: Array.isArray(preajustes.modalidadesAtencion) ? preajustes.modalidadesAtencion : undefined,
+        tiposPacientes: Array.isArray(preajustes.tiposPacientes) ? preajustes.tiposPacientes : undefined,
+        precioConsultaVirtual: preajustes.precioConsultaVirtual ?? undefined,
+        precioConsultaPresencial: preajustes.precioConsultaPresencial ?? undefined,
+        logoUrl: medico.logoUrl ?? undefined,
+      }
+    });
+  } catch (err) {
+    console.error('[RegistroMedico] obtenerMedicoPorColegiatura:', err);
+    res.status(500).json({ mensaje: 'Error al buscar el médico.' });
   }
 };
 

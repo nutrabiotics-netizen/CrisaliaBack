@@ -30,6 +30,10 @@ export interface MedicoDisponible {
   modalidadesAtencion?: string[];
   /** Desde preajustes: tipos de pacientes que atiende (Adultos, Niños, Familia, etc.) */
   tiposPacientes?: string[];
+  /** Desde preajustes */
+  direccionAtencionPresencial?: string;
+  precioConsultaPresencial?: number;
+  precioConsultaVirtual?: number;
 }
 
 export interface HorarioDisponible {
@@ -128,6 +132,9 @@ class AgendamientoService {
       gruposInteres: Array.isArray(pv.gruposInteres) ? pv.gruposInteres : undefined,
       modalidadesAtencion: Array.isArray(medico.preajustes?.modalidadesAtencion) ? medico.preajustes.modalidadesAtencion : undefined,
       tiposPacientes: Array.isArray(medico.preajustes?.tiposPacientes) ? medico.preajustes.tiposPacientes : undefined,
+      direccionAtencionPresencial: medico.preajustes?.direccionAtencionPresencial ?? undefined,
+      precioConsultaPresencial: medico.preajustes?.precioConsultaPresencial ?? undefined,
+      precioConsultaVirtual: medico.preajustes?.precioConsultaVirtual ?? undefined,
     };
   }
 
@@ -198,6 +205,14 @@ class AgendamientoService {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(parte)) {
       return [];
     }
+
+    // Determinar si la fecha pedida es hoy en Colombia (UTC-5) y los minutos actuales
+    const ahoraUtc = new Date();
+    const ahoraCol = new Date(ahoraUtc.getTime() - 5 * 60 * 60 * 1000);
+    const hoyCol = `${ahoraCol.getUTCFullYear()}-${String(ahoraCol.getUTCMonth() + 1).padStart(2, '0')}-${String(ahoraCol.getUTCDate()).padStart(2, '0')}`;
+    const esHoy = parte === hoyCol;
+    const minutosAhora = esHoy ? ahoraCol.getUTCHours() * 60 + ahoraCol.getUTCMinutes() : -1;
+
     const [y, m, d] = parte.split('-').map(Number);
     // Usar noon UTC para obtener el día de la semana sin desfase por zona horaria
     const fechaParaDia = new Date(Date.UTC(y, m - 1, d, 12, 0, 0, 0));
@@ -256,6 +271,11 @@ class AgendamientoService {
         const horaFinMinutos = horaFin * 60 + minutoFin;
 
         while (horaActual + duracion <= horaFinMinutos) {
+          if (esHoy && horaActual <= minutosAhora) {
+            horaActual += duracion;
+            continue;
+          }
+
           const estaEnInactividad = tiemposInactividad.some((inact: any) => {
             const [inicioH, inicioM] = (inact.inicio || '00:00').split(':').map(Number);
             const [finH, finM] = (inact.fin || '00:00').split(':').map(Number);
