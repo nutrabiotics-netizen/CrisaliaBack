@@ -90,56 +90,6 @@
       "type": "text"
     },
     {
-      "id": "s01_peso_habitual",
-      "text": "Peso habitual (kg)",
-      "type": "text"
-    },
-    {
-      "id": "s01_peso_deseado",
-      "text": "Peso deseado (kg)",
-      "type": "text"
-    },
-    {
-      "id": "s01_peso_max",
-      "text": "Peso máximo alcanzado (kg)",
-      "type": "text"
-    },
-    {
-      "id": "s01_peso_max_edad",
-      "text": "¿A qué edad?",
-      "type": "text"
-    },
-    {
-      "id": "s01_peso_min",
-      "text": "Peso mínimo (kg)",
-      "type": "text"
-    },
-    {
-      "id": "s01_peso_min_edad",
-      "text": "¿A qué edad?",
-      "type": "text"
-    },
-    {
-      "id": "s01_grasa_corporal",
-      "text": "Porcentaje de grasa corporal",
-      "type": "text"
-    },
-    {
-      "id": "s01_masa_muscular",
-      "text": "Porcentaje de masa muscular",
-      "type": "text"
-    },
-    {
-      "id": "s01_perimetro_abdominal",
-      "text": "Perímetro abdominal (cm)",
-      "type": "text"
-    },
-    {
-      "id": "s01_metodo_medicion",
-      "text": "Método de medición",
-      "type": "text"
-    },
-    {
       "id": "s01_peso_12meses",
       "text": "En los últimos 12 meses mi peso:",
       "type": "single",
