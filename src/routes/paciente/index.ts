@@ -2,7 +2,11 @@ import { Router } from 'express';
 import { authenticate, authorize } from '../../middleware/auth';
 import { UserRole } from '../../types';
 import { infoCitaHeridas, getMeetingHeridas } from '../../controllers/paciente/heridasPacienteController';
-import { responder as responderCuerpoChat, precargar as precargarCuerpoChat } from '../../controllers/paciente/cuerpoConChatController';
+import {
+  responder as responderCuerpoChat,
+  precargar as precargarCuerpoChat,
+  responderInterrogatorio as responderCuerpoInterrogatorio,
+} from '../../controllers/paciente/cuerpoConChatController';
 import perfilRoutes from './perfil';
 import agendamientoRoutes from './agendamiento';
 import interrogatorioRoutes from './interrogatorio';
@@ -22,7 +26,7 @@ import tratamientoRoutes from './tratamiento';
 import transcriptionRoutes from './transcription';
 import chatRoutes from './chat';
 import wearablesRoutes from './wearables';
-// import consultaRapidaRoutes from './consulta-rapida';
+import consultaRapidaRoutes from './consulta-rapida';
 
 const router = Router();
 
@@ -51,5 +55,6 @@ router.get('/heridas-cita/:citaId/info', authenticate, authorize(UserRole.PACIEN
 router.get('/heridas-cita/:citaId/meeting', authenticate, authorize(UserRole.PACIENTE), getMeetingHeridas);
 router.post('/cuerpo-chat', authenticate, authorize(UserRole.PACIENTE), responderCuerpoChat);
 router.post('/cuerpo-chat/precargar', authenticate, authorize(UserRole.PACIENTE), precargarCuerpoChat);
+router.post('/cuerpo-chat/interrogatorio', authenticate, authorize(UserRole.PACIENTE), responderCuerpoInterrogatorio);
 
 export default router;
