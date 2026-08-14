@@ -125,6 +125,7 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
     let opciones: string[] = [];
     let tipoOpciones: 'single' | 'checkbox' = 'single';
     let resumenItems: string[] = [];
+    let enfoqueAbordaje = '';
 
     const jsonStart = respuestaClean.lastIndexOf('{"texto"');
     if (jsonStart >= 0) {
@@ -139,6 +140,7 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
             opciones      = Array.isArray(parsed.opciones) ? parsed.opciones : [];
             tipoOpciones  = parsed.tipoOpciones === 'checkbox' ? 'checkbox' : 'single';
             resumenItems  = Array.isArray(parsed.resumen) ? parsed.resumen : [];
+            enfoqueAbordaje = typeof parsed.enfoque === 'string' ? parsed.enfoque.trim() : '';
           }
         } catch {
           const preJson = respuestaClean.slice(0, jsonStart).trim();
@@ -235,6 +237,7 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
         opciones,
         tipoOpciones,
         resumenItems,
+        enfoqueAbordaje,
         finConversacion,
         ...(finConversacion && {
           finFaseInicial:   true,

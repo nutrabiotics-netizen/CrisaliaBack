@@ -341,3 +341,86 @@ Instrucciones de salida:
 
   return invokeCrisaliaAgent(prompt);
 }
+
+/**
+ * Genera el perfil de radar de disfunciones funcionales a partir de las
+ * respuestas s01 y s03 del interrogatorio (primera fase).
+ */
+export async function generarPerfilRadar(params: {
+  respuestasS01: Record<string, any>;
+  respuestasS03: Record<string, any>;
+  respuestasCompletas?: Record<string, any>;
+  interrogatorioId: string;
+  timeoutMs?: number;
+}): Promise<{ textoAnalisis: string; perfilRadar: any | null }> {
+  const { respuestasS01, respuestasS03, respuestasCompletas, interrogatorioId, timeoutMs } = params;
+
+  const CAMPOS_EXCLUIDOS = new Set(['historialChat', 'mensajeFinal', 'causas', 'zonasDolor', 'estado_confirmado']);
+  const ESCALA: Record<number, string> = { 0: 'nunca', 1: 'leve', 2: 'moderado', 3: 'intenso' };
+
+  const serializarRespuestas = (r: Record<string, any>) =>
+    Object.entries(r)
+      .filter(([k, v]) => !CAMPOS_EXCLUIDOS.has(k) && v !== null && v !== undefined && v !== '')
+      .map(([k, v]) => {
+        const val = typeof v === 'number'
+          ? `${v} (${ESCALA[v] ?? v})`
+          : Array.isArray(v) ? v.join(', ')
+          : String(v).slice(0, 150);
+        return `${k}: ${val}`;
+      })
+      .join('\n');
+
+  // Si hay respuestas completas (fase 2), incluir todas las secciones agrupadas
+  let datosAdicionales = '';
+  if (respuestasCompletas && Object.keys(respuestasCompletas).length > 0) {
+    const seccionesDisponibles = new Set(
+      Object.keys(respuestasCompletas)
+        .map(k => k.match(/^(s\d{2})/)?.[1])
+        .filter(Boolean)
+    );
+    // Excluir s01 y s03 ya incluidos arriba
+    seccionesDisponibles.delete('s01');
+    seccionesDisponibles.delete('s03');
+
+    if (seccionesDisponibles.size > 0) {
+      const camposFase2: Record<string, any> = {};
+      Object.entries(respuestasCompletas).forEach(([k, v]) => {
+        const seccion = k.match(/^(s\d{2})/)?.[1];
+        if (seccion && seccionesDisponibles.has(seccion)) camposFase2[k] = v;
+      });
+      datosAdicionales = `\nRESPUESTAS DE INTERROGATORIO COMPLETO (secciones fisiológicas s04-s36):\n${serializarRespuestas(camposFase2) || '(no disponibles)'}`;
+    }
+  }
+
+  const prompt = `Necesito el puntaje por eje de este caso:
+
+DATOS GENERALES DEL PACIENTE (s01):
+${serializarRespuestas(respuestasS01) || '(no disponibles)'}
+
+MOTIVO DE CONSULTA Y SÍNTOMAS (s03):
+${serializarRespuestas(respuestasS03) || '(no disponibles)'}${datosAdicionales}
+
+Por cada eje devuelve: nombre, puntaje 0-10, clasificación cualitativa de severidad, 2-4 factores que sustentan la puntuación. Para cada eje: mayor foco actual, acciones que más ayudan, cómo puede cambiar.
+
+Al final, el bloque JSON en este formato exacto:
+===PERFIL_RADAR_JSON===
+{"tipo":"perfil_disfunciones","ejes":[...],"series":[{"nombre":"Paciente","puntajes":[...]}]}
+===FIN_PERFIL_RADAR_JSON===`;
+
+  const raw = await invokeCrisaliaAgent(prompt, {
+    sessionId: `radar-${interrogatorioId}`,
+    timeoutMs: timeoutMs ?? 120000,
+  });
+
+  let perfilRadar: any = null;
+  const radarMatch = raw.match(/===PERFIL_RADAR_JSON===\s*([\s\S]*?)\s*===FIN_PERFIL_RADAR_JSON===/);
+  if (radarMatch) {
+    try { perfilRadar = JSON.parse(radarMatch[1].trim()); } catch { /* ignorar */ }
+  }
+
+  const textoAnalisis = raw
+    .replace(/===PERFIL_RADAR_JSON===[\s\S]*?===FIN_PERFIL_RADAR_JSON===/g, '')
+    .trim();
+
+  return { textoAnalisis, perfilRadar };
+}

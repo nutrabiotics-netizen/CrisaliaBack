@@ -46,6 +46,8 @@ export const listarSeguimiento = async (
 
     // 2. Para cada paciente, obtener datos en paralelo
     const ahora = new Date();
+    const inicioDia = new Date(ahora);
+    inicioDia.setUTCHours(0, 0, 0, 0);
 
     const resultados = await Promise.all(
       pacientesIds.map(async (pacienteId) => {
@@ -58,8 +60,8 @@ export const listarSeguimiento = async (
             Cita.findOne({
               medicoId: medicoObjId,
               pacienteId,
-              fecha: { $gte: ahora },
-              estado: { $in: ['pendiente', 'confirmada'] }
+              fecha: { $gte: inicioDia },
+              estado: { $in: ['pendiente', 'confirmada', 'en_espera', 'en_consulta'] }
             })
               .sort({ fecha: 1 })
               .select('fecha hora tipo modalidad estado')

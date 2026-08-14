@@ -17,6 +17,7 @@ import Cita from '../../../models/Cita';
 import Interrogatorio from '../../../models/Interrogatorio';
 import Paciente from '../../../models/Paciente';
 import { handleError } from '../../../utils/errors';
+import { registrarAccion } from '../../../utils/auditoriaHelper';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -60,7 +61,7 @@ export const listarAnamnesisDelPaciente = async (
 
     const interrogatorios = await Interrogatorio.find({ pacienteId })
       .sort({ createdAt: -1 })
-      .select('_id tipo estado progreso analisisIA objetivos notasMedico createdAt updatedAt')
+      .select('_id tipo estado progreso analisisIA objetivos notasMedico respuestas revisadoPorMedico revisadoEn createdAt updatedAt')
       .lean();
 
     res.json({
@@ -144,17 +145,143 @@ export const guardarNotasMedico = async (
       return;
     }
 
+    const nuevaNota = { texto: notas.trim(), creadoEn: new Date() };
+
     const actualizado = await Interrogatorio.findByIdAndUpdate(
       interrogatorioId,
-      { $set: { notasMedico: notas.trim() } },
+      { $push: { notasHistorial: nuevaNota } },
       { new: true }
-    ).select('_id notasMedico updatedAt');
+    ).select('_id notasHistorial updatedAt');
 
     res.json({
       success: true,
-      message: 'Notas guardadas correctamente',
+      message: 'Nota agregada correctamente',
       data: actualizado
     });
+  } catch (err: any) {
+    handleError(err, res);
+  }
+};
+
+export const editarNotaMedico = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const medicoId = req.userId!;
+    const interrogatorioId = String(req.params.interrogatorioId);
+    const notaId = String(req.params.notaId);
+    const { texto } = req.body;
+
+    if (typeof texto !== 'string' || !texto.trim()) {
+      res.status(400).json({ success: false, message: 'El campo "texto" es requerido.' });
+      return;
+    }
+
+    const interrogatorio = await Interrogatorio.findById(interrogatorioId).lean();
+    if (!interrogatorio) { res.status(404).json({ success: false, message: 'Interrogatorio no encontrado' }); return; }
+
+    const esMiPaciente = await verificarPacienteDelMedico(medicoId, interrogatorio.pacienteId.toString());
+    if (!esMiPaciente) { res.status(403).json({ success: false, message: 'Acceso no autorizado' }); return; }
+
+    if (!mongoose.Types.ObjectId.isValid(notaId)) {
+      res.status(400).json({ success: false, message: 'ID de nota inválido' });
+      return;
+    }
+
+    const actualizado = await Interrogatorio.findOneAndUpdate(
+      { _id: interrogatorioId, 'notasHistorial._id': new mongoose.Types.ObjectId(String(notaId)) },
+      { $set: { 'notasHistorial.$.texto': texto.trim() } },
+      { new: true }
+    ).select('_id notasHistorial updatedAt');
+
+    if (!actualizado) { res.status(404).json({ success: false, message: 'Nota no encontrada' }); return; }
+
+    res.json({ success: true, message: 'Nota actualizada', data: actualizado });
+  } catch (err: any) {
+    handleError(err, res);
+  }
+};
+
+export const eliminarNotaMedico = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const medicoId = req.userId!;
+    const interrogatorioId = String(req.params.interrogatorioId);
+    const notaId = String(req.params.notaId);
+
+    const interrogatorio = await Interrogatorio.findById(interrogatorioId).lean();
+    if (!interrogatorio) { res.status(404).json({ success: false, message: 'Interrogatorio no encontrado' }); return; }
+
+    const esMiPaciente = await verificarPacienteDelMedico(medicoId, interrogatorio.pacienteId.toString());
+    if (!esMiPaciente) { res.status(403).json({ success: false, message: 'Acceso no autorizado' }); return; }
+
+    if (!mongoose.Types.ObjectId.isValid(notaId)) {
+      res.status(400).json({ success: false, message: 'ID de nota inválido' });
+      return;
+    }
+
+    const actualizado = await Interrogatorio.findByIdAndUpdate(
+      interrogatorioId,
+      { $pull: { notasHistorial: { _id: new mongoose.Types.ObjectId(String(notaId)) } } },
+      { new: true }
+    ).select('_id notasHistorial updatedAt');
+
+    res.json({ success: true, message: 'Nota eliminada', data: actualizado });
+  } catch (err: any) {
+    handleError(err, res);
+  }
+};
+
+export const marcarPreconsultaRevisada = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const medicoId = req.userId;
+    const { interrogatorioId } = req.params;
+
+    if (!medicoId) {
+      res.status(401).json({ success: false, message: 'No autorizado' });
+      return;
+    }
+
+    const actualizado = await Interrogatorio.findByIdAndUpdate(
+      interrogatorioId,
+      { $set: { revisadoPorMedico: medicoId, revisadoEn: new Date() } },
+      { new: true }
+    ).select('_id revisadoPorMedico revisadoEn updatedAt');
+
+    if (!actualizado) {
+      res.status(404).json({ success: false, message: 'Interrogatorio no encontrado' });
+      return;
+    }
+
+    await registrarAccion(req, 'actualizar', 'Interrogatorio', String(interrogatorioId));
+
+    res.json({ success: true, message: 'Preconsulta marcada como revisada', data: actualizado });
+  } catch (err: any) {
+    handleError(err, res);
+  }
+};
+
+export const quitarRevisionPreconsulta = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const medicoId = req.userId;
+    const { interrogatorioId } = req.params;
+
+    if (!medicoId) {
+      res.status(401).json({ success: false, message: 'No autorizado' });
+      return;
+    }
+
+    const actualizado = await Interrogatorio.findByIdAndUpdate(
+      interrogatorioId,
+      { $set: { revisadoPorMedico: null, revisadoEn: null } },
+      { new: true }
+    ).select('_id revisadoPorMedico revisadoEn updatedAt');
+
+    if (!actualizado) {
+      res.status(404).json({ success: false, message: 'Interrogatorio no encontrado' });
+      return;
+    }
+
+    await registrarAccion(req, 'actualizar', 'Interrogatorio', String(interrogatorioId));
+
+    res.json({ success: true, message: 'Revisión quitada', data: actualizado });
   } catch (err: any) {
     handleError(err, res);
   }

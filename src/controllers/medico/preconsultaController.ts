@@ -68,6 +68,10 @@ export const obtenerPreconsulta = async (req: AuthRequest, res: Response): Promi
           objetivos: (interrogatorio as any).objetivos ?? [],
           observacionesIA: incoherencias,
           analisisFisiologicoIA: semaforizacion,
+          recomendacionAutomatica: (interrogatorio as any).recomendacionAutomatica ?? null,
+          perfilRadar: (interrogatorio as any).perfilRadar ?? null,
+          notasMedico: (interrogatorio as any).notasMedico ?? '',
+          notasHistorial: (interrogatorio as any).notasHistorial ?? [],
           createdAt: (interrogatorio as any).createdAt
         },
         cita

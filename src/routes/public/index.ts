@@ -3,6 +3,7 @@ import * as documentosLegalesController from '../../controllers/public/documento
 import { validarCodigo, registrarMedicoConCodigo, obtenerMedicoPorColegiatura } from '../../controllers/public/registroMedicoController';
 import { obtenerHCPublica } from '../../controllers/medico/historiaClinica/historiaClinicaController';
 import { enviarEncuestaPostPago } from '../../controllers/public/encuestaController';
+import { obtenerSecciones } from '../../controllers/public/anamnesisSeccionesController';
 import { authenticate } from '../../middleware/auth';
 
 const router = Router();
@@ -22,5 +23,8 @@ router.get('/hc/:token', obtenerHCPublica);
 
 // Encuesta post-pago (sin auth)
 router.post('/encuesta-post-pago', enviarEncuestaPostPago);
+
+// Definiciones de secciones del formulario de anamnesis (sin auth — solo metadatos de preguntas)
+router.get('/anamnesis-secciones', obtenerSecciones);
 
 export default router;

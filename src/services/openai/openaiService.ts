@@ -26,6 +26,8 @@ class OpenAIService {
 2. Objetivos de salud específicos y alcanzables
 3. Observaciones sobre posibles incoherencias en las respuestas
 
+La fecha actual es ${new Date().toISOString().slice(0, 10)}. Usa esta fecha para calcular edades a partir de fechas de nacimiento — NO uses ninguna otra referencia temporal.
+
 Responde siempre en español y con un enfoque profesional y empático.`
           },
           {
@@ -48,43 +50,51 @@ Responde siempre en español y con un enfoque profesional y empático.`
   }
 
   private construirPrompt(respuestas: Record<string, any>): string {
-    let prompt = `Analiza las siguientes respuestas de un interrogatorio médico de Medicina Funcional:\n\n`;
+    // Campos internos que no aportan valor clínico al análisis
+    const EXCLUIR = new Set([
+      'historialChat', 'mensajeFinal', 'causas', 'zonasDolor',
+      'estado_confirmado', 'historialChat'
+    ]);
 
-    // Mapeo de IDs de preguntas a descripciones legibles
-    const mapeoPreguntas: Record<string, string> = {
-      motivo_consulta: 'Motivo principal de consulta',
-      sintomas_principales: 'Síntomas principales',
-      duracion_sintomas: 'Duración de los síntomas',
-      enfermedades_previas: 'Enfermedades previas',
-      medicamentos_actuales: 'Medicamentos actuales',
-      alergias: 'Alergias conocidas',
-      alimentacion: 'Alimentación',
-      horas_sueno: 'Horas de sueño',
-      calidad_sueno: 'Calidad del sueño',
-      ejercicio: 'Ejercicio físico',
-      nivel_estres: 'Nivel de estrés',
-      digestion: 'Problemas digestivos',
-      sintomas_digestivos: 'Síntomas digestivos específicos',
-      nivel_energia: 'Nivel de energía',
-      estado_animo: 'Estado de ánimo',
-      cambios_peso: 'Cambios de peso',
-      apetito: 'Apetito',
-      objetivos_salud: 'Objetivos de salud'
-    };
+    // Escala de intensidad para valores numéricos 0-3
+    const escala: Record<number, string> = { 0: 'nunca/ausente', 1: 'leve', 2: 'moderado', 3: 'intenso/frecuente' };
 
-    // Agregar cada respuesta al prompt
-    Object.entries(respuestas).forEach(([id, respuesta]) => {
-      const descripcion = mapeoPreguntas[id] || id;
-      if (respuesta !== undefined && respuesta !== null && respuesta !== '') {
-        if (Array.isArray(respuesta)) {
-          prompt += `${descripcion}: ${respuesta.join(', ')}\n`;
+    const camposClinicos: string[] = [];
+
+    Object.entries(respuestas).forEach(([id, valor]) => {
+      if (EXCLUIR.has(id)) return;
+      if (valor === null || valor === undefined || valor === '') return;
+      if (Array.isArray(valor) && valor.length === 0) return;
+
+      let valorStr: string;
+      if (typeof valor === 'number') {
+        valorStr = `${valor} (${escala[valor] ?? valor})`;
+      } else if (Array.isArray(valor)) {
+        if (typeof valor[0] === 'object') {
+          // Objetos complejos: serializar compacto
+          valorStr = JSON.stringify(valor).slice(0, 200);
         } else {
-          prompt += `${descripcion}: ${respuesta}\n`;
+          valorStr = valor.join(', ');
         }
+      } else if (typeof valor === 'object') {
+        valorStr = JSON.stringify(valor).slice(0, 200);
+      } else {
+        valorStr = String(valor).slice(0, 200);
       }
+
+      camposClinicos.push(`${id}: ${valorStr}`);
     });
 
-    prompt += `\nPor favor, proporciona:
+    const prompt = `Analiza las siguientes respuestas de un interrogatorio de Medicina Funcional.
+
+Los IDs siguen el formato sXX_campo donde XX es la sección del formulario (s01=datos generales, s03=motivo de consulta, s04=antecedentes familiares, s05=historia médica, s06=medicamentos, s07-s08=salud hormonal, s09=nutrición, s10=estrés positivo/hormesis, s11=tolerancia al estrés/eje HPA, s12=coherencia cardíaca, s13=sueño, s14=hidratación, s15-s16=digestión, s17=evacuación, s18=salud oral, s19=disbiosis, s20-s21=permeabilidad, s22=glicotoxicidad, s23=fatiga muscular, s24=metilación, s25=hierro, s26=inflamación, s27=autoinmunidad, s28=dolor crónico, s29=vitamina D, s30=omega, s31=dislipidemia, s32=carga tóxica, s33=mitocondria, s34=neurología, s35=tiroides, s36=dimensión social/emocional).
+
+Los valores numéricos siguen la escala: 0=nunca/ausente, 1=leve, 2=moderado, 3=intenso/frecuente.
+
+RESPUESTAS DEL PACIENTE:
+${camposClinicos.join('\n')}
+
+Por favor, proporciona:
 1. Un análisis detallado (mínimo 300 palabras) sobre posibles disfunciones identificadas, rutas terapéuticas recomendadas y observaciones importantes basadas en Medicina Funcional.
 2. Una lista de 3-5 objetivos de salud específicos y alcanzables para el paciente.
 3. Cualquier observación sobre posibles incoherencias o información que requiera aclaración.

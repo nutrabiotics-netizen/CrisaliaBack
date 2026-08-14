@@ -545,3 +545,66 @@ export const generarAnalisisIA = async (req: AuthRequest, res: Response): Promis
     });
   }
 };
+
+// ─── POST /:id/perfil-radar ───────────────────────────────────────────────────
+// Llama al Crisal Agent en background para generar el perfil de radar de
+// disfunciones a partir de las respuestas s01 y s03. Guarda el resultado en
+// el interrogatorio. Fire-and-forget desde el frontend.
+export const generarPerfilRadarInterrogatorio = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const pacienteId = req.userId!;
+    const { interrogatorioId } = req.params;
+
+    const interrogatorio = await Interrogatorio.findOne({ _id: interrogatorioId, pacienteId });
+    if (!interrogatorio) {
+      res.status(404).json({ success: false, message: 'Interrogatorio no encontrado.' });
+      return;
+    }
+
+    // Responder inmediatamente — el proceso continúa en background
+    res.json({ success: true, message: 'Generando perfil de radar en background.' });
+
+    // Separar respuestas por sección
+    const respuestas = interrogatorio.respuestas || {};
+    const respuestasS01: Record<string, any> = {};
+    const respuestasS03: Record<string, any> = {};
+
+    Object.entries(respuestas).forEach(([k, v]) => {
+      if (k.startsWith('s01_')) respuestasS01[k] = v;
+      else if (k.startsWith('s03_')) respuestasS03[k] = v;
+    });
+
+    // Si el interrogatorio tiene secciones más allá de s03 (fase 2 completa),
+    // pasar todas las respuestas para un análisis más completo
+    const tieneDataFase2 = Object.keys(respuestas).some(k =>
+      /^s(0[4-9]|[1-9]\d)_/.test(k)
+    );
+
+    // Importar dinámicamente para no bloquear
+    const { generarPerfilRadar } = await import('../../../services/ai/crisaliaAgentService');
+
+    const { textoAnalisis, perfilRadar } = await generarPerfilRadar({
+      respuestasS01,
+      respuestasS03,
+      respuestasCompletas: tieneDataFase2 ? respuestas : undefined,
+      interrogatorioId: String(interrogatorioId),
+      timeoutMs: 300000, // 5 minutos
+    });
+
+    // Guardar en el interrogatorio
+    interrogatorio.perfilRadar = {
+      textoAnalisis,
+      json: perfilRadar,
+      generadoEn: new Date(),
+    };
+    interrogatorio.markModified('perfilRadar');
+    await interrogatorio.save();
+
+    console.log('[perfilRadar] Guardado para interrogatorio', interrogatorioId,
+      '| ejes:', perfilRadar?.ejes?.length ?? 0);
+
+  } catch (error: any) {
+    console.error('[perfilRadar] Error:', error.message);
+    // No propagar — la respuesta ya fue enviada
+  }
+};

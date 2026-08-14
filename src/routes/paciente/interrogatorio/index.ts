@@ -11,6 +11,7 @@ import {
   generarAnalisisIA,
   siguienteSeccion,
   generarSintesis,
+  generarPerfilRadarInterrogatorio,
 } from '../../../controllers/paciente/interrogatorio/interrogatorioController';
 
 const router = Router();
@@ -28,7 +29,8 @@ router.post('/:interrogatorioId/analizar', authenticate, authorize(UserRole.PACI
 //                               y devuelve su estructura JSON lista para el entrevistador
 // POST /:id/generar-sintesis  → genera la sección 37 (síntesis funcional completa)
 router.post('/:interrogatorioId/siguiente-seccion', authenticate, authorize(UserRole.PACIENTE), siguienteSeccion);
-router.post('/:interrogatorioId/generar-sintesis',  authenticate, authorize(UserRole.PACIENTE), generarSintesis);
+router.post('/:interrogatorioId/generar-sintesis', authenticate, authorize(UserRole.PACIENTE), generarSintesis);
+router.post('/:interrogatorioId/perfil-radar', authenticate, authorize(UserRole.PACIENTE), generarPerfilRadarInterrogatorio);
 
 export default router;
 
