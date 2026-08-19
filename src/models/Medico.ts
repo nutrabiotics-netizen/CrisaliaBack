@@ -131,8 +131,8 @@ export interface IMedico extends Document {
   logoUrl?: string;
   /** URL de la imagen de firma del médico para documentos/PDFs */
   firmaUrl?: string;
-  /** Indicaciones y recomendaciones que el paciente debe ver antes de la consulta */
-  indicacionesAntesConsulta?: string;
+  /** Lista de recomendaciones de preparación previa a la consulta */
+  indicacionesAntesConsulta?: string[];
   /** Datos de verificación y filtros de búsqueda (grupos de interés, modalidades, etc.) */
   perfilVerificacion?: Record<string, unknown>;
   /** Configuración del copiloto de voz STT/TTS */
@@ -299,7 +299,7 @@ const MedicoSchema = new Schema<IMedico>(
     planPrueba:       { type: PlanPruebaSchema, default: () => ({ activo: true, pacientesUsados: 0, limite: 3 }) },
     logoUrl:          { type: String, trim: true },
     firmaUrl:         { type: String, trim: true },
-    indicacionesAntesConsulta: { type: String, trim: true, default: '' },
+    indicacionesAntesConsulta: { type: [String], default: [] },
     perfilVerificacion: { type: Schema.Types.Mixed, default: {} },
     copilotoVoz:      { type: CopilotoVozSchema, default: () => ({}) },
     preajustes:       { type: PreajustesMedicoSchema, default: () => ({}) },

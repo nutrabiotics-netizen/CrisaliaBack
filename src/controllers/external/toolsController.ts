@@ -6,6 +6,7 @@
  * El contexto del sujeto vive en req.externalRole + req.externalSubjectId.
  */
 
+import { parseFechaColombia } from '../../utils/dateHelper';
 import { Response } from 'express';
 import mongoose from 'mongoose';
 import Paciente from '../../models/Paciente';
@@ -318,7 +319,7 @@ export const postAgendar = async (req: ExternalPhoneRequest, res: Response): Pro
     const cita = await Cita.create({
       pacienteId,
       medicoId: medicoObjId,
-      fecha: new Date(`${fecha}T${hora24}:00`),
+      fecha: parseFechaColombia(String(fecha)),
       hora: hora24,
       modalidad,
       tipo: tipo || 'consulta',
@@ -556,7 +557,7 @@ export const reagendarCita = async (req: ExternalPhoneRequest, res: Response): P
     const nuevaCita = await Cita.create({
       pacienteId,
       medicoId: citaActual.medicoId,
-      fecha: new Date(`${fecha}T${hora24}:00`),
+      fecha: parseFechaColombia(String(fecha)),
       hora: hora24,
       modalidad: citaActual.modalidad,
       tipo: citaActual.tipo,

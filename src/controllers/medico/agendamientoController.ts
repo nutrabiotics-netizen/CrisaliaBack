@@ -18,7 +18,7 @@ import Medico from '../../models/Medico';
 import Meeting from '../../models/Meeting';
 import mongoose from 'mongoose';
 import { fetchImageAsBuffer } from '../../utils/pdfGenerator';
-import { notificarCitaConfirmadaPorMedico } from '../../services/notifications/citaWhatsAppNotifier';
+import { notificarCitaConfirmadaPorMedico, notificarCitaReagendadaPaciente, notificarCitaCanceladaPorMedico } from '../../services/notifications/citaWhatsAppNotifier';
 
 const crearJornadasPorDefecto = (): IJornadaConfig[] => {
   const bloquesLab = { horaInicio: '08:00', horaFin: '18:00', modalidad: 'presencial' as const, duracionConsulta: 30, tiemposInactividad: [{ inicio: '12:00', fin: '13:00', tipo: 'Almuerzo' }] };
@@ -114,7 +114,7 @@ export const guardarConfiguracion = async (req: AuthRequest, res: Response): Pro
       return;
     }
 
-    const { optimizacionAutomatica, flexibilidadReubicacion, sedes, notificacionesAgendamiento, flujoPaciente } = req.body;
+    const { optimizacionAutomatica, flexibilidadReubicacion, sedes, notificacionesAgendamiento, flujoPaciente, bloqueosFechasEspecificas } = req.body;
 
     // Validar datos requeridos
     if (!sedes || !Array.isArray(sedes)) {
@@ -160,6 +160,9 @@ export const guardarConfiguracion = async (req: AuthRequest, res: Response): Pro
           activarVideosTestimonios: flujoPaciente.activarVideosTestimonios !== undefined ? flujoPaciente.activarVideosTestimonios : fp.activarVideosTestimonios ?? false,
           activarChatDirectoMedico: flujoPaciente.activarChatDirectoMedico !== undefined ? flujoPaciente.activarChatDirectoMedico : fp.activarChatDirectoMedico ?? false
         };
+      }
+      if (Array.isArray(bloqueosFechasEspecificas)) {
+        (configuracion as any).bloqueosFechasEspecificas = bloqueosFechasEspecificas;
       }
       await configuracion.save();
     } else {
@@ -412,7 +415,7 @@ export const cancelarCita = async (req: AuthRequest, res: Response): Promise<voi
   try {
     const medicoId = req.userId;
     const { citaId } = req.params;
-    const { motivoCancelacion } = req.body;
+    const { motivoCancelacion, tipoCancelacion, mensajeAdicional } = req.body;
 
     if (!medicoId) {
       res.status(401).json({
@@ -446,7 +449,7 @@ export const cancelarCita = async (req: AuthRequest, res: Response): Promise<voi
     };
 
     const cita = await agendamientoService.cancelarCitaMedico(
-      citaId as string, 
+      citaId as string,
       medicoId,
       motivoCancelacion,
       medicoId,
@@ -464,16 +467,44 @@ export const cancelarCita = async (req: AuthRequest, res: Response): Promise<voi
         estado: cita.estado,
         motivoCancelacion: cita.motivoCancelacion,
         canceladoPor: cita.canceladoPor,
-        canceladoPorRol: cita.canceladoPorRol
+        canceladoPorRol: cita.canceladoPorRol,
+        tipoCancelacion
       },
       motivoCancelacion
     );
+
+    // Si el tipo es cancelar_bloquear, agregar el slot a bloqueosFechasEspecificas
+    if (tipoCancelacion === 'cancelar_bloquear') {
+      try {
+        const horaStr = String(citaAnterior.hora).slice(0, 5); // HH:MM
+        const [hh, mm] = horaStr.split(':').map(Number);
+        const finTotalMin = hh * 60 + mm + 30;
+        const finH = Math.floor(finTotalMin / 60);
+        const finM = finTotalMin % 60;
+        const fin = `${String(finH).padStart(2, '0')}:${String(finM).padStart(2, '0')}`;
+        const nuevoBloqueo = {
+          fecha: new Date(citaAnterior.fecha as any),
+          inicio: horaStr,
+          fin,
+          tipo: 'Bloqueado',
+          diaCompleto: false,
+        };
+        await ConfiguracionAgenda.findOneAndUpdate(
+          { medico: medicoId },
+          { $push: { bloqueosFechasEspecificas: nuevoBloqueo } }
+        );
+      } catch (e) {
+        console.warn('[cancelarCita] Error al agregar bloqueo:', e);
+      }
+    }
 
     res.json({
       success: true,
       message: 'Cita cancelada exitosamente',
       data: cita
     });
+
+    void notificarCitaCanceladaPorMedico(String(citaAnterior._id), tipoCancelacion, mensajeAdicional);
   } catch (error: any) {
     console.error('Error al cancelar cita:', error);
     
@@ -586,6 +617,36 @@ export const completarCita = async (req: AuthRequest, res: Response): Promise<vo
       message: 'Error al completar cita',
       error: error.message
     });
+  }
+};
+
+/** Reagenda una cita a una nueva fecha/hora y notifica al paciente via Meta API. */
+export const reagendarCita = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const medicoId = req.userId;
+    const { citaId } = req.params;
+    const { nuevaFecha, nuevaHora, mensajeAdicional: mensajeAdicionalReagendar } = req.body;
+
+    if (!medicoId) { res.status(401).json({ success: false, message: 'No autorizado' }); return; }
+    if (!nuevaFecha || !nuevaHora) { res.status(400).json({ success: false, message: 'nuevaFecha y nuevaHora son requeridos' }); return; }
+
+    const { parseFechaColombia } = await import('../../utils/dateHelper');
+    const nuevaFechaObj = parseFechaColombia(String(nuevaFecha));
+
+    const citaActualizada = await Cita.findOneAndUpdate(
+      { _id: citaId, medicoId },
+      { $set: { fecha: nuevaFechaObj, hora: String(nuevaHora), estado: 'confirmada', actualizadoPor: medicoId, actualizadoPorRol: 'Medico' } },
+      { new: true }
+    );
+
+    if (!citaActualizada) { res.status(404).json({ success: false, message: 'Cita no encontrada' }); return; }
+
+    await registrarAccion(req, 'actualizar', 'Cita', String(citaId));
+    res.json({ success: true, message: 'Cita reagendada correctamente', data: citaActualizada });
+
+    void notificarCitaReagendadaPaciente(String(citaActualizada._id), mensajeAdicionalReagendar);
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'Error al reagendar cita', error: error.message });
   }
 };
 

@@ -94,7 +94,7 @@ class PerfilMedicoService {
       medico.firmaUrl = datosActualizacion.firmaUrl || undefined;
     }
     if (datosActualizacion.indicacionesAntesConsulta !== undefined) {
-      medico.indicacionesAntesConsulta = datosActualizacion.indicacionesAntesConsulta ?? '';
+      medico.indicacionesAntesConsulta = Array.isArray(datosActualizacion.indicacionesAntesConsulta) ? datosActualizacion.indicacionesAntesConsulta : [];
     }
 
     // Actualizar perfilVerificacion (campos para filtros y verificación)

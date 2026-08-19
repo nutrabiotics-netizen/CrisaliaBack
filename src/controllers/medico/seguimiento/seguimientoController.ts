@@ -46,8 +46,10 @@ export const listarSeguimiento = async (
 
     // 2. Para cada paciente, obtener datos en paralelo
     const ahora = new Date();
-    const inicioDia = new Date(ahora);
-    inicioDia.setUTCHours(0, 0, 0, 0);
+    // Obtener la fecha de hoy en Colombia (UTC-5) y usar medianoche UTC de ese día
+    // Esto incluye citas almacenadas como T00:00:00Z o T05:00:00Z
+    const colombiaDateStr = ahora.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
+    const inicioDia = new Date(colombiaDateStr + 'T00:00:00.000Z');
 
     const resultados = await Promise.all(
       pacientesIds.map(async (pacienteId) => {

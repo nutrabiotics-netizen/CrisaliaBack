@@ -1,14 +1,15 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../../../middleware/auth';
 import { UserRole } from '../../../types';
-import { 
-  obtenerConfiguracion, 
+import {
+  obtenerConfiguracion,
   guardarConfiguracion,
   obtenerCitas,
   obtenerCitasHoy,
   confirmarCita,
   cancelarCita,
   completarCita,
+  reagendarCita,
   generarResumenPdfCita,
   obtenerRecordingUrl
 } from '../../../controllers/medico/agendamientoController';
@@ -27,10 +28,11 @@ router.put('/configuracion', authenticate, authorize(UserRole.MEDICO), guardarCo
 router.get('/citas', authenticate, authorize(UserRole.MEDICO), obtenerCitas);
 router.get('/citas/hoy', authenticate, authorize(UserRole.MEDICO), obtenerCitasHoy);
 
-// Confirmar, cancelar o completar citas
+// Confirmar, cancelar, completar o reagendar citas
 router.put('/citas/:citaId/confirmar', authenticate, authorize(UserRole.MEDICO), confirmarCita);
 router.put('/citas/:citaId/cancelar', authenticate, authorize(UserRole.MEDICO), cancelarCita);
 router.put('/citas/:citaId/completar', authenticate, authorize(UserRole.MEDICO), completarCita);
+router.put('/citas/:citaId/reagendar', authenticate, authorize(UserRole.MEDICO), reagendarCita);
 
 // Generar PDF resumen de la cita (historia + fórmula + incapacidad + interconsulta)
 router.post('/citas/:citaId/resumen-pdf', authenticate, authorize(UserRole.MEDICO), generarResumenPdfCita);

@@ -1,5 +1,6 @@
 import { Response } from 'express';
 import { AuthRequest } from '../../../middleware/auth';
+import { parseFechaColombia } from '../../../utils/dateHelper';
 import agendamientoService from '../../../services/paciente/agendamiento/agendamientoService';
 import { registrarAccion } from '../../../utils/auditoriaHelper';
 import { notificarCitaAgendadaPaciente } from '../../../services/notifications/citaWhatsAppNotifier';
@@ -136,7 +137,7 @@ export const obtenerSedesMedico = async (req: AuthRequest, res: Response): Promi
 export const obtenerHorariosDisponibles = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { medicoId } = req.params;
-    const { fecha, sedeIndex } = req.query;
+    const { fecha, sedeIndex, modalidad } = req.query;
     const pacienteId = req.userId ?? undefined;
 
     if (!fecha) {
@@ -149,7 +150,8 @@ export const obtenerHorariosDisponibles = async (req: AuthRequest, res: Response
 
     const parsed = sedeIndex != null ? parseInt(String(sedeIndex), 10) : NaN;
     const idx = !isNaN(parsed) ? parsed : undefined;
-    const horarios = await agendamientoService.obtenerHorariosDisponibles(medicoId as string, fecha as string, idx, pacienteId);
+    const modalidadFiltro = modalidad === 'presencial' || modalidad === 'virtual' ? modalidad as string : undefined;
+    const horarios = await agendamientoService.obtenerHorariosDisponibles(medicoId as string, fecha as string, idx, pacienteId, modalidadFiltro);
 
     res.json({
       success: true,
@@ -177,7 +179,7 @@ export const crearCita = async (req: AuthRequest, res: Response): Promise<void> 
       return;
     }
 
-    const { medicoId, fecha, hora, tipo, modalidad, modulo } = req.body;
+    const { medicoId, fecha, hora, tipo, modalidad, modulo, motivoConsulta } = req.body;
 
     if (!medicoId || !fecha || !hora || !tipo || !modalidad) {
       res.status(400).json({
@@ -203,7 +205,7 @@ export const crearCita = async (req: AuthRequest, res: Response): Promise<void> 
       return;
     }
 
-    const fechaObj = new Date(fecha);
+    const fechaObj = parseFechaColombia(fecha as string);
     if (isNaN(fechaObj.getTime())) {
       res.status(400).json({
         success: false,
@@ -239,7 +241,8 @@ export const crearCita = async (req: AuthRequest, res: Response): Promise<void> 
       hora,
       tipo,
       modalidad,
-      ...(modulo && ['general', 'heridas'].includes(modulo) ? { modulo } : {})
+      ...(modulo && ['general', 'heridas'].includes(modulo) ? { modulo } : {}),
+      ...(motivoConsulta ? { motivoConsulta: String(motivoConsulta).trim() } : {})
     } as any, pacienteId, 'Paciente');
 
     // Registrar en auditoría

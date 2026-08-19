@@ -194,7 +194,7 @@ class AgendamientoService {
     }));
   }
 
-  async obtenerHorariosDisponibles(medicoId: string, fecha: string, sedeIndex?: number, pacienteId?: string): Promise<HorarioDisponible[]> {
+  async obtenerHorariosDisponibles(medicoId: string, fecha: string, sedeIndex?: number, pacienteId?: string, modalidad?: string): Promise<HorarioDisponible[]> {
     const configuracion = await ConfiguracionAgenda.findOne({ medico: medicoId });
     
     if (!configuracion || !configuracion.sedes || configuracion.sedes.length === 0) {
@@ -262,6 +262,7 @@ class AgendamientoService {
       if (!jornada || !jornada.bloquesHorarios) continue;
 
       for (const bloque of jornada.bloquesHorarios) {
+        if (modalidad && (bloque as any).modalidad && (bloque as any).modalidad !== "mixta" && (bloque as any).modalidad !== modalidad) continue;
         const [horaInicio, minutoInicio] = (bloque.horaInicio || '08:00').split(':').map(Number);
         const [horaFin, minutoFin] = (bloque.horaFin || '18:00').split(':').map(Number);
         const duracion = bloque.duracionConsulta || 30;
