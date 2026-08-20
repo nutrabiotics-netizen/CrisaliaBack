@@ -29,6 +29,8 @@ import chatRoutes from './chat';
 import cie10Routes from './cie10';
 import wearablesRoutes from './wearables';
 import recordatoriosRoutes from './recordatorios';
+import notificacionesRoutes from './notificaciones';
+// import consultaRapidaRoutes from './consulta-rapida';
 
 const router = Router();
 
@@ -63,6 +65,8 @@ router.use('/chat', chatRoutes);
 router.use('/cie10', cie10Routes);
 router.use('/wearables', wearablesRoutes);
 router.use('/recordatorios', recordatoriosRoutes);
+router.use('/notificaciones', notificacionesRoutes);
+// router.use('/consulta-rapida', consultaRapidaRoutes);
 
 export default router;
 

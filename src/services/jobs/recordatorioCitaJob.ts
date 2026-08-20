@@ -12,6 +12,7 @@
  * 5. Envía el mensaje WP y marca la cita
  */
 
+import cron from 'node-cron';
 import Cita from '../../models/Cita';
 import Paciente from '../../models/Paciente';
 import Medico from '../../models/Medico';
@@ -80,8 +81,7 @@ async function enviarRecordatorioMetaWP(params: {
   }
 }
 
-const INTERVALO_JOB_MS = 5 * 60 * 1000;  // 5 minutos
-const TOLERANCIA_MS = 7 * 60 * 1000;      // ±7 min — cubre el intervalo del job (10 min)
+const TOLERANCIA_MS = 90 * 1000;  // ±1.5 min — preciso con cron cada minuto
 
 function toMs(intervalo: number, unidad: 'minutos' | 'horas' | 'dias'): number {
   if (unidad === 'minutos') return intervalo * 60 * 1000;
@@ -224,13 +224,10 @@ export async function runRecordatorioJob(): Promise<void> {
 }
 
 export function scheduleRecordatorioCitaJob(): void {
-  setTimeout(() => {
-    runRecordatorioJob().catch(e => console.error('[RecordatorioJob] Error inicial:', e));
-  }, 15_000);
+  // Corre cada minuto — tolerancia ±1.5 min garantiza precisión para recordatorios cortos (5 min antes)
+  cron.schedule('* * * * *', () => {
+    runRecordatorioJob().catch(e => console.error('[RecordatorioJob] Error:', e));
+  }, { timezone: 'America/Bogota' });
 
-  setInterval(() => {
-    runRecordatorioJob().catch(e => console.error('[RecordatorioJob] Error periódico:', e));
-  }, INTERVALO_JOB_MS);
-
-  console.info('[RecordatorioJob] Job de recordatorios registrado (cada 10 min).');
+  console.info('[RecordatorioJob] Cron registrado (cada minuto, America/Bogota).');
 }

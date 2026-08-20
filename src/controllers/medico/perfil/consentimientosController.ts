@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthRequest } from '../../../middleware/auth';
 import Medico from '../../../models/Medico';
 import DocumentoLegal from '../../../models/DocumentoLegal';
+import Notificacion from '../../../models/Notificacion';
 import { handleError } from '../../../utils/errors';
 
 /**
@@ -31,6 +32,28 @@ export const getConsentimientos = async (req: AuthRequest, res: Response): Promi
     }));
 
     res.json({ success: true, data: resultado });
+
+    // Crear notificación in-app si hay consentimientos obligatorios pendientes y no existe una no leída reciente
+    const pendientes = resultado.filter(r => r.obligatorio && !r.aceptadoEn);
+    if (pendientes.length > 0) {
+      const yaExiste = await Notificacion.exists({
+        medicoId,
+        tipo: 'consentimiento_requerido',
+        leida: false,
+      });
+      if (!yaExiste) {
+        void Notificacion.create({
+          medicoId,
+          tipo: 'consentimiento_requerido',
+          categoria: 'privacidad_seguridad',
+          titulo: `${pendientes.length} consentimiento${pendientes.length > 1 ? 's' : ''} pendiente${pendientes.length > 1 ? 's' : ''} de firma`,
+          cuerpo: `Tienes documentos obligatorios que requieren tu aceptación: ${pendientes.map(p => p.titulo).join(', ')}.`,
+          requiereAccion: true,
+          accionUrl: '/medico/perfil/inscripcion',
+          accionLabel: 'Revisar consentimientos',
+        });
+      }
+    }
   } catch (err: any) {
     handleError(err, res);
   }

@@ -4,6 +4,7 @@ import { parseFechaColombia } from '../../../utils/dateHelper';
 import agendamientoService from '../../../services/paciente/agendamiento/agendamientoService';
 import { registrarAccion } from '../../../utils/auditoriaHelper';
 import { notificarCitaAgendadaPaciente } from '../../../services/notifications/citaWhatsAppNotifier';
+import { notificarMedicoCambiosCita } from '../../../services/notifications/medicoNotificacionService';
 import { getRecordingPlaybackUrl } from '../../../utils/s3Documents';
 import Cita from '../../../models/Cita';
 import Meeting from '../../../models/Meeting';
@@ -270,6 +271,9 @@ export const crearCita = async (req: AuthRequest, res: Response): Promise<void> 
 
     if (cita._id) {
       void notificarCitaAgendadaPaciente(String(cita._id));
+      // Notificar al médico in-app + WhatsApp respetando sus preferencias
+      const fechaLabelCita = String(cita.fecha).slice(0, 10);
+      void notificarMedicoCambiosCita(String(cita.medicoId), 'cita_nueva', fechaLabelCita, String(cita.hora), String(cita._id), String(pacienteId));
     }
   } catch (error: any) {
     console.error('Error al crear cita:', error);
@@ -432,6 +436,11 @@ export const cancelarCita = async (req: AuthRequest, res: Response): Promise<voi
       message: 'Cita cancelada exitosamente',
       data: cita
     });
+
+    // Notificar al médico in-app + WhatsApp
+    const medicoIdCita = String((citaAnterior as any).medicoId);
+    const fechaLabelCancel = String(citaAnterior.fecha).slice(0, 10);
+    void notificarMedicoCambiosCita(medicoIdCita, 'cita_cancelada', fechaLabelCancel, String(citaAnterior.hora), String(citaAnterior._id), String(pacienteId));
   } catch (error: any) {
     console.error('Error al cancelar cita:', error);
     

@@ -3,6 +3,8 @@ import { AuthRequest } from '../../../middleware/auth';
 import interrogatorioService from '../../../services/paciente/interrogatorio/interrogatorioService';
 import { registrarAccion } from '../../../utils/auditoriaHelper';
 import Interrogatorio from '../../../models/Interrogatorio';
+import Cita from '../../../models/Cita';
+import { crearNotificacionMedico } from '../../../utils/notificacionHelper';
 import { AIService } from '../../../services/ai/AIService';
 import {
   cargarSecciones,
@@ -330,6 +332,26 @@ export const completarInterrogatorio = async (req: AuthRequest, res: Response): 
         objetivos: interrogatorio.objetivos
       }
     });
+
+    // Notificar al médico in-app que el paciente completó su seguimiento
+    const citaReciente = await Cita.findOne({ pacienteId })
+      .sort({ fecha: -1 })
+      .select('medicoId')
+      .lean();
+    const medicoId = citaReciente?.medicoId;
+    if (medicoId) {
+      void crearNotificacionMedico({
+        medicoId: String(medicoId),
+        tipo: 'seguimiento_evolucion',
+        categoria: 'seguimiento_clinico',
+        titulo: 'Cuestionario de seguimiento completado',
+        cuerpo: 'El paciente completó su cuestionario de seguimiento clínico.',
+        requiereAccion: false,
+        accionUrl: '/medico/pacientes',
+        accionLabel: 'Ver seguimiento',
+        pacienteId: String(pacienteId),
+      });
+    }
   } catch (error: any) {
     console.error('Error al completar interrogatorio:', error);
     res.status(500).json({

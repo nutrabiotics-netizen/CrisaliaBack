@@ -4,6 +4,7 @@ import Paciente from '../../models/Paciente';
 import { AuthRequest } from '../../middleware/auth';
 import { buildParaclinicoKey, uploadBinaryAndGetUrl } from '../../utils/s3Documents';
 import { extraerParaclinicoOcr } from '../../services/paraclinicos/paraclinicoOcrService';
+import { crearNotificacionMedico } from '../../utils/notificacionHelper';
 
 const ALLOWED_MIMES = new Set(['application/pdf', 'image/jpeg', 'image/png', 'image/webp']);
 
@@ -45,6 +46,8 @@ export const subirParaclinico = async (req: AuthRequest, res: Response): Promise
       return;
     }
 
+    const medicoId = req.body.medicoId;
+
     const nuevoParaclinico = new Paraclinico({
       pacienteId,
       nombre,
@@ -60,6 +63,21 @@ export const subirParaclinico = async (req: AuthRequest, res: Response): Promise
 
     await nuevoParaclinico.save();
     res.status(201).json(nuevoParaclinico);
+
+    // Notificar al médico in-app que el paciente subió resultados
+    if (medicoId) {
+      void crearNotificacionMedico({
+        medicoId: String(medicoId),
+        tipo: 'resultados_cargados',
+        categoria: 'laboratorios_resultados',
+        titulo: 'Resultados de laboratorio cargados',
+        cuerpo: 'El paciente subió nuevos resultados de laboratorio pendientes de revisión.',
+        requiereAccion: true,
+        accionUrl: '/medico/pacientes',
+        accionLabel: 'Ver resultados',
+        pacienteId: String(pacienteId),
+      });
+    }
   } catch (error) {
     console.error('Error al subir paraclínico:', error);
     res.status(500).json({ mensaje: 'Error al registrar el paraclínico' });
@@ -95,6 +113,8 @@ export const subirParaclinicoArchivo = async (req: AuthRequest, res: Response): 
 
     const paciente = await Paciente.findById(pacienteId).select('numeroDocumento').lean();
     const numeroDoc = paciente?.numeroDocumento || pacienteId;
+
+    const medicoId = req.body?.medicoId;
 
     const notasPaciente =
       typeof req.body?.notasPaciente === 'string' && req.body.notasPaciente.trim()
@@ -140,6 +160,21 @@ export const subirParaclinicoArchivo = async (req: AuthRequest, res: Response): 
 
     await doc.save();
     res.status(201).json(doc);
+
+    // Notificar al médico in-app que el paciente subió resultados
+    if (medicoId) {
+      void crearNotificacionMedico({
+        medicoId: String(medicoId),
+        tipo: 'resultados_cargados',
+        categoria: 'laboratorios_resultados',
+        titulo: 'Resultados de laboratorio cargados',
+        cuerpo: 'El paciente subió nuevos resultados de laboratorio pendientes de revisión.',
+        requiereAccion: true,
+        accionUrl: '/medico/pacientes',
+        accionLabel: 'Ver resultados',
+        pacienteId: String(pacienteId),
+      });
+    }
   } catch (error) {
     console.error('Error al subir paraclínico (archivo):', error);
     res.status(500).json({ mensaje: 'Error al registrar el paraclínico' });

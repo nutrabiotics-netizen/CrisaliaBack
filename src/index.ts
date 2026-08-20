@@ -141,7 +141,10 @@ import publicRoutes from "./routes/public/index";
 import cuidadorIARoutes from "./routes/paciente/cuidador-ia";
 // import { scheduleControlPreCitaJob } from './services/jobs/controlPreCitaJob';
 import { scheduleRecordatorioCitaJob } from './services/jobs/recordatorioCitaJob';
+import { scheduleResumenDiarioJob } from './services/jobs/resumenDiarioJob';
 import './models/ConfiguracionRecordatorios';
+import './models/ConfiguracionNotificacionesMedico';
+import './models/Notificacion';
 // import './models/ConsultaRapida';
 // Fase 5
 import {
@@ -197,6 +200,7 @@ app.use("/api/paciente/cuidador-ia", cuidadorIARoutes);
 // automático de WhatsApps de pre-cita en producción.
 // scheduleControlPreCitaJob();
 scheduleRecordatorioCitaJob();
+scheduleResumenDiarioJob();
 
 
 
