@@ -17,7 +17,8 @@ import {
   obtenerCitasPaciente,
   cancelarCita,
   confirmarPagoCita,
-  obtenerRecordingUrl
+  obtenerRecordingUrl,
+  proxyFirmaMedico
 } from '../../../controllers/paciente/agendamiento/agendamientoController';
 import {
   getContenidoSalaEspera,
@@ -32,6 +33,7 @@ router.get('/medicos/precios', authenticate, authorize(UserRole.PACIENTE, UserRo
 router.get('/medicos', authenticate, authorize(UserRole.PACIENTE), obtenerMedicosDisponibles);
 router.get('/medicos-recomendados', authenticate, authorize(UserRole.PACIENTE), obtenerMedicosRecomendados);
 router.get('/medicos/:medicoId', authenticate, authorize(UserRole.PACIENTE), obtenerMedicoPorId);
+router.get('/medicos/:medicoId/firma', authenticate, authorize(UserRole.PACIENTE), proxyFirmaMedico);
 router.get('/medicos/:medicoId/sedes', authenticate, authorize(UserRole.PACIENTE), obtenerSedesMedico);
 router.get('/medicos/:medicoId/horarios', authenticate, authorize(UserRole.PACIENTE, UserRole.MEDICO), obtenerHorariosDisponibles);
 router.get('/medicos/:medicoId/configuracion-flujo', authenticate, authorize(UserRole.PACIENTE), obtenerConfiguracionFlujoMedico);

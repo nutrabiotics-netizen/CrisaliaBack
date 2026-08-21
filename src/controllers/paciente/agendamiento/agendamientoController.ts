@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthRequest } from '../../../middleware/auth';
 import { parseFechaColombia } from '../../../utils/dateHelper';
 import agendamientoService from '../../../services/paciente/agendamiento/agendamientoService';
+import Medico from '../../../models/Medico';
 import { registrarAccion } from '../../../utils/auditoriaHelper';
 import { notificarCitaAgendadaPaciente } from '../../../services/notifications/citaWhatsAppNotifier';
 import { notificarMedicoCambiosCita } from '../../../services/notifications/medicoNotificacionService';
@@ -533,3 +534,24 @@ export const confirmarPagoCita = async (req: AuthRequest, res: Response): Promis
   }
 };
 
+
+export const proxyFirmaMedico = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { medicoId } = req.params;
+    const medico = await Medico.findById(medicoId).select('firmaUrl').lean();
+    if (!medico || !(medico as any).firmaUrl) {
+      res.status(404).json({ message: 'Firma no disponible' });
+      return;
+    }
+    const firmaUrl: string = (medico as any).firmaUrl;
+    const response = await fetch(firmaUrl);
+    if (!response.ok) { res.status(404).json({ message: 'No se pudo obtener la firma' }); return; }
+    const contentType = response.headers.get('content-type') || 'image/png';
+    const buffer = Buffer.from(await response.arrayBuffer());
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'private, max-age=3600');
+    res.send(buffer);
+  } catch (err: any) {
+    res.status(500).json({ message: 'Error al obtener la firma' });
+  }
+};

@@ -34,6 +34,10 @@ export interface MedicoDisponible {
   direccionAtencionPresencial?: string;
   precioConsultaPresencial?: number;
   precioConsultaVirtual?: number;
+  indicacionesAntesConsulta?: string[];
+  email?: string;
+  firmaUrl?: string;
+  numeroColegiatura?: string;
 }
 
 export interface HorarioDisponible {
@@ -68,7 +72,7 @@ class AgendamientoService {
     }
 
     const medicos = await Medico.find(query)
-      .select('nombre apellido especialidad perfilVerificacion logoUrl preajustes')
+      .select('nombre apellido especialidad email numeroColegiatura perfilVerificacion logoUrl firmaUrl preajustes indicacionesAntesConsulta')
       .lean();
 
     return medicos.map(medico => this.mapearMedicoDisponible(medico as any));
@@ -135,12 +139,16 @@ class AgendamientoService {
       direccionAtencionPresencial: medico.preajustes?.direccionAtencionPresencial ?? undefined,
       precioConsultaPresencial: medico.preajustes?.precioConsultaPresencial ?? undefined,
       precioConsultaVirtual: medico.preajustes?.precioConsultaVirtual ?? undefined,
+      indicacionesAntesConsulta: Array.isArray((medico as any).indicacionesAntesConsulta) ? (medico as any).indicacionesAntesConsulta : undefined,
+      email: (medico as any).email ?? undefined,
+      firmaUrl: (medico as any).firmaUrl ?? undefined,
+      numeroColegiatura: (medico as any).numeroColegiatura ?? undefined,
     };
   }
 
   async obtenerMedicoPorId(medicoId: string): Promise<MedicoDisponible | null> {
     const medico = await Medico.findById(medicoId)
-      .select('nombre apellido especialidad perfilVerificacion logoUrl preajustes')
+      .select('nombre apellido especialidad email numeroColegiatura perfilVerificacion logoUrl firmaUrl preajustes indicacionesAntesConsulta')
       .lean();
 
     if (!medico) {
