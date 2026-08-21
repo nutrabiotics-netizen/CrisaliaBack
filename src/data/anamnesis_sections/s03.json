@@ -16,7 +16,8 @@
         "¿Cómo apareció?",
         "Factores agravantes",
         "Factores que lo alivian"
-      ]
+      ],
+      "objetivo_clinico": "Centrar la entrevista en lo que más importa al paciente y organizar la caracterización posterior."
     },
     {
       "id": "s03_limitacion",
@@ -43,17 +44,20 @@
           "value": "impiden_trabajar",
           "label": "Me impiden trabajar o funcionar"
         }
-      ]
+      ],
+      "objetivo_clinico": "Medir impacto funcional en trabajo, autocuidado, relaciones y actividades, no solo intensidad física."
     },
     {
       "id": "s03_ultima_vez_bien",
       "text": "¿Cuándo fue la última vez o época de tu vida en la que te sentiste bien?",
-      "type": "text"
+      "type": "text",
+      "objetivo_clinico": "Establecer una línea de base personal y ubicar cambios relevantes antes del problema actual."
     },
     {
       "id": "s03_que_hacías_bien",
       "text": "¿Qué hacías en esa época que te permitía sentirte así de bien?",
-      "type": "text"
+      "type": "text",
+      "objetivo_clinico": "Explorar factores protectores percibidos y recursos recuperables sin atribuirles causalidad automática."
     },
     {
       "id": "s03_evento_inicio",
@@ -124,27 +128,32 @@
           "value": "ningun_evento",
           "label": "No lo relaciono con ningún evento"
         }
-      ]
+      ],
+      "objetivo_clinico": "Construir una línea de tiempo de exposiciones y transiciones que merezcan revisión clínica."
     },
     {
       "id": "s03_objetivo_a",
       "text": "Objetivo de bienestar a",
-      "type": "text"
+      "type": "text",
+      "objetivo_clinico": "Traducir preocupaciones en resultados significativos para el paciente y facilitar decisiones compartidas."
     },
     {
       "id": "s03_objetivo_b",
       "text": "Objetivo de bienestar b",
-      "type": "text"
+      "type": "text",
+      "objetivo_clinico": "Traducir preocupaciones en resultados significativos para el paciente y facilitar decisiones compartidas."
     },
     {
       "id": "s03_objetivo_c",
       "text": "Objetivo de bienestar c",
-      "type": "text"
+      "type": "text",
+      "objetivo_clinico": "Traducir preocupaciones en resultados significativos para el paciente y facilitar decisiones compartidas."
     },
     {
       "id": "s03_objetivo_d",
       "text": "Objetivo de bienestar d",
-      "type": "text"
+      "type": "text",
+      "objetivo_clinico": "Traducir preocupaciones en resultados significativos para el paciente y facilitar decisiones compartidas."
     },
     {
       "id": "s03_disposicion",
@@ -167,7 +176,8 @@
           "value": "bajo",
           "label": "Bajo: me cuesta mucho cambiar hábitos"
         }
-      ]
+      ],
+      "objetivo_clinico": "Ajustar el ritmo y la carga de recomendaciones a la capacidad y preferencias actuales del paciente."
     }
   ]
 }

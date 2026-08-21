@@ -24,10 +24,11 @@ const client = new BedrockRuntimeClient({ region: REGION, credentials });
 
 function cargarEstructuraInicial(): string {
   try {
-    const secciones = cargarSecciones(['s01', 's03']);
+    const secciones = cargarSecciones(['s01', 's02', 's03']);
     const json = JSON.stringify(secciones, null, 2);
-    console.log('[CuerpoConChat] ✅ s01/s03 cargadas — bytes:', json.length,
+    console.log('[CuerpoConChat] ✅ s01/s02/s03 cargadas — bytes:', json.length,
       '| s01 preguntas:', secciones['s01']?.questions?.length ?? 'N/A',
+      '| s02 preguntas:', secciones['s02']?.questions?.length ?? 'N/A',
       '| s03 preguntas:', secciones['s03']?.questions?.length ?? 'N/A');
     return json;
   } catch (e) {
@@ -69,7 +70,9 @@ Debes seguir este orden estrictamente. NO puedes pasar a la fase 2 sin completar
 
 FASE 1 — DATOS GENERALES (s01): Después del saludo, recopila PRIMERO los datos que nos faltan del perfil del paciente. Los datos que ya tenemos en el sistema están marcados como "ya conocidos" en el contexto — NO los preguntes. Solo pregunta los que faltan.
 
-FASE 2 — MOTIVO DE CONSULTA (s03): Solo después de completar los datos de s01 que faltan
+FASE 2 - Alergias, Intolerancias y Reacciones Adversas (s02): Solo después de completar los datos de s01 que faltan
+
+FASE 3 — MOTIVO DE CONSULTA (s03): Solo después de completar los datos de s02 que faltan
 
 Aunque el paciente ya mencionó espontáneamente su síntoma (por ejemplo al marcar zonas de dolor), IGUAL debes completar los datos de s01 que faltan ANTES de profundizar en el síntoma.
 
@@ -94,6 +97,13 @@ Ejemplo correcto para s03_disposicion (tiene 4 opciones en el JSON):
 Ejemplo INCORRECTO — nunca hagas esto:
 {"texto": "¿Cuál es tu disposición para modificar hábitos?", "opciones": []}  ← pregunta abierta sin opciones
 
+REGLA PARA PREGUNTAS type "table" — APLICA SIN EXCEPCIÓN:
+Si el campo tiene type: "table" en el JSON del cuestionario, usa este formato:
+{"texto": "Pregunta reformulada de forma empática", "opciones": [], "tipoOpciones": "tabla_dinamica", "columnas": ["Col1", "Col2", ...], "respuestaLibre": true}
+Las columnas son EXACTAMENTE las del array "columns" del JSON — no las modifiques.
+
+PROHIBIDO: NUNCA menciones la palabra "tabla" en el campo "texto" ni en ningún texto visible al paciente para preguntas que NO sean type "table". Si necesitas agrupar varias preguntas de tipo text/scale/single, hazlo de forma conversacional en texto natural — nunca como tabla. NUNCA digas "completa la siguiente tabla" a menos que el campo sea explícitamente type "table".
+
 Si el paciente ya respondió algo conversacionalmente que cubre un campo con opciones, mapea internamente su respuesta a la opción más cercana y continúa con la siguiente pregunta SIN repetir con opciones.
 
 REGLA DE INFERENCIA — evita preguntas con respuesta obvia:
@@ -104,7 +114,7 @@ En general: si una pregunta tiene una respuesta que puedes deducir con certeza r
 
 Para las tablas de síntomas (type: "symptom_table"), agrupa los ítems de forma conversacional y usa la escala 0-3: 0=Nunca, 1=Leve/esporádico, 2=Moderado/frecuente, 3=Intenso/permanente.
 
-ESTRUCTURA DEL CUESTIONARIO (s01 y s03):
+ESTRUCTURA DEL CUESTIONARIO (s01, s02 y s03):
 ${ESTRUCTURA_S01_S03}
 
 ⸻
@@ -135,7 +145,8 @@ Si el paciente menciona: dificultad para respirar, dolor torácico opresivo, pé
 - Habla directamente al paciente usando "tú".
 - Evita tecnicismos. Si usas uno, explícalo.
 - Una pregunta principal por mensaje.
-- Confirma brevemente cada respuesta antes de avanzar.
+- Cuando el paciente responde con un número a una pregunta numérica (peso, talla, edad, escala, años, etc.), acéptalo directamente y pasa a la siguiente pregunta. NUNCA digas "¿quisiste decir...?", "¿hubo un error de tipeo?" ni ninguna variante de confirmación. El número es válido tal como fue escrito.
+- Solo pide aclaración si la respuesta es genuinamente ambigua (ej: texto incomprensible, o respuesta a una pregunta de opciones que no corresponde a ninguna opción).
 
 ⸻
 
@@ -290,6 +301,7 @@ export interface DatosExistentesPaciente {
   edad?:            number;
   sexoBiologico?:   string;
   ocupacion?:       string;
+  escolaridad?:     string;
   direccion?:       string;
 }
 
@@ -318,6 +330,7 @@ export async function responderCuerpoConChat(params: {
   if (d.edad !== undefined) camposConocidos.push(`- Edad: ${d.edad} años`);
   if (d.sexoBiologico)   camposConocidos.push(`- Sexo biológico: ${d.sexoBiologico}`);
   if (d.ocupacion)       camposConocidos.push(`- Ocupación: ${d.ocupacion}`);
+  if (d.escolaridad)     camposConocidos.push(`- Nivel educativo: ${d.escolaridad}`);
   if (d.direccion)       camposConocidos.push(`- Dirección: ${d.direccion}`);
 
   const datosConocidosTexto = camposConocidos.length > 0
@@ -355,7 +368,7 @@ export async function responderCuerpoConChat(params: {
     content: [{ text: mensajeUsuario }]
   });
 
-  const contextoCompleto = `${systemPrompt}\n\nContexto del paciente: ${contexto}`;
+  const contextoCompleto = `${systemPrompt}\n\nContexto del paciente: ${contexto}\n\nRECUERDA — FORMATO OBLIGATORIO: Tu respuesta debe ser SIEMPRE un JSON válido que empiece con {"texto": y NUNCA texto libre. Si la pregunta tiene type "table" en el JSON del cuestionario, usa tipoOpciones: "tabla_dinamica" con el array "columnas". Ejemplo mínimo: {"texto":"Mensaje empático","opciones":[],"tipoOpciones":"single","respuestaLibre":true}`;
 
   console.log('[CuerpoConChat] ▶ invoke Claude', {
     modelId:          MODEL_ID,
@@ -370,7 +383,7 @@ export async function responderCuerpoConChat(params: {
     modelId: MODEL_ID,
     system: [{ text: contextoCompleto }],
     messages,
-    inferenceConfig: { maxTokens: 1500, temperature: 0.7 }
+    inferenceConfig: { maxTokens: 1500, temperature: 0.3 }
   });
 
   const resp = await client.send(command);
@@ -549,6 +562,8 @@ export async function responderInterrogatorioConClaude(params: {
       linea += `, opciones múltiples: ${q.options.map((o: any) => o.label).join(' / ')}`;
     } else if (q.type === 'symptom_table' && q.items?.length) {
       linea += `, ítems de tabla: ${q.items.map((it: any) => it.label).join(', ')}`;
+    } else if (q.type === 'table' && q.columns?.length) {
+      linea += `, columnas: ${q.columns.join(' | ')}`;
     }
     linea += ')';
     return linea;
@@ -579,6 +594,9 @@ NO hagas preguntas que no estén en esta lista.
 - type "symptom_table" → usa formato tabla:
   {"texto":"...","opciones":[],"tipoOpciones":"tabla","tabla":[{"id":"item_id","label":"Nombre síntoma"},...],"respuestaLibre":true}
   NUNCA listes ítems como texto — SIEMPRE usa la tabla cuando hay múltiples ítems 0-3.
+- type "table" → tabla dinámica donde el paciente ingresa filas libres:
+  {"texto":"Pregunta reformulada","opciones":[],"tipoOpciones":"tabla_dinamica","columnas":["Col1","Col2",...],"respuestaLibre":true}
+  Las columnas son EXACTAMENTE las del campo "columns" de la definición de la pregunta. No las modifiques.
 
 4. SEÑALES DE ALARMA
 
@@ -606,12 +624,21 @@ ${resumenRespuestas || 'Primera sesión del interrogatorio.'}`;
 
   const messages: any[] = [];
 
+  const intro = nombrePaciente
+    ? `Soy ${nombrePaciente}. Continúa el interrogatorio.`
+    : 'Continúa el interrogatorio.';
+  const primedUserMsg = `Síntoma principal: "${sintomaInicial}". ${intro}`;
+
   if (historial.length === 0) {
-    const intro = nombrePaciente
-      ? `Soy ${nombrePaciente}. Continúa el interrogatorio.`
-      : 'Continúa el interrogatorio.';
-    messages.push({ role: 'user', content: [{ text: `Síntoma principal: "${sintomaInicial}". ${intro}` }] });
+    // Primera llamada sin historial: añadir par priming user+assistant
+    messages.push({ role: 'user', content: [{ text: primedUserMsg }] });
     messages.push({ role: 'assistant', content: [{ text: '{"texto":"Perfecto, continuemos. Voy a hacerte algunas preguntas más sobre tu salud.","opciones":[],"tipoOpciones":"single","respuestaLibre":true}' }] });
+  } else if (historial[0]?.rol === 'ia') {
+    // El historial empieza por un mensaje IA (primera pregunta de la ronda guardada
+    // como contexto). Anteponer mensaje de priming explícito que deje claro que
+    // esa pregunta YA fue hecha y la respuesta del paciente la sigue inmediatamente.
+    const primedExplicito = `${primedUserMsg}\nIMPORTANTE: La primera pregunta que aparece en el historial YA fue formulada al paciente. La respuesta que el paciente acaba de dar corresponde a ESA pregunta. NO la repitas. Avanza directamente a la siguiente pregunta de tu lista que aún no haya sido respondida.`;
+    messages.push({ role: 'user', content: [{ text: primedExplicito }] });
   }
 
   for (const msg of historial) {

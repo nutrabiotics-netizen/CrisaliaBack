@@ -47,7 +47,7 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
     }
 
     const paciente = await Paciente.findById(pacienteId)
-      .select('nombre apellido email telefono fechaNacimiento sexoBiologico genero ocupacion direccion')
+      .select('nombre apellido email telefono fechaNacimiento sexoBiologico genero ocupacion profesion escolaridad direccion')
       .lean() as any;
 
     // Calcular edad a partir de fechaNacimiento
@@ -72,7 +72,8 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
                        : undefined,
       edad,
       sexoBiologico: paciente?.sexoBiologico || paciente?.genero,
-      ocupacion:     paciente?.ocupacion,
+      ocupacion:     paciente?.profesion || paciente?.ocupacion,
+      escolaridad:   paciente?.escolaridad,
       direccion:     paciente?.direccion,
     };
 
@@ -123,7 +124,8 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
     // Estrategia: encontrar el último {"texto" y parsear desde ahí hasta el último }
     let textoFinal = respuestaClean;
     let opciones: string[] = [];
-    let tipoOpciones: 'single' | 'checkbox' = 'single';
+    let tipoOpciones: 'single' | 'checkbox' | 'tabla_dinamica' = 'single';
+    let columnasFase1: string[] = [];
     let resumenItems: string[] = [];
     let enfoqueAbordaje = '';
 
@@ -134,13 +136,22 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
         try {
           const parsed = JSON.parse(respuestaClean.slice(jsonStart, jsonEnd + 1));
           if (parsed?.texto) {
-            const preJson = respuestaClean.slice(0, jsonStart).trim();
-            const partes  = [preJson, parsed.texto].filter(Boolean);
-            textoFinal    = partes.join('\n\n');
-            opciones      = Array.isArray(parsed.opciones) ? parsed.opciones : [];
-            tipoOpciones  = parsed.tipoOpciones === 'checkbox' ? 'checkbox' : 'single';
-            resumenItems  = Array.isArray(parsed.resumen) ? parsed.resumen : [];
+            opciones        = Array.isArray(parsed.opciones) ? parsed.opciones : [];
+            resumenItems    = Array.isArray(parsed.resumen) ? parsed.resumen : [];
             enfoqueAbordaje = typeof parsed.enfoque === 'string' ? parsed.enfoque.trim() : '';
+            if (parsed.tipoOpciones === 'tabla_dinamica' && Array.isArray(parsed.columnas)) {
+              tipoOpciones   = 'tabla_dinamica';
+              columnasFase1  = parsed.columnas;
+            } else {
+              tipoOpciones = parsed.tipoOpciones === 'checkbox' ? 'checkbox' : 'single';
+            }
+            // Descartar preJson cuando hay card propia para evitar pregunta duplicada
+            const preJson = respuestaClean.slice(0, jsonStart).trim();
+            if (opciones.length > 0 || resumenItems.length > 0 || tipoOpciones === 'tabla_dinamica') {
+              textoFinal = parsed.texto;
+            } else {
+              textoFinal = [preJson, parsed.texto].filter(Boolean).join('\n\n');
+            }
           }
         } catch {
           const preJson = respuestaClean.slice(0, jsonStart).trim();
@@ -236,6 +247,7 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
         respuesta:        textoFinal,
         opciones,
         tipoOpciones,
+        columnas:         columnasFase1,
         resumenItems,
         enfoqueAbordaje,
         finConversacion,
@@ -395,8 +407,9 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
       const jsonEnd   = rawLimpio.lastIndexOf('}');
       let textoFinal  = rawLimpio;
       let opciones: string[] = [];
-      let tipoOpciones: 'single' | 'checkbox' | 'tabla' = 'single';
+      let tipoOpciones: 'single' | 'checkbox' | 'tabla' | 'tabla_dinamica' = 'single';
       let tablaItems: { id: string; label: string }[] = [];
+      let columnas: string[] = [];
 
       if (jsonStart >= 0 && jsonEnd > jsonStart) {
         try {
@@ -404,7 +417,10 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
           if (parsed?.texto) {
             textoFinal  = parsed.texto;
             opciones    = Array.isArray(parsed.opciones) ? parsed.opciones : [];
-            if (parsed.tipoOpciones === 'tabla' && Array.isArray(parsed.tabla)) {
+            if (parsed.tipoOpciones === 'tabla_dinamica' && Array.isArray(parsed.columnas)) {
+              tipoOpciones = 'tabla_dinamica';
+              columnas     = parsed.columnas;
+            } else if (parsed.tipoOpciones === 'tabla' && Array.isArray(parsed.tabla)) {
               tipoOpciones = 'tabla';
               tablaItems   = parsed.tabla;
             } else {
@@ -434,9 +450,10 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
         success: true,
         data: {
           respuesta: textoFinal,
-          opciones: finRonda ? [] : opciones,
+          opciones:    finRonda ? [] : opciones,
           tipoOpciones: finRonda ? 'single' : tipoOpciones,
-          tablaItems: finRonda ? [] : tablaItems,
+          tablaItems:  finRonda ? [] : tablaItems,
+          columnas:    finRonda ? [] : columnas,
           finRonda,
           progreso: interrogatorio.progreso,
         },
@@ -551,8 +568,9 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
     const jEnd   = primerMensajeLimpio.lastIndexOf('}');
     let textoPrimer  = primerMensajeLimpio;
     let opcionesPrimer: string[] = [];
-    let tipoOpcPrimer: 'single' | 'checkbox' | 'tabla' = 'single';
+    let tipoOpcPrimer: 'single' | 'checkbox' | 'tabla' | 'tabla_dinamica' = 'single';
     let tablaItemsPrimer: { id: string; label: string }[] = [];
+    let columnasPrimer: string[] = [];
 
     // Guardar respuestas del primer mensaje si Claude ya las incluyó
     const respuestasRondaMatchA = primerMensaje.match(/\[\[RESPUESTAS_RONDA\]\]([\s\S]*?)\[\[\/RESPUESTAS_RONDA\]\]/);
@@ -571,7 +589,10 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
         if (p?.texto) {
           textoPrimer   = p.texto;
           opcionesPrimer = Array.isArray(p.opciones) ? p.opciones : [];
-          if (p.tipoOpciones === 'tabla' && Array.isArray(p.tabla)) {
+          if (p.tipoOpciones === 'tabla_dinamica' && Array.isArray(p.columnas)) {
+            tipoOpcPrimer    = 'tabla_dinamica';
+            columnasPrimer   = p.columnas;
+          } else if (p.tipoOpciones === 'tabla' && Array.isArray(p.tabla)) {
             tipoOpcPrimer    = 'tabla';
             tablaItemsPrimer = p.tabla;
           } else {
@@ -594,11 +615,12 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
         decision,
         seccionesActivas: seccionesGuia,
         idsPreguntaActivos: idsPregunta,
-        respuesta: textoPrimer,
-        opciones: opcionesPrimer,
+        respuesta:   textoPrimer,
+        opciones:    opcionesPrimer,
         tipoOpciones: tipoOpcPrimer,
-        tablaItems: tablaItemsPrimer,
-        finRonda: false,
+        tablaItems:  tablaItemsPrimer,
+        columnas:    columnasPrimer,
+        finRonda:    false,
         progreso: interrogatorio.progreso,
       },
     });

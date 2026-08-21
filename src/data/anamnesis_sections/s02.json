@@ -11,8 +11,9 @@
         "Sustancia (medicamento / alimento / suplemento / ambiental)",
         "Tipo de reacción",
         "Edad de aparición",
-        "¿Confirmada por prueba?"
-      ]
+        "¿Confirmada por profesional?"
+      ],
+      "objetivo_clinico": "Crear una lista inicial amplia antes de clasificar cada evento y priorizar los potencialmente graves."
     },
     {
       "id": "s02_manifestaciones",
@@ -67,7 +68,8 @@
           "value": "cambios_animo",
           "label": "Cambios del estado de ánimo"
         }
-      ]
+      ],
+      "objetivo_clinico": "Estandarizar síntomas declarados sin perder la descripción narrativa del episodio."
     },
     {
       "id": "s02_intolerancia_olores",
@@ -86,7 +88,8 @@
           "value": "marcada",
           "label": "Sí, marcada (me obliga a retirarme del lugar)"
         }
-      ]
+      ],
+      "objetivo_clinico": "Caracterizar síntomas provocados por olores o irritantes y su impacto funcional, sin etiquetar una enfermedad."
     },
     {
       "id": "s02_hipersensibilidad_quimica",
@@ -101,7 +104,8 @@
           "value": "si",
           "label": "Sí"
         }
-      ]
+      ],
+      "objetivo_clinico": "Explorar un patrón amplio de exposiciones de manera neutral y evitar confirmar una etiqueta controvertida solo por autorreporte."
     }
   ]
 }

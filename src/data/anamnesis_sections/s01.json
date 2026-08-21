@@ -4,19 +4,28 @@
   "title": "Información General",
   "questions": [
     {
+      "id": "s01_marco_temporal",
+      "text": "Síntomas: últimos 2 meses / Antecedentes: toda la vida",
+      "type": "text",
+      "objetivo_clinico": "Evitar que el paciente mezcle síntomas actuales con episodios remotos y mejorar la comparabilidad de las respuestas."
+    },
+    {
       "id": "s01_nombre",
       "text": "Nombre completo",
-      "type": "text"
+      "type": "text",
+      "objetivo_clinico": "Identificar correctamente el registro y permitir un trato personal respetuoso durante elchat."
     },
     {
       "id": "s01_nacimiento",
       "text": "Fecha de nacimiento (DD/MM/AAAA)",
-      "type": "text"
+      "type": "text",
+      "objetivo_clinico": "Interpretar síntomas, antecedentes y riesgos dentro de la etapa de vida"
     },
     {
       "id": "s01_edad",
       "text": "Edad",
-      "type": "text"
+      "type": "text",
+      "objetivo_clinico": "evitar inconsistencias de edad."
     },
 
     {
@@ -36,12 +45,49 @@
           "value": "intersexual",
           "label": "Intersexual / otra condición cromosómica"
         }
+      ],
+      "objetivo_clinico": "Recoger información relevante para anatomía, hormonas, reproducción y rangos de referencia sin asumir identidad de género ni cariotipo."
+    },
+    {
+      "id": "s01_nivel_educativo",
+      "text": "Nivel educativo más alto completado",
+      "type": "single",
+      "options": [
+        {
+          "value": "primaria",
+          "label": "Primaria"
+        },
+        {
+          "value": "bachillerato",
+          "label": "Bachillerato"
+        },
+        {
+          "value": "tecnico_tecnologo",
+          "label": "Técnico o tecnólogo"
+        },
+        {
+          "value": "universitario",
+          "label": "Universitario"
+        },
+        {
+          "value": "posgrado",
+          "label": "Posgrado"
+        },
+        {
+          "value": "otro",
+          "label": "Otro"
+        },
+        {
+          "value": "no_responder",
+          "label": "Prefiero no responder"
+        }
       ]
     },
     {
       "id": "s01_ocupacion",
       "text": "Ocupación actual",
-      "type": "text"
+      "type": "text",
+      "objetivo_clinico": "Comprender demandas físicas, cognitivas, horarios, exposiciones y estabilidad laboral relevantes para los síntomas."
     },
     {
       "id": "s01_anos_ocupacion",
@@ -77,17 +123,107 @@
           "value": "jubilado",
           "label": "Jubilado"
         }
+      ],
+      "objetivo_clinico": "Identificar patrones que pueden afectar sueño, alimentación, actividad física, exposición ambiental y recuperación."
+    },
+    {
+      "id": "s01_contacto_emergencia",
+      "text": "Contacto de emergencia autorizado (Nombre, relación contigo y teléfono)",
+      "type": "text",
+      "objetivo_clinico": "Disponer de una persona de apoyo para situaciones definidas por la política asistencial."
+    },
+    {
+      "id": "s01_como_nos_conociste",
+      "text": "¿Cómo nos conociste?",
+      "type": "single",
+      "options": [
+        { 
+          "value": "medico", 
+          "label": "Médico" 
+        },
+        { 
+          "value": "amigo_familiar", 
+          "label": "Amigo o familiar" 
+        },
+        { 
+          "value": "redes_sociales", 
+          "label": "Redes sociales" 
+        },
+        { 
+          "value": "internet", 
+          "label": "Búsqueda en internet" 
+        },
+        { 
+          "value": "otro", 
+          "label": "Otro" 
+        }
       ]
     },
     {
       "id": "s01_talla",
       "text": "Talla (cm)",
-      "type": "text"
+      "type": "text",
+      "objetivo_clinico": "Calcular indicadores antropométricos y contextualizar cambios de peso."
     },
     {
       "id": "s01_peso_actual",
       "text": "Peso actual (kg)",
-      "type": "text"
+      "type": "text",
+      "objetivo_clinico": "Diferenciar el estado actual, el patrón usual y las metas personales, con lenguaje neutral."
+    },
+    { 
+      "id": "s01_peso_habitual", 
+      "text": "Peso habitual (kg)", 
+      "type": "text",
+      "objetivo_clinico": "Diferenciar el estado actual, el patrón usual y las metas personales, con lenguaje neutral."
+    },
+    { 
+      "id": "s01_peso_deseado", 
+      "text": "Peso deseado (kg)", 
+      "type": "text",
+      "objetivo_clinico": "Diferenciar el estado actual, el patrón usual y las metas personales, con lenguaje neutral."
+    },
+    { 
+      "id": "s01_peso_max", 
+      "text": "Peso máximo alcanzado (kg)", 
+      "type": "text",
+      "objetivo_clinico": "Reconstruir la trayectoria ponderal y relacionarla temporalmente con etapas de vida, tratamientos o enfermedad."
+    },
+    { 
+      "id": "s01_peso_max_edad", 
+      "text": "¿A qué edad?", 
+      "type": "text",
+      "objetivo_clinico": "Reconstruir la trayectoria ponderal y relacionarla temporalmente con etapas de vida, tratamientos o enfermedad."
+    },
+    { 
+      "id": "s01_peso_min", 
+      "text": "Peso mínimo (kg)", 
+      "type": "text",
+      "objetivo_clinico": "Reconstruir la trayectoria ponderal y relacionarla temporalmente con etapas de vida, tratamientos o enfermedad."
+    },
+    { 
+      "id": "s01_peso_min_edad", 
+      "text": "¿A qué edad?", 
+      "type": "text",
+      "objetivo_clinico": "Reconstruir la trayectoria ponderal y relacionarla temporalmente con etapas de vida, tratamientos o enfermedad."
+    },
+    { 
+      "id": "s01_grasa_corporal", 
+      "text": "Porcentaje de grasa corporal", 
+      "type": "text",
+      "objetivo_clinico": "Registrar indicadores complementarios y su método de medición, sin sobreinterpretar valores de consumo."
+    },
+    { 
+      "id": "s01_masa_muscular", 
+      "text": "Porcentaje de masa muscular", 
+      "type": "text",
+      "objetivo_clinico": "Registrar indicadores complementarios y su método de medición, sin sobreinterpretar valores de consumo."
+    },
+    { 
+      "id": "s01_perimetro_abdominal", 
+      "text": "Perímetro abdominal (cm)", 
+      "type": "text",
+      "objetivo_clinico": "Registrar indicadores complementarios y su método de medición, sin sobreinterpretar valores de consumo."
     },
     {
       "id": "s01_peso_12meses",
@@ -111,6 +247,12 @@
           "label": "Ha fluctuado repetidamente (efecto rebote)"
         }
       ]
+    },
+    { 
+      "id": "s01_metodo_medicion", 
+      "text": "Método de medición (como una báscula digital o de bioimpedancia)", 
+      "type": "text",
+      "objetivo_clinico": "Conocer la procedencia y posible variabilidad de peso y composición corporal."
     },
     {
       "id": "s01_dispositivos",
@@ -157,7 +299,8 @@
           "value": "ninguno",
           "label": "Ninguno"
         }
-      ]
+      ],
+      "objetivo_clinico": "Saber qué datos generados por el paciente podrían revisarse y valorar su procedencia"
     }
   ]
 }
