@@ -22,6 +22,9 @@ export interface IParaclinico extends Document {
   ocrMetodo?: 'pdf-texto' | 'vision';
   ocrError?: string;
 
+  // Clasificación automática por IA
+  tipoDocumento?: 'laboratorio' | 'imagen_diagnostica' | 'electrocardiograma' | 'biopsia' | 'formula_medica' | 'historia_clinica' | 'otro';
+
   // Análisis funcional IA (Fase 3)
   semaforo?: 'verde' | 'amarillo' | 'rojo';
   valorFuncional?: string;  // interpretación en rangos funcionales
@@ -100,6 +103,11 @@ const ParaclinicoSchema = new Schema<IParaclinico>(
     ocrError: {
       type: String,
       trim: true
+    },
+
+    tipoDocumento: {
+      type: String,
+      enum: ['laboratorio', 'imagen_diagnostica', 'electrocardiograma', 'biopsia', 'formula_medica', 'historia_clinica', 'otro'],
     },
 
     // Análisis funcional IA (Fase 3)

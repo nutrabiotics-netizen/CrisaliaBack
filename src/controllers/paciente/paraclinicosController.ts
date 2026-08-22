@@ -1,10 +1,16 @@
 import { Response } from 'express';
 import Paraclinico from '../../models/Paraclinico';
 import Paciente from '../../models/Paciente';
+import Cita from '../../models/Cita';
 import { AuthRequest } from '../../middleware/auth';
-import { buildParaclinicoKey, uploadBinaryAndGetUrl } from '../../utils/s3Documents';
+import { buildParaclinicoKey, uploadBinaryAndGetPublicUrl } from '../../utils/s3Documents';
 import { extraerParaclinicoOcr } from '../../services/paraclinicos/paraclinicoOcrService';
 import { crearNotificacionMedico } from '../../utils/notificacionHelper';
+
+async function resolverMedicoPaciente(pacienteId: string): Promise<string | null> {
+  const cita = await Cita.findOne({ pacienteId }).sort({ createdAt: -1 }).select('medicoId').lean();
+  return cita?.medicoId ? String(cita.medicoId) : null;
+}
 
 const ALLOWED_MIMES = new Set(['application/pdf', 'image/jpeg', 'image/png', 'image/webp']);
 
@@ -46,8 +52,6 @@ export const subirParaclinico = async (req: AuthRequest, res: Response): Promise
       return;
     }
 
-    const medicoId = req.body.medicoId;
-
     const nuevoParaclinico = new Paraclinico({
       pacienteId,
       nombre,
@@ -64,10 +68,11 @@ export const subirParaclinico = async (req: AuthRequest, res: Response): Promise
     await nuevoParaclinico.save();
     res.status(201).json(nuevoParaclinico);
 
-    // Notificar al médico in-app que el paciente subió resultados
-    if (medicoId) {
+    // Notificar al médico in-app
+    const medicoIdResuelto = await resolverMedicoPaciente(String(pacienteId));
+    if (medicoIdResuelto) {
       void crearNotificacionMedico({
-        medicoId: String(medicoId),
+        medicoId: medicoIdResuelto,
         tipo: 'resultados_cargados',
         categoria: 'laboratorios_resultados',
         titulo: 'Resultados de laboratorio cargados',
@@ -114,8 +119,6 @@ export const subirParaclinicoArchivo = async (req: AuthRequest, res: Response): 
     const paciente = await Paciente.findById(pacienteId).select('numeroDocumento').lean();
     const numeroDoc = paciente?.numeroDocumento || pacienteId;
 
-    const medicoId = req.body?.medicoId;
-
     const notasPaciente =
       typeof req.body?.notasPaciente === 'string' && req.body.notasPaciente.trim()
         ? req.body.notasPaciente.trim()
@@ -129,7 +132,7 @@ export const subirParaclinicoArchivo = async (req: AuthRequest, res: Response): 
     const key = buildParaclinicoKey(numeroDoc, file.originalname || 'documento', mime);
     let urlArchivo: string;
     try {
-      urlArchivo = await uploadBinaryAndGetUrl(file.buffer, key, mime);
+      urlArchivo = await uploadBinaryAndGetPublicUrl(file.buffer, key, mime);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       console.error('[subirParaclinicoArchivo] S3:', msg);
@@ -155,16 +158,18 @@ export const subirParaclinicoArchivo = async (req: AuthRequest, res: Response): 
       ocrValores: ocr.ocrValores,
       ocrEstado: ocr.ocrEstado,
       ocrMetodo: ocr.ocrMetodo,
-      ocrError: ocr.ocrError
+      ocrError: ocr.ocrError,
+      tipoDocumento: ocr.tipoDocumento
     });
 
     await doc.save();
     res.status(201).json(doc);
 
-    // Notificar al médico in-app que el paciente subió resultados
-    if (medicoId) {
+    // Notificar al médico in-app
+    const medicoIdResuelto = await resolverMedicoPaciente(String(pacienteId));
+    if (medicoIdResuelto) {
       void crearNotificacionMedico({
-        medicoId: String(medicoId),
+        medicoId: medicoIdResuelto,
         tipo: 'resultados_cargados',
         categoria: 'laboratorios_resultados',
         titulo: 'Resultados de laboratorio cargados',

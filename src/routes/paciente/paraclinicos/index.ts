@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import { authenticate, authorize } from '../../../middleware/auth';
 import { UserRole } from '../../../types';
-import { requireCuota1 } from '../../../middleware/requirePago';
+
 import {
   obtenerParaclinicos,
   subirParaclinico,
@@ -50,9 +50,8 @@ router.get('/', obtenerParaclinicos);
 // GET análisis evolutivo con IA (Fase 3) — debe ir antes de /:id
 router.get('/analisis-evolutivo', obtenerAnalisisEvolutivo);
 
-// POST/DELETE: requieren Cuota 1 pagada (el pago desbloquea la carga de paraclínicos)
-router.post('/upload', requireCuota1, uploadParaclinicoMiddleware, subirParaclinicoArchivo);
-router.post('/', requireCuota1, subirParaclinico);
-router.delete('/:id', requireCuota1, eliminarParaclinico);
+router.post('/upload', uploadParaclinicoMiddleware, subirParaclinicoArchivo);
+router.post('/', subirParaclinico);
+router.delete('/:id', eliminarParaclinico);
 
 export default router;
