@@ -6,6 +6,10 @@ import {
   obtenerAnalisisEvolutivoPaciente,
   actualizarSemaforoParaclinico,
   marcarParaclinicoRevisado,
+  quitarRevisadoParaclinico,
+  agregarNotaParaclinico,
+  editarNotaParaclinico,
+  eliminarNotaParaclinico,
 } from '../../../controllers/medico/paraclinicosController';
 
 const router = Router();
@@ -41,5 +45,18 @@ router.put(
   authorize(UserRole.MEDICO),
   marcarParaclinicoRevisado
 );
+
+// PUT /api/medico/paraclinicos/:paraclinicoId/quitar-revisado
+router.put(
+  '/:paraclinicoId/quitar-revisado',
+  authenticate,
+  authorize(UserRole.MEDICO),
+  quitarRevisadoParaclinico
+);
+
+// Notas del médico
+router.put('/:paraclinicoId/notas',            authenticate, authorize(UserRole.MEDICO), agregarNotaParaclinico);
+router.put('/:paraclinicoId/notas/:notaId',    authenticate, authorize(UserRole.MEDICO), editarNotaParaclinico);
+router.delete('/:paraclinicoId/notas/:notaId', authenticate, authorize(UserRole.MEDICO), eliminarNotaParaclinico);
 
 export default router;

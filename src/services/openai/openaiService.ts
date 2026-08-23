@@ -35,7 +35,7 @@ Responde siempre en español y con un enfoque profesional y empático.`
             content: prompt
           }
         ],
-        temperature: 0.7,
+        temperature: 0.5,
         max_tokens: 2000
       });
 
@@ -97,7 +97,7 @@ ${camposClinicos.join('\n')}
 Por favor, proporciona:
 1. Un análisis detallado (mínimo 300 palabras) sobre posibles disfunciones identificadas, rutas terapéuticas recomendadas y observaciones importantes basadas en Medicina Funcional.
 2. Una lista de 3-5 objetivos de salud específicos y alcanzables para el paciente.
-3. Cualquier observación sobre posibles incoherencias o información que requiera aclaración.
+3. Incoherencias reales en las respuestas: solo datos que se contradigan entre sí de forma directa y clínicamente significativa (por ejemplo, sexo femenino pero embarazos = 0 con historial inconsistente). NO reportes como incoherencia: valores que coinciden aunque provengan de campos distintos (ej. edad calculada = edad declarada), ausencia de síntomas, respuestas dentro de rangos normales, ni ninguna observación trivial. Si no existe ninguna incoherencia real, escribe exactamente: Ninguna.
 
 Formato de respuesta (usa exactamente estos encabezados):
 ANALISIS:
@@ -109,7 +109,7 @@ OBJETIVOS:
 - Objetivo 3
 
 OBSERVACIONES:
-[observaciones sobre incoherencias o información que requiera aclaración, si las hay]`;
+[incoherencias reales únicamente, o "Ninguna" si no las hay]`;
 
     return prompt;
   }
@@ -145,7 +145,14 @@ OBSERVACIONES:
     const observacionesMatch = respuestaIA.match(/OBSERVACIONES:\s*([\s\S]*?)$/i);
     if (observacionesMatch) {
       const observacionesTexto = observacionesMatch[1].trim();
-      if (observacionesTexto && observacionesTexto.toLowerCase() !== 'ninguna' && observacionesTexto.toLowerCase() !== 'no hay') {
+      const textoNorm = observacionesTexto.toLowerCase().trim();
+      const esVacio = !observacionesTexto ||
+        textoNorm === 'ninguna' || textoNorm === 'no hay' ||
+        textoNorm === 'no se identificaron incoherencias' ||
+        textoNorm === 'no hay incoherencias' ||
+        textoNorm.startsWith('no se observan') ||
+        textoNorm.startsWith('no hay incoherencias');
+      if (!esVacio) {
         analisis.observacionesIA = observacionesTexto
           .split('\n')
           .map(line => line.replace(/^[-•\d.\s]+/, '').trim())

@@ -31,6 +31,9 @@ export interface IParaclinico extends Document {
   tendencia?: 'mejorando' | 'estable' | 'empeorando';
   analisisIA?: string;
 
+  // Notas del médico
+  notasHistorial?: { _id?: mongoose.Types.ObjectId; texto: string; creadoEn: Date }[];
+
   // Auditoría
   createdAt: Date;
   updatedAt: Date;
@@ -125,6 +128,13 @@ const ParaclinicoSchema = new Schema<IParaclinico>(
     },
     analisisIA: {
       type: String
+    },
+    notasHistorial: {
+      type: [{
+        texto:    { type: String, required: true, trim: true },
+        creadoEn: { type: Date, default: Date.now },
+      }],
+      default: [],
     }
   },
   {

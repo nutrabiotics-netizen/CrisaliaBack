@@ -17,7 +17,7 @@ export const obtenerParaclinicosPaciente = async (req: AuthRequest, res: Respons
 
     const docs = await Paraclinico.find({ pacienteId })
       .sort({ fecha: -1 })
-      .select('nombre tipo fecha semaforo tendencia analisisIA valorFuncional revisadoPorMedico ocrEstado ocrValores notasPaciente tamañoBytes urlArchivo')
+      .select('nombre tipo tipoDocumento fecha semaforo tendencia analisisIA valorFuncional revisadoPorMedico ocrEstado ocrValores notasPaciente tamañoBytes urlArchivo notasHistorial')
       .lean();
 
     res.json({ success: true, data: docs });
@@ -157,4 +157,73 @@ export const marcarParaclinicoRevisado = async (req: AuthRequest, res: Response)
   } catch (err: any) {
     res.status(500).json({ mensaje: 'Error al marcar como revisado.' });
   }
+};
+
+/**
+ * PUT /api/medico/paraclinicos/:paraclinicoId/quitar-revisado
+ * Médico desmarca el paraclínico como revisado.
+ */
+export const quitarRevisadoParaclinico = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { paraclinicoId } = req.params;
+    if (!mongoose.isValidObjectId(paraclinicoId)) {
+      res.status(400).json({ mensaje: 'ID inválido.' });
+      return;
+    }
+    const doc = await Paraclinico.findByIdAndUpdate(
+      paraclinicoId,
+      { $set: { revisadoPorMedico: false } },
+      { new: true }
+    ).lean();
+    if (!doc) { res.status(404).json({ mensaje: 'No encontrado.' }); return; }
+    res.json({ success: true, data: doc });
+  } catch (err: any) {
+    res.status(500).json({ mensaje: 'Error al quitar revisión.' });
+  }
+};
+
+/** PUT /api/medico/paraclinicos/:paraclinicoId/notas — agrega una nota al historial */
+export const agregarNotaParaclinico = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { paraclinicoId } = req.params;
+    const { notas } = req.body;
+    if (!notas?.trim()) { res.status(400).json({ mensaje: 'El texto de la nota es requerido.' }); return; }
+    const doc = await Paraclinico.findByIdAndUpdate(
+      paraclinicoId,
+      { $push: { notasHistorial: { texto: notas.trim(), creadoEn: new Date() } } },
+      { new: true }
+    ).select('notasHistorial').lean();
+    if (!doc) { res.status(404).json({ mensaje: 'No encontrado.' }); return; }
+    res.json({ success: true, data: { notasHistorial: (doc as any).notasHistorial } });
+  } catch (err: any) { res.status(500).json({ mensaje: 'Error al agregar nota.' }); }
+};
+
+/** PUT /api/medico/paraclinicos/:paraclinicoId/notas/:notaId — edita una nota */
+export const editarNotaParaclinico = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { paraclinicoId, notaId } = req.params;
+    const { texto } = req.body;
+    if (!texto?.trim()) { res.status(400).json({ mensaje: 'El texto es requerido.' }); return; }
+    const doc = await Paraclinico.findOneAndUpdate(
+      { _id: paraclinicoId, 'notasHistorial._id': notaId },
+      { $set: { 'notasHistorial.$.texto': texto.trim() } },
+      { new: true }
+    ).select('notasHistorial').lean();
+    if (!doc) { res.status(404).json({ mensaje: 'Nota no encontrada.' }); return; }
+    res.json({ success: true, data: { notasHistorial: (doc as any).notasHistorial } });
+  } catch (err: any) { res.status(500).json({ mensaje: 'Error al editar nota.' }); }
+};
+
+/** DELETE /api/medico/paraclinicos/:paraclinicoId/notas/:notaId — elimina una nota */
+export const eliminarNotaParaclinico = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { paraclinicoId, notaId } = req.params;
+    const doc = await Paraclinico.findByIdAndUpdate(
+      paraclinicoId,
+      { $pull: { notasHistorial: { _id: notaId } } },
+      { new: true }
+    ).select('notasHistorial').lean();
+    if (!doc) { res.status(404).json({ mensaje: 'No encontrado.' }); return; }
+    res.json({ success: true, data: { notasHistorial: (doc as any).notasHistorial } });
+  } catch (err: any) { res.status(500).json({ mensaje: 'Error al eliminar nota.' }); }
 };

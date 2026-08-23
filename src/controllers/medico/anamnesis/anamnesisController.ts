@@ -61,7 +61,7 @@ export const listarAnamnesisDelPaciente = async (
 
     const interrogatorios = await Interrogatorio.find({ pacienteId })
       .sort({ createdAt: -1 })
-      .select('_id tipo estado progreso analisisIA objetivos notasMedico respuestas revisadoPorMedico revisadoEn createdAt updatedAt')
+      .select('_id tipo estado progreso analisisIA observacionesIA objetivos notasMedico notasHistorial respuestas revisadoPorMedico revisadoEn recomendacionAutomatica.llamadoAccion perfilRadar.generadoEn createdAt updatedAt')
       .lean();
 
     res.json({
