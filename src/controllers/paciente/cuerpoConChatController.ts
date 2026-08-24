@@ -114,10 +114,22 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
       .trim();
 
     // ── Limpiar fences de markdown ────────────────────────────────────────────
-    const respuestaClean = respuestaSinMarcadores
-      .replace(/^```(?:json)?\s*/im, '')
-      .replace(/```\s*$/m, '')
-      .trim();
+    // Si hay un bloque ```json ... ``` embebido, extraer su contenido
+    // y guardar el texto previo como preámbulo
+    let preambulo = '';
+    let respuestaClean = respuestaSinMarcadores;
+
+    const fenceMatch = respuestaSinMarcadores.match(/^([\s\S]*?)```(?:json)?\s*([\s\S]*?)```/m);
+    if (fenceMatch) {
+      preambulo = fenceMatch[1].trim();
+      respuestaClean = fenceMatch[2].trim();
+    } else {
+      // Sin fence embebido: limpiar solo fences al inicio/final
+      respuestaClean = respuestaSinMarcadores
+        .replace(/^```(?:json)?\s*/im, '')
+        .replace(/```\s*$/m, '')
+        .trim();
+    }
 
     // ── Parsear JSON { texto, opciones, tipoOpciones, respuestaLibre } ──────────
     // Claude devuelve markdown libre ANTES del JSON de cierre.
@@ -146,18 +158,33 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
               tipoOpciones = parsed.tipoOpciones === 'checkbox' ? 'checkbox' : 'single';
             }
             // Descartar preJson cuando hay card propia para evitar pregunta duplicada
-            const preJson = respuestaClean.slice(0, jsonStart).trim();
+            const preJson = [preambulo, respuestaClean.slice(0, jsonStart).trim()].filter(Boolean).join('\n\n');
             if (opciones.length > 0 || resumenItems.length > 0 || tipoOpciones === 'tabla_dinamica') {
-              textoFinal = parsed.texto;
+              // Con card: usar preámbulo como texto introductorio si existe, si no usar parsed.texto
+              textoFinal = preJson || parsed.texto;
             } else {
               textoFinal = [preJson, parsed.texto].filter(Boolean).join('\n\n');
             }
           }
         } catch {
           const preJson = respuestaClean.slice(0, jsonStart).trim();
-          if (preJson) textoFinal = preJson;
+          if (preJson) {
+            textoFinal = preJson;
+          } else {
+            // Fallback: extraer "texto" por regex si JSON.parse falló
+            const m = respuestaClean.match(/"texto"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+            if (m) textoFinal = m[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+            // Si aún parece JSON, devolver string vacío en lugar del JSON crudo
+            else if (textoFinal.trimStart().startsWith('{')) textoFinal = '';
+          }
         }
       }
+    }
+
+    // Guarda final: si textoFinal sigue pareciendo JSON crudo, extrae "texto" o vacía
+    if (textoFinal.trimStart().startsWith('{"texto"') || textoFinal.trimStart().startsWith('{ "texto"')) {
+      const mFinal = textoFinal.match(/"texto"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+      textoFinal = mFinal ? mFinal[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : '';
     }
 
     console.log('[cuerpoConChat/responder] ◀ procesado', {
