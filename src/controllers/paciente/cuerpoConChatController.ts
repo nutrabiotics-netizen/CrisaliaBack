@@ -165,9 +165,10 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
             }
             // Descartar preJson cuando hay card propia para evitar pregunta duplicada
             const preJson = [preambulo, respuestaClean.slice(0, jsonStart).trim()].filter(Boolean).join('\n\n');
-            if (opciones.length > 0 || resumenItems.length > 0 || tipoOpciones === 'tabla_dinamica') {
-              // Con card: usar preámbulo como texto introductorio si existe, si no usar parsed.texto
-              textoFinal = preJson || parsed.texto;
+            const esCard = opciones.length > 0 || resumenItems.length > 0 || tipoOpciones === 'tabla' || tipoOpciones === 'tabla_dinamica';
+            if (esCard) {
+              // El card muestra parsed.texto como encabezado — no mezclar con el preámbulo
+              textoFinal = parsed.texto;
             } else {
               textoFinal = [preJson, parsed.texto].filter(Boolean).join('\n\n');
             }
