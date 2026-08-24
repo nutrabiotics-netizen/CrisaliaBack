@@ -107,10 +107,14 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
     const respuestasS01S03 = extraerRespuestasS01S03(respuesta);
 
     // ── Limpiar marcadores técnicos ───────────────────────────────────────────
+    // [[RESPUESTAS_S01_S03]] siempre viene después del JSON; si Claude omite el
+    // tag de cierre el regex no matchea y los } del contenido técnico rompen
+    // lastIndexOf('}') → eliminamos desde la apertura hasta el fin del string
+    // (o hasta el tag de cierre si existe) para que el JSON quede limpio.
     const respuestaSinMarcadores = respuesta
-      .replace(/\[\[CAUSAS\]\][\s\S]*?\[\[\/CAUSAS\]\]/g, '')
-      .replace(/\[\[RESPUESTAS_S01_S03\]\][\s\S]*?\[\[\/RESPUESTAS_S01_S03\]\]/g, '')
-      .replace('[[FIN_CONVERSACION]]', '')
+      .replace(/\[\[CAUSAS\]\][\s\S]*?(?:\[\[\/CAUSAS\]\]|$)/g, '')
+      .replace(/\[\[RESPUESTAS_S01_S03\]\][\s\S]*?(?:\[\[\/RESPUESTAS_S01_S03\]\]|$)/g, '')
+      .replace(/\[\[FIN_CONVERSACION\]\]/g, '')
       .trim();
 
     // ── Limpiar fences de markdown ────────────────────────────────────────────
@@ -141,7 +145,9 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
     let resumenItems: string[] = [];
     let enfoqueAbordaje = '';
 
-    const jsonStart = respuestaClean.lastIndexOf('{"texto"');
+    // Buscar última ocurrencia de { seguido de "texto" (con o sin espacios/saltos)
+    const jsonStartMatches = [...respuestaClean.matchAll(/\{\s*"texto"/g)];
+    const jsonStart = jsonStartMatches.length > 0 ? jsonStartMatches[jsonStartMatches.length - 1].index! : -1;
     if (jsonStart >= 0) {
       const jsonEnd = respuestaClean.lastIndexOf('}');
       if (jsonEnd > jsonStart) {
@@ -182,7 +188,7 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
     }
 
     // Guarda final: si textoFinal sigue pareciendo JSON crudo, extrae "texto" o vacía
-    if (textoFinal.trimStart().startsWith('{"texto"') || textoFinal.trimStart().startsWith('{ "texto"')) {
+    if (/^\s*\{\s*"texto"/.test(textoFinal)) {
       const mFinal = textoFinal.match(/"texto"\s*:\s*"((?:[^"\\]|\\.)*)"/);
       textoFinal = mFinal ? mFinal[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : '';
     }
