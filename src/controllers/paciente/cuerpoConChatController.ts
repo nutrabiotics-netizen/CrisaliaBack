@@ -140,8 +140,9 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
     // Estrategia: encontrar el último {"texto" y parsear desde ahí hasta el último }
     let textoFinal = respuestaClean;
     let opciones: string[] = [];
-    let tipoOpciones: 'single' | 'checkbox' | 'tabla_dinamica' = 'single';
+    let tipoOpciones: 'single' | 'checkbox' | 'tabla' | 'tabla_dinamica' = 'single';
     let columnasFase1: string[] = [];
+    let tablaItemsFase1: { id: string; label: string }[] = [];
     let resumenItems: string[] = [];
     let enfoqueAbordaje = '';
 
@@ -158,8 +159,11 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
             resumenItems    = Array.isArray(parsed.resumen) ? parsed.resumen : [];
             enfoqueAbordaje = typeof parsed.enfoque === 'string' ? parsed.enfoque.trim() : '';
             if (parsed.tipoOpciones === 'tabla_dinamica' && Array.isArray(parsed.columnas)) {
-              tipoOpciones   = 'tabla_dinamica';
-              columnasFase1  = parsed.columnas;
+              tipoOpciones  = 'tabla_dinamica';
+              columnasFase1 = parsed.columnas;
+            } else if (parsed.tipoOpciones === 'tabla' && Array.isArray(parsed.tabla)) {
+              tipoOpciones     = 'tabla';
+              tablaItemsFase1  = parsed.tabla;
             } else {
               tipoOpciones = parsed.tipoOpciones === 'checkbox' ? 'checkbox' : 'single';
             }
@@ -281,6 +285,7 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
         respuesta:        textoFinal,
         opciones,
         tipoOpciones,
+        tablaItems:       tablaItemsFase1,
         columnas:         columnasFase1,
         resumenItems,
         enfoqueAbordaje,
