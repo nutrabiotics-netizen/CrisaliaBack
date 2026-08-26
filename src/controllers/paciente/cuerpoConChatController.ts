@@ -140,11 +140,12 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
     // Estrategia: encontrar el último {"texto" y parsear desde ahí hasta el último }
     let textoFinal = respuestaClean;
     let opciones: string[] = [];
-    let tipoOpciones: 'single' | 'checkbox' | 'tabla' | 'tabla_dinamica' = 'single';
+    let tipoOpciones: 'single' | 'checkbox' | 'tabla' | 'tabla_dinamica' | 'file_upload' = 'single';
     let columnasFase1: string[] = [];
     let tablaItemsFase1: { id: string; label: string }[] = [];
     let resumenItems: string[] = [];
     let enfoqueAbordaje = '';
+    let alertaPresencial = false;
 
     // Buscar última ocurrencia de { seguido de "texto" (con o sin espacios/saltos)
     const jsonStartMatches = [...respuestaClean.matchAll(/\{\s*"texto"/g)];
@@ -158,12 +159,15 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
             opciones        = Array.isArray(parsed.opciones) ? parsed.opciones : [];
             resumenItems    = Array.isArray(parsed.resumen) ? parsed.resumen : [];
             enfoqueAbordaje = typeof parsed.enfoque === 'string' ? parsed.enfoque.trim() : '';
+            if (parsed.alertaPresencial === true) alertaPresencial = true;
             if (parsed.tipoOpciones === 'tabla_dinamica' && Array.isArray(parsed.columnas)) {
               tipoOpciones  = 'tabla_dinamica';
               columnasFase1 = parsed.columnas;
             } else if (parsed.tipoOpciones === 'tabla' && Array.isArray(parsed.tabla)) {
               tipoOpciones     = 'tabla';
               tablaItemsFase1  = parsed.tabla;
+            } else if (parsed.tipoOpciones === 'file_upload') {
+              tipoOpciones = 'file_upload';
             } else {
               tipoOpciones = parsed.tipoOpciones === 'checkbox' ? 'checkbox' : 'single';
             }
@@ -287,6 +291,7 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
         tipoOpciones,
         tablaItems:       tablaItemsFase1,
         columnas:         columnasFase1,
+        alertaPresencial,
         resumenItems,
         enfoqueAbordaje,
         finConversacion,
@@ -446,7 +451,7 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
       const jsonEnd   = rawLimpio.lastIndexOf('}');
       let textoFinal  = rawLimpio;
       let opciones: string[] = [];
-      let tipoOpciones: 'single' | 'checkbox' | 'tabla' | 'tabla_dinamica' = 'single';
+      let tipoOpciones: 'single' | 'checkbox' | 'tabla' | 'tabla_dinamica' | 'file_upload' = 'single';
       let tablaItems: { id: string; label: string }[] = [];
       let columnas: string[] = [];
 
