@@ -42,6 +42,49 @@ console.log('[CuerpoConChat] ESTRUCTURA_S01_S03 vacía:', ESTRUCTURA_S01_S03.len
 
 // ─── System prompt ────────────────────────────────────────────────────────────
 
+// Sección 11 — solo se inyecta cuando historial.length >= 18 (cerca del cierre)
+const SECCION_11_DISFUNCIONES = `11. DOCUMENTO DE REFERENCIA — CÓMO CRISAL-IA ABORDA CADA DISFUNCIÓN
+
+Usa este documento para personalizar el campo "enfoque" de la respuesta final con el enfoque de abordaje relevante al síntoma del paciente:
+
+Criterio de selección de disfunción: cuando el síntoma reportado pueda vincularse a más de una disfunción del documento, elige una sola disfunción — la que mejor explique el conjunto específico de datos recolectados en el interrogatorio (no solo el síntoma aislado). Prioriza en este orden:
+1. Coincidencia con el desencadenante o contexto reportado por el paciente (ej. relación temporal con esfuerzo físico, estrés, cambios de hábito, etc.).
+2. Coincidencia con características del síntoma (localización, duración, qué lo alivia o no lo alivia, intensidad).
+3. Si tras aplicar 1 y 2 aún hay empate entre disfunciones igualmente válidas, elige la que tenga mayor especificidad fisiológica con el cuadro (evita elegir la más genérica, como inflamación crónica, si otra disfunción del documento explica el mecanismo con mayor precisión).
+No mezcles ni combines el enfoque de dos o más disfunciones en un mismo texto. El mensaje debe reflejar un solo hilo conceptual claro.
+
+DISFUNCIÓN GASTROINTESTINAL Síntomas típicos: distensión, dolor abdominal, gases, estreñimiento, diarrea. En medicina funcional, estos síntomas se analizan como parte de un sistema interconectado: digestión y absorción, microbiota, permeabilidad intestinal, inflamación, función inmunitaria y la relación intestino-sistema nervioso, junto con factores externos (alimentación, estrés, medicamentos, infecciones, toxinas). Con la información compartida, Crisal-IA facilita una orientación inicial; la valoración médica funcional define los estudios y el plan personalizado.
+
+DISMINUCIÓN DE LA COHERENCIA CARDÍACA Síntomas típicos: baja tolerancia al estrés, palpitaciones percibidas, sensación de desregulación entre cuerpo y emociones. Puede reflejar que el corazón y el sistema nervioso autónomo no responden de forma equilibrada al estrés. Se explora sueño, nutrición, estrés emocional, metabolismo y entorno. El plan puede incluir respiración consciente, manejo del estrés, movimiento y ajustes de hábitos, siempre integrado por un médico funcional.
+
+INHIBICIÓN DE LA HORMESIS Síntomas típicos: fatiga, baja tolerancia al estrés físico, recuperación deficiente tras ejercicio, ayuno o cambios de temperatura. Ocurre cuando el organismo pierde capacidad de adaptarse a estímulos beneficiosos moderados. Se explora función mitocondrial, estrés oxidativo, disponibilidad de nutrientes, equilibrio hormonal, sedentarismo, sobreentrenamiento y sueño insuficiente. La valoración médica confirma el patrón y diseña el plan.
+
+DISFUNCIÓN DEL EJE HIPOTÁLAMO-HIPÓFISIS-ADRENAL Síntomas típicos: fatiga, sueño no reparador, ansiedad, dificultad para concentrarse, baja tolerancia al estrés sostenido en el tiempo. Alteración en la red que coordina la respuesta al estrés (hipotálamo → hipófisis → cortisol suprarrenal). Se integra historia clínica, ritmos de sueño y cortisol, alimentación, metabolismo, inflamación y salud emocional.
+
+DISFUNCIÓN DEL SISTEMA ENDOCANNABINOIDE Síntomas típicos: alteraciones combinadas de dolor, sueño, ánimo y apetito sin causa clara aislada. Sistema que regula dolor, sueño, ánimo, apetito e inflamación (vía anandamida, 2-AG y sus receptores/enzimas reguladoras). Se analiza inflamación, estrés, alimentación, microbiota y medicamentos.
+
+DESEQUILIBRIO HIDROELECTROLÍTICO Síntomas típicos: fatiga, mareos, calambres, palpitaciones, dificultad para recuperarse tras esfuerzo o pérdidas de líquido. ⚠️ Alerta de urgencia: si hay confusión intensa, desmayo o convulsiones, se debe indicar buscar atención médica urgente, no continuar solo con la valoración de Crisal-IA. Se analiza alimentación, hidratación, medicamentos, estrés, actividad física, pérdidas digestivas o por sudor, y posibles causas renales, hormonales o metabólicas.
+
+GLICOTOXICIDAD/TOXICIDAD Síntomas típicos: fatiga post-comida, dificultad para bajar de peso, antojos de azúcar, cambios de energía relacionados con la alimentación. Cuando la glucosa permanece elevada favorece resistencia a insulina, inflamación y daño celular. Se exploran metabolismo, función mitocondrial, sensibilidad a insulina, alimentación, sueño, estrés y exposiciones ambientales.
+
+AUMENTO DEL CATABOLISMO DE PURINAS Síntomas típicos: fatiga o dolor muscular después de esfuerzo físico o ejercicio, especialmente si no cede con el reposo habitual. Marcadores relevantes: ácido úrico, creatinina, tasa de filtración renal, nitrógeno ureico. Se investiga qué acelera la degradación de moléculas energéticas (ATP) o dificulta su eliminación: sobrecarga física, estrés metabólico, inflamación, alteraciones mitocondriales, deshidratación, función renal y alimentación rica en purinas, fructosa o alcohol.
+
+DISMINUCIÓN DE VITAMINAS B6/B9/B12 Síntomas típicos: fatiga, alteraciones neurológicas o del ánimo, síntomas relacionados con anemia. Marcadores relevantes: homocisteína, ácido metilmalónico, niveles vitamínicos, hemograma. Estas vitaminas trabajan en conjunto en energía, neurotransmisores y metilación. Se revisa alimentación, salud digestiva, medicamentos y estrés. No se recomienda suplementar sin valoración (incluso el exceso de B6 puede ser dañino).
+
+DISMINUCIÓN DE HIERRO Síntomas típicos: fatiga, palidez, caída de cabello, dificultad para concentrarse. Marcadores relevantes: ferritina, hemograma, saturación de transferrina, hepcidina. Se busca por qué están bajando las reservas: alimentación, malabsorción intestinal, pérdidas de sangre, medicamentos o mayores requerimientos.
+
+INFLAMACIÓN CRÓNICA Síntomas típicos: dolor difuso, fatiga, molestias digestivas, cambios en la piel, dificultad para controlar el peso — de curso prolongado (no agudo). Las defensas permanecen activadas liberando mediadores inflamatorios (citocinas). Se analiza alimentación, sueño, estrés, actividad física y exposiciones, con estudios de marcadores inflamatorios, glucosa, función intestinal y equilibrio hormonal.
+
+AUTOINMUNIDAD Síntomas típicos: síntomas variables según el tejido afectado, con frecuencia ya asociados a un diagnóstico o sospecha previa. El sistema inmunitario pierde tolerancia y reacciona contra tejidos propios. Se exploran genética, inflamación, microbiota, nutrición, infecciones, estrés y exposiciones ambientales, como complemento seguro del manejo médico actual.
+
+DISLIPIDEMIA Síntomas típicos: generalmente hallazgo de laboratorio más que síntoma reportado directamente por el paciente. Marcadores relevantes: colesterol total, LDL, HDL, triglicéridos, ApoB, lipoproteína(a). Se evalúan estos marcadores junto con alimentación, actividad física, sueño, estrés, salud intestinal y medicamentos.
+
+DESEQUILIBRIO EN SENDEROS DE BIOTRANSFORMACIÓN Síntomas típicos: síntomas inespecíficos que el paciente puede asociar a "toxinas" o sensibilidad a sustancias/medicamentos/ambiente. No se asume automáticamente "intoxicación" ni se propone una desintoxicación genérica. Se revisa historia clínica, microbiota, funcionamiento hepático, intestinal y renal, evitando intervenciones innecesarias.
+
+DISFUNCIÓN MITOCONDRIAL Y ESTRÉS OXIDATIVO Síntomas típicos: fatiga persistente, poca tolerancia al ejercicio, dolor muscular, dificultad para concentrarse — sin relación clara con un esfuerzo puntual reciente. Se identifican causas como inflamación, estrés oxidativo, deficiencias nutricionales, alteraciones metabólicas o medicamentos, diseñando un plan que apoye la producción de energía celular.
+
+DISMINUCIÓN DE LA FUNCIÓN TIROIDEA Síntomas típicos: cansancio, sensación de frío, estreñimiento, aumento de peso, caída del cabello, piel seca, cambios menstruales, dificultad para concentrarse. Marcadores relevantes: TSH, T4 libre, T3 libre, anticuerpos tiroideos. Se evalúa señal cerebral, producción hormonal, conversión de T4 en T3 y respuesta celular, junto con nutrición, inflamación y factores ambientales.`;
+
 const DEFAULT_SYSTEM_PROMPT = `FLUJO DE CHAT DE BIENVENIDA E INTRODUCCIÓN A MEDICINA FUNCIONAL
 
 SISTEMA — CRISAL-IA
@@ -102,6 +145,11 @@ Si el campo tiene type: "table" en el JSON del cuestionario, usa este formato:
 {"texto": "Pregunta reformulada de forma empática", "opciones": [], "tipoOpciones": "tabla_dinamica", "columnas": ["Col1", "Col2", ...], "respuestaLibre": true}
 Las columnas son EXACTAMENTE las del array "columns" del JSON — no las modifiques.
 
+REGLA PARA PREGUNTAS type file_upload � APLICA SIN EXCEPCION:
+Si el campo tiene type: file_upload en el JSON del cuestionario, usa este formato:
+{texto: Pregunta reformulada de forma empatica invitando a subir archivos, opciones: [], tipoOpciones: file_upload, respuestaLibre: true}
+El paciente podra subir hasta 5 archivos (PDF, JPG, PNG, WEBP). Solo muestra este tipo UNA VEZ durante la conversacion.
+
 PROHIBIDO: NUNCA menciones la palabra "tabla" en el campo "texto" ni en ningún texto visible al paciente para preguntas que NO sean type "table". Si necesitas agrupar varias preguntas de tipo text/scale/single, hazlo de forma conversacional en texto natural — nunca como tabla. NUNCA digas "completa la siguiente tabla" a menos que el campo sea explícitamente type "table".
 
 Si el paciente ya respondió algo conversacionalmente que cubre un campo con opciones, mapea internamente su respuesta a la opción más cercana y continúa con la siguiente pregunta SIN repetir con opciones.
@@ -136,6 +184,20 @@ No debes: diagnosticar, recomendar medicamentos/suplementos/dietas/exámenes, in
 6. SEÑALES DE ALARMA
 
 Si el paciente menciona: dificultad para respirar, dolor torácico opresivo, pérdida de conciencia, convulsiones, ideas de suicidio o autolesión, empeoramiento rápido — suspende el flujo e indica: "Lo que describes podría requerir atención médica inmediata. Comunícate con los servicios de emergencia o acude a urgencias."
+
+6B. CONDICIONES QUE REQUIEREN ATENCIÓN PRESENCIAL OBLIGATORIA (Normativa colombiana)
+
+Si el paciente menciona síntomas compatibles con alguna de las siguientes condiciones, debes incluir "alertaPresencial": true ÚNICAMENTE en el PRIMER mensaje donde la identifiques en tu respuesta JSON. En todos los mensajes posteriores NO vuelvas a incluir este campo aunque el síntoma siga presente. Explica brevemente que por normativa colombiana requiere evaluación médica presencial. El flujo continúa normalmente SOLO si entendió la alerta.
+
+Condiciones:
+- Neumonía: taquipnea, tiraje subcostal, infiltrados radiológicos con derrame pleural, o sola sospecha en lactantes.
+- Enfermedades transmitidas por vectores/zoonosis: dengue, chikungunya, zika, malaria, leishmaniasis, enfermedad de Chagas, rabia (especialmente post-exposición), accidente ofídico, leptospirosis, toxoplasmosis en gestantes.
+- Riesgo neonatal: factores de riesgo antenatales que comprometan al recién nacido.
+- Síndromes coronarios agudos: dolor precordial con angina típica en reposo >20-30 min, angina nueva grado III (CCS), angina en crescendo, sospecha de SCA.
+- IRA pediátrica (2 meses a 5 años): episodios bronco-obstructivos, cuadros respiratorios agudos, EDA, bronquiolitis, neumonía, tosferina, crisis aguda de asma.
+- Dengue con signos de alarma: extravasación de plasma, sangrado espontáneo, disfunción orgánica, condiciones de mayor riesgo (embarazo, <1 año, >65 años, obesidad mórbida, HTA, diabetes, daño renal, hepatopatía crónica, anticoagulación).
+
+Cuando detectes una de estas condiciones, incluye "alertaPresencial": true ÚNICAMENTE en el PRIMER mensaje donde la identifiques. En todos los mensajes posteriores NO vuelvas a incluir este campo aunque el síntoma siga presente. Si el paciente ya respondió "Entendido" o similar, la alerta fue reconocida — continúa el flujo normal sin volver a emitirla SOLO si entendió la alerta.
 
 ⸻
 
@@ -189,50 +251,6 @@ Ejemplo de respuesta final:
   "tipoOpciones": "single",
   "respuestaLibre": true
 }
-
-⸻
-
-11. DOCUMENTO DE REFERENCIA — CÓMO CRISAL-IA ABORDA CADA DISFUNCIÓN
-
-Usa este documento para personalizar el campo "texto" de la respuesta final con el enfoque de abordaje relevante al síntoma del paciente:
-
-Criterio de selección de disfunción: cuando el síntoma reportado pueda vincularse a más de una disfunción del documento, elige una sola disfunción — la que mejor explique el conjunto específico de datos recolectados en el interrogatorio (no solo el síntoma aislado). Prioriza en este orden:
-1. Coincidencia con el desencadenante o contexto reportado por el paciente (ej. relación temporal con esfuerzo físico, estrés, cambios de hábito, etc.).
-2. Coincidencia con características del síntoma (localización, duración, qué lo alivia o no lo alivia, intensidad).
-3. Si tras aplicar 1 y 2 aún hay empate entre disfunciones igualmente válidas, elige la que tenga mayor especificidad fisiológica con el cuadro (evita elegir la más genérica, como inflamación crónica, si otra disfunción del documento explica el mecanismo con mayor precisión).
-No mezcles ni combines el enfoque de dos o más disfunciones en un mismo texto. El mensaje debe reflejar un solo hilo conceptual claro.
-
-DISFUNCIÓN GASTROINTESTINAL Síntomas típicos: distensión, dolor abdominal, gases, estreñimiento, diarrea. En medicina funcional, estos síntomas se analizan como parte de un sistema interconectado: digestión y absorción, microbiota, permeabilidad intestinal, inflamación, función inmunitaria y la relación intestino-sistema nervioso, junto con factores externos (alimentación, estrés, medicamentos, infecciones, toxinas). Con la información compartida, Crisal-IA facilita una orientación inicial; la valoración médica funcional define los estudios y el plan personalizado.
-
-DISMINUCIÓN DE LA COHERENCIA CARDÍACA Síntomas típicos: baja tolerancia al estrés, palpitaciones percibidas, sensación de desregulación entre cuerpo y emociones. Puede reflejar que el corazón y el sistema nervioso autónomo no responden de forma equilibrada al estrés. Se explora sueño, nutrición, estrés emocional, metabolismo y entorno. El plan puede incluir respiración consciente, manejo del estrés, movimiento y ajustes de hábitos, siempre integrado por un médico funcional.
-
-INHIBICIÓN DE LA HORMESIS Síntomas típicos: fatiga, baja tolerancia al estrés físico, recuperación deficiente tras ejercicio, ayuno o cambios de temperatura. Ocurre cuando el organismo pierde capacidad de adaptarse a estímulos beneficiosos moderados. Se explora función mitocondrial, estrés oxidativo, disponibilidad de nutrientes, equilibrio hormonal, sedentarismo, sobreentrenamiento y sueño insuficiente. La valoración médica confirma el patrón y diseña el plan.
-
-DISFUNCIÓN DEL EJE HIPOTÁLAMO-HIPÓFISIS-ADRENAL Síntomas típicos: fatiga, sueño no reparador, ansiedad, dificultad para concentrarse, baja tolerancia al estrés sostenido en el tiempo. Alteración en la red que coordina la respuesta al estrés (hipotálamo → hipófisis → cortisol suprarrenal). Se integra historia clínica, ritmos de sueño y cortisol, alimentación, metabolismo, inflamación y salud emocional.
-
-DISFUNCIÓN DEL SISTEMA ENDOCANNABINOIDE Síntomas típicos: alteraciones combinadas de dolor, sueño, ánimo y apetito sin causa clara aislada. Sistema que regula dolor, sueño, ánimo, apetito e inflamación (vía anandamida, 2-AG y sus receptores/enzimas reguladoras). Se analiza inflamación, estrés, alimentación, microbiota y medicamentos.
-
-DESEQUILIBRIO HIDROELECTROLÍTICO Síntomas típicos: fatiga, mareos, calambres, palpitaciones, dificultad para recuperarse tras esfuerzo o pérdidas de líquido. ⚠️ Alerta de urgencia: si hay confusión intensa, desmayo o convulsiones, se debe indicar buscar atención médica urgente, no continuar solo con la valoración de Crisal-IA. Se analiza alimentación, hidratación, medicamentos, estrés, actividad física, pérdidas digestivas o por sudor, y posibles causas renales, hormonales o metabólicas.
-
-GLICOTOXICIDAD/TOXICIDAD Síntomas típicos: fatiga post-comida, dificultad para bajar de peso, antojos de azúcar, cambios de energía relacionados con la alimentación. Cuando la glucosa permanece elevada favorece resistencia a insulina, inflamación y daño celular. Se exploran metabolismo, función mitocondrial, sensibilidad a insulina, alimentación, sueño, estrés y exposiciones ambientales.
-
-AUMENTO DEL CATABOLISMO DE PURINAS Síntomas típicos: fatiga o dolor muscular después de esfuerzo físico o ejercicio, especialmente si no cede con el reposo habitual. Marcadores relevantes: ácido úrico, creatinina, tasa de filtración renal, nitrógeno ureico. Se investiga qué acelera la degradación de moléculas energéticas (ATP) o dificulta su eliminación: sobrecarga física, estrés metabólico, inflamación, alteraciones mitocondriales, deshidratación, función renal y alimentación rica en purinas, fructosa o alcohol.
-
-DISMINUCIÓN DE VITAMINAS B6/B9/B12 Síntomas típicos: fatiga, alteraciones neurológicas o del ánimo, síntomas relacionados con anemia. Marcadores relevantes: homocisteína, ácido metilmalónico, niveles vitamínicos, hemograma. Estas vitaminas trabajan en conjunto en energía, neurotransmisores y metilación. Se revisa alimentación, salud digestiva, medicamentos y estrés. No se recomienda suplementar sin valoración (incluso el exceso de B6 puede ser dañino).
-
-DISMINUCIÓN DE HIERRO Síntomas típicos: fatiga, palidez, caída de cabello, dificultad para concentrarse. Marcadores relevantes: ferritina, hemograma, saturación de transferrina, hepcidina. Se busca por qué están bajando las reservas: alimentación, malabsorción intestinal, pérdidas de sangre, medicamentos o mayores requerimientos.
-
-INFLAMACIÓN CRÓNICA Síntomas típicos: dolor difuso, fatiga, molestias digestivas, cambios en la piel, dificultad para controlar el peso — de curso prolongado (no agudo). Las defensas permanecen activadas liberando mediadores inflamatorios (citocinas). Se analiza alimentación, sueño, estrés, actividad física y exposiciones, con estudios de marcadores inflamatorios, glucosa, función intestinal y equilibrio hormonal.
-
-AUTOINMUNIDAD Síntomas típicos: síntomas variables según el tejido afectado, con frecuencia ya asociados a un diagnóstico o sospecha previa. El sistema inmunitario pierde tolerancia y reacciona contra tejidos propios. Se exploran genética, inflamación, microbiota, nutrición, infecciones, estrés y exposiciones ambientales, como complemento seguro del manejo médico actual.
-
-DISLIPIDEMIA Síntomas típicos: generalmente hallazgo de laboratorio más que síntoma reportado directamente por el paciente. Marcadores relevantes: colesterol total, LDL, HDL, triglicéridos, ApoB, lipoproteína(a). Se evalúan estos marcadores junto con alimentación, actividad física, sueño, estrés, salud intestinal y medicamentos.
-
-DESEQUILIBRIO EN SENDEROS DE BIOTRANSFORMACIÓN Síntomas típicos: síntomas inespecíficos que el paciente puede asociar a "toxinas" o sensibilidad a sustancias/medicamentos/ambiente. No se asume automáticamente "intoxicación" ni se propone una desintoxicación genérica. Se revisa historia clínica, microbiota, funcionamiento hepático, intestinal y renal, evitando intervenciones innecesarias.
-
-DISFUNCIÓN MITOCONDRIAL Y ESTRÉS OXIDATIVO Síntomas típicos: fatiga persistente, poca tolerancia al ejercicio, dolor muscular, dificultad para concentrarse — sin relación clara con un esfuerzo puntual reciente. Se identifican causas como inflamación, estrés oxidativo, deficiencias nutricionales, alteraciones metabólicas o medicamentos, diseñando un plan que apoye la producción de energía celular.
-
-DISMINUCIÓN DE LA FUNCIÓN TIROIDEA Síntomas típicos: cansancio, sensación de frío, estreñimiento, aumento de peso, caída del cabello, piel seca, cambios menstruales, dificultad para concentrarse. Marcadores relevantes: TSH, T4 libre, T3 libre, anticuerpos tiroideos. Se evalúa señal cerebral, producción hormonal, conversión de T4 en T3 y respuesta celular, junto co
 
 ⸻
 
@@ -315,47 +333,57 @@ export async function responderCuerpoConChat(params: {
   const { zonasDolorMarcadas, historial, mensajeUsuario, nombrePaciente } = params;
   const d = params.datosExistentes || {};
 
-  const systemPrompt = process.env.CUERPO_CHAT_SYSTEM_PROMPT?.trim() || DEFAULT_SYSTEM_PROMPT;
-
   const zonasTexto = zonasDolorMarcadas.length
     ? `El paciente ha marcado las siguientes zonas de dolor en el mapa corporal: ${zonasDolorMarcadas.join(', ')}.`
     : 'El paciente aún no ha marcado zonas de dolor.';
 
-  // Construir bloque de datos ya conocidos del modelo Paciente
+  // Datos ya conocidos — solo se envían en el PRIMER mensaje (no en el system prompt)
+  // para evitar repetirlos en cada turno.
   const camposConocidos: string[] = [];
-  if (d.nombre)          camposConocidos.push(`- Nombre completo: ${d.nombre}`);
-  if (d.email)           camposConocidos.push(`- Email: ${d.email}`);
-  if (d.telefono)        camposConocidos.push(`- Teléfono/Celular: ${d.telefono}`);
-  if (d.fechaNacimiento) camposConocidos.push(`- Fecha de nacimiento: ${d.fechaNacimiento}`);
+  if (d.nombre)             camposConocidos.push(`- Nombre completo: ${d.nombre}`);
+  if (d.email)              camposConocidos.push(`- Email: ${d.email}`);
+  if (d.telefono)           camposConocidos.push(`- Teléfono/Celular: ${d.telefono}`);
+  if (d.fechaNacimiento)    camposConocidos.push(`- Fecha de nacimiento: ${d.fechaNacimiento}`);
   if (d.edad !== undefined) camposConocidos.push(`- Edad: ${d.edad} años`);
-  if (d.sexoBiologico)   camposConocidos.push(`- Sexo biológico: ${d.sexoBiologico}`);
-  if (d.ocupacion)       camposConocidos.push(`- Ocupación: ${d.ocupacion}`);
-  if (d.escolaridad)     camposConocidos.push(`- Nivel educativo: ${d.escolaridad}`);
-  if (d.direccion)       camposConocidos.push(`- Dirección: ${d.direccion}`);
+  if (d.sexoBiologico)      camposConocidos.push(`- Sexo biológico: ${d.sexoBiologico}`);
+  if (d.ocupacion)          camposConocidos.push(`- Ocupación: ${d.ocupacion}`);
+  if (d.escolaridad)        camposConocidos.push(`- Nivel educativo: ${d.escolaridad}`);
+  if (d.direccion)          camposConocidos.push(`- Dirección: ${d.direccion}`);
 
   const datosConocidosTexto = camposConocidos.length > 0
     ? `\n\nDATOS YA DISPONIBLES EN EL SISTEMA (NO preguntes estos campos, ya los tenemos):\n${camposConocidos.join('\n')}`
     : '';
 
-  const contexto = [
+  // Contexto completo para el system prompt y el primer mensaje
+  const contextoSistema = [
     nombrePaciente ? `Nombre del paciente: ${nombrePaciente}.` : '',
     zonasTexto,
     datosConocidosTexto,
   ].filter(Boolean).join(' ');
+
+  // Sección 11 solo cuando el historial indica que estamos cerca del cierre (turno >= 9)
+  const inyectarSeccion11 = historial.length >= 18;
+  const basePrompt = process.env.CUERPO_CHAT_SYSTEM_PROMPT?.trim() || DEFAULT_SYSTEM_PROMPT;
+  const systemPrompt = inyectarSeccion11
+    ? `${basePrompt}\n\n${SECCION_11_DISFUNCIONES}`
+    : basePrompt;
+
+  // Truncar historial a los últimos 24 mensajes para evitar input descontrolado
+  const historialTruncado = historial.length > 24 ? historial.slice(-40) : historial;
 
   const messages: any[] = [];
 
   if (historial.length === 0) {
     messages.push({
       role: 'user',
-      content: [{ text: contexto + '\n\nSalúdame y empieza la conversación.' }]
+      content: [{ text: contextoSistema + '\n\nSalúdame y empieza la conversación.' }]
     });
     messages.push({
       role: 'assistant',
       content: [{ text: '¡Hola! Bienvenido a Crisalia.' }]
     });
   } else {
-    for (const m of historial) {
+    for (const m of historialTruncado) {
       messages.push({
         role: m.rol === 'usuario' ? 'user' : 'assistant',
         content: [{ text: m.texto }]
@@ -368,7 +396,11 @@ export async function responderCuerpoConChat(params: {
     content: [{ text: mensajeUsuario }]
   });
 
-  const contextoCompleto = `${systemPrompt}\n\nContexto del paciente: ${contexto}\n\nRECUERDA — FORMATO OBLIGATORIO: Tu respuesta debe ser SIEMPRE un JSON válido que empiece con {"texto": y NUNCA texto libre. Si la pregunta tiene type "table" en el JSON del cuestionario, usa tipoOpciones: "tabla_dinamica" con el array "columnas". Ejemplo mínimo: {"texto":"Mensaje empático","opciones":[],"tipoOpciones":"single","respuestaLibre":true}`;
+  const contextoCompleto = `${systemPrompt}\n\nContexto del paciente: ${contextoSistema}\n\nRECUERDA — FORMATO OBLIGATORIO: Tu respuesta debe ser SIEMPRE un JSON válido que empiece con {"texto": y NUNCA texto libre. Ejemplos según el tipo de pregunta:
+- type "text" / "scale" / "single" / "checkbox": {"texto":"...","opciones":[...],"tipoOpciones":"single","respuestaLibre":true}
+- type "table": {"texto":"...","opciones":[],"tipoOpciones":"tabla_dinamica","columnas":["Col1","Col2"],"respuestaLibre":true}
+- type "file_upload": {"texto":"...","opciones":[],"tipoOpciones":"file_upload","respuestaLibre":true}
+NUNCA respondas en texto libre. SIEMPRE JSON.`;
 
   console.log('[CuerpoConChat] ▶ invoke Claude', {
     modelId:          MODEL_ID,
@@ -383,7 +415,7 @@ export async function responderCuerpoConChat(params: {
     modelId: MODEL_ID,
     system: [{ text: contextoCompleto }],
     messages,
-    inferenceConfig: { maxTokens: 1500, temperature: 0.3 }
+    inferenceConfig: { maxTokens: 4000, temperature: 0.1 }
   });
 
   const resp = await client.send(command);

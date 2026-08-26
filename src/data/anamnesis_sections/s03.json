@@ -132,6 +132,12 @@
       "objetivo_clinico": "Construir una línea de tiempo de exposiciones y transiciones que merezcan revisión clínica."
     },
     {
+      "id": "s03_examenes_previos",
+      "text": "Exámenes médicos en los ultimos 6 meses",
+      "type": "file_upload",
+      "objetivo_clinico": "Recopilar los exámenes medicos del paciente para una mejor analisis"
+    },
+    {
       "id": "s03_objetivo_a",
       "text": "Objetivo de bienestar a",
       "type": "text",
