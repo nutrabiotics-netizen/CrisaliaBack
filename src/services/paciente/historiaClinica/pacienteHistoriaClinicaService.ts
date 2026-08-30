@@ -2,6 +2,8 @@ import HistoriaClinica, { IHistoriaClinica } from '../../../models/HistoriaClini
 import Cita from '../../../models/Cita';
 import FormulaMedica from '../../../models/FormulaMedica';
 import ExamenMedico from '../../../models/ExamenMedico';
+import AyudaDiagnostica from '../../../models/AyudaDiagnostica';
+import ApoyoTerapeutico from '../../../models/ApoyoTerapeutico';
 import PagoSimulado from '../../../models/PagoSimulado';
 
 class PacienteHistoriaClinicaService {
@@ -31,25 +33,28 @@ class PacienteHistoriaClinicaService {
       .lean();
     if (!cita) return null;
 
-    const [historia, formula, examenMedico, pagos] = await Promise.all([
+    const [historia, formula, examenMedico, ayudaDiagnostica, apoyoTerapeutico, pagos] = await Promise.all([
       HistoriaClinica.findOne({ citaId, pacienteId, activo: { $ne: false } })
-        .populate('medicoId', 'nombre apellido especialidad')
+        .populate('medicoId', 'nombre apellido especialidad numeroColegiatura email firmaUrl perfilVerificacion')
+        .populate('pacienteId', 'nombre apellido tipoDocumento numeroDocumento fechaNacimiento email')
         .lean(),
       FormulaMedica.findOne({ citaId, pacienteId }).lean(),
       ExamenMedico.findOne({ citaId, pacienteId }).lean(),
+      AyudaDiagnostica.findOne({ citaId, pacienteId }).lean(),
+      ApoyoTerapeutico.findOne({ citaId, pacienteId }).lean(),
       PagoSimulado.find({ pacienteId }).sort({ createdAt: -1 }).limit(5).lean()
     ]);
 
-    // Tomamos el pago más reciente como representativo de esta cita (el modelo
-    // PagoSimulado actual no está vinculado a citaId; mejor que nada).
     const pagoReciente = pagos[0] ?? null;
 
     return {
       cita,
-      historia: historia ?? null,
-      formula: formula ?? null,
-      examenMedico: examenMedico ?? null,
-      pago: pagoReciente
+      historia:          historia          ?? null,
+      formula:           formula           ?? null,
+      examenMedico:      examenMedico      ?? null,
+      ayudaDiagnostica:  ayudaDiagnostica  ?? null,
+      apoyoTerapeutico:  apoyoTerapeutico  ?? null,
+      pago:              pagoReciente
     };
   }
 

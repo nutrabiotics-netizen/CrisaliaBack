@@ -3,18 +3,11 @@ import jwt from 'jsonwebtoken';
 import { AuthRequest } from '../../../middleware/auth';
 import historiaClinicaService from '../../../services/medico/historiaClinica/historiaClinicaService';
 import { registrarAccion } from '../../../utils/auditoriaHelper';
-import { generateHistoriaPdf } from '../../../utils/pdfGenerator';
-import { uploadPDFAndGetUrl, buildCitaDocumentKey } from '../../../utils/s3Documents';
 import HistoriaClinica from '../../../models/HistoriaClinica';
-import Paciente from '../../../models/Paciente';
 import { summarizeLastClinicalHistory } from '../../../services/ai/bedrock.service';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
-/** Genera un JWT de 48 h para acceso público a una HC. */
-function generarTokenPublicoHC(historiaId: string): string {
-  return jwt.sign({ historiaId, tipo: 'hc-publica' }, JWT_SECRET, { expiresIn: '48h' } as any);
-}
 
 /**
  * GET /api/public/hc/:token
@@ -67,28 +60,59 @@ export const crearHistoriaClinica = async (req: AuthRequest, res: Response): Pro
       return;
     }
 
-    // Verificar si ya existe una historia clínica para esta cita
-    const historiaExistente = await historiaClinicaService.obtenerHistoriaClinicaPorCita(
-      historiaData.citaId,
-      medicoId
-    );
+    const { borrador, ...camposHistoria } = historiaData;
 
-    if (historiaExistente) {
-      res.status(400).json({
-        success: false,
-        message: 'Ya existe una historia clínica para esta cita'
-      });
+    // ─── Modo borrador: upsert sin PDF (guardar avance durante la consulta) ───
+    if (borrador) {
+      const historiaExistente = await historiaClinicaService.obtenerHistoriaClinicaPorCita(
+        camposHistoria.citaId,
+        medicoId
+      );
+      if (historiaExistente) {
+        // Actualizar borrador existente sin generar PDF
+        const actualizada = await historiaClinicaService.actualizarHistoriaClinica(
+          String(historiaExistente._id),
+          medicoId,
+          camposHistoria
+        );
+        res.status(200).json({ success: true, message: 'Borrador actualizado', data: actualizada });
+      } else {
+        // Crear nuevo borrador sin PDF
+        const nuevoBorrador = await historiaClinicaService.crearHistoriaClinica(
+          { ...camposHistoria, medicoId },
+          medicoId,
+          'Medico'
+        );
+        res.status(201).json({ success: true, message: 'Borrador creado', data: nuevoBorrador });
+      }
       return;
     }
 
-    const nuevaHistoria = await historiaClinicaService.crearHistoriaClinica(
-      {
-        ...historiaData,
-        medicoId
-      },
-      medicoId,
-      'Medico'
+    // ─── Flujo normal: crear/actualizar con PDF ──────────────────────────────
+    const historiaExistente = await historiaClinicaService.obtenerHistoriaClinicaPorCita(
+      camposHistoria.citaId,
+      medicoId
     );
+
+    // Si ya existe un borrador, actualizarlo con los datos finales
+    let nuevaHistoria: any;
+    if (historiaExistente) {
+      nuevaHistoria = await historiaClinicaService.actualizarHistoriaClinica(
+        String(historiaExistente._id),
+        medicoId,
+        camposHistoria
+      );
+      if (!nuevaHistoria) {
+        res.status(400).json({ success: false, message: 'No se pudo actualizar la historia clínica existente' });
+        return;
+      }
+    } else {
+      nuevaHistoria = await historiaClinicaService.crearHistoriaClinica(
+        { ...camposHistoria, medicoId },
+        medicoId,
+        'Medico'
+      );
+    }
 
     // Registrar en auditoría
     await registrarAccion(
@@ -104,30 +128,10 @@ export const crearHistoriaClinica = async (req: AuthRequest, res: Response): Pro
       }
     );
 
-    let pdfUrl: string | undefined;
-    try {
-      const historiaParaPdf = await HistoriaClinica.findById(nuevaHistoria._id)
-        .populate('medicoId', 'nombre apellido logoUrl')
-        .lean();
-      if (historiaParaPdf) {
-        const paciente = await Paciente.findById(nuevaHistoria.pacienteId).select('numeroDocumento').lean();
-        const numeroDoc = paciente?.numeroDocumento ?? String(nuevaHistoria.pacienteId);
-        const citaIdStr = String(nuevaHistoria.citaId);
-        const key = buildCitaDocumentKey(numeroDoc, citaIdStr, 'historia-clinica');
-        const tokenPublico = generarTokenPublicoHC(String(nuevaHistoria._id));
-        const buffer = await generateHistoriaPdf({ ...historiaParaPdf, tokenPublico });
-        pdfUrl = await uploadPDFAndGetUrl(buffer, key);
-        await HistoriaClinica.updateOne({ _id: nuevaHistoria._id }, { pdfUrl });
-      }
-    } catch (err) {
-      console.error('Error generando PDF de historia clínica:', err);
-    }
-
     res.status(201).json({
       success: true,
       message: 'Historia clínica creada exitosamente',
-      data: { ...nuevaHistoria.toObject(), pdfUrl: pdfUrl ?? (nuevaHistoria as any).pdfUrl },
-      pdfUrl
+      data: nuevaHistoria.toObject(),
     });
   } catch (error: any) {
     console.error('Error al crear historia clínica:', error);

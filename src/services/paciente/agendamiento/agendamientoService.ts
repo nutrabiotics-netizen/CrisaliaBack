@@ -359,7 +359,7 @@ class AgendamientoService {
 
   async obtenerCitasPaciente(pacienteId: string): Promise<(ICita & { pacienteNombre?: string; pacienteApellido?: string })[]> {
     const citas = await Cita.find({ pacienteId })
-      .populate('medicoId', 'nombre apellido especialidad indicacionesAntesConsulta perfilVerificacion')
+      .populate('medicoId', 'nombre apellido especialidad numeroColegiatura email indicacionesAntesConsulta perfilVerificacion')
       .populate('pacienteId', 'nombre apellido')
       .sort({ fecha: 1, hora: 1 })
       .lean();
@@ -367,7 +367,7 @@ class AgendamientoService {
     return citas.map(cita => {
       const medico = cita.medicoId as any;
       let medicoIdStr: string;
-      let medicoData: { _id: string; nombre: string; apellido: string; especialidad?: string; indicacionesAntesConsulta?: string; perfilVerificacion?: Record<string, any> } | undefined;
+      let medicoData: { _id: string; nombre: string; apellido: string; especialidad?: string; numeroColegiatura?: string; email?: string; indicacionesAntesConsulta?: string; perfilVerificacion?: Record<string, any> } | undefined;
 
       if (typeof medico === 'object' && medico !== null && '_id' in medico) {
         medicoIdStr = medico._id.toString();
@@ -376,6 +376,8 @@ class AgendamientoService {
           nombre: medico.nombre ?? '',
           apellido: medico.apellido ?? '',
           especialidad: medico.especialidad,
+          numeroColegiatura: medico.numeroColegiatura ?? undefined,
+          email: medico.email ?? undefined,
           indicacionesAntesConsulta: medico.indicacionesAntesConsulta ?? '',
           perfilVerificacion: medico.perfilVerificacion ?? undefined,
         };
@@ -396,6 +398,7 @@ class AgendamientoService {
         meetingId: (cita as any).meetingId,
         grabacionUrl: (cita as any).grabacionUrl,
         pdfResumenUrl: (cita as any).pdfResumenUrl,
+        documentosFirmados: (cita as any).documentosFirmados ?? {},
         modulo: (cita as any).modulo ?? 'general',
         createdAt: cita.createdAt,
         updatedAt: cita.updatedAt

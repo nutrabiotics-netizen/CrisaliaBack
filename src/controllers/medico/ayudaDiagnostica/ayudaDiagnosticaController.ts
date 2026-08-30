@@ -3,10 +3,6 @@ import { AuthRequest } from '../../../middleware/auth';
 import ayudaDiagnosticaService from '../../../services/medico/ayudaDiagnostica/ayudaDiagnosticaService';
 import { registrarAccion } from '../../../utils/auditoriaHelper';
 import mongoose from 'mongoose';
-import { generateAyudaDiagnosticaPdf } from '../../../utils/pdfGenerator';
-import { uploadPDFAndGetUrl, buildCitaDocumentKey } from '../../../utils/s3Documents';
-import AyudaDiagnostica from '../../../models/AyudaDiagnostica';
-import Paciente from '../../../models/Paciente';
 
 export const crearAyudaDiagnostica = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -109,30 +105,10 @@ export const crearAyudaDiagnostica = async (req: AuthRequest, res: Response): Pr
       }
     );
 
-    // Generar PDF y subir a S3
-    let pdfUrl: string | undefined;
-    try {
-      const ayudaPop = await AyudaDiagnostica.findById(nuevaAyudaDiagnostica._id)
-        .populate('pacienteId', 'nombre apellido numeroDocumento')
-        .populate('medicoId', 'nombre apellido logoUrl')
-        .lean();
-      if (ayudaPop) {
-        const paciente = await Paciente.findById(pacienteId).select('numeroDocumento').lean();
-        const numeroDoc = paciente?.numeroDocumento ?? String(pacienteId);
-        const key = buildCitaDocumentKey(numeroDoc, citaId, 'ayudas-diagnosticas');
-        const buffer = await generateAyudaDiagnosticaPdf(ayudaPop);
-        pdfUrl = await uploadPDFAndGetUrl(buffer, key);
-        await AyudaDiagnostica.updateOne({ _id: nuevaAyudaDiagnostica._id }, { pdfUrl });
-      }
-    } catch (err) {
-      console.error('Error generando PDF de orden de ayudas diagnósticas:', err);
-    }
-
     res.status(201).json({
       success: true,
       message: 'Orden de ayudas diagnósticas creada exitosamente',
-      data: { ...(nuevaAyudaDiagnostica.toObject?.() ?? nuevaAyudaDiagnostica), pdfUrl: pdfUrl ?? (nuevaAyudaDiagnostica as any).pdfUrl },
-      pdfUrl: pdfUrl ?? (nuevaAyudaDiagnostica as any).pdfUrl
+      data: nuevaAyudaDiagnostica.toObject?.() ?? nuevaAyudaDiagnostica,
     });
   } catch (error: any) {
     console.error('Error al crear orden de ayudas diagnósticas:', error);
@@ -332,31 +308,10 @@ export const actualizarAyudaDiagnostica = async (req: AuthRequest, res: Response
       ayudaDiagnosticaActualizada
     );
 
-    // Regenerar PDF con los datos actualizados y reemplazar en S3
-    let pdfUrl: string | undefined;
-    try {
-      const ayudaPop = await AyudaDiagnostica.findById(ayudaDiagnosticaActualizada._id)
-        .populate('pacienteId', 'nombre apellido numeroDocumento')
-        .populate('medicoId', 'nombre apellido logoUrl')
-        .lean();
-      if (ayudaPop) {
-        const paciente = await Paciente.findById(ayudaPop.pacienteId).select('numeroDocumento').lean();
-        const numeroDoc = paciente?.numeroDocumento ?? String(ayudaPop.pacienteId);
-        const citaId = String(ayudaPop.citaId);
-        const key = buildCitaDocumentKey(numeroDoc, citaId, 'ayudas-diagnosticas');
-        const buffer = await generateAyudaDiagnosticaPdf(ayudaPop);
-        pdfUrl = await uploadPDFAndGetUrl(buffer, key);
-        await AyudaDiagnostica.updateOne({ _id: ayudaDiagnosticaActualizada._id }, { pdfUrl });
-      }
-    } catch (err) {
-      console.error('Error regenerando PDF de orden de ayudas diagnósticas:', err);
-    }
-
     res.json({
       success: true,
       message: 'Orden de ayudas diagnósticas actualizada exitosamente',
-      data: { ...(ayudaDiagnosticaActualizada.toObject?.() ?? ayudaDiagnosticaActualizada), pdfUrl: pdfUrl ?? (ayudaDiagnosticaActualizada as any).pdfUrl },
-      pdfUrl: pdfUrl ?? (ayudaDiagnosticaActualizada as any).pdfUrl
+      data: ayudaDiagnosticaActualizada.toObject?.() ?? ayudaDiagnosticaActualizada,
     });
   } catch (error: any) {
     console.error('Error al actualizar orden de ayudas diagnósticas:', error);

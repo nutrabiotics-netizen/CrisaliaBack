@@ -3,10 +3,6 @@ import { AuthRequest } from '../../../middleware/auth';
 import apoyoTerapeuticoService from '../../../services/medico/apoyoTerapeutico/apoyoTerapeuticoService';
 import { registrarAccion } from '../../../utils/auditoriaHelper';
 import mongoose from 'mongoose';
-import { generateApoyoTerapeuticoPdf } from '../../../utils/pdfGenerator';
-import { uploadPDFAndGetUrl, buildCitaDocumentKey } from '../../../utils/s3Documents';
-import ApoyoTerapeutico from '../../../models/ApoyoTerapeutico';
-import Paciente from '../../../models/Paciente';
 
 export const crearApoyoTerapeutico = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -111,30 +107,10 @@ export const crearApoyoTerapeutico = async (req: AuthRequest, res: Response): Pr
       }
     );
 
-    // Generar PDF y subir a S3
-    let pdfUrl: string | undefined;
-    try {
-      const apoyoPop = await ApoyoTerapeutico.findById(nuevoApoyoTerapeutico._id)
-        .populate('pacienteId', 'nombre apellido numeroDocumento')
-        .populate('medicoId', 'nombre apellido logoUrl')
-        .lean();
-      if (apoyoPop) {
-        const paciente = await Paciente.findById(pacienteId).select('numeroDocumento').lean();
-        const numeroDoc = paciente?.numeroDocumento ?? String(pacienteId);
-        const key = buildCitaDocumentKey(numeroDoc, citaId, 'apoyo-terapeutico');
-        const buffer = await generateApoyoTerapeuticoPdf(apoyoPop);
-        pdfUrl = await uploadPDFAndGetUrl(buffer, key);
-        await ApoyoTerapeutico.updateOne({ _id: nuevoApoyoTerapeutico._id }, { pdfUrl });
-      }
-    } catch (err) {
-      console.error('Error generando PDF de apoyo terapéutico:', err);
-    }
-
     res.status(201).json({
       success: true,
       message: 'Apoyo terapéutico creado exitosamente',
-      data: { ...(nuevoApoyoTerapeutico.toObject?.() ?? nuevoApoyoTerapeutico), pdfUrl: pdfUrl ?? (nuevoApoyoTerapeutico as any).pdfUrl },
-      pdfUrl: pdfUrl ?? (nuevoApoyoTerapeutico as any).pdfUrl
+      data: nuevoApoyoTerapeutico.toObject?.() ?? nuevoApoyoTerapeutico,
     });
   } catch (error: any) {
     console.error('Error al crear apoyo terapéutico:', error);
@@ -334,31 +310,10 @@ export const actualizarApoyoTerapeutico = async (req: AuthRequest, res: Response
       apoyoTerapeuticoActualizado
     );
 
-    // Regenerar PDF con los datos actualizados y reemplazar en S3
-    let pdfUrl: string | undefined;
-    try {
-      const apoyoPop = await ApoyoTerapeutico.findById(apoyoTerapeuticoActualizado._id)
-        .populate('pacienteId', 'nombre apellido numeroDocumento')
-        .populate('medicoId', 'nombre apellido logoUrl')
-        .lean();
-      if (apoyoPop) {
-        const paciente = await Paciente.findById(apoyoPop.pacienteId).select('numeroDocumento').lean();
-        const numeroDoc = paciente?.numeroDocumento ?? String(apoyoPop.pacienteId);
-        const citaId = String(apoyoPop.citaId);
-        const key = buildCitaDocumentKey(numeroDoc, citaId, 'apoyo-terapeutico');
-        const buffer = await generateApoyoTerapeuticoPdf(apoyoPop);
-        pdfUrl = await uploadPDFAndGetUrl(buffer, key);
-        await ApoyoTerapeutico.updateOne({ _id: apoyoTerapeuticoActualizado._id }, { pdfUrl });
-      }
-    } catch (err) {
-      console.error('Error regenerando PDF de apoyo terapéutico:', err);
-    }
-
     res.json({
       success: true,
       message: 'Apoyo terapéutico actualizado exitosamente',
-      data: { ...(apoyoTerapeuticoActualizado.toObject?.() ?? apoyoTerapeuticoActualizado), pdfUrl: pdfUrl ?? (apoyoTerapeuticoActualizado as any).pdfUrl },
-      pdfUrl: pdfUrl ?? (apoyoTerapeuticoActualizado as any).pdfUrl
+      data: apoyoTerapeuticoActualizado.toObject?.() ?? apoyoTerapeuticoActualizado,
     });
   } catch (error: any) {
     console.error('Error al actualizar apoyo terapéutico:', error);

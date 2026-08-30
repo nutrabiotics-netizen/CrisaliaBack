@@ -33,6 +33,15 @@ router.put('/citas/:citaId/confirmar', authenticate, authorize(UserRole.MEDICO),
 router.put('/citas/:citaId/cancelar', authenticate, authorize(UserRole.MEDICO), cancelarCita);
 router.put('/citas/:citaId/completar', authenticate, authorize(UserRole.MEDICO), completarCita);
 router.put('/citas/:citaId/reagendar', authenticate, authorize(UserRole.MEDICO), reagendarCita);
+router.patch('/citas/:citaId/documentos-firmados', authenticate, authorize(UserRole.MEDICO), async (req: import('express').Request, res: import('express').Response) => {
+  try {
+    const { citaId } = req.params;
+    const { documentosFirmados } = req.body;
+    const Cita = (await import('../../../models/Cita')).default;
+    await Cita.updateOne({ _id: citaId }, { $set: { documentosFirmados } });
+    res.json({ success: true });
+  } catch { res.status(500).json({ success: false }); }
+});
 
 // Generar PDF resumen de la cita (historia + fórmula + incapacidad + interconsulta)
 router.post('/citas/:citaId/resumen-pdf', authenticate, authorize(UserRole.MEDICO), generarResumenPdfCita);

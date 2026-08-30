@@ -99,6 +99,16 @@ export interface IHistoriaClinica extends Document {
   // Recomendaciones
   recomendaciones?: string;
 
+  // Estrategia Terapéutica (plan de manejo post-consulta)
+  habitosTerapeuticos?: string;      // hábitos + nutrición combinados
+  suplementosTerapeuticos?: string;  // suplementos y nutracéuticos
+  seguimientoTerapeutico?: string;
+  horarioTerapeutico?: Array<{
+    hora: string;
+    tipo: string;
+    descripcion: string;
+  }>;
+
   /**
    * Cache de textos generados por el agente Crisal·IA, para no reinvocar
    * al agente cada vez que el paciente abre el resumen de la cita.
@@ -232,6 +242,17 @@ const HistoriaClinicaSchema = new Schema<IHistoriaClinica>(
       relacionado: String
     }],
     recomendaciones: String,
+
+    // Estrategia Terapéutica
+    habitosTerapeuticos:    { type: String, default: '' },
+    suplementosTerapeuticos:{ type: String, default: '' },
+    seguimientoTerapeutico: { type: String, default: '' },
+    horarioTerapeutico: [{
+      hora:        String,
+      tipo:        String,
+      descripcion: String,
+    }],
+
     iaRecomendacionesPaciente: {
       texto: String,
       generadoEn: Date

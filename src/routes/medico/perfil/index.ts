@@ -26,6 +26,8 @@ import {
 } from '../../../controllers/medico/perfil/consentimientosController';
 import { authenticate, authorize } from '../../../middleware/auth';
 import { UserRole } from '../../../types';
+import Medico from '../../../models/Medico';
+import { enviarDocumentoPaciente } from '../../../services/notifications/emailService';
 
 const router = Router();
 
@@ -54,6 +56,38 @@ router.get('/', authenticate, authorize(UserRole.MEDICO), getPerfilMedico);
 router.put('/', authenticate, authorize(UserRole.MEDICO), updatePerfilMedico);
 router.post('/foto', authenticate, authorize(UserRole.MEDICO), uploadFotoMiddleware, subirFotoMedico);
 router.post('/firma', authenticate, authorize(UserRole.MEDICO), uploadFotoMiddleware, subirFirmaMedico);
+router.get('/firma/proxy', authenticate, authorize(UserRole.MEDICO), async (req: Request, res: Response) => {
+  try {
+    const medicoId = (req as any).userId;
+    if (!medicoId) { res.status(401).json({ message: 'No autenticado' }); return; }
+    const medico = await Medico.findById(medicoId).select('firmaUrl').lean();
+    const firmaUrl: string | undefined = (medico as any)?.firmaUrl;
+    if (!firmaUrl) { res.status(404).json({ message: 'Sin firma registrada' }); return; }
+    const r = await fetch(firmaUrl);
+    if (!r.ok) { res.status(404).json({ message: 'No se pudo obtener la firma' }); return; }
+    const buf = Buffer.from(await r.arrayBuffer());
+    res.set('Content-Type', r.headers.get('content-type') || 'image/png');
+    res.set('Cache-Control', 'private, max-age=3600');
+    res.send(buf);
+  } catch {
+    res.status(500).json({ message: 'Error al obtener firma' });
+  }
+});
+
+router.post('/enviar-documento', authenticate, authorize(UserRole.MEDICO), async (req: Request, res: Response) => {
+  try {
+    const { emailPaciente, nombrePaciente, nombreMedico, tipoDocumento, pdfBase64, nombreArchivo } = req.body;
+    if (!emailPaciente || !pdfBase64) {
+      res.status(400).json({ success: false, message: 'emailPaciente y pdfBase64 son requeridos' });
+      return;
+    }
+    await enviarDocumentoPaciente({ emailPaciente, nombrePaciente, nombreMedico, tipoDocumento, pdfBase64, nombreArchivo });
+    res.json({ success: true, message: 'Documento enviado correctamente' });
+  } catch (err: any) {
+    console.error('[enviar-documento]', err);
+    res.status(500).json({ success: false, message: err?.message || 'Error al enviar el documento' });
+  }
+});
 
 // Preajustes clínicos
 router.get('/preajustes', authenticate, authorize(UserRole.MEDICO), getPreajustes);
