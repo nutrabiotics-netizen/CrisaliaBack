@@ -13,8 +13,11 @@ export interface ICita extends Document {
   meetingId?: string; // ID de reunión AWS Chime para videoconsultas
   /** Ruta S3 de la grabación de videoconsulta (ej. s3://bucket/prefix/pipelineId/) para poder generar link de visualización */
   grabacionUrl?: string;
+  motivoConsulta?: string;
   motivoCancelacion?: string;
   pdfResumenUrl?: string; // PDF resumen de la consulta (historia + fórmulas + incapacidades + etc.)
+  /** Documentos firmados digitalmente por el médico al finalizar la consulta */
+  documentosFirmados?: { formula?: boolean; terapeutica?: boolean; examenes?: boolean };
   /** Marca de envío de recordatorio WhatsApp (~24 h antes de la cita) */
   notifRecordatorio24hAt?: Date;
   /** Marca de envío de recordatorio WhatsApp (~2 h antes de la cita) */
@@ -86,7 +89,9 @@ const CitaSchema = new Schema<ICita>(
       trim: true
     },
     grabacionUrl: { type: String, trim: true },
+    motivoConsulta: { type: String, trim: true },
     pdfResumenUrl: { type: String, trim: true },
+    documentosFirmados: { formula: { type: Boolean, default: false }, terapeutica: { type: Boolean, default: false }, examenes: { type: Boolean, default: false } },
     notifRecordatorio24hAt: { type: Date },
     notifRecordatorio2hAt: { type: Date },
     notificacionesEnviadas: { type: [String], default: [] },
