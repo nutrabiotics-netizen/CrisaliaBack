@@ -56,17 +56,17 @@ export interface IFlujoPaciente {
   activarChatDirectoMedico: boolean;
 }
 
-// export interface IHorarioConsultaRapida {
-//   dia: 'Lunes' | 'Martes' | 'Miércoles' | 'Jueves' | 'Viernes' | 'Sábado' | 'Domingo';
-//   horaInicio: string;
-//   horaFin: string;
-// }
+export interface IHorarioConsultaRapida {
+  dia: 'Lunes' | 'Martes' | 'Miércoles' | 'Jueves' | 'Viernes' | 'Sábado' | 'Domingo';
+  horaInicio: string;
+  horaFin: string;
+}
 
-// export interface IConsultaRapidaConfig {
-//   habilitada: boolean;
-//   modalidades: ('chat' | 'teleconsulta')[];
-//   horarios: IHorarioConsultaRapida[];
-// }
+export interface IConsultaRapidaConfig {
+  habilitada: boolean;
+  modalidades: ('chat' | 'teleconsulta')[];
+  horarios: IHorarioConsultaRapida[];
+}
 
 export interface IBloqueoFechaEspecifica {
   fecha: Date;
@@ -85,7 +85,7 @@ export interface IConfiguracionAgenda extends Document {
   /** Configuración del flujo para pacientes que entran por el link de Conexión 1 */
   flujoPaciente?: IFlujoPaciente;
   /** Configuración de consultas rápidas */
-  // consultaRapida?: IConsultaRapidaConfig;
+  consultaRapida?: IConsultaRapidaConfig;
   /** Bloqueos por fecha específica (ej: cumpleaños, vacaciones, día festivo) */
   bloqueosFechasEspecificas: IBloqueoFechaEspecifica[];
   createdAt: Date;
@@ -121,7 +121,7 @@ const BloqueHorarioSchema = new Schema({
     type: Number,
     min: 15,
     max: 120,
-    required: true
+    default: 30,
   },
   tiemposInactividad: {
     type: [TiempoInactividadSchema],
@@ -225,19 +225,19 @@ const ConfiguracionAgendaSchema = new Schema<IConfiguracionAgenda>(
       }],
       default: []
     },
-    // consultaRapida: {
-    //   habilitada: { type: Boolean, default: false },
-    //   modalidades: { type: [String], enum: ['chat', 'teleconsulta'], default: [] },
-    //   horarios: {
-    //     type: [{
-    //       dia: { type: String, enum: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'], required: true },
-    //       horaInicio: { type: String, required: true },
-    //       horaFin: { type: String, required: true },
-    //       _id: false,
-    //     }],
-    //     default: []
-    //   }
-    // }
+    consultaRapida: {
+      habilitada: { type: Boolean, default: false },
+      modalidades: { type: [String], enum: ['chat', 'teleconsulta'], default: [] },
+      horarios: {
+        type: [{
+          dia: { type: String, enum: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'], required: true },
+          horaInicio: { type: String, required: true },
+          horaFin: { type: String, required: true },
+          _id: false,
+        }],
+        default: []
+      }
+    }
   },
   {
     timestamps: true
