@@ -30,11 +30,11 @@ import cie10Routes from './cie10';
 import wearablesRoutes from './wearables';
 import recordatoriosRoutes from './recordatorios';
 import notificacionesRoutes from './notificaciones';
+import historialCompartidoRoutes from './historial-compartido';
 // import consultaRapidaRoutes from './consulta-rapida';
 
 const router = Router();
 
-// Montar todas las rutas del módulo médico
 router.use('/perfil', perfilRoutes);
 router.use('/agendamiento', agendamientoRoutes);
 router.use('/historia-clinica', historiaClinicaRoutes);
@@ -66,7 +66,7 @@ router.use('/cie10', cie10Routes);
 router.use('/wearables', wearablesRoutes);
 router.use('/recordatorios', recordatoriosRoutes);
 router.use('/notificaciones', notificacionesRoutes);
+router.use('/historial-compartido', historialCompartidoRoutes);
 // router.use('/consulta-rapida', consultaRapidaRoutes);
 
 export default router;
-

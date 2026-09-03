@@ -15,6 +15,7 @@ import Cita from '../../../models/Cita';
 import Interrogatorio from '../../../models/Interrogatorio';
 import HistoriaClinica from '../../../models/HistoriaClinica';
 import Paciente from '../../../models/Paciente';
+import CompartirHistorial from '../../../models/CompartirHistorial';
 import { handleError } from '../../../utils/errors';
 
 // ─── Listar pacientes con su estado de seguimiento ───────────────────────────
@@ -36,8 +37,22 @@ export const listarSeguimiento = async (
     const medicoId = req.userId!;
     const medicoObjId = new mongoose.Types.ObjectId(medicoId);
 
-    // 1. Pacientes únicos que tienen cita con este médico
-    const pacientesIds = await Cita.distinct('pacienteId', { medicoId: medicoObjId });
+    // 1. Pacientes por citas + pacientes que compartieron historial
+    const [idsPorCita, compartidos] = await Promise.all([
+      Cita.distinct('pacienteId', { medicoId: medicoObjId }),
+      CompartirHistorial.find({ medicoId, activo: true }).select('pacienteId secciones').lean(),
+    ]);
+
+    const idsPorCompartir = compartidos.map(c => c.pacienteId.toString());
+    const compartidoMap = new Map(compartidos.map(c => [c.pacienteId.toString(), c.secciones]));
+
+    // Unión sin duplicados
+    const todosIds = [...new Set([
+      ...idsPorCita.map((id: any) => id.toString()),
+      ...idsPorCompartir,
+    ])].map(id => new mongoose.Types.ObjectId(id));
+
+    const pacientesIds = todosIds;
 
     if (pacientesIds.length === 0) {
       res.json({ success: true, data: [] });
@@ -92,6 +107,9 @@ export const listarSeguimiento = async (
 
         if (!paciente) return null;
 
+        const pacienteIdStr = pacienteId.toString();
+        const seccionesCompartidas = compartidoMap.get(pacienteIdStr);
+
         return {
           paciente,
           proximaCita,
@@ -107,7 +125,10 @@ export const listarSeguimiento = async (
                 updatedAt: (ultimoInterrogatorio as any).updatedAt
               }
             : null,
-          totalHistoriasClinicas: totalHC
+          totalHistoriasClinicas: totalHC,
+          historialCompartido: seccionesCompartidas
+            ? { activo: true, secciones: seccionesCompartidas }
+            : null,
         };
       })
     );

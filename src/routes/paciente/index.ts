@@ -26,6 +26,8 @@ import tratamientoRoutes from './tratamiento';
 import transcriptionRoutes from './transcription';
 import chatRoutes from './chat';
 import wearablesRoutes from './wearables';
+import compartirHistorialRoutes from './compartir-historial';
+import { obtenerMiHistorial } from '../../controllers/paciente/miHistorialController';
 // import consultaRapidaRoutes from './consulta-rapida';
 
 const router = Router();
@@ -49,6 +51,8 @@ router.use('/tratamiento', tratamientoRoutes);
 router.use('/transcription', transcriptionRoutes);
 router.use('/chat', chatRoutes);
 router.use('/wearables', wearablesRoutes);
+router.use('/compartir-historial', compartirHistorialRoutes);
+router.get('/mi-historial', authenticate, authorize(UserRole.PACIENTE), obtenerMiHistorial);
 // router.use('/consulta-rapida', consultaRapidaRoutes);
 
 router.get('/heridas-cita/:citaId/info', authenticate, authorize(UserRole.PACIENTE), infoCitaHeridas);

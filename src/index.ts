@@ -145,6 +145,7 @@ import { scheduleResumenDiarioJob } from './services/jobs/resumenDiarioJob';
 import './models/ConfiguracionRecordatorios';
 import './models/ConfiguracionNotificacionesMedico';
 import './models/Notificacion';
+import './models/CompartirHistorial';
 // import './models/ConsultaRapida';
 // Fase 5
 import {
