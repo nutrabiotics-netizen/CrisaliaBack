@@ -16,23 +16,30 @@ import { AuthRequest } from '../../../middleware/auth';
 import Cita from '../../../models/Cita';
 import Interrogatorio from '../../../models/Interrogatorio';
 import Paciente from '../../../models/Paciente';
+import CompartirHistorial from '../../../models/CompartirHistorial';
 import { handleError } from '../../../utils/errors';
 import { registrarAccion } from '../../../utils/auditoriaHelper';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/** Verifica que el paciente esté asociado al médico (tiene al menos una cita). */
+/** Verifica que el paciente esté asociado al médico por cita O por historial compartido. */
 async function verificarPacienteDelMedico(
   medicoId: string,
   pacienteId: string
 ): Promise<boolean> {
-  const cita = await Cita.findOne({
-    medicoId: new mongoose.Types.ObjectId(medicoId),
-    pacienteId: new mongoose.Types.ObjectId(pacienteId)
-  })
-    .select('_id')
-    .lean();
-  return cita !== null;
+  const [cita, compartido] = await Promise.all([
+    Cita.findOne({
+      medicoId: new mongoose.Types.ObjectId(medicoId),
+      pacienteId: new mongoose.Types.ObjectId(pacienteId)
+    }).select('_id').lean(),
+    CompartirHistorial.findOne({
+      medicoId,
+      pacienteId,
+      activo: true,
+      secciones: 'interrogatorio',
+    }).select('_id').lean(),
+  ]);
+  return cita !== null || compartido !== null;
 }
 
 // ─── Controladores ───────────────────────────────────────────────────────────
