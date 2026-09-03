@@ -210,6 +210,13 @@ export class AuthService {
       throw new AppError('Este correo electrónico ya está registrado', 400);
     }
 
+    if (telefono?.trim()) {
+      const existingTelefono = await Paciente.findOne({ telefono: telefono.trim() });
+      if (existingTelefono) {
+        throw new AppError('Este número de teléfono ya está registrado', 400);
+      }
+    }
+
     // Parse fechaNacimiento si viene como string ISO/YYYY-MM-DD
     let fechaNacimientoParsed: Date | undefined;
     if (fechaNacimiento) {
