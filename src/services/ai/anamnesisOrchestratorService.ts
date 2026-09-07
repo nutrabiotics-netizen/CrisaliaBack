@@ -175,15 +175,11 @@ export async function consultarSiguientePaso(
   payload: PayloadSiguientePaso,
   opts: AnamnesisAgentOptions = {}
 ): Promise<AgentDecision> {
-  const { sintomaInicial, seccionesCompletadas, scores, medicacionActual, resumenRespuestas } = payload;
+  const { sintomaInicial, scores, medicacionActual, resumenRespuestas } = payload;
 
   const rojas    = scores.seccRojas.join(', ')    || 'ninguna';
   const amarillas = scores.seccAmarillas.join(', ') || 'ninguna';
   const criticos  = scores.itemsCriticos.slice(0, 20).join(', ') || 'ninguno';
-
-  const seccionesCompletadasStr = seccionesCompletadas.length > 0
-    ? seccionesCompletadas.join(', ')
-    : 'ninguna aún';
 
   const medicacionStr = medicacionActual
     ? `\nMEDICACIÓN ACTUAL (s06):\n${medicacionActual}`
