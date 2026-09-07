@@ -400,6 +400,7 @@ class AgendamientoService {
         pdfResumenUrl: (cita as any).pdfResumenUrl,
         documentosFirmados: (cita as any).documentosFirmados ?? {},
         modulo: (cita as any).modulo ?? 'general',
+        modoAgendamiento: (cita as any).modoAgendamiento ?? null,
         createdAt: cita.createdAt,
         updatedAt: cita.updatedAt
       };

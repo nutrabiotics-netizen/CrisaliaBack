@@ -181,7 +181,7 @@ export const crearCita = async (req: AuthRequest, res: Response): Promise<void> 
       return;
     }
 
-    const { medicoId, fecha, hora, tipo, modalidad, modulo, motivoConsulta } = req.body;
+    const { medicoId, fecha, hora, tipo, modalidad, modulo, motivoConsulta, modoAgendamiento } = req.body;
 
     if (!medicoId || !fecha || !hora || !tipo || !modalidad) {
       res.status(400).json({
@@ -244,7 +244,8 @@ export const crearCita = async (req: AuthRequest, res: Response): Promise<void> 
       tipo,
       modalidad,
       ...(modulo && ['general', 'heridas'].includes(modulo) ? { modulo } : {}),
-      ...(motivoConsulta ? { motivoConsulta: String(motivoConsulta).trim() } : {})
+      ...(motivoConsulta ? { motivoConsulta: String(motivoConsulta).trim() } : {}),
+      ...(modoAgendamiento === 'tradicional' ? { modoAgendamiento: 'tradicional' } : { modoAgendamiento: 'ia' })
     } as any, pacienteId, 'Paciente');
 
     // Registrar en auditoría
