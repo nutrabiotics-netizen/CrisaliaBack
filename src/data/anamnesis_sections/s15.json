@@ -4,275 +4,104 @@
   "title": "Proceso Digestivo — Función Gástrica",
   "questions": [
     {
-      "id": "s15_insuficiencia_gastrica",
+      "id": "s15_sintomas_gastricos",
       "text": "Síntomas sugestivos de insuficiencia gástrica o hipoclorhidria",
       "type": "symptom_table",
+      "scale_type": "frequency",
       "items": [
-        {
-          "id": "s15_acidez_reflujo",
-          "label": "Sensación de acidez o reflujo",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s15_punzadas",
-          "label": "Punzadas gástricas (sensación de cuchillo en el estómago)",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s15_ardor_sordo",
-          "label": "Ardor o dolor sordo entre el esternón y el ombligo",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s15_llenura",
-          "label": "Llenura y pesadez después de comer con poca cantidad",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s15_distension",
-          "label": "Distensión abdominal después de comer",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s15_eructos",
-          "label": "Eructos anormales o repetidos",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s15_gases_fetidos",
-          "label": "Gases y flatulencias fétidas",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s15_nauseas_matutinas",
-          "label": "Náuseas matutinas",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s15_halitosis",
-          "label": "Halitosis (mal aliento)",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s15_alimentos_no_digeridos",
-          "label": "Alimentos no digeridos en las heces",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s15_prurito_anal",
-          "label": "Prurito anal",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s15_colicos",
-          "label": "Cólicos abdominales",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s15_rinitis",
-          "label": "Rinitis alérgica",
-          "type": "scale_0_3"
-        }
+        { "id": "s15_acidez_reflujo", "label": "Sensación de acidez o reflujo", "type": "scale_0_3" },
+        { "id": "s15_punzadas", "label": "Punzadas gástricas (sensación de cuchillo en el estómago)", "type": "scale_0_3" },
+        { "id": "s15_ardor_sordo", "label": "Ardor o dolor sordo entre el esternón y el ombligo", "type": "scale_0_3" },
+        { "id": "s15_llenura", "label": "Llenura y pesadez después de comer, independiente de la cantidad", "type": "scale_0_3" },
+        { "id": "s15_distension", "label": "Distensión abdominal después de comer", "type": "scale_0_3" },
+        { "id": "s15_eructos", "label": "Eructos anormales o repetidos", "type": "scale_0_3" },
+        { "id": "s15_gases_fetidos", "label": "Gases y flatulencias fétidas", "type": "scale_0_3" },
+        { "id": "s15_nauseas_matutinas", "label": "Náuseas matutinas", "type": "scale_0_3" },
+        { "id": "s15_halitosis", "label": "Halitosis (mal aliento)", "type": "scale_0_3" },
+        { "id": "s15_alimentos_no_digeridos", "label": "Alimentos no digeridos en las heces", "type": "scale_0_3" },
+        { "id": "s15_prurito_anal", "label": "Sensación de picazón anal", "type": "scale_0_3" },
+        { "id": "s15_colicos", "label": "Cólicos o dolores abdominales", "type": "scale_0_3" },
+        { "id": "s15_rinitis", "label": "Rinitis alérgica", "type": "scale_0_3" },
+        { "id": "s15_rinorrea", "label": "Rinorrea (secreciones finas tipo goteo nasal)", "type": "scale_0_3" },
+        { "id": "s15_palpitaciones_comer", "label": "Palpitaciones o sensación de que el corazón late acelerado después de comer", "type": "scale_0_3" },
+        { "id": "s15_presion_abdominal", "label": "Dificultad para respirar por sensación de presión en la zona superior del abdomen", "type": "scale_0_3" },
+        { "id": "s15_falsa_angina", "label": "Falsa angina de pecho (sensación de opresión en el centro del pecho asociado a distensión abdominal)", "type": "scale_0_3" },
+        { "id": "s15_pirosis", "label": "Pirosis o ardor en la zona detrás de la zona central del pecho (retroesternal)", "type": "scale_0_3" },
+        { "id": "s15_regurgitacion", "label": "Sensación de que se devuelve el alimento o líquido ácido", "type": "scale_0_3" },
+        { "id": "s15_globo_garganta", "label": "Sensación de globo o nudo en la garganta", "type": "scale_0_3" },
+        { "id": "s15_dolor_mejora_comer", "label": "Dolor en la boca del estómago que mejora al comer", "type": "scale_0_3" },
+        { "id": "s15_dolor_empeora_comer", "label": "Dolor en la boca del estómago que empeora al comer", "type": "scale_0_3" },
+        { "id": "s15_vomito", "label": "Vómito", "type": "scale_0_3" },
+        { "id": "s15_sangrado_digestivo", "label": "Sangrado digestivo o vómito con sangre", "type": "scale_0_3" },
+        { "id": "s15_saciedad_temprana", "label": "Saciedad muy temprana", "type": "scale_0_3" },
+        { "id": "s15_aversion_proteina", "label": "Aversión a la carne o a las proteínas", "type": "scale_0_3" }
       ]
     },
     {
-      "id": "s15_otros_gastricos",
-      "text": "Otros síntomas gástricos",
-      "type": "symptom_table",
-      "items": [
-        {
-          "id": "s15_pirosis",
-          "label": "Ardor retroesternal (pirosis)",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s15_regurgitacion",
-          "label": "Regurgitación de alimento o de líquido ácido",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s15_globo",
-          "label": "Sensación de globo o nudo en la garganta",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s15_dolor_mejora_comer",
-          "label": "Dolor que mejora al comer",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s15_dolor_empeora_comer",
-          "label": "Dolor que empeora al comer",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s15_vomito",
-          "label": "Vómito",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s15_sangrado",
-          "label": "Sangrado digestivo o vómito con sangre",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s15_saciedad_temprana",
-          "label": "Saciedad muy temprana",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s15_aversion_proteina",
-          "label": "Aversión a la carne o a las proteínas",
-          "type": "scale_0_3"
-        }
-      ]
-    },
-    {
-      "id": "s15_dificultad_digestion",
-      "text": "¿Se te dificulta digerir alguno de estos alimentos? (marca todos)",
+      "id": "s15_dificultad_digerir",
+      "text": "¿Se te dificulta digerir alguno de estos alimentos?",
       "type": "checkbox",
       "options": [
-        {
-          "value": "carne_roja",
-          "label": "Carne roja"
-        },
-        {
-          "value": "pollo",
-          "label": "Pollo"
-        },
-        {
-          "value": "pescado",
-          "label": "Pescado"
-        },
-        {
-          "value": "huevo",
-          "label": "Huevo"
-        },
-        {
-          "value": "frituras",
-          "label": "Frituras"
-        },
-        {
-          "value": "grasas_saludables",
-          "label": "Grasas saludables (aguacate, mantequilla, aceite de oliva)"
-        },
-        {
-          "value": "lacteos",
-          "label": "Lácteos"
-        },
-        {
-          "value": "gluten",
-          "label": "Gluten y trigo"
-        },
-        {
-          "value": "leguminosas",
-          "label": "Leguminosas"
-        },
-        {
-          "value": "cruciferos",
-          "label": "Vegetales crucíferos"
-        },
-        {
-          "value": "cebolla_ajo",
-          "label": "Cebolla y ajo"
-        },
-        {
-          "value": "ninguno",
-          "label": "Ninguno"
-        }
+        { "value": "carne_roja", "label": "Carne roja" },
+        { "value": "pollo", "label": "Pollo" },
+        { "value": "pescado", "label": "Pescado" },
+        { "value": "huevo", "label": "Huevo" },
+        { "value": "frituras", "label": "Frituras" },
+        { "value": "grasas_saludables", "label": "Grasas saludables (aguacate, mantequilla, aceite de oliva)" },
+        { "value": "lacteos", "label": "Lácteos" },
+        { "value": "gluten_trigo", "label": "Gluten y trigo" },
+        { "value": "leguminosas", "label": "Leguminosas" },
+        { "value": "cruciferos", "label": "Vegetales crucíferos" },
+        { "value": "cebolla_ajo", "label": "Cebolla y ajo" },
+        { "value": "ninguno", "label": "Ninguno" }
       ]
     },
     {
-      "id": "s15_dificultan_digestion",
+      "id": "s15_habitos_dificultan",
       "text": "¿Consumes habitualmente estos elementos que dificultan la digestión?",
       "type": "checkbox",
       "options": [
-        {
-          "value": "liquidos_frios",
-          "label": "Líquidos fríos o al clima con las comidas"
-        },
-        {
-          "value": "gran_volumen",
-          "label": "Grandes volúmenes de líquido durante la comida"
-        },
-        {
-          "value": "cereales_alta",
-          "label": "Cereales y granos en alta cantidad"
-        },
-        {
-          "value": "vegetales_no_organicos",
-          "label": "Vegetales no orgánicos"
-        },
-        {
-          "value": "colorantes",
-          "label": "Colorantes artificiales"
-        },
-        {
-          "value": "pesticidas",
-          "label": "Alimentos con pesticidas"
-        },
-        {
-          "value": "sales_alcalinas",
-          "label": "Sales alcalinas o antiácidos"
-        },
-        {
-          "value": "ibb",
-          "label": "Inhibidores de la bomba de protones (omeprazol)"
-        },
-        {
-          "value": "h2",
-          "label": "Antagonistas H2 (ranitidina)"
-        },
-        {
-          "value": "ninguno",
-          "label": "Ninguno"
-        }
+        { "value": "liquidos_frios", "label": "Líquidos fríos o al clima con las comidas" },
+        { "value": "grandes_volumenes", "label": "Grandes volúmenes de líquido durante la comida" },
+        { "value": "cereales_granos", "label": "Cereales y granos en alta cantidad" },
+        { "value": "vegetales_no_organicos", "label": "Vegetales no orgánicos" },
+        { "value": "colorantes", "label": "Colorantes artificiales" },
+        { "value": "pesticidas", "label": "Alimentos con pesticidas" },
+        { "value": "sales_alcalinas", "label": "Sales alcalinas o antiácidos" },
+        { "value": "ibb", "label": "Inhibidores de la bomba de protones (omeprazol)" },
+        { "value": "antagonistas_h2", "label": "Antagonistas H2 (ranitidina)" },
+        { "value": "ninguno", "label": "Ninguno" }
       ]
     },
     {
-      "id": "s15_prueba_hcl",
-      "text": "¿Te has realizado prueba de titulación con dióxido de carbono y ácido clorhídrico?",
+      "id": "s15_prueba_bicarbonato",
+      "text": "¿Has realizado la prueba de bicarbonato de sodio?",
       "type": "single",
       "options": [
-        {
-          "value": "no",
-          "label": "No"
-        },
-        {
-          "value": "normal",
-          "label": "Sí, resultado normal"
-        },
-        {
-          "value": "disminuido",
-          "label": "Sí, resultado disminuido (alcalinidad)"
-        },
-        {
-          "value": "no_recuerdo",
-          "label": "No recuerdo"
-        }
+        { "value": "no", "label": "No" },
+        { "value": "si", "label": "Sí" }
       ]
     },
     {
-      "id": "s15_h_pylori",
+      "id": "s15_prueba_bic_resultado",
+      "text": "Si realizaste la prueba de bicarbonato, ¿al cuánto tiempo expulsaste el primer eructo?",
+      "type": "single",
+      "options": [
+        { "value": "30seg", "label": "A los 30 segundos" },
+        { "value": "1min", "label": "Al minuto" },
+        { "value": "2min", "label": "A los 2 minutos" },
+        { "value": "mas_3min", "label": "Más de 3 minutos" }
+      ]
+    },
+    {
+      "id": "s15_helicobacter",
       "text": "¿Te han diagnosticado Helicobacter pylori?",
       "type": "single",
       "options": [
-        {
-          "value": "no",
-          "label": "No"
-        },
-        {
-          "value": "tratado",
-          "label": "Sí, tratado"
-        },
-        {
-          "value": "no_tratado",
-          "label": "Sí, no tratado"
-        },
-        {
-          "value": "recurrente",
-          "label": "Sí, recurrente"
-        }
+        { "value": "no", "label": "No" },
+        { "value": "si_tratado", "label": "Sí, y he sido tratado" },
+        { "value": "si_no_tratado", "label": "Sí, no he sido tratado" },
+        { "value": "si_recurrente", "label": "Sí, recurrente" }
       ]
     }
   ]

@@ -4,351 +4,132 @@
   "title": "Energía Celular, Función Mitocondrial e Hipoxia",
   "questions": [
     {
-      "id": "s33_intolerancia_ejercicio",
-      "text": "¿Tienes mala tolerancia al ejercicio (te cansas fácil o tienes poca motivación)?",
+      "id": "s33_tolerancia_ejercicio",
+      "text": "¿Tienes baja tolerancia al ejercicio (te cansas fácilmente o sientes poca capacidad para mantener la actividad)?",
       "type": "single",
       "options": [
-        {
-          "value": "no",
-          "label": "No"
-        },
-        {
-          "value": "leve",
-          "label": "Sí, leve"
-        },
-        {
-          "value": "marcada",
-          "label": "Sí, marcada"
-        }
+        { "value": "no", "label": "No" },
+        { "value": "leve", "label": "Sí, leve" },
+        { "value": "marcada", "label": "Sí, marcada" }
       ]
     },
     {
-      "id": "s33_perder_peso",
-      "text": "¿Se te dificulta perder peso?",
+      "id": "s33_dificultad_perder_peso",
+      "text": "¿Tienes dificultad para perder peso pese a mantener una alimentación y actividad física adecuadas?",
       "type": "single",
       "options": [
-        {
-          "value": "no",
-          "label": "No"
-        },
-        {
-          "value": "moderado",
-          "label": "Sí, moderadamente"
-        },
-        {
-          "value": "mucho",
-          "label": "Sí, mucho pese a dieta y ejercicio"
-        }
+        { "value": "no", "label": "No" },
+        { "value": "moderadamente", "label": "Sí, moderadamente" },
+        { "value": "mucho", "label": "Sí, mucha dificultad" }
       ]
     },
     {
-      "id": "s33_actividad_semanal",
-      "text": "¿Cuántas horas a la semana haces actividad física que te produce sudoración?",
+      "id": "s33_horas_actividad",
+      "text": "¿Cuántas horas a la semana realizas actividad física que te produce sudoración?",
       "type": "single",
       "options": [
-        {
-          "value": "ninguna",
-          "label": "Ninguna"
-        },
-        {
-          "value": "menos_1",
-          "label": "Menos de 1 h"
-        },
-        {
-          "value": "1_3",
-          "label": "1 a 3 h"
-        },
-        {
-          "value": "4_6",
-          "label": "4 a 6 h"
-        },
-        {
-          "value": "mas_6",
-          "label": "Más de 6 h"
-        }
+        { "value": "ninguna", "label": "Ninguna" },
+        { "value": "menos_1h", "label": "Menos de 1 h" },
+        { "value": "1_3h", "label": "1 a 3 h" },
+        { "value": "4_6h", "label": "4 a 6 h" },
+        { "value": "mas_6h", "label": "Más de 6 h" }
       ]
     },
     {
-      "id": "s33_mitocondrial",
-      "text": "Síntomas de disfunción mitocondrial",
+      "id": "s33_sintomas_mitocondrial",
+      "text": "Manifestaciones relacionadas con energía celular y tolerancia al esfuerzo",
       "type": "symptom_table",
+      "scale_type": "frequency",
       "items": [
-        {
-          "id": "s33_fatiga_inexplicada",
-          "label": "Fatiga persistente no explicada",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_fatiga_esfuerzo",
-          "label": "Fatiga que empeora desproporcionadamente después del esfuerzo",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_baja_resistencia",
-          "label": "Baja resistencia al ejercicio prolongado",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_recuperacion_lenta",
-          "label": "Recuperación muy lenta después de entrenar",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_fuerza",
-          "label": "Disminución de la fuerza",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_dolor_cronico",
-          "label": "Dolor crónico",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_cefalea",
-          "label": "Cefalea",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_depresion",
-          "label": "Depresión",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_memoria",
-          "label": "Pérdida de la memoria",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_sueno",
-          "label": "Trastornos del sueño",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_dormir_muchas_horas",
-          "label": "Necesidad de dormir muchas horas sin sentirme descansado",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_intolerancia_temperatura",
-          "label": "Intolerancia al calor o al frío",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_cuerpo_no_responde",
-          "label": "Sensación de que el cuerpo no responde como antes",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_debilidad_fluctuante",
-          "label": "Debilidad muscular fluctuante",
-          "type": "scale_0_3"
-        }
+        { "id": "s33_fatiga_persistente", "label": "Fatiga persistente sin una causa claramente identificada", "type": "scale_0_3" },
+        { "id": "s33_fatiga_esfuerzo", "label": "Fatiga que empeora de forma desproporcionada después del esfuerzo", "type": "scale_0_3" },
+        { "id": "s33_baja_resistencia", "label": "Baja resistencia durante el ejercicio prolongado", "type": "scale_0_3" },
+        { "id": "s33_recuperacion_lenta", "label": "Recuperación muy lenta después de realizar ejercicio", "type": "scale_0_3" },
+        { "id": "s33_disminucion_fuerza", "label": "Disminución de la fuerza muscular", "type": "scale_0_3" },
+        { "id": "s33_dolor_cronico", "label": "Dolor crónico", "type": "scale_0_3" },
+        { "id": "s33_cefalea", "label": "Cefalea recurrente", "type": "scale_0_3" },
+        { "id": "s33_depresion", "label": "Ánimo depresivo o síntomas depresivos", "type": "scale_0_3" },
+        { "id": "s33_perdida_memoria", "label": "Dificultades de memoria o concentración", "type": "scale_0_3" },
+        { "id": "s33_trastornos_sueno", "label": "Trastornos del sueño", "type": "scale_0_3" },
+        { "id": "s33_sueno_sin_descanso", "label": "Duermo muchas horas y aun así no me siento descansado", "type": "scale_0_3" },
+        { "id": "s33_intolerancia_calor_frio", "label": "Intolerancia al calor o al frío", "type": "scale_0_3" },
+        { "id": "s33_cuerpo_no_responde", "label": "Sensación de que mi cuerpo no responde como antes", "type": "scale_0_3" },
+        { "id": "s33_debilidad_fluctuante", "label": "Debilidad muscular que fluctúa durante el día o según la actividad", "type": "scale_0_3" }
       ]
     },
     {
-      "id": "s33_hipoxia",
-      "text": "Síntomas sugestivos de hipoxia tisular",
+      "id": "s33_sintomas_hipoxia",
+      "text": "Manifestaciones que pueden asociarse con una oxigenación insuficiente",
       "type": "symptom_table",
+      "scale_type": "frequency",
       "items": [
-        {
-          "id": "s33_cianosis",
-          "label": "Cianosis (coloración azulada de labios o uñas)",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_cefalea_hipoxia",
-          "label": "Cefalea",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_desorientacion",
-          "label": "Desorientación o movimiento descoordinado",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_confusion",
-          "label": "Confusión",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_memoria_h",
-          "label": "Pérdida de memoria",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_mareo",
-          "label": "Mareo",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_fatiga_somnolencia",
-          "label": "Fatiga o somnolencia",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_dificultad_respirar",
-          "label": "Dificultad para respirar",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_palpitaciones",
-          "label": "Palpitaciones o disritmia",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_nauseas",
-          "label": "Náuseas",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_ta",
-          "label": "Alteración de la presión arterial",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_hormigueos",
-          "label": "Hormigueos",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_piernas_inquietas",
-          "label": "Piernas inquietas",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_bostezos",
-          "label": "Bostezos frecuentes",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s33_altura",
-          "label": "Dificultad para adaptarme a la altura",
-          "type": "scale_0_3"
-        }
+        { "id": "s33_cianosis", "label": "Coloración azulada de labios, lengua o uñas", "type": "scale_0_3" },
+        { "id": "s33_cefalea_h", "label": "Cefalea", "type": "scale_0_3" },
+        { "id": "s33_desorientacion", "label": "Desorientación o dificultad para coordinar los movimientos", "type": "scale_0_3" },
+        { "id": "s33_confusion", "label": "Confusión", "type": "scale_0_3" },
+        { "id": "s33_perdida_memoria_h", "label": "Dificultades de memoria", "type": "scale_0_3" },
+        { "id": "s33_mareo", "label": "Mareo", "type": "scale_0_3" },
+        { "id": "s33_fatiga_somnolencia", "label": "Fatiga o somnolencia excesiva", "type": "scale_0_3" },
+        { "id": "s33_dificultad_respirar", "label": "Dificultad para respirar", "type": "scale_0_3" },
+        { "id": "s33_palpitaciones", "label": "Palpitaciones o sensación de ritmo cardíaco irregular", "type": "scale_0_3" },
+        { "id": "s33_nauseas", "label": "Náuseas", "type": "scale_0_3" },
+        { "id": "s33_alteracion_ta", "label": "Presión arterial elevada, baja o inestable", "type": "scale_0_3" },
+        { "id": "s33_hormigueos", "label": "Hormigueos o parestesias", "type": "scale_0_3" },
+        { "id": "s33_piernas_inquietas", "label": "Sensación de piernas inquietas", "type": "scale_0_3" },
+        { "id": "s33_bostezos", "label": "Bostezos frecuentes sin causa evidente", "type": "scale_0_3" },
+        { "id": "s33_altura", "label": "Dificultad para adaptarme a lugares de mayor altitud", "type": "scale_0_3" }
       ]
     },
     {
-      "id": "s33_inflexibilidad",
-      "text": "¿Has notado inflexibilidad metabólica (no logras funcionar bien sin comer con frecuencia)?",
+      "id": "s33_inflexibilidad_metabolica",
+      "text": "¿Has notado dificultad para mantener tu energía cuando pasan varias horas sin comer?",
       "type": "single",
       "options": [
-        {
-          "value": "no",
-          "label": "No, tolero bien pasar horas sin comer"
-        },
-        {
-          "value": "cada_3h",
-          "label": "Sí, necesito comer cada 3 horas"
-        },
-        {
-          "value": "descompensacion",
-          "label": "Sí, me descompenso si no como"
-        }
+        { "value": "no", "label": "No, tolero bien pasar varias horas sin comer" },
+        { "value": "necesito_cada_3h", "label": "Sí, necesito comer aproximadamente cada 3 horas" },
+        { "value": "me_descompensa", "label": "Sí, me siento mal o me descompenso si no como" }
       ]
     },
     {
-      "id": "s33_dieta_baja_carbos",
-      "text": "¿Tienes dificultad para tolerar dietas bajas en carbohidratos o el ayuno?",
+      "id": "s33_intolerancia_ayuno",
+      "text": "¿Tienes dificultad para tolerar dietas bajas en carbohidratos o períodos de ayuno?",
       "type": "single",
       "options": [
-        {
-          "value": "no_intentado",
-          "label": "No lo he intentado"
-        },
-        {
-          "value": "bien",
-          "label": "Lo tolero bien"
-        },
-        {
-          "value": "dificultad",
-          "label": "Lo tolero con dificultad"
-        },
-        {
-          "value": "no_tolero",
-          "label": "No lo tolero"
-        }
+        { "value": "no_intentado", "label": "No lo he intentado" },
+        { "value": "bien", "label": "Lo tolero bien" },
+        { "value": "con_dificultad", "label": "Lo tolero con dificultad" },
+        { "value": "no_tolero", "label": "No lo tolero" }
       ]
     },
     {
       "id": "s33_toxicos_mitocondriales",
-      "text": "Exposición a tóxicos mitocondriales (marca todos)",
+      "text": "¿Has tenido exposición relevante a sustancias o ambientes potencialmente perjudiciales para la salud celular?",
       "type": "checkbox",
       "options": [
-        {
-          "value": "herbicidas",
-          "label": "Herbicidas"
-        },
-        {
-          "value": "insecticidas",
-          "label": "Insecticidas"
-        },
-        {
-          "value": "pesticidas",
-          "label": "Pesticidas"
-        },
-        {
-          "value": "ropa_sintetica",
-          "label": "Ropa sintética"
-        },
-        {
-          "value": "amalgamas",
-          "label": "Amalgamas dentales"
-        },
-        {
-          "value": "remocion_amalgamas",
-          "label": "Remoción de amalgamas"
-        },
-        {
-          "value": "labial_plomo",
-          "label": "Labial con plomo"
-        },
-        {
-          "value": "pintura_antigua",
-          "label": "Pintura de casa antigua"
-        },
-        {
-          "value": "vacunas",
-          "label": "Vacunas"
-        },
-        {
-          "value": "cemento",
-          "label": "Polvo de cemento"
-        },
-        {
-          "value": "asbesto",
-          "label": "Asbesto"
-        },
-        {
-          "value": "pescado_rio",
-          "label": "Consumo de pescado de río"
-        },
-        {
-          "value": "ninguno",
-          "label": "Ninguno"
-        }
+        { "value": "herbicidas", "label": "Herbicidas" },
+        { "value": "insecticidas", "label": "Insecticidas" },
+        { "value": "pesticidas", "label": "Pesticidas" },
+        { "value": "ropa_sintetica", "label": "Uso habitual de ropa sintética" },
+        { "value": "amalgamas", "label": "Amalgamas dentales" },
+        { "value": "remocion_amalgamas", "label": "Remoción de amalgamas dentales" },
+        { "value": "labial_plomo", "label": "Uso de labiales o cosméticos con posible contenido de metales pesados" },
+        { "value": "pintura_antigua", "label": "Vivienda antigua con posible exposición a pintura con plomo" },
+        { "value": "vacunas", "label": "Vacunación reciente o repetida" },
+        { "value": "polvo_cemento", "label": "Exposición frecuente a polvo de cemento" },
+        { "value": "asbesto", "label": "Exposición a asbesto" },
+        { "value": "pescado_rio", "label": "Consumo frecuente de pescado de río procedente de zonas potencialmente contaminadas" },
+        { "value": "ninguno", "label": "Ninguno" }
       ]
     },
     {
-      "id": "s33_altura",
-      "text": "¿Vives o entrenas en altura?",
+      "id": "s33_altitud",
+      "text": "¿Vives o entrenas habitualmente en altura?",
       "type": "single",
       "options": [
-        {
-          "value": "nivel_mar",
-          "label": "No, a nivel del mar"
-        },
-        {
-          "value": "500_1500",
-          "label": "Entre 500 y 1500 msnm"
-        },
-        {
-          "value": "1500_2500",
-          "label": "Entre 1500 y 2500 msnm"
-        },
-        {
-          "value": "mas_2500",
-          "label": "Más de 2500 msnm"
-        }
+        { "value": "nivel_mar", "label": "No, a nivel del mar" },
+        { "value": "500_1500", "label": "Entre 500 y 1500 msnm" },
+        { "value": "1500_2500", "label": "Entre 1500 y 2500 msnm" },
+        { "value": "mas_2500", "label": "Más de 2500 msnm" }
       ]
     }
   ]

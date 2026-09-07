@@ -4,350 +4,125 @@
   "title": "Estrés Positivo y Hormesis",
   "questions": [
     {
-      "id": "s10_exposicion_sol",
+      "id": "s10_ayuno",
+      "text": "¿Practicas ayuno intermitente o restricción horaria de la alimentación?",
+      "type": "single",
+      "options": [
+        { "value": "no", "label": "No" },
+        { "value": "ocasionalmente", "label": "Ocasionalmente" },
+        { "value": "2_3_semana", "label": "2-3 veces/semana" },
+        { "value": "diario", "label": "A diario" }
+      ]
+    },
+    {
+      "id": "s10_sol_frecuencia",
       "text": "¿Con qué frecuencia expones tu piel al sol de forma directa (sin bloqueador, brazos y piernas descubiertos)?",
       "type": "single",
       "options": [
-        {
-          "value": "nunca",
-          "label": "Nunca"
-        },
-        {
-          "value": "1_semana",
-          "label": "≤1 vez/semana"
-        },
-        {
-          "value": "2_3_semana",
-          "label": "2-3 veces/semana"
-        },
-        {
-          "value": "4_6_semana",
-          "label": "4-6 veces/semana"
-        },
-        {
-          "value": "diario",
-          "label": "A diario"
-        }
+        { "value": "nunca", "label": "Nunca" },
+        { "value": "diario", "label": "A diario" },
+        { "value": "4_6_semana", "label": "4-6 veces/semana" },
+        { "value": "2_3_semana", "label": "2-3 veces/semana" },
+        { "value": "menos_1_semana", "label": "Menos de 1 vez/semana" }
       ]
     },
-    {
-      "id": "s10_duracion_sol",
-      "text": "¿Cuánto tiempo dura cada exposición?",
-      "type": "single",
-      "options": [
-        {
-          "value": "menos_10",
-          "label": "Menos de 10 minutos"
-        },
-        {
-          "value": "10_20",
-          "label": "10 a 20 minutos"
-        },
-        {
-          "value": "20_40",
-          "label": "20 a 40 minutos"
-        },
-        {
-          "value": "mas_40",
-          "label": "Más de 40 minutos"
-        }
-      ]
-    },
-    {
-      "id": "s10_horario_sol",
-      "text": "¿En qué horario te expones al sol?",
-      "type": "single",
-      "options": [
-        {
-          "value": "antes_9",
-          "label": "Antes de las 9:00"
-        },
-        {
-          "value": "9_11",
-          "label": "Entre 9:00 y 11:00"
-        },
-        {
-          "value": "11_15",
-          "label": "Entre 11:00 y 15:00"
-        },
-        {
-          "value": "despues_15",
-          "label": "Después de las 15:00"
-        }
-      ]
-    },
-    {
-      "id": "s10_bloqueador",
-      "text": "¿Usas bloqueador solar?",
-      "type": "single",
-      "options": [
-        {
-          "value": "nunca",
-          "label": "Nunca"
-        },
-        {
-          "value": "prolongadas",
-          "label": "Solo en exposiciones prolongadas"
-        },
-        {
-          "value": "casi_siempre",
-          "label": "Casi siempre"
-        },
-        {
-          "value": "siempre",
-          "label": "Siempre, todos los días"
-        }
-      ]
-    },
+    { "id": "s10_sol_minutos", "text": "¿Cuántos minutos dura cada exposición al sol?", "type": "text" },
+    { "id": "s10_sol_hora", "text": "¿A qué hora te expones al sol?", "type": "text" },
     {
       "id": "s10_banos_frios",
       "text": "¿Con qué frecuencia te expones a baños fríos, duchas frías o inmersión en agua fría?",
       "type": "single",
       "options": [
-        {
-          "value": "nunca",
-          "label": "Nunca"
-        },
-        {
-          "value": "ocasionalmente",
-          "label": "Ocasionalmente"
-        },
-        {
-          "value": "1_2_semana",
-          "label": "1-2 veces/semana"
-        },
-        {
-          "value": "3_5_semana",
-          "label": "3-5 veces/semana"
-        },
-        {
-          "value": "diario",
-          "label": "A diario"
-        }
+        { "value": "nunca", "label": "Nunca" },
+        { "value": "ocasionalmente", "label": "Ocasionalmente" },
+        { "value": "1_2_semana", "label": "1-2 veces/semana" },
+        { "value": "3_5_semana", "label": "3-5 veces/semana" },
+        { "value": "diario", "label": "A diario" }
       ]
     },
     {
-      "id": "s10_calor",
-      "text": "¿Con qué frecuencia te expones a calor intenso (sauna, baño turco, sauna de infrarrojos)?",
+      "id": "s10_calor_frecuencia",
+      "text": "¿Con qué frecuencia te expones a calor intenso (sauna, baño turco, sauna de infrarrojos) o actividad física que genera sudoración?",
       "type": "single",
       "options": [
-        {
-          "value": "nunca",
-          "label": "Nunca"
-        },
-        {
-          "value": "ocasionalmente",
-          "label": "Ocasionalmente"
-        },
-        {
-          "value": "1_2_semana",
-          "label": "1-2 veces/semana"
-        },
-        {
-          "value": "3_mas_semana",
-          "label": "3+ veces/semana"
-        }
+        { "value": "nunca", "label": "Nunca" },
+        { "value": "ocasionalmente", "label": "Ocasionalmente (1 vez al mes)" },
+        { "value": "1_2_semana", "label": "1-2 veces/semana" },
+        { "value": "3_mas_semana", "label": "3 o más veces/semana" },
+        { "value": "menos_1_semana", "label": "Menos de 1 vez/semana" }
       ]
     },
+    { "id": "s10_calor_agua", "text": "¿Cuántos litros de agua tomas durante la sesión de calor?", "type": "text" },
+    { "id": "s10_calor_sal", "text": "¿Cuántas cucharadas de sal tomas durante la sesión de calor?", "type": "text" },
+    { "id": "s10_calor_yodo", "text": "¿Realizas suplementación de yodo durante la sesión de calor?", "type": "text" },
     {
-      "id": "s10_ayuno",
-      "text": "¿Practicas ayuno intermitente o restricción horaria de la alimentación?",
-      "type": "single",
-      "options": [
-        {
-          "value": "no",
-          "label": "No"
-        },
-        {
-          "value": "ocasionalmente",
-          "label": "Ocasionalmente"
-        },
-        {
-          "value": "2_3_semana",
-          "label": "2-3 veces/semana"
-        },
-        {
-          "value": "diario",
-          "label": "A diario"
-        }
-      ]
-    },
-    {
-      "id": "s10_frecuencia_ejercicio",
+      "id": "s10_ejercicio_frecuencia",
       "text": "¿Con qué frecuencia haces ejercicio?",
       "type": "single",
       "options": [
-        {
-          "value": "no",
-          "label": "No hago ejercicio"
-        },
-        {
-          "value": "1_semana",
-          "label": "1 vez/semana"
-        },
-        {
-          "value": "2_3_semana",
-          "label": "2-3 veces/semana"
-        },
-        {
-          "value": "4_5_semana",
-          "label": "4-5 veces/semana"
-        },
-        {
-          "value": "6_mas",
-          "label": "6+ veces/semana"
-        }
+        { "value": "no_hago", "label": "No hago ejercicio" },
+        { "value": "1_semana", "label": "1 vez/semana" },
+        { "value": "2_3_semana", "label": "2-3 veces/semana" },
+        { "value": "4_5_semana", "label": "4-5 veces/semana" },
+        { "value": "6_mas_semana", "label": "6+ veces/semana" }
       ]
     },
     {
-      "id": "s10_intensidad_ejercicio",
-      "text": "¿A qué intensidad?",
+      "id": "s10_ejercicio_intensidad",
+      "text": "¿Con qué intensidad haces ejercicio?",
       "type": "single",
       "options": [
-        {
-          "value": "suave",
-          "label": "Suave: puedo conversar sin dificultad"
-        },
-        {
-          "value": "moderada",
-          "label": "Moderada: converso con algo de esfuerzo"
-        },
-        {
-          "value": "vigorosa",
-          "label": "Vigorosa: no puedo conversar"
-        },
-        {
-          "value": "polarizado",
-          "label": "Combino intensidades (entrenamiento polarizado)"
-        }
+        { "value": "suave", "label": "Suave: puedo conversar sin dificultad al realizar el ejercicio" },
+        { "value": "vigorosa", "label": "Vigorosa: no puedo conversar al realizar el ejercicio" },
+        { "value": "moderada", "label": "Moderada: converso con algo de esfuerzo al realizar el ejercicio" },
+        { "value": "polarizado", "label": "Combino intensidades (entrenamiento polarizado)" }
       ]
     },
     {
-      "id": "s10_tipo_ejercicio",
+      "id": "s10_ejercicio_tipo",
       "text": "Tipo de ejercicio que practicas",
       "type": "checkbox",
       "options": [
-        {
-          "value": "caminata",
-          "label": "Caminata"
-        },
-        {
-          "value": "trote",
-          "label": "Trote o carrera"
-        },
-        {
-          "value": "ciclismo",
-          "label": "Ciclismo"
-        },
-        {
-          "value": "natacion",
-          "label": "Natación"
-        },
-        {
-          "value": "fuerza",
-          "label": "Fuerza o pesas"
-        },
-        {
-          "value": "hiit",
-          "label": "Entrenamiento interválico de alta intensidad"
-        },
-        {
-          "value": "yoga_pilates",
-          "label": "Yoga o pilates"
-        },
-        {
-          "value": "deporte_equipo",
-          "label": "Deporte de equipo"
-        },
-        {
-          "value": "ninguno",
-          "label": "Ninguno"
-        }
-      ]
-    },
-    {
-      "id": "s10_horas_semanales",
-      "text": "Horas semanales de actividad física que producen sudoración",
-      "type": "text"
-    },
-    {
-      "id": "s10_horas_sentado",
-      "text": "Horas al día en posición sentado",
-      "type": "text"
-    },
-    {
-      "id": "s10_pausas_activas",
-      "text": "¿Interrumpes el tiempo sentado con pausas activas?",
-      "type": "single",
-      "options": [
-        {
-          "value": "nunca",
-          "label": "Nunca"
-        },
-        {
-          "value": "cada_3_4h",
-          "label": "Cada 3 a 4 horas"
-        },
-        {
-          "value": "cada_1_2h",
-          "label": "Cada 1 a 2 horas"
-        },
-        {
-          "value": "cada_30_60min",
-          "label": "Cada 30 a 60 minutos"
-        }
+        { "value": "ninguno", "label": "Ninguno" },
+        { "value": "trote", "label": "Trote o carrera" },
+        { "value": "ciclismo", "label": "Ciclismo" },
+        { "value": "caminata", "label": "Caminata" },
+        { "value": "fuerza", "label": "Fuerza o pesas" },
+        { "value": "natacion", "label": "Natación" },
+        { "value": "yoga_pilates", "label": "Yoga o pilates" },
+        { "value": "deporte_equipo", "label": "Deporte de equipo" },
+        { "value": "hiit", "label": "Entrenamiento interválico de alta intensidad" }
       ]
     },
     {
       "id": "s10_respuesta_ejercicio",
-      "text": "Respuesta al ejercicio",
+      "text": "Califica la frecuencia con la que te ocurre alguna de estas respuestas al ejercicio",
       "type": "symptom_table",
+      "scale_type": "frequency",
       "items": [
-        {
-          "id": "s10_re_fatiga",
-          "label": "Fatiga o dolor muscular desproporcionado después del ejercicio",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s10_re_intolerancia",
-          "label": "Intolerancia al ejercicio: me canso mucho antes de lo esperado",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s10_re_recuperacion",
-          "label": "Recuperación lenta: necesito más de 48 horas para recuperarme",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s10_re_empeoramiento",
-          "label": "Empeoramiento de todos mis síntomas al día siguiente de entrenar",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s10_re_motivacion",
-          "label": "Falta de motivación para iniciar el ejercicio",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s10_re_mareo",
-          "label": "Mareo o palpitaciones durante el esfuerzo",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s10_re_calambres",
-          "label": "Calambres durante o después del esfuerzo",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s10_re_pesadez",
-          "label": "Pesadez o rigidez después del esfuerzo",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s10_re_sobreentrenamiento",
-          "label": "Sensación de sobreentrenamiento pese a cargas bajas",
-          "type": "scale_0_3"
-        }
+        { "id": "s10_re_sobreentrenamiento", "label": "Sensación de sobre entrenamiento pese a cargas bajas", "type": "scale_0_3" },
+        { "id": "s10_re_intolerancia", "label": "Intolerancia al ejercicio: me canso mucho antes de lo esperado", "type": "scale_0_3" },
+        { "id": "s10_re_recuperacion", "label": "Recuperación lenta: necesito más de 48 horas para recuperarme", "type": "scale_0_3" },
+        { "id": "s10_re_empeoramiento_dia_siguiente", "label": "Empeoramiento de todos mis síntomas al día siguiente de entrenar", "type": "scale_0_3" },
+        { "id": "s10_re_falta_motivacion", "label": "Falta de motivación para iniciar el ejercicio", "type": "scale_0_3" },
+        { "id": "s10_re_mareo_palpitaciones", "label": "Mareo o palpitaciones durante el esfuerzo", "type": "scale_0_3" },
+        { "id": "s10_re_calambres", "label": "Calambres durante o después del esfuerzo", "type": "scale_0_3" },
+        { "id": "s10_re_pesadez", "label": "Pesadez o rigidez después del esfuerzo", "type": "scale_0_3" },
+        { "id": "s10_re_fatiga_dolor", "label": "Fatiga o dolor muscular desproporcionado después del ejercicio", "type": "scale_0_3" },
+        { "id": "s10_re_dificultad_masa", "label": "Dificultad importante para ganar masa muscular", "type": "scale_0_3" },
+        { "id": "s10_re_desempeno_aerobico", "label": "Dificultad importante para aumentar el desempeño aeróbico", "type": "scale_0_3" },
+        { "id": "s10_re_desempeno_anaerobico", "label": "Dificultad importante para aumentar el desempeño anaeróbico", "type": "scale_0_3" }
+      ]
+    },
+    { "id": "s10_fatiga_tiempo_aparicion", "text": "Si presentas fatiga o dolor muscular desproporcionado después de la actividad física, ¿cuánto tiempo después aparece?", "type": "text" },
+    {
+      "id": "s10_entrena_mas_recupera",
+      "text": "¿Consideras que entrenas más de lo que puedes recuperar?",
+      "type": "single",
+      "options": [
+        { "value": "no", "label": "No" },
+        { "value": "a_veces", "label": "A veces" },
+        { "value": "si_frecuente", "label": "Sí, con frecuencia" }
       ]
     },
     {
@@ -355,42 +130,24 @@
       "text": "¿Has tenido periodos largos de inmovilización o desacondicionamiento?",
       "type": "single",
       "options": [
-        {
-          "value": "no",
-          "label": "No"
-        },
-        {
-          "value": "lesion",
-          "label": "Sí, por lesión"
-        },
-        {
-          "value": "enfermedad",
-          "label": "Sí, por enfermedad prolongada"
-        },
-        {
-          "value": "hospitalizacion",
-          "label": "Sí, por hospitalización"
-        }
+        { "value": "no", "label": "No" },
+        { "value": "lesion", "label": "Sí, por lesión" },
+        { "value": "enfermedad", "label": "Sí, por enfermedad prolongada" },
+        { "value": "hospitalizacion", "label": "Sí, por hospitalización" }
       ]
     },
     {
-      "id": "s10_sobreentrenamiento",
-      "text": "¿Consideras que entrenas más de lo que puedes recuperar?",
+      "id": "s10_pausas_activas",
+      "text": "¿Interrumpes el tiempo sentado con pausas activas?",
       "type": "single",
       "options": [
-        {
-          "value": "no",
-          "label": "No"
-        },
-        {
-          "value": "a_veces",
-          "label": "A veces"
-        },
-        {
-          "value": "si_frecuente",
-          "label": "Sí, con frecuencia"
-        }
+        { "value": "nunca", "label": "Nunca" },
+        { "value": "ocasionalmente", "label": "Ocasionalmente (1 vez al día)" },
+        { "value": "cada_3_4h", "label": "Cada 3 a 4 horas" },
+        { "value": "cada_1_2h", "label": "Cada 1 a 2 horas" },
+        { "value": "cada_30_60min", "label": "Cada 30 a 60 minutos" }
       ]
-    }
+    },
+    { "id": "s10_pausas_activas_descripcion", "text": "Describe qué tipo de actividad o movimientos realizas durante las pausas activas", "type": "text" }
   ]
 }

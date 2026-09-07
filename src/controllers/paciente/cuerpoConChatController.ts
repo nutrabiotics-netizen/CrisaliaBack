@@ -2,8 +2,10 @@ import { Response } from 'express';
 import { AuthRequest } from '../../middleware/auth';
 import {
   responderCuerpoConChat,
+  generarCierreFase1,
   extraerRespuestasS01S03,
   responderInterrogatorioConClaude,
+  TODAS_LAS_PREGUNTAS,
 } from '../../services/ai/cuerpoConChatService';
 import {
   cargarSecciones,
@@ -32,7 +34,8 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
       return;
     }
 
-    const { zonasDolorMarcadas = [], historial = [], mensajeUsuario } = req.body;
+    const { zonasDolorMarcadas = [], historial = [], mensajeUsuario, loteIndex: loteIndexBody = 0 } = req.body;
+    const loteIndex: number = typeof loteIndexBody === "number" ? loteIndexBody : 0;
 
     console.log('[cuerpoConChat/responder] ▶ request', {
       pacienteId,
@@ -85,13 +88,58 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
       ocupacion:     !!datosExistentes.ocupacion,
     });
 
-    const respuesta = await responderCuerpoConChat({
+    let respuesta = await responderCuerpoConChat({
       zonasDolorMarcadas,
       historial,
       mensajeUsuario: mensajeUsuario.trim(),
       nombrePaciente: paciente?.nombre,
       datosExistentes,
+      loteIndex,
     });
+
+    // ── Manejo de [[FIN_LOTE]] ───────────────────────────────────────────────
+    if (respuesta.includes('[[FIN_LOTE]]') && !respuesta.includes('[[FIN_CONVERSACION]]')) {
+      const nextLoteIndex = loteIndex + 1;
+      // Filtrar preguntas ya conocidas para calcular si era el último lote real
+      const IDS_CONOCIDOS_CTRL: Record<string, boolean> = {
+        s01_nombre:    !!datosExistentes.nombre,
+        s01_nacimiento: !!datosExistentes.fechaNacimiento,
+        s01_edad:      datosExistentes.edad !== undefined,
+        s01_sexo:      !!datosExistentes.sexoBiologico,
+        s01_educacion: !!datosExistentes.escolaridad,
+        s01_ocupacion: !!datosExistentes.ocupacion,
+      };
+      const pendientes = TODAS_LAS_PREGUNTAS.filter((q: any) => !IDS_CONOCIDOS_CTRL[q.id]);
+      const eraUltimoLote = (loteIndex + 1) * 5 >= pendientes.length;
+
+      if (eraUltimoLote) {
+        // Último lote completado → el backend genera el cierre
+        const historialCompleto: typeof historial = [
+          ...historial,
+          { rol: 'usuario', texto: mensajeUsuario.trim() },
+        ];
+        respuesta = await generarCierreFase1({
+          historial: historialCompleto,
+          nombrePaciente: paciente?.nombre,
+          zonasDolorMarcadas,
+          datosExistentes,
+        });
+        (req as any)._nextLoteIndex = nextLoteIndex;
+      } else {
+        // Lote intermedio → cascada al siguiente lote
+        const historialCascada: typeof historial = historial.slice(-4);
+        const respuestaSiguienteLote = await responderCuerpoConChat({
+          zonasDolorMarcadas,
+          historial: historialCascada,
+          mensajeUsuario: 'Haz la primera pregunta de tu lista actual.',
+          nombrePaciente: paciente?.nombre,
+          datosExistentes,
+          loteIndex: nextLoteIndex,
+        });
+        respuesta = respuestaSiguienteLote.replace('[[FIN_LOTE]]', '').replace('[[FIN_CONVERSACION]]', '').trim();
+        (req as any)._nextLoteIndex = nextLoteIndex;
+      }
+    }
 
     // ── Extraer causas del bloque [[CAUSAS]]..[[/CAUSAS]] ────────────────────
     let causas: { titulo: string; desc: string }[] = [];
@@ -143,6 +191,7 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
     let tipoOpciones: 'single' | 'checkbox' | 'tabla' | 'tabla_dinamica' | 'file_upload' = 'single';
     let columnasFase1: string[] = [];
     let tablaItemsFase1: { id: string; label: string }[] = [];
+    let tablaEscalaFase1: 'frecuencia' | 'intensidad' = 'frecuencia';
     let resumenItems: string[] = [];
     let enfoqueAbordaje = '';
     let alertaPresencial = false;
@@ -166,6 +215,7 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
             } else if (parsed.tipoOpciones === 'tabla' && Array.isArray(parsed.tabla)) {
               tipoOpciones     = 'tabla';
               tablaItemsFase1  = parsed.tabla;
+              if (parsed.escala) tablaEscalaFase1 = parsed.escala === 'intensidad' ? 'intensidad' : 'frecuencia';
             } else if (parsed.tipoOpciones === 'file_upload') {
               tipoOpciones = 'file_upload';
             } else {
@@ -234,6 +284,20 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
         if (datosExistentes.ocupacion)     datosDelModelo['s01_ocupacion']       = datosExistentes.ocupacion;
         if (datosExistentes.direccion)     datosDelModelo['s01_direccion']       = datosExistentes.direccion;
 
+        // Si s03_sintomas_tabla llegó como string (fallback), parsearlo a array de objetos
+        if (typeof respuestasS01S03['s03_sintomas_tabla'] === 'string') {
+          const raw: string = respuestasS01S03['s03_sintomas_tabla'];
+          const filas = raw.split('\n').filter(Boolean).map(fila => {
+            const obj: Record<string, string> = {};
+            fila.split(' | ').forEach(par => {
+              const idx = par.indexOf(':');
+              if (idx > 0) obj[par.slice(0, idx).trim()] = par.slice(idx + 1).trim();
+            });
+            return obj;
+          }).filter(f => Object.keys(f).length > 0);
+          if (filas.length > 0) respuestasS01S03['s03_sintomas_tabla'] = filas;
+        }
+
         const respuestasInterrogatorio: Record<string, any> = {
           ...datosDelModelo,   // datos del modelo Paciente
           ...respuestasS01S03, // respuestas que Claude extrajo del chat (pueden completar o sobreescribir)
@@ -290,11 +354,13 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
         opciones,
         tipoOpciones,
         tablaItems:       tablaItemsFase1,
+        tablaEscala:      tablaEscalaFase1,
         columnas:         columnasFase1,
         alertaPresencial,
         resumenItems,
         enfoqueAbordaje,
         finConversacion,
+        nextLoteIndex:    (req as any)._nextLoteIndex ?? loteIndex,
         ...(finConversacion && {
           finFaseInicial:   true,
           interrogatorioId,
@@ -453,6 +519,7 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
       let opciones: string[] = [];
       let tipoOpciones: 'single' | 'checkbox' | 'tabla' | 'tabla_dinamica' | 'file_upload' = 'single';
       let tablaItems: { id: string; label: string }[] = [];
+      let tablaEscala: 'frecuencia' | 'intensidad' = 'frecuencia';
       let columnas: string[] = [];
 
       if (jsonStart >= 0 && jsonEnd > jsonStart) {
@@ -467,6 +534,13 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
             } else if (parsed.tipoOpciones === 'tabla' && Array.isArray(parsed.tabla)) {
               tipoOpciones = 'tabla';
               tablaItems   = parsed.tabla;
+              // Buscar scale_type en las preguntas activas de la sección
+              const pregActiva = Object.values(seccionesActivas).flatMap((s: any) => s?.questions ?? [])
+                .find((q: any) => q.type === 'symptom_table' && q.items?.some((it: any) => parsed.tabla.some((t: any) => t.id === it.id)));
+              const scaleFromJson = (pregActiva as any)?.scale_type;
+              tablaEscala = scaleFromJson === 'intensity' ? 'intensidad'
+                : scaleFromJson === 'frequency' ? 'frecuencia'
+                : parsed.escala === 'intensidad' ? 'intensidad' : 'frecuencia';
             } else {
               tipoOpciones = parsed.tipoOpciones === 'checkbox' ? 'checkbox' : 'single';
             }
@@ -497,6 +571,7 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
           opciones:    finRonda ? [] : opciones,
           tipoOpciones: finRonda ? 'single' : tipoOpciones,
           tablaItems:  finRonda ? [] : tablaItems,
+          tablaEscala: tablaEscala,
           columnas:    finRonda ? [] : columnas,
           finRonda,
           progreso: interrogatorio.progreso,
@@ -519,6 +594,16 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
     const medicacionActual = respuestas['s06_detalle']
       ? JSON.stringify(respuestas['s06_detalle']) : undefined;
 
+    console.log('[responderInterrogatorio] Modo A → Agent payload', {
+      sintomaInicial:        (sintomaInicial || respuestas['s03_sintoma_principal'] || 'consulta general').slice(0, 120),
+      seccionesCompletadas,
+      seccRojas:             scores.seccRojas,
+      seccAmarillas:         scores.seccAmarillas,
+      itemsCriticosCount:    scores.itemsCriticos.length,
+      resumenRespuestasLen:  resumenRespuestas.length,
+      resumenRespuestasKeys: Object.keys(respuestas).filter(k => !['historialChat','mensajeFinal','causas','zonasDolor'].includes(k)),
+    });
+
     const decision = await consultarSiguientePaso(
       {
         sintomaInicial: sintomaInicial || respuestas['s03_sintoma_principal'] || 'consulta general',
@@ -527,7 +612,7 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
         medicacionActual,
         resumenRespuestas,
       },
-      { sessionId: `interrogatorio-${interrogatorioId}` }
+      { sessionId: `interrogatorios-${interrogatorioId}` }
     );
 
     // Calcular progreso
@@ -614,6 +699,7 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
     let opcionesPrimer: string[] = [];
     let tipoOpcPrimer: 'single' | 'checkbox' | 'tabla' | 'tabla_dinamica' = 'single';
     let tablaItemsPrimer: { id: string; label: string }[] = [];
+    let tablaEscalaPrimer: 'frecuencia' | 'intensidad' = 'frecuencia';
     let columnasPrimer: string[] = [];
 
     // Guardar respuestas del primer mensaje si Claude ya las incluyó
@@ -639,11 +725,30 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
           } else if (p.tipoOpciones === 'tabla' && Array.isArray(p.tabla)) {
             tipoOpcPrimer    = 'tabla';
             tablaItemsPrimer = p.tabla;
+            // Priorizar scale_type del JSON de secciones sobre lo que Claude devuelva
+            const pregTabla = preguntasFiltradas.find((q: any) =>
+              q.type === 'symptom_table' && q.items?.some((it: any) => p.tabla.some((t: any) => t.id === it.id)));
+            const scaleFromJson = pregTabla?.scale_type;
+            tablaEscalaPrimer = scaleFromJson === 'intensity' ? 'intensidad'
+              : scaleFromJson === 'frequency' ? 'frecuencia'
+              : p.escala === 'intensidad' ? 'intensidad' : 'frecuencia';
           } else {
             tipoOpcPrimer = p.tipoOpciones === 'checkbox' ? 'checkbox' : 'single';
           }
         }
       } catch { /* usar texto completo */ }
+    }
+
+    // Guardar primerMensaje en historialChat para que el siguiente Modo A
+    // lo vea en historialPrevio y no repita la pregunta.
+    if (textoPrimer) {
+      const histExistente: any[] = interrogatorio.respuestas?.historialChat ?? [];
+      interrogatorio.respuestas = {
+        ...interrogatorio.respuestas,
+        historialChat: [...histExistente, { rol: 'ia', texto: textoPrimer }],
+      };
+      interrogatorio.markModified('respuestas');
+      await interrogatorio.save();
     }
 
     console.log('[responderInterrogatorio] Modo A — respuesta', {
@@ -663,6 +768,7 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
         opciones:    opcionesPrimer,
         tipoOpciones: tipoOpcPrimer,
         tablaItems:  tablaItemsPrimer,
+        tablaEscala: tablaEscalaPrimer,
         columnas:    columnasPrimer,
         finRonda:    false,
         progreso: interrogatorio.progreso,

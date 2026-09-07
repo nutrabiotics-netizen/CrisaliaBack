@@ -22,23 +22,24 @@ const client = new BedrockRuntimeClient({ region: REGION, credentials });
 // ─── Carga de secciones s01 y s03 ────────────────────────────────────────────
 // Se carga una sola vez al iniciar el módulo para evitar I/O en cada request.
 
-function cargarEstructuraInicial(): string {
+function cargarTodasLasPreguntas(): any[] {
   try {
-    const secciones = cargarSecciones(['s01', 's02', 's03']);
-    const json = JSON.stringify(secciones, null, 2);
-    console.log('[CuerpoConChat] ✅ s01/s02/s03 cargadas — bytes:', json.length,
-      '| s01 preguntas:', secciones['s01']?.questions?.length ?? 'N/A',
-      '| s02 preguntas:', secciones['s02']?.questions?.length ?? 'N/A',
-      '| s03 preguntas:', secciones['s03']?.questions?.length ?? 'N/A');
-    return json;
+    const secciones = cargarSecciones(['s01', 's03']);
+    const preguntas: any[] = [];
+    for (const secId of ['s01', 's03']) {
+      const sec = secciones[secId];
+      if (sec?.questions) preguntas.push(...sec.questions);
+    }
+    console.log('[CuerpoConChat] ✅ s01+s03 cargadas — total preguntas:', preguntas.length);
+    return preguntas;
   } catch (e) {
     console.error('[CuerpoConChat] ❌ Error cargando s01/s03:', e);
-    return '';
+    return [];
   }
 }
 
-const ESTRUCTURA_S01_S03 = cargarEstructuraInicial();
-console.log('[CuerpoConChat] ESTRUCTURA_S01_S03 vacía:', ESTRUCTURA_S01_S03.length === 0);
+export const TODAS_LAS_PREGUNTAS = cargarTodasLasPreguntas();
+export const TOTAL_LOTES = Math.ceil(TODAS_LAS_PREGUNTAS.length / 5);
 
 // ─── System prompt ────────────────────────────────────────────────────────────
 
@@ -109,15 +110,11 @@ No eres un médico. No reemplazas una consulta médica. No realizas diagnóstico
 
 2. ORDEN OBLIGATORIO DE LA CONVERSACIÓN
 
-Debes seguir este orden estrictamente. NO puedes pasar a la fase 2 sin completar la fase 1.
+Debes seguir este orden estrictamente. NO puedes pasar a la fase 2 sin completar la fase 1. El sistema te entrega las preguntas en lotes. Haz las preguntas del lote actual en orden, de forma natural y empática. NUNCA le digas al paciente que "necesitas completar su perfil antes de continuar" ni menciones secciones, fases ni etapas — simplemente hazle las preguntas como parte de una conversación fluida.
 
 FASE 1 — DATOS GENERALES (s01): Después del saludo, recopila PRIMERO los datos que nos faltan del perfil del paciente. Los datos que ya tenemos en el sistema están marcados como "ya conocidos" en el contexto — NO los preguntes. Solo pregunta los que faltan.
 
-FASE 2 - Alergias, Intolerancias y Reacciones Adversas (s02): Solo después de completar los datos de s01 que faltan
-
-FASE 3 — MOTIVO DE CONSULTA (s03): Solo después de completar los datos de s02 que faltan
-
-Aunque el paciente ya mencionó espontáneamente su síntoma (por ejemplo al marcar zonas de dolor), IGUAL debes completar los datos de s01 que faltan ANTES de profundizar en el síntoma.
+FASE 2 — MOTIVO DE CONSULTA (s03): Solo después de completar los datos de s01 que faltan
 
 ⸻
 
@@ -160,16 +157,24 @@ Usa la información ya recopilada para inferir respuestas cuando sean obvias. Ej
 - Si el paciente describió un evento claro que inició el dolor, NO preguntes "¿con qué evento coincidió el inicio?" — ya lo sabes.
 En general: si una pregunta tiene una respuesta que puedes deducir con certeza razonable del contexto previo, infiere el valor internamente y salta esa pregunta.
 
-Para las tablas de síntomas (type: "symptom_table"), agrupa los ítems de forma conversacional y usa la escala 0-3: 0=Nunca, 1=Leve/esporádico, 2=Moderado/frecuente, 3=Intenso/permanente.
+Para las tablas de síntomas (type: "symptom_table"), agrupa los ítems de forma conversacional. Incluye SIEMPRE el campo "escala" en el JSON de respuesta: usa "escala":"frecuencia" cuando la sección mide con qué frecuencia ocurre un síntoma (ej. alimentación, hábitos, síntomas digestivos); usa "escala":"intensidad" cuando mide con qué intensidad o gravedad se siente (ej. dolor, energía). Escala frecuencia: 0=Raro/excepcional, 1=Ocasional, 2=Frecuente, 3=Muy frecuente. Escala intensidad: 0=Nunca, 1=Leve, 2=Moderado, 3=Intenso/permanente.
 
-ESTRUCTURA DEL CUESTIONARIO (s01, s02 y s03):
-${ESTRUCTURA_S01_S03}
+PREGUNTAS DEL LOTE ACTUAL (solo estas, en orden):
+{{PREGUNTAS_LOTE}}
+
+{{INSTRUCCION_FIN_LOTE}}
 
 ⸻
 
 4. RECOPILACIÓN DE RESPUESTAS
 
 A medida que el paciente responda, extrae internamente los valores para cada campo del JSON. Al finalizar la conversación incluirás estos valores en el bloque [[RESPUESTAS_S01_S03]].
+
+Al recopilar los campos de profesión y ocupación (s01) y al valorar posibles exposiciones relacionadas con el motivo de consulta, aplica estos criterios:
+ 
+- Diferencia profesión de ocupación actual. La profesión es la formación u oficio de base; la ocupación actual son las tareas reales que el paciente realiza hoy. Da prioridad a las tareas del trabajo actual para evaluar exposiciones vigentes, y conserva la profesión únicamente como antecedente de posibles exposiciones previas.
+- Registra como "exposición confirmada" solo lo que el paciente declare explícitamente. Puedes proponer exposiciones plausibles por verificar según la actividad descrita —químicas, polvo o material particulado, humos, gases, solventes, pesticidas, metales, agentes biológicos, radiación, ruido, vibración, calor o frío, carga ergonómica, sedentarismo, turnos nocturnos, carga psicosocial—, pero preséntalas siempre como algo por confirmar con el paciente, nunca como un hecho ya establecido.
+- Busca concordancia temporal entre el inicio o empeoramiento de los síntomas y cambios ocupacionales relevantes: comienzo o cambio de trabajo, cambio de jornada, cambio de lugar de trabajo, mudanza, o inicio de una exposición concreta.
 
 ⸻
 
@@ -209,44 +214,26 @@ Cuando detectes una de estas condiciones, incluye "alertaPresencial": true ÚNIC
 - Una pregunta principal por mensaje.
 - Cuando el paciente responde con un número a una pregunta numérica (peso, talla, edad, escala, años, etc.), acéptalo directamente y pasa a la siguiente pregunta. NUNCA digas "¿quisiste decir...?", "¿hubo un error de tipeo?" ni ninguna variante de confirmación. El número es válido tal como fue escrito.
 - Solo pide aclaración si la respuesta es genuinamente ambigua (ej: texto incomprensible, o respuesta a una pregunta de opciones que no corresponde a ninguna opción).
+- NUNCA repitas una pregunta que ya hayas hecho en esta conversación. Antes de formular cada pregunta, revisa el historial completo para verificar que no fue preguntada ni respondida ya, aunque con palabras ligeramente distintas.
 
 ⸻
 
 8. RESPUESTA FINAL OBLIGATORIA
 
-Cuando hayas recopilado información suficiente de s01 y s03, genera la respuesta final con DOS mensajes separados:
+SOLO genera la respuesta final cuando el sistema de lotes te indique que es el último lote (la instrucción dirá [[FIN_CONVERSACION]] en lugar de [[FIN_LOTE]]). NUNCA cierres la conversación por tu propia decisión antes de eso.
 
-MENSAJE A — texto empático corto (máx 2 frases):
-Algo como: "Gracias, {nombre}. Antes de continuar, revisemos lo que entendí hasta ahora."
+Cuando el sistema indique el último lote y hayas completado sus preguntas, genera el JSON con el resumen:
 
-MENSAJE B — JSON con el resumen estructurado. El campo "resumen" debe contener entre 4 y 6 ítems concretos extraídos de lo que el paciente describió. Cada ítem es una frase corta y directa (sin emojis, sin markdown).
+- El campo "texto" es el mensaje empático corto de cierre (máx 2 frases): "Gracias, {nombre}. Antes de continuar, revisemos lo que entendí hasta ahora."
+- El campo "resumen" contiene 4-6 ítems concretos de los síntomas del paciente (sin emojis, sin markdown).
+- El campo "enfoque" (OBLIGATORIO) es un párrafo sobre cómo Crisal-IA abordará el caso usando la sección 11 como referencia.
+- "opciones" debe ser [].
 
-Ejemplo de resumen para dolor lumbar:
-{
-  "texto": "Gracias, {nombre}. Antes de continuar, revisemos lo que entendí hasta ahora.",
-  "resumen": [
-    "El dolor se encuentra principalmente en la zona lumbar",
-    "Comenzó hace aproximadamente tres días",
-    "Empeora con actividad física y falta de sueño",
-    "La intensidad reportada es moderada",
-    "No has identificado una relación clara con alimentos"
-  ],
-  "opciones": [],
-  "tipoOpciones": "single",
-  "respuestaLibre": true
-}
-
-IMPORTANTE:
-- El campo "texto" es el mensaje empático corto de cierre (máx 2 frases). Ejemplo: "Gracias, {nombre}. Antes de continuar, revisemos lo que entendí hasta ahora."
-- El campo "resumen" contiene los síntomas del paciente (4-6 ítems concretos).
-- El campo "enfoque" (OBLIGATORIO en la respuesta final) es un párrafo sobre cómo Crisal-IA abordará el caso según el síntoma principal. Usa el documento de disfunciones de la sección 11 como referencia — elige la disfunción más relevante y menciona el enfoque funcional de forma empática y personalizada. NO copies el texto textualmente; adáptalo al caso.
-- "opciones" debe ser [] en la respuesta final.
-
-Ejemplo de respuesta final:
+Ejemplo:
 {
   "texto": "Gracias, {nombre}. Antes de continuar, revisemos lo que entendí hasta ahora.",
   "resumen": ["El dolor se encuentra en la zona lumbar", "Comenzó hace 3 días", "..."],
-  "enfoque": "Con base en lo que describes, el enfoque de Crisal-IA buscará comprender qué está alterando el eje de respuesta al estrés en tu caso — integrando tus ritmos de sueño, cortisol e inflamación — para abordar el origen del dolor desde la raíz. Tu médico funcional definirá los estudios y construirá contigo un plan personalizado.",
+  "enfoque": "Con base en lo que describes, el enfoque de Crisal-IA buscará...",
   "opciones": [],
   "tipoOpciones": "single",
   "respuestaLibre": true
@@ -254,12 +241,9 @@ Ejemplo de respuesta final:
 
 ⸻
 
-9. CRITERIOS DE FINALIZACIÓN
+9. FINALIZACIÓN
 
-Puedes cerrar la fase inicial cuando:
-1. Se hayan recopilado los campos prioritarios de s01 y s03.
-2. El síntoma principal esté claramente descrito.
-3. Se hayan revisado señales de alarma.
+REGLA: NUNCA emitas [[FIN_CONVERSACION]] por tu propia decisión. Solo usa [[FIN_LOTE]] al terminar las preguntas de cada lote. El sistema controlará cuándo termina la conversación.
 
 ⸻
 
@@ -272,7 +256,10 @@ Cuando hayas completado todos los criterios y entregado la RESPUESTA FINAL, agre
 [{"titulo":"...","desc":"..."},{"titulo":"...","desc":"..."},{"titulo":"...","desc":"..."}]
 [[/CAUSAS]]
 
-2. Las respuestas estructuradas recopiladas de s01 y s03:
+2. Las respuestas estructuradas recopiladas de s01 y s03.
+Usa EXACTAMENTE estos IDs (NO inventes variaciones):
+s01: s01_nombre, s01_nacimiento, s01_edad, s01_sexo, s01_educacion, s01_ocupacion, s01_anos_ocupacion, s01_jornada, s01_contacto_emergencia, s01_como_nos_conociste, s01_talla, s01_peso_actual, s01_peso_habitual, s01_peso_deseado, s01_peso_max, s01_peso_max_edad, s01_peso_min, s01_peso_min_edad, s01_grasa_corporal, s01_masa_muscular, s01_perimetro_abdominal, s01_peso_12meses, s01_medicion_electronica, s01_dispositivos
+s03: s03_sintomas_tabla (guarda como array de objetos, ej: [{"sintoma":"...","intensidad":"...","frecuencia":"...","aparecio":"...","agrava":"...","evolucion":"...","agravantes":"...","alivian":"..."}]), s03_limitacion, s03_que_hacias_bien, s03_evento_inicio, s03_objetivo_a, s03_objetivo_b, s03_disposicion, s03_examenes_previos
 [[RESPUESTAS_S01_S03]]
 
 [[/RESPUESTAS_S01_S03]]
@@ -323,15 +310,90 @@ export interface DatosExistentesPaciente {
   direccion?:       string;
 }
 
+/**
+ * Genera el cierre final de fase 1: resumen de síntomas + enfoque + bloques técnicos.
+ * Se llama desde el controlador cuando el último lote emite [[FIN_LOTE]].
+ */
+export async function generarCierreFase1(params: {
+  historial: MensajeChat[];
+  nombrePaciente?: string;
+  zonasDolorMarcadas: string[];
+  datosExistentes?: DatosExistentesPaciente;
+}): Promise<string> {
+  const { historial, nombrePaciente, zonasDolorMarcadas, datosExistentes } = params;
+  const d = datosExistentes || {};
+
+  const nombre = nombrePaciente || d.nombre || 'paciente';
+  const zonasTexto = zonasDolorMarcadas.length
+    ? `Zonas de dolor marcadas: ${zonasDolorMarcadas.join(', ')}.`
+    : '';
+
+  const systemPrompt = `Eres Crisal-IA. Basándote ÚNICAMENTE en el historial de conversación que tienes, genera la respuesta de cierre de fase 1.
+
+${zonasTexto}
+
+DATOS DEL PACIENTE:
+${d.nombre ? `- Nombre: ${d.nombre}` : ''}
+${d.edad !== undefined ? `- Edad: ${d.edad} años` : ''}
+${d.sexoBiologico ? `- Sexo: ${d.sexoBiologico}` : ''}
+
+Genera EXACTAMENTE este JSON:
+{
+  "texto": "Gracias, ${nombre}. Antes de continuar, revisemos lo que entendí hasta ahora.",
+  "resumen": ["ítem 1", "ítem 2", "ítem 3", "ítem 4"],
+  "enfoque": "párrafo empático sobre el abordaje funcional",
+  "opciones": [],
+  "tipoOpciones": "single",
+  "respuestaLibre": true
+}
+
+El campo "resumen" debe tener 4-6 ítems concretos de los síntomas del paciente.
+El campo "enfoque" describe cómo Crisal-IA abordará el caso (elige la disfunción más relevante del historial).
+
+Después del JSON agrega obligatoriamente:
+[[CAUSAS]]
+[{"titulo":"...","desc":"..."},{"titulo":"...","desc":"..."},{"titulo":"...","desc":"..."}]
+[[/CAUSAS]]
+
+[[RESPUESTAS_S01_S03]]
+{ "clave_id": valor, ... }
+[[/RESPUESTAS_S01_S03]]
+
+[[FIN_CONVERSACION]]`;
+
+  const historialTrunc = historial.slice(-20);
+  const messages: any[] = [
+    { role: 'user', content: [{ text: `Síntoma principal del paciente. ${zonasTexto} Genera el cierre.` }] },
+    { role: 'assistant', content: [{ text: 'Entendido, procedo a generar el cierre.' }] },
+    ...historialTrunc.map(m => ({
+      role: m.rol === 'usuario' ? 'user' : 'assistant',
+      content: [{ text: m.texto }],
+    })),
+    { role: 'user', content: [{ text: 'Genera ahora el JSON de cierre con resumen, enfoque y los bloques técnicos.' }] },
+  ];
+
+  const command = new ConverseCommand({
+    modelId: MODEL_ID,
+    system: [{ text: systemPrompt }],
+    messages,
+    inferenceConfig: { maxTokens: 4000, temperature: 0.3 },
+  });
+
+  const resp = await client.send(command);
+  return resp.output?.message?.content?.find((c: any) => c.text)?.text?.trim() ?? '';
+}
+
 export async function responderCuerpoConChat(params: {
   zonasDolorMarcadas: string[];
   historial: MensajeChat[];
   mensajeUsuario: string;
   nombrePaciente?: string;
   datosExistentes?: DatosExistentesPaciente;
+  loteIndex?: number;
 }): Promise<string> {
   const { zonasDolorMarcadas, historial, mensajeUsuario, nombrePaciente } = params;
   const d = params.datosExistentes || {};
+  const loteIndex = params.loteIndex ?? 0;
 
   const zonasTexto = zonasDolorMarcadas.length
     ? `El paciente ha marcado las siguientes zonas de dolor en el mapa corporal: ${zonasDolorMarcadas.join(', ')}.`
@@ -361,9 +423,47 @@ export async function responderCuerpoConChat(params: {
     datosConocidosTexto,
   ].filter(Boolean).join(' ');
 
-  // Sección 11 solo cuando el historial indica que estamos cerca del cierre (turno >= 9)
+  // Filtrar preguntas ya conocidas del modelo Paciente
+  const IDS_CONOCIDOS: Record<string, boolean> = {
+    s01_nombre:    !!d.nombre,
+    s01_nacimiento: !!d.fechaNacimiento,
+    s01_edad:      d.edad !== undefined,
+    s01_sexo:      !!d.sexoBiologico,
+    s01_educacion: !!d.escolaridad,
+    s01_ocupacion: !!d.ocupacion,
+  };
+  const preguntasPendientes = TODAS_LAS_PREGUNTAS.filter((q: any) => !IDS_CONOCIDOS[q.id]);
+
+  // Construir preguntas del lote actual (5 preguntas sobre pendientes)
+  const inicio = loteIndex * 5;
+  const esUltimoLote = inicio + 5 >= preguntasPendientes.length;
+  const lote = preguntasPendientes.slice(inicio, inicio + 5);
+  const preguntasLoteTexto = lote.map((q: any, i: number) => {
+    let linea = `${i + 1}. [${q.id}] ${q.text || q.title || ''} (tipo: ${q.type}`;
+    if ((q.type === 'single' || q.type === 'checkbox') && Array.isArray(q.options))
+      linea += `, opciones: ${q.options.map((o: any) => o.label).join(' / ')}`;
+    if (q.type === 'symptom_table' && Array.isArray(q.items)) {
+      linea += `, escala: ${q.scale_type || 'frequency'}, ítems: ${q.items.map((it: any) => it.label).join(', ')}`;
+    }
+    if (q.type === 'table' && Array.isArray(q.columns))
+      linea += `, columnas: ${q.columns.join(' | ')}`;
+    if (q.type === 'file_upload') linea += ', subida de archivos';
+    linea += ')';
+    return linea;
+  }).join('\n') || '(sin preguntas en este lote)';
+
+  // Instrucción de fin de lote: cuando es el último lote, solo mencionamos
+  // [[FIN_CONVERSACION]]; para lotes intermedios, solo mencionamos [[FIN_LOTE]]
+  // y NO mencionamos [[FIN_CONVERSACION]] para que Claude no lo use por cuenta propia.
+  const instruccionFinLote = 'Cuando hayas hecho y recibido respuesta de TODAS las preguntas de este lote, confirma brevemente ("Anotado.") y emite [[FIN_LOTE]] INMEDIATAMENTE al final. NUNCA emitas [[FIN_CONVERSACION]] — el backend controlará el cierre.';
+
+  const DEFAULT_PROMPT_CON_LOTE = DEFAULT_SYSTEM_PROMPT
+    .replace('{{PREGUNTAS_LOTE}}', preguntasLoteTexto)
+    .replace('{{INSTRUCCION_FIN_LOTE}}', instruccionFinLote);
+
+  // Sección 11 solo cuando el historial indica que estamos cerca del cierre
   const inyectarSeccion11 = historial.length >= 18;
-  const basePrompt = process.env.CUERPO_CHAT_SYSTEM_PROMPT?.trim() || DEFAULT_SYSTEM_PROMPT;
+  const basePrompt = process.env.CUERPO_CHAT_SYSTEM_PROMPT?.trim() || DEFAULT_PROMPT_CON_LOTE;
   const systemPrompt = inyectarSeccion11
     ? `${basePrompt}\n\n${SECCION_11_DISFUNCIONES}`
     : basePrompt;
@@ -407,7 +507,9 @@ NUNCA respondas en texto libre. SIEMPRE JSON.`;
     region:           REGION,
     historialLen:     historial.length,
     mensajeUsuario:   mensajeUsuario.slice(0, 80),
-    estructuraCargada: ESTRUCTURA_S01_S03.length > 0,
+    loteIndex,
+    preguntasEnLote:  lote.map((q: any) => q.id),
+    esUltimoLote,
     systemPromptLen:  contextoCompleto.length,
   });
 
@@ -593,7 +695,7 @@ export async function responderInterrogatorioConClaude(params: {
     } else if (q.type === 'checkbox' && q.options?.length) {
       linea += `, opciones múltiples: ${q.options.map((o: any) => o.label).join(' / ')}`;
     } else if (q.type === 'symptom_table' && q.items?.length) {
-      linea += `, ítems de tabla: ${q.items.map((it: any) => it.label).join(', ')}`;
+      linea += `, escala: ${q.scale_type || 'frequency'}, ítems de tabla: ${q.items.map((it: any) => it.label).join(', ')}`;
     } else if (q.type === 'table' && q.columns?.length) {
       linea += `, columnas: ${q.columns.join(' | ')}`;
     }
@@ -615,6 +717,7 @@ NO hagas preguntas que no estén en esta lista.
 2. INTELIGENCIA CONTEXTUAL
 
 - NUNCA repitas una pregunta que ya hiciste — revisa el historial antes de cada turno.
+- Si el paciente ya respondió una pregunta en texto libre (aunque no haya sido presentada con opciones), acepta esa respuesta tal como está. NO vuelvas a presentar la pregunta con opciones para "confirmar". Registra la respuesta internamente y continúa con la siguiente.
 - Adapta el tono según lo que el paciente ya respondió.
 - Si una pregunta no aplica (ej: embarazo a un hombre), omítela y pasa a la siguiente.
 
@@ -625,7 +728,7 @@ NO hagas preguntas que no estén en esta lista.
 - type "text" → opciones: []
 - type "symptom_table" → usa formato tabla:
   {"texto":"...","opciones":[],"tipoOpciones":"tabla","tabla":[{"id":"item_id","label":"Nombre síntoma"},...],"respuestaLibre":true}
-  NUNCA listes ítems como texto — SIEMPRE usa la tabla cuando hay múltiples ítems 0-3.
+  NUNCA listes ítems como texto — SIEMPRE usa la tabla cuando hay múltiples ítems 0-3. Incluye "escala":"frecuencia" o "escala":"intensidad" según la sección: frecuencia para hábitos/alimentación/síntomas digestivos; intensidad para dolor/energía/estado general.
 - type "table" → tabla dinámica donde el paciente ingresa filas libres:
   {"texto":"Pregunta reformulada","opciones":[],"tipoOpciones":"tabla_dinamica","columnas":["Col1","Col2",...],"respuestaLibre":true}
   Las columnas son EXACTAMENTE las del campo "columns" de la definición de la pregunta. No las modifiques.

@@ -8,29 +8,17 @@
       "text": "¿Tienes una infección crónica o recurrente?",
       "type": "single",
       "options": [
-        {
-          "value": "no",
-          "label": "No"
-        },
-        {
-          "value": "si",
-          "label": "Sí"
-        }
+        {"value": "no", "label": "No"},
+        {"value": "si", "label": "Sí"}
       ]
     },
     {
-      "id": "s31_gi_cronicos",
+      "id": "s31_trastornos_gi",
       "text": "¿Tienes trastornos gastrointestinales crónicos o recurrentes?",
       "type": "single",
       "options": [
-        {
-          "value": "no",
-          "label": "No"
-        },
-        {
-          "value": "si",
-          "label": "Sí"
-        }
+        {"value": "no", "label": "No"},
+        {"value": "si", "label": "Sí"}
       ]
     },
     {
@@ -38,56 +26,23 @@
       "text": "¿Fumas tabaco?",
       "type": "single",
       "options": [
-        {
-          "value": "nunca",
-          "label": "Nunca he fumado"
-        },
-        {
-          "value": "actual",
-          "label": "Fumador actual"
-        },
-        {
-          "value": "exfumador",
-          "label": "Exfumador"
-        }
+        {"value": "nunca", "label": "Nunca he fumado"},
+        {"value": "fumador_actual", "label": "Fumador actual"},
+        {"value": "exfumador", "label": "Exfumador"}
       ]
     },
-    {
-      "id": "s31_cigarrillos_dia",
-      "text": "Cigarrillos al día",
-      "type": "text"
-    },
-    {
-      "id": "s31_fumo_desde",
-      "text": "¿Desde cuándo?",
-      "type": "text"
-    },
-    {
-      "id": "s31_fumo_suspendio",
-      "text": "Si lo suspendiste, ¿cuándo?",
-      "type": "text"
-    },
+    {"id": "s31_tabaco_cigarrillos", "text": "Cigarrillos al día", "type": "text"},
+    {"id": "s31_tabaco_desde_cuando", "text": "¿Desde cuándo fuma?", "type": "text"},
+    {"id": "s31_tabaco_suspension", "text": "Si lo suspendiste, ¿cuándo?", "type": "text"},
     {
       "id": "s31_salta_comidas",
       "text": "¿Cuántas veces a la semana te saltas una comida?",
       "type": "single",
       "options": [
-        {
-          "value": "ninguna",
-          "label": "Ninguna"
-        },
-        {
-          "value": "1_2",
-          "label": "1 a 2"
-        },
-        {
-          "value": "3_5",
-          "label": "3 a 5"
-        },
-        {
-          "value": "casi_diario",
-          "label": "Casi a diario"
-        }
+        {"value": "ninguna", "label": "Ninguna"},
+        {"value": "1_2", "label": "1 a 2"},
+        {"value": "3_5", "label": "3 a 5"},
+        {"value": "casi_diario", "label": "Casi a diario"}
       ]
     },
     {
@@ -95,18 +50,9 @@
       "text": "¿Consumes poca fibra en tu dieta?",
       "type": "single",
       "options": [
-        {
-          "value": "no",
-          "label": "No, consumo suficiente"
-        },
-        {
-          "value": "moderada",
-          "label": "Sí, moderadamente baja"
-        },
-        {
-          "value": "muy_baja",
-          "label": "Sí, muy baja"
-        }
+        {"value": "no", "label": "No, consumo suficiente"},
+        {"value": "moderadamente_baja", "label": "Sí, moderadamente baja"},
+        {"value": "muy_baja", "label": "Sí, muy baja"}
       ]
     },
     {
@@ -114,86 +60,36 @@
       "text": "¿Tienes historia de trastornos de la vesícula biliar?",
       "type": "single",
       "options": [
-        {
-          "value": "no",
-          "label": "No"
-        },
-        {
-          "value": "calculos",
-          "label": "Cálculos"
-        },
-        {
-          "value": "colecistectomia",
-          "label": "Colecistectomía"
-        },
-        {
-          "value": "disquinesia",
-          "label": "Disquinesia biliar"
-        }
+        {"value": "no", "label": "No"},
+        {"value": "calculos", "label": "Cálculos"},
+        {"value": "colecistectomia", "label": "Colecistectomía"},
+        {"value": "disquinesia", "label": "Disquinesia biliar"}
       ]
     },
     {
-      "id": "s31_estatinas",
+      "id": "s31_estatinas_bbloqueadores",
       "text": "¿Tienes historia de uso de estatinas o beta-bloqueadores?",
       "type": "checkbox",
       "options": [
-        {
-          "value": "no",
-          "label": "No"
-        },
-        {
-          "value": "estatinas_actual",
-          "label": "Estatinas, actualmente"
-        },
-        {
-          "value": "estatinas_pasado",
-          "label": "Estatinas, en el pasado"
-        },
-        {
-          "value": "beta_actual",
-          "label": "Beta-bloqueadores, actualmente"
-        },
-        {
-          "value": "beta_pasado",
-          "label": "Beta-bloqueadores, en el pasado"
-        }
+        {"value": "no", "label": "No"},
+        {"value": "estatinas_actual", "label": "Estatinas, actualmente"},
+        {"value": "estatinas_pasado", "label": "Estatinas, en el pasado"},
+        {"value": "bbloqueadores_actual", "label": "Beta-bloqueadores, actualmente"},
+        {"value": "bbloqueadores_pasado", "label": "Beta-bloqueadores, en el pasado"}
       ]
     },
     {
-      "id": "s31_cq10",
+      "id": "s31_sintomas_estatinas",
       "text": "Síntomas asociados al uso de estatinas o al déficit de coenzima Q10",
       "type": "symptom_table",
+      "scale_type": "frequency",
       "items": [
-        {
-          "id": "s31_dolor_debilidad",
-          "label": "Dolor o debilidad muscular",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s31_calambres",
-          "label": "Calambres",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s31_fatiga",
-          "label": "Fatiga desproporcionada",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s31_intolerancia_ejercicio",
-          "label": "Intolerancia al ejercicio",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s31_memoria",
-          "label": "Pérdida de memoria o niebla mental",
-          "type": "scale_0_3"
-        },
-        {
-          "id": "s31_neuropatia",
-          "label": "Neuropatía periférica",
-          "type": "scale_0_3"
-        }
+        {"id": "s31_s_dolor_muscular", "label": "Dolor o debilidad muscular", "type": "scale_0_3"},
+        {"id": "s31_s_calambres", "label": "Calambres", "type": "scale_0_3"},
+        {"id": "s31_s_fatiga", "label": "Fatiga desproporcionada", "type": "scale_0_3"},
+        {"id": "s31_s_intolerancia_ejercicio", "label": "Intolerancia al ejercicio", "type": "scale_0_3"},
+        {"id": "s31_s_niebla_mental", "label": "Pérdida de memoria o niebla mental", "type": "scale_0_3"},
+        {"id": "s31_s_neuropatia", "label": "Neuropatía periférica", "type": "scale_0_3"}
       ]
     },
     {
@@ -201,64 +97,20 @@
       "text": "Perfil lipídico más reciente (si lo conoces)",
       "type": "checkbox",
       "options": [
-        {
-          "value": "col_normal",
-          "label": "Colesterol total normal"
-        },
-        {
-          "value": "col_alto",
-          "label": "Colesterol total elevado"
-        },
-        {
-          "value": "ldl_normal",
-          "label": "LDL normal"
-        },
-        {
-          "value": "ldl_alto",
-          "label": "LDL elevado"
-        },
-        {
-          "value": "hdl_bajo",
-          "label": "HDL bajo"
-        },
-        {
-          "value": "tg_alto",
-          "label": "Triglicéridos elevados"
-        },
-        {
-          "value": "tg_hdl_3",
-          "label": "Relación TG/HDL mayor a 3"
-        },
-        {
-          "value": "no_conoce",
-          "label": "No lo conozco"
-        }
+        {"value": "colesterol_normal", "label": "Colesterol total normal"},
+        {"value": "colesterol_elevado", "label": "Colesterol total elevado"},
+        {"value": "ldl_normal", "label": "LDL normal"},
+        {"value": "ldl_elevado", "label": "LDL elevado"},
+        {"value": "hdl_bajo", "label": "HDL bajo"},
+        {"value": "trigliceridos_elevados", "label": "Triglicéridos elevados"},
+        {"value": "tg_hdl_mayor_3", "label": "Relación TG/HDL mayor a 3"},
+        {"value": "no_conozco", "label": "No lo conozco"}
       ]
     },
-    {
-      "id": "s31_fecha_lipidico",
-      "text": "Fecha del último perfil lipídico",
-      "type": "text"
-    },
-    {
-      "id": "s31_col_total",
-      "text": "Colesterol total",
-      "type": "text"
-    },
-    {
-      "id": "s31_ldl",
-      "text": "LDL",
-      "type": "text"
-    },
-    {
-      "id": "s31_hdl",
-      "text": "HDL",
-      "type": "text"
-    },
-    {
-      "id": "s31_trigliceridos",
-      "text": "Triglicéridos",
-      "type": "text"
-    }
+    {"id": "s31_fecha_ultimo_perfil", "text": "Fecha del último perfil lipídico", "type": "text"},
+    {"id": "s31_colesterol_total", "text": "Colesterol total (mg/dL)", "type": "text"},
+    {"id": "s31_ldl", "text": "LDL (mg/dL)", "type": "text"},
+    {"id": "s31_hdl", "text": "HDL (mg/dL)", "type": "text"},
+    {"id": "s31_trigliceridos", "text": "Triglicéridos (mg/dL)", "type": "text"}
   ]
 }
