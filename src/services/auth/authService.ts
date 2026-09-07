@@ -46,6 +46,8 @@ export interface RegisterPacienteData {
   aceptaConsentimiento?: boolean;
   zonasDolor?: string[];
   numeroDocumento?: string;
+  tipoDocumento?: string;
+  direccion?: string;
 }
 
 export interface AuthResponse {
@@ -203,7 +205,7 @@ export class AuthService {
   }
 
   async registerPaciente(data: RegisterPacienteData): Promise<AuthResponse> {
-    const { nombre, apellido, email, password, telefono, fechaNacimiento, genero, acudiente, aceptaTerminos, aceptaConsentimiento, zonasDolor, numeroDocumento } = data;
+    const { nombre, apellido, email, password, telefono, fechaNacimiento, genero, acudiente, aceptaTerminos, aceptaConsentimiento, zonasDolor, numeroDocumento, tipoDocumento, direccion } = data;
 
     const existingPaciente = await Paciente.findOne({ email });
     if (existingPaciente) {
@@ -214,6 +216,16 @@ export class AuthService {
       const existingTelefono = await Paciente.findOne({ telefono: telefono.trim() });
       if (existingTelefono) {
         throw new AppError('Este número de teléfono ya está registrado', 400);
+      }
+    }
+
+    if (tipoDocumento?.trim() && numeroDocumento?.trim()) {
+      const existingDoc = await Paciente.findOne({
+        tipoDocumento: tipoDocumento.trim(),
+        numeroDocumento: numeroDocumento.trim()
+      });
+      if (existingDoc) {
+        throw new AppError('Ya existe un usuario registrado con ese número de documento', 400);
       }
     }
 
@@ -247,7 +259,9 @@ export class AuthService {
       role: UserRole.PACIENTE,
       activo: true,
       ...(zonasDolor && zonasDolor.length > 0 && { zonasDolor }),
-      ...(numeroDocumento?.trim() && { numeroDocumento: numeroDocumento.trim() })
+      ...(tipoDocumento?.trim() && { tipoDocumento: tipoDocumento.trim() }),
+      ...(numeroDocumento?.trim() && { numeroDocumento: numeroDocumento.trim() }),
+      ...(direccion?.trim() && { direccion: direccion.trim() })
     });
 
     await nuevoPaciente.save();

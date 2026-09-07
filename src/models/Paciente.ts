@@ -261,5 +261,11 @@ PacienteSchema.methods.comparePassword = async function (candidatePassword: stri
   return bcrypt.compare(candidatePassword, this.password);
 };
 
+// Índice compuesto: mismo número de documento no puede repetirse dentro del mismo tipo
+PacienteSchema.index(
+  { tipoDocumento: 1, numeroDocumento: 1 },
+  { unique: true, sparse: true }
+);
+
 export default mongoose.model<IPaciente>('Paciente', PacienteSchema);
 
