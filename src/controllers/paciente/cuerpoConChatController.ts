@@ -98,7 +98,9 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
     });
 
     // ── Manejo de [[FIN_LOTE]] ───────────────────────────────────────────────
-    if (respuesta.includes('[[FIN_LOTE]]') && !respuesta.includes('[[FIN_CONVERSACION]]')) {
+    // También interceptar [[FIN_CONVERSACION]] prematuro de Claude en lotes intermedios
+    const claudeEmitioFin = respuesta.includes('[[FIN_LOTE]]') || respuesta.includes('[[FIN_CONVERSACION]]');
+    if (claudeEmitioFin) {
       const nextLoteIndex = loteIndex + 1;
       // Filtrar preguntas ya conocidas para calcular si era el último lote real
       const IDS_CONOCIDOS_CTRL: Record<string, boolean> = {
@@ -111,6 +113,12 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
       };
       const pendientes = TODAS_LAS_PREGUNTAS.filter((q: any) => !IDS_CONOCIDOS_CTRL[q.id]);
       const eraUltimoLote = (loteIndex + 1) * 5 >= pendientes.length;
+
+      // Si Claude emitió [[FIN_CONVERSACION]] en un lote intermedio, limpiarlo
+      // para que no active el bloque de cierre con datos incompletos
+      if (!eraUltimoLote) {
+        respuesta = respuesta.replace(/\[\[FIN_CONVERSACION\]\]/g, '[[FIN_LOTE]]');
+      }
 
       if (eraUltimoLote) {
         // Último lote completado → el backend genera el cierre

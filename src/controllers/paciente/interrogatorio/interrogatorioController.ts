@@ -596,6 +596,35 @@ export const generarPerfilRadarInterrogatorio = async (req: AuthRequest, res: Re
       else if (k.startsWith('s03_')) respuestasS03[k] = v;
     });
 
+    // Fallback: si no hay campos s03_*, buscar campos sin prefijo (IDs antiguos de Claude)
+    if (Object.keys(respuestasS03).length === 0) {
+      const FALLBACK_MAP: Record<string, string> = {
+        sintoma_principal:      's03_sintoma_principal',
+        zona_dolor:             's03_zona_dolor',
+        intensidad:             's03_intensidad',
+        frecuencia_semanal:     's03_frecuencia',
+        hora_agravamiento:      's03_hora_agravacion',
+        tiempo_evolucion:       's03_duracion',
+        factores_agravantes:    's03_factores_agravantes',
+        factores_aliviantes:    's03_factores_aliviantes',
+        limitacion_vida_diaria: 's03_limitacion',
+        epoca_bienestar:        's03_ultima_vez_bien',
+        habitos_bienestar:      's03_que_hacias_bien',
+        eventos_coincidentes:   's03_evento_inicio',
+        objetivo_principal:     's03_objetivo_a',
+        objetivos_secundarios:  's03_objetivo_b',
+        disposicion_cambios:    's03_disposicion',
+        examenes_disponibles:   's03_examenes_previos',
+      };
+      Object.entries(respuestas).forEach(([k, v]) => {
+        const mapped = FALLBACK_MAP[k];
+        if (mapped) respuestasS03[mapped] = v;
+      });
+      if (Object.keys(respuestasS03).length > 0) {
+        console.log('[perfilRadar] Fallback s03 aplicado — campos sin prefijo mapeados:', Object.keys(respuestasS03));
+      }
+    }
+
     // Si el interrogatorio tiene secciones más allá de s03 (fase 2 completa),
     // pasar todas las respuestas para un análisis más completo
     const tieneDataFase2 = Object.keys(respuestas).some(k =>

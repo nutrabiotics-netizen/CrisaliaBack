@@ -214,6 +214,7 @@ Cuando detectes una de estas condiciones, incluye "alertaPresencial": true ÚNIC
 - Una pregunta principal por mensaje.
 - Cuando el paciente responde con un número a una pregunta numérica (peso, talla, edad, escala, años, etc.), acéptalo directamente y pasa a la siguiente pregunta. NUNCA digas "¿quisiste decir...?", "¿hubo un error de tipeo?" ni ninguna variante de confirmación. El número es válido tal como fue escrito.
 - Solo pide aclaración si la respuesta es genuinamente ambigua (ej: texto incomprensible, o respuesta a una pregunta de opciones que no corresponde a ninguna opción).
+- Si el paciente responde de forma COMPLETA (número, opción seleccionada, texto claro), acepta la respuesta y continúa. Si la respuesta es INCOMPLETA (ej: solo dio nombre pero falta teléfono), pide conversacionalmente solo el dato que falta — sin repetir la pregunta completa.
 - NUNCA repitas una pregunta que ya hayas hecho en esta conversación. Antes de formular cada pregunta, revisa el historial completo para verificar que no fue preguntada ni respondida ya, aunque con palabras ligeramente distintas.
 
 ⸻
@@ -359,13 +360,18 @@ Después del JSON agrega obligatoriamente:
 { "clave_id": valor, ... }
 [[/RESPUESTAS_S01_S03]]
 
+Usa EXACTAMENTE estos IDs en [[RESPUESTAS_S01_S03]] (NO inventes variaciones):
+s01: s01_nombre, s01_nacimiento, s01_edad, s01_sexo, s01_educacion, s01_ocupacion, s01_anos_ocupacion, s01_jornada, s01_contacto_emergencia, s01_como_nos_conociste, s01_talla, s01_peso_actual, s01_peso_habitual, s01_peso_deseado, s01_peso_max, s01_peso_max_edad, s01_peso_min, s01_peso_min_edad, s01_grasa_corporal, s01_masa_muscular, s01_perimetro_abdominal, s01_peso_12meses, s01_medicion_electronica, s01_dispositivos
+s03: s03_sintomas_tabla (array de objetos), s03_limitacion, s03_ultima_vez_bien, s03_que_hacias_bien, s03_evento_inicio, s03_objetivo_a, s03_objetivo_b, s03_objetivo_c, s03_objetivo_d, s03_disposicion, s03_examenes_previos
+
 [[FIN_CONVERSACION]]`;
 
-  const historialTrunc = historial.slice(-20);
+  // Usar historial completo — generarCierreFase1 es una llamada única al final
+  // y necesita ver TODAS las respuestas de todos los lotes para no generar nulls
   const messages: any[] = [
     { role: 'user', content: [{ text: `Síntoma principal del paciente. ${zonasTexto} Genera el cierre.` }] },
     { role: 'assistant', content: [{ text: 'Entendido, procedo a generar el cierre.' }] },
-    ...historialTrunc.map(m => ({
+    ...historial.map(m => ({
       role: m.rol === 'usuario' ? 'user' : 'assistant',
       content: [{ text: m.texto }],
     })),
@@ -717,7 +723,8 @@ NO hagas preguntas que no estén en esta lista.
 2. INTELIGENCIA CONTEXTUAL
 
 - NUNCA repitas una pregunta que ya hiciste — revisa el historial antes de cada turno.
-- Si el paciente ya respondió una pregunta en texto libre (aunque no haya sido presentada con opciones), acepta esa respuesta tal como está. NO vuelvas a presentar la pregunta con opciones para "confirmar". Registra la respuesta internamente y continúa con la siguiente.
+- Si el paciente ya respondió una pregunta de forma COMPLETA (número, opción seleccionada, texto claro que cubre lo que se pedía), acepta la respuesta y continúa con la siguiente. NO la repitas ni la presentes de nuevo con opciones.
+Sin embargo, si la respuesta es INCOMPLETA (ej: solo dio el nombre pero falta el teléfono, o dio una cantidad sin unidad cuando era necesaria), haz el seguimiento natural de forma conversacional para obtener el dato que falta — sin repetir la pregunta completa, solo pidiendo lo que falta. Esta regla aplica incluso cuando estás a punto de emitir [[FIN_RONDA]].
 - Adapta el tono según lo que el paciente ya respondió.
 - Si una pregunta no aplica (ej: embarazo a un hombre), omítela y pasa a la siguiente.
 
