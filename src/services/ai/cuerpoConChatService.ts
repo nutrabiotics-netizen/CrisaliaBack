@@ -735,7 +735,7 @@ Sin embargo, si la respuesta es INCOMPLETA (ej: solo dio el nombre pero falta el
 - type "text" → opciones: []
 - type "symptom_table" → usa formato tabla:
   {"texto":"...","opciones":[],"tipoOpciones":"tabla","tabla":[{"id":"item_id","label":"Nombre síntoma"},...],"respuestaLibre":true}
-  NUNCA listes ítems como texto — SIEMPRE usa la tabla cuando hay múltiples ítems 0-3. Incluye "escala":"frecuencia" o "escala":"intensidad" según la sección: frecuencia para hábitos/alimentación/síntomas digestivos; intensidad para dolor/energía/estado general.
+  NUNCA listes ítems como texto — SIEMPRE usa la tabla cuando hay múltiples ítems 0-3. Incluye "escala":"frecuencia" o "escala":"intensidad" según la sección. En el campo "texto" NO expliques la escala numérica (no digas "0=nunca, 1=leve..." ni "califica del 0 al 3") — el componente de la UI ya muestra los valores y su descripción al paciente. Solo formula la pregunta empáticamente.
 - type "table" → tabla dinámica donde el paciente ingresa filas libres:
   {"texto":"Pregunta reformulada","opciones":[],"tipoOpciones":"tabla_dinamica","columnas":["Col1","Col2",...],"respuestaLibre":true}
   Las columnas son EXACTAMENTE las del campo "columns" de la definición de la pregunta. No las modifiques.
