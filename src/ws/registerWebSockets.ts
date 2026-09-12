@@ -9,7 +9,7 @@ import { WebSocketServer } from 'ws';
 import { registerTranscriptionHandlers } from './transcriptionWs';
 import { registerMedicoCopilotoVozHandlers } from './medicoCopilotoVozWs';
 import { registerChatHandlers } from './chatWs';
-import { registerConsultaRapidaHandlers } from './consultaRapidaWs';
+// import { registerConsultaRapidaHandlers } from './consultaRapidaWs';
 
 function pathnameOf(req: IncomingMessage): string {
   const u = req.url || '';
@@ -28,7 +28,7 @@ export function registerSharedWebSockets(server: Server): void {
   registerTranscriptionHandlers(wssTranscription);
   registerMedicoCopilotoVozHandlers(wssCopiloto);
   registerChatHandlers(wssChat);
-  registerConsultaRapidaHandlers(wssConsultaRapida);
+  // registerConsultaRapidaHandlers(wssConsultaRapida);
 
   server.on('upgrade', (request, socket, head) => {
     try {
