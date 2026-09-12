@@ -54,7 +54,7 @@ export const handleCallback = async (req: Request, res: Response): Promise<void>
     const { code, state: medicoId, error } = req.query;
 
     if (error) {
-      res.redirect(`${process.env.FRONTEND_URL ?? 'http://localhost:5173'}/medico/perfil/personalizacion?gcal=error`);
+      res.redirect(`${process.env.FRONTEND_URL ?? 'http://localhost:5173'}/medico/perfil/general?gcal=error`);
       return;
     }
 
@@ -76,7 +76,7 @@ export const handleCallback = async (req: Request, res: Response): Promise<void>
       }
     });
 
-    res.redirect(`${process.env.FRONTEND_URL ?? 'http://localhost:5173'}/medico/perfil/personalizacion?gcal=ok`);
+    res.redirect(`${process.env.FRONTEND_URL ?? 'http://localhost:5173'}/medico/perfil/general?gcal=ok`);
   } catch (err: any) {
     handleError(err, res);
   }
@@ -150,12 +150,12 @@ export const syncCitas = async (req: AuthRequest, res: Response): Promise<void> 
       try {
         await calendar.events.insert({
           calendarId: 'primary',
+          sendUpdates: 'none',
           requestBody: {
             summary: `Consulta — ${pac?.nombre ?? ''} ${pac?.apellido ?? ''}`.trim(),
             description: `Tipo: ${cita.tipo}\nModalidad: ${cita.modalidad}\nEstado: ${cita.estado}`,
             start: { dateTime: fechaInicio.toISOString(), timeZone: 'America/Bogota' },
             end: { dateTime: fechaFin.toISOString(), timeZone: 'America/Bogota' },
-            attendees: pac?.email ? [{ email: pac.email }] : []
           }
         });
         sincronizadas++;

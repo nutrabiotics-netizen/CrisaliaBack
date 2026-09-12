@@ -22,6 +22,8 @@ import {
 } from '../services/transcription/streaming/transcribeStreamingService';
 import { invokeBedrockAgent, parseBedrockResponse } from '../services/ai/bedrock.service';
 import Paciente from '../models/Paciente';
+import Material from '../models/Material';
+import { cargarCatalogo, corregirTranscript } from '../services/transcription/correccionMedicamentos';
 
 const CLINICAL_SECTIONS_LIST = [...CLINICAL_SECTIONS] as readonly string[];
 
@@ -124,6 +126,9 @@ function broadcastToCitaRoom(citaId: string, obj: object, excludeWs?: WebSocket)
 }
 
 /** Registra el handler de conexión (usar con `noServer` + enrutado único de `upgrade`). */
+// Cargar catálogo de medicamentos al iniciar (una sola vez)
+cargarCatalogo();
+
 export function registerTranscriptionHandlers(wss: WebSocketServer): void {
   wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
     const url = req.url || '';
@@ -258,9 +263,10 @@ export function registerTranscriptionHandlers(wss: WebSocketServer): void {
           });
           stopTranscribe = startTranscribeStreaming(audioQueue, {
             onTranscript(ev: TranscriptStreamEvent) {
+              const transcriptCorregido = corregirTranscript(ev.transcript);
               const payload = {
                 type: 'transcript' as const,
-                transcript: ev.transcript,
+                transcript: transcriptCorregido,
                 isPartial: ev.isPartial,
                 startTime: ev.startTime,
                 endTime: ev.endTime,
@@ -380,11 +386,63 @@ export function registerTranscriptionHandlers(wss: WebSocketServer): void {
             resumenLen: (parsed.resumen || '').length,
           });
 
+          // Enriquecer medicamentos sugeridos con datos del catálogo de materials
+          let medicamentosEnriquecidos: any[] = [];
+          if (parsed.medicamentos && parsed.medicamentos.length > 0) {
+            medicamentosEnriquecidos = await Promise.all(
+              parsed.medicamentos.map(async (med) => {
+                try {
+                  const regex = new RegExp(med.nombre.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+                  const material = await Material.findOne({ activo: true, $or: [{ nombre: regex }] }).lean();
+                  if (material) {
+                    return {
+                      ...med,
+                      materialId: String(material._id),
+                      denominacionComun: material.nombre || med.nombre,
+                      concentracion: material.concentracion || '',
+                      unidadMedida: material.unidadMedida || '',
+                      formaFarmaceutica: material.formaFarmaceutica || material.presentacion || '',
+                      viaAdministracion: med.via || material.viaAdministracion || '',
+                    };
+                  }
+                } catch {}
+                return { ...med, denominacionComun: med.nombre, viaAdministracion: med.via || '' };
+              })
+            );
+          }
+
+          // Enriquecer suplementos igual que medicamentos
+          let suplementosEnriquecidos: any[] = [];
+          if (parsed.suplementos && parsed.suplementos.length > 0) {
+            suplementosEnriquecidos = await Promise.all(
+              parsed.suplementos.map(async (sup) => {
+                try {
+                  const regex = new RegExp(sup.nombre.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+                  const material = await Material.findOne({ activo: true, $or: [{ nombre: regex }] }).lean();
+                  if (material) {
+                    return {
+                      ...sup,
+                      materialId: String(material._id),
+                      denominacionComun: material.nombre || sup.nombre,
+                      concentracion: material.concentracion || '',
+                      unidadMedida: material.unidadMedida || '',
+                      formaFarmaceutica: material.formaFarmaceutica || material.presentacion || '',
+                      viaAdministracion: sup.via || material.viaAdministracion || '',
+                    };
+                  }
+                } catch {}
+                return { ...sup, denominacionComun: sup.nombre, viaAdministracion: sup.via || '' };
+              })
+            );
+          }
+
           broadcastToCitaRoom(citaIdStr, {
             type: 'proposal',
             payload: {
               resumen: parsed.resumen || '',
-              propuestas: parsed.propuestas || []
+              propuestas: parsed.propuestas || [],
+              medicamentos: medicamentosEnriquecidos,
+              suplementos: suplementosEnriquecidos,
             }
           });
         } catch (err) {

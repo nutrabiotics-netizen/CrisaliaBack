@@ -154,6 +154,13 @@ export interface IMedico extends Document {
     expiryDate?: Date;
     conectado: boolean;
   };
+  /** Integración Outlook / Microsoft Calendar */
+  outlookCalendar?: {
+    accessToken?: string;
+    refreshToken?: string;
+    expiryDate?: Date;
+    conectado: boolean;
+  };
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -308,6 +315,15 @@ const MedicoSchema = new Schema<IMedico>(
     documentos:       { type: [DocumentoMedicoSchema], default: [] },
     aliados:          { type: AliadosSchema, default: () => ({}) },
     googleCalendar: {
+      type: new Schema({
+        accessToken:  { type: String },
+        refreshToken: { type: String },
+        expiryDate:   { type: Date },
+        conectado:    { type: Boolean, default: false }
+      }, { _id: false }),
+      default: undefined
+    },
+    outlookCalendar: {
       type: new Schema({
         accessToken:  { type: String },
         refreshToken: { type: String },

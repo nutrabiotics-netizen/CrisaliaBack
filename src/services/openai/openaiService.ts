@@ -11,31 +11,38 @@ export interface AnalisisInterrogatorio {
 }
 
 class OpenAIService {
-  async analizarInterrogatorio(respuestas: Record<string, any>): Promise<AnalisisInterrogatorio> {
+  async analizarInterrogatorio(
+    respuestas: Record<string, any>,
+    contextoAgent?: {
+      disfuncionesAgent?: any[];
+      notaMedico?: string;
+      ordenAbordaje?: any[];
+    }
+  ): Promise<AnalisisInterrogatorio> {
     try {
-      // Construir el prompt con las respuestas del paciente
-      const prompt = this.construirPrompt(respuestas);
+      // Construir el prompt con las respuestas del paciente y la síntesis del AnamnesisAgent
+      const prompt = this.construirPrompt(respuestas, contextoAgent);
 
       const completion = await openai.chat.completions.create({
         model: 'gpt-4',
         messages: [
           {
             role: 'system',
-            content: `Eres un asistente médico especializado en Medicina Funcional. Tu tarea es analizar las respuestas de un interrogatorio médico y proporcionar:
-1. Un análisis detallado de posibles disfunciones identificadas
-2. Objetivos de salud específicos y alcanzables
-3. Observaciones sobre posibles incoherencias en las respuestas
+            content: `Eres un médico especialista en Medicina Funcional con formación clínica avanzada. Tu tarea es integrar los datos del interrogatorio con el análisis fisiopatológico ya realizado por el sistema de IA y producir un documento clínico estructurado con:
+1. Un análisis clínico detallado usando terminología médica funcional precisa
+2. Objetivos terapéuticos específicos, medibles y priorizados
+3. Incoherencias clínicamente relevantes en los datos
 
-La fecha actual es ${new Date().toISOString().slice(0, 10)}. Usa esta fecha para calcular edades a partir de fechas de nacimiento — NO uses ninguna otra referencia temporal.
+La fecha actual es ${new Date().toISOString().slice(0, 10)}. Usa esta fecha para calcular edades.
 
-Responde siempre en español y con un enfoque profesional y empático.`
+Usa lenguaje médico-clínico formal. Menciona mecanismos fisiopatológicos, ejes disfuncionales y biomarcadores relevantes cuando aplique. El documento será leído por el médico tratante, no por el paciente.`
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        temperature: 0.5,
+        temperature: 0.2,
         max_tokens: 2000
       });
 
@@ -49,7 +56,7 @@ Responde siempre en español y con un enfoque profesional y empático.`
     }
   }
 
-  private construirPrompt(respuestas: Record<string, any>): string {
+  private construirPrompt(respuestas: Record<string, any>, contextoAgent?: { disfuncionesAgent?: any[]; notaMedico?: string; ordenAbordaje?: any[] }): string {
     // Campos internos que no aportan valor clínico al análisis
     const EXCLUIR = new Set([
       'historialChat', 'mensajeFinal', 'causas', 'zonasDolor',
@@ -85,19 +92,29 @@ Responde siempre en español y con un enfoque profesional y empático.`
       camposClinicos.push(`${id}: ${valorStr}`);
     });
 
-    const prompt = `Analiza las siguientes respuestas de un interrogatorio de Medicina Funcional.
+    // Síntesis del AnamnesisAgent como contexto clínico base
+    let bloqueAgent = '';
+    if (contextoAgent?.disfuncionesAgent?.length) {
+      const disfs = contextoAgent.disfuncionesAgent.map((d: any) =>
+        `- ${d.nombre || ''} (certeza: ${d.certeza || ''}, etapa: ${d.etapa || ''})${d.evidencia?.length ? ': ' + d.evidencia.slice(0,2).join('; ') : ''}`
+      ).join('\n');
+      bloqueAgent = `\n\nANÁLISIS DEL SISTEMA IA FUNCIONAL (úsalo como base clínica para tu análisis):\n${disfs}`;
+      if (contextoAgent.notaMedico) bloqueAgent += `\n\nNOTA AL MÉDICO: ${contextoAgent.notaMedico}`;
+    }
 
-Los IDs siguen el formato sXX_campo donde XX es la sección del formulario (s01=datos generales, s03=motivo de consulta, s04=antecedentes familiares, s05=historia médica, s06=medicamentos, s07-s08=salud hormonal, s09=nutrición, s10=estrés positivo/hormesis, s11=tolerancia al estrés/eje HPA, s12=coherencia cardíaca, s13=sueño, s14=hidratación, s15-s16=digestión, s17=evacuación, s18=salud oral, s19=disbiosis, s20-s21=permeabilidad, s22=glicotoxicidad, s23=fatiga muscular, s24=metilación, s25=hierro, s26=inflamación, s27=autoinmunidad, s28=dolor crónico, s29=vitamina D, s30=omega, s31=dislipidemia, s32=carga tóxica, s33=mitocondria, s34=neurología, s35=tiroides, s36=dimensión social/emocional).
+    const prompt = `Integra el análisis fisiopatológico con los datos del interrogatorio de Medicina Funcional.${bloqueAgent}
 
-Los valores numéricos siguen la escala: 0=nunca/ausente, 1=leve, 2=moderado, 3=intenso/frecuente.
+Los IDs siguen el formato sXX_campo (s01=datos generales, s03=motivo de consulta, s04=antecedentes familiares, s05=historia médica, s06=medicamentos, s07-s08=salud hormonal, s09=nutrición, s10=estrés/hormesis, s11=eje HPA, s12=coherencia cardíaca, s13=sueño, s14=hidratación, s15-s16=digestión, s17=evacuación, s18=salud oral, s19=disbiosis, s20-s21=permeabilidad, s22=glicotoxicidad, s23=fatiga muscular, s24=metilación, s25=hierro, s26=inflamación, s27=autoinmunidad, s28=dolor crónico, s29=vitamina D, s30=omega, s31=dislipidemia, s32=carga tóxica, s33=mitocondria, s34=neurología, s35=tiroides, s36=dimensión social/emocional).
 
-RESPUESTAS DEL PACIENTE:
+Escala: 0=nunca/ausente, 1=leve, 2=moderado, 3=intenso/frecuente.
+
+DATOS DEL INTERROGATORIO:
 ${camposClinicos.join('\n')}
 
-Por favor, proporciona:
-1. Un análisis detallado (mínimo 300 palabras) sobre posibles disfunciones identificadas, rutas terapéuticas recomendadas y observaciones importantes basadas en Medicina Funcional.
-2. Una lista de 3-5 objetivos de salud específicos y alcanzables para el paciente.
-3. Incoherencias reales en las respuestas: solo datos que se contradigan entre sí de forma directa y clínicamente significativa (por ejemplo, sexo femenino pero embarazos = 0 con historial inconsistente). NO reportes como incoherencia: valores que coinciden aunque provengan de campos distintos (ej. edad calculada = edad declarada), ausencia de síntomas, respuestas dentro de rangos normales, ni ninguna observación trivial. Si no existe ninguna incoherencia real, escribe exactamente: Ninguna.
+Proporciona en lenguaje médico-clínico formal:
+1. Análisis clínico detallado (mínimo 400 palabras): integra las disfunciones identificadas por el sistema IA con los datos del interrogatorio. Menciona mecanismos fisiopatológicos, ejes disfuncionales implicados, interacciones entre sistemas y recomendaciones de paraclínicos confirmatorios con sus biomarcadores específicos.
+2. Objetivos terapéuticos: 3-5 objetivos específicos, medibles y priorizados según urgencia clínica.
+3. Incoherencias clínicamente relevantes: solo datos que se contradigan entre sí de forma directa y significativa. Si no las hay, escribe exactamente: Ninguna.
 
 Formato de respuesta (usa exactamente estos encabezados):
 ANALISIS:

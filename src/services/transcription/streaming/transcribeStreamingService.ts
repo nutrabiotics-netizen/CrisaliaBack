@@ -136,6 +136,8 @@ export function startTranscribeStreaming(
 
   (async () => {
     try {
+      const vocabularyName = process.env.TRANSCRIBE_VOCABULARY_NAME;
+      console.log('[Transcribe] VocabularyName:', vocabularyName ?? '(no configurado)');
       const command = new StartStreamTranscriptionCommand({
         LanguageCode: LANGUAGE_CODE,
         MediaSampleRateHertz: SAMPLE_RATE,
@@ -143,7 +145,8 @@ export function startTranscribeStreaming(
         SessionId: sessionId,
         AudioStream: audioQueue.stream,
         ShowSpeakerLabel: false,
-        EnableChannelIdentification: false
+        EnableChannelIdentification: false,
+        ...(vocabularyName ? { VocabularyName: vocabularyName } : {}),
       });
 
       const response = await client.send(command);

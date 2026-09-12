@@ -9,6 +9,7 @@ import { WebSocketServer } from 'ws';
 import { registerTranscriptionHandlers } from './transcriptionWs';
 import { registerMedicoCopilotoVozHandlers } from './medicoCopilotoVozWs';
 import { registerChatHandlers } from './chatWs';
+import { registerConsultaRapidaHandlers } from './consultaRapidaWs';
 
 function pathnameOf(req: IncomingMessage): string {
   const u = req.url || '';
@@ -22,10 +23,12 @@ export function registerSharedWebSockets(server: Server): void {
   const wssTranscription = new WebSocketServer({ noServer: true, perMessageDeflate: false });
   const wssCopiloto = new WebSocketServer({ noServer: true, perMessageDeflate: false });
   const wssChat = new WebSocketServer({ noServer: true, perMessageDeflate: false });
+  const wssConsultaRapida = new WebSocketServer({ noServer: true, perMessageDeflate: false });
 
   registerTranscriptionHandlers(wssTranscription);
   registerMedicoCopilotoVozHandlers(wssCopiloto);
   registerChatHandlers(wssChat);
+  registerConsultaRapidaHandlers(wssConsultaRapida);
 
   server.on('upgrade', (request, socket, head) => {
     try {
@@ -41,6 +44,10 @@ export function registerSharedWebSockets(server: Server): void {
       } else if (p === '/api/chat-ws') {
         wssChat.handleUpgrade(request, socket, head, (ws) => {
           wssChat.emit('connection', ws, request);
+        });
+      } else if (p === '/api/consulta-rapida-ws') {
+        wssConsultaRapida.handleUpgrade(request, socket, head, (ws) => {
+          wssConsultaRapida.emit('connection', ws, request);
         });
       } else {
         socket.destroy();

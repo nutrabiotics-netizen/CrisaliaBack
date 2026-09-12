@@ -12,7 +12,11 @@ class AgendamientoService {
         query.fecha.$gte = fechaInicio;
       }
       if (fechaFin) {
-        query.fecha.$lte = fechaFin;
+        // Las citas se guardan a T05:00:00Z (medianoche Colombia). Para incluir todas
+        // las citas del último día, extender el límite al final del día en UTC.
+        const finDia = new Date(fechaFin);
+        finDia.setUTCHours(23, 59, 59, 999);
+        query.fecha.$lte = finDia;
       }
     }
 

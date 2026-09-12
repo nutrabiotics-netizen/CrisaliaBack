@@ -505,6 +505,12 @@ export const cancelarCita = async (req: AuthRequest, res: Response): Promise<voi
     });
 
     void notificarCitaCanceladaPorMedico(String(citaAnterior._id), tipoCancelacion, mensajeAdicional);
+    void import('../../utils/googleCalendarSync').then(m =>
+      m.syncCitaGoogleCalendar(String(req.userId), String(citaAnterior._id), 'eliminar')
+    );
+    void import('../../utils/outlookCalendarSync').then(m =>
+      m.syncCitaOutlookCalendar(String(req.userId), String(citaAnterior._id), 'eliminar')
+    );
   } catch (error: any) {
     console.error('Error al cancelar cita:', error);
     
@@ -645,6 +651,12 @@ export const reagendarCita = async (req: AuthRequest, res: Response): Promise<vo
     res.json({ success: true, message: 'Cita reagendada correctamente', data: citaActualizada });
 
     void notificarCitaReagendadaPaciente(String(citaActualizada._id), mensajeAdicionalReagendar);
+    void import('../../utils/googleCalendarSync').then(m =>
+      m.syncCitaGoogleCalendar(String(req.userId), String(citaActualizada._id), 'actualizar')
+    );
+    void import('../../utils/outlookCalendarSync').then(m =>
+      m.syncCitaOutlookCalendar(String(req.userId), String(citaActualizada._id), 'actualizar')
+    );
   } catch (error: any) {
     res.status(500).json({ success: false, message: 'Error al reagendar cita', error: error.message });
   }

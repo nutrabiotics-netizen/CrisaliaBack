@@ -159,7 +159,14 @@ class InterrogatorioService {
     // Si no se proporciona análisis IA, generarlo automáticamente
     if (!analisisIA && Object.keys(interrogatorio.respuestas).length > 0) {
       try {
-        const analisis = await openaiService.analizarInterrogatorio(interrogatorio.respuestas);
+        const analisis = await openaiService.analizarInterrogatorio(
+          interrogatorio.respuestas,
+          {
+            disfuncionesAgent: interrogatorio.analisisFisiologicoIA,
+            notaMedico: (interrogatorio.recomendacionAutomatica as any)?.llamadoAccion,
+            ordenAbordaje: (interrogatorio.recomendacionAutomatica as any)?.estrategiasFuncionales,
+          }
+        );
         interrogatorio.analisisIA = analisis.analisisIA;
         interrogatorio.objetivos = analisis.objetivos;
         if (analisis.observacionesIA && analisis.observacionesIA.length > 0) {

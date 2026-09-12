@@ -273,9 +273,14 @@ export const crearCita = async (req: AuthRequest, res: Response): Promise<void> 
 
     if (cita._id) {
       void notificarCitaAgendadaPaciente(String(cita._id));
-      // Notificar al médico in-app + WhatsApp respetando sus preferencias
       const fechaLabelCita = String(cita.fecha).slice(0, 10);
       void notificarMedicoCambiosCita(String(cita.medicoId), 'cita_nueva', fechaLabelCita, String(cita.hora), String(cita._id), String(pacienteId));
+      void import('../../../utils/googleCalendarSync').then(m =>
+        m.syncCitaGoogleCalendar(String(cita.medicoId), String(cita._id), 'crear')
+      );
+      void import('../../../utils/outlookCalendarSync').then(m =>
+        m.syncCitaOutlookCalendar(String(cita.medicoId), String(cita._id), 'crear')
+      );
     }
   } catch (error: any) {
     console.error('Error al crear cita:', error);

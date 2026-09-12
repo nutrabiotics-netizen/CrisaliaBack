@@ -21,9 +21,20 @@ export interface BedrockAgentInput {
   activeSection?: string;
 }
 
+export interface MedicamentoSugerido {
+  nombre: string;
+  dosis?: string;
+  frecuencia?: string;
+  duracion?: string;
+  via?: string;
+  indicaciones?: string;
+}
+
 export interface BedrockAgentResponse {
   resumen?: string;
   propuestas?: Array<{ seccion: string; contenido: string }>;
+  medicamentos?: MedicamentoSugerido[];
+  suplementos?: MedicamentoSugerido[];
 }
 
 /**
@@ -151,7 +162,19 @@ SECCIONES VÁLIDAS (usa exactamente estas claves):
 - examen_fisico: hallazgos físicos durante la consulta — signos vitales, inspección, palpación (MÉDICO observa).
 - diagnosticos: impresiones diagnósticas mencionadas explícitamente (MÉDICO). VER FORMATO ESPECIAL ABAJO.
 - analisis_plan: razonamiento + plan (exámenes a pedir, medicación, interconsultas) (MÉDICO).
-- recomendaciones: instrucciones al paciente para casa (MÉDICO).
+- recomendaciones: instrucciones generales al paciente para casa (MÉDICO).
+- habitos_alimentacion: recomendaciones concretas de hábitos de vida y alimentación que el MÉDICO indica al paciente (ej: "caminar 30 min", "reducir azúcar", "aumentar proteína").
+- seguimiento_terapeutico: indicaciones del MÉDICO sobre cuándo volver o próximo control (ej: "te veo en 3 semanas", "control en un mes", "vuelves si empeora").
+
+DETECCIÓN DE MEDICAMENTOS (campo especial "medicamentos"):
+Si el MÉDICO menciona que va a prescribir o ya prescribió un medicamento, extráelo.
+Patrones a detectar:
+- "te voy a recetar X", "te receto X", "vamos a recetar X"
+- "te doy X", "le damos X", "vamos a manejar con X"
+- "se llama X", "se llama un medicamento X", "un producto que se llama X"
+- "tómate X", "tomá X", "vas a tomar X"
+- "te mando X", "te envío X"
+Extrae el NOMBRE del producto/medicamento (lo que va después del patrón). VER FORMATO ABAJO.
 
 REGLAS DE QUIÉN APORTA QUÉ:
 - Las PREGUNTAS del médico ("¿desde cuándo?", "¿le duele aquí?") NO se documentan — son guía.
@@ -257,6 +280,8 @@ Cada línea de la transcripción viene etiquetada con "PACIENTE:" o "MÉDICO:". 
 - Lo que dice el PACIENTE sobre exámenes ya hechos → resultados_paraclinicos
 - Lo que dice el MÉDICO con razonamiento o plan → diagnosticos, analisis_plan
 - Lo que dice el MÉDICO al paciente para casa → recomendaciones
+- Lo que dice el MÉDICO sobre hábitos y alimentación (ej: "camina 30 min", "reduce azúcar") → habitos_alimentacion
+- Lo que dice el MÉDICO sobre próximo control o seguimiento (ej: "vuelves en un mes") → seguimiento_terapeutico
 - Hallazgos físicos observados durante la consulta → examen_fisico
 - Las PREGUNTAS del médico ("¿desde cuándo?", "¿le duele aquí?") NO se documentan — son guía conversacional, no contenido clínico.
 
@@ -276,7 +301,9 @@ Cada línea de la transcripción viene etiquetada con "PACIENTE:" o "MÉDICO:". 
 - examen_fisico: hallazgos físicos durante la consulta — signos vitales, inspección, palpación (MÉDICO observa).
 - diagnosticos: impresiones diagnósticas mencionadas explícitamente (MÉDICO). VER FORMATO ESPECIAL ABAJO.
 - analisis_plan: razonamiento + plan (exámenes a pedir, medicación, interconsultas) (MÉDICO).
-- recomendaciones: instrucciones al paciente para casa (MÉDICO).
+- recomendaciones: instrucciones generales al paciente para casa (MÉDICO).
+- habitos_alimentacion: recomendaciones concretas de hábitos de vida y alimentación que el MÉDICO indica al paciente (ej: "caminar 30 min diarios", "reducir azúcar", "aumentar proteína", "dormir 8 horas"). SOLO lo que el médico recomienda explícitamente, NO los hábitos actuales del paciente.
+- seguimiento_terapeutico: indicaciones del MÉDICO sobre cuándo volver o próximo control (ej: "te veo en 3 semanas", "control en un mes", "vuelves si empeora"). SOLO cuando el médico lo menciona explícitamente.
 
 # FORMATO ESPECIAL PARA "diagnosticos" (CRÍTICO)
 
@@ -341,12 +368,35 @@ Si el médico menciona el diagnóstico sin código, infiere el CIE-10 más proba
 Si el médico menciona el CÓDIGO explícitamente (ej: "diagnóstico E11.9"), úsalo tal cual.
 Si menciona varios diagnósticos en la misma frase ("hipertensión y diabetes tipo 2"), inclúyelos como elementos separados del array.
 
+# FORMATO ESPECIAL PARA "medicamentos" (campo raíz del JSON)
+
+Cuando el MÉDICO mencione explícitamente que va a prescribir un medicamento ("te voy a recetar X", "vamos a tomar X", "te doy X mg"), extráelo como array en el campo raíz "medicamentos".
+
+Ejemplo cuando el médico dice "te voy a recetar acetaminofén 500mg cada 8 horas por 5 días":
+{
+  "resumen": "Médico prescribe acetaminofén",
+  "propuestas": [...],
+  "medicamentos": [
+    {"nombre": "acetaminofén", "dosis": "500mg", "frecuencia": "cada 8 horas", "duracion": "5 días", "via": "oral", "indicaciones": "Tomar con alimentos"}
+  ],
+  "suplementos": [
+    {"nombre": "magnesio glicinato", "dosis": "200mg", "frecuencia": "en la noche", "duracion": "30 días", "via": "oral", "indicaciones": "Con la cena"}
+  ]
+}
+
+Si NO se mencionan medicamentos, omite el campo "medicamentos" o devuélvelo como array vacío.
+SOLO incluye medicamentos que el médico mencione prescribir — NO los que el paciente ya toma.
+
+Para SUPLEMENTOS/NUTRACÉUTICOS: igual que medicamentos pero en el campo "suplementos".
+Considerar suplementos: vitaminas, minerales, proteínas, omega, probióticos, adaptógenos, nutracéuticos, productos de origen natural.
+Si el médico dice "te recomiendo X suplemento", "vamos a incluir X", "tómate X vitamina" → va en "suplementos".
+
 # FORMATO DE SALIDA (ESTRICTO)
 
 Devuelve EXCLUSIVAMENTE un JSON válido. NO uses bloques de markdown. NO incluyas texto antes ni después. NO incluyas explicaciones, advertencias ni disculpas.
 
 Estructura general:
-{"resumen":"Frase corta de lo detectado","propuestas":[{"seccion":"motivo_consulta","contenido":"..."}]}
+{"resumen":"Frase corta de lo detectado","propuestas":[{"seccion":"motivo_consulta","contenido":"..."}],"medicamentos":[]}
 
 ## Reglas del array de propuestas
 - Incluye SOLO las secciones que tienen contenido REAL extraído del fragmento actual.
@@ -419,10 +469,17 @@ export function parseBedrockResponse(response: string): BedrockAgentResponse {
              typeof p.seccion === 'string' && typeof p.contenido === 'string'
            );
         }
+        if (Array.isArray(parsed.medicamentos)) {
+          result.medicamentos = parsed.medicamentos.filter((m: any) => typeof m.nombre === 'string' && m.nombre.trim());
+        }
+        if (Array.isArray(parsed.suplementos)) {
+          result.suplementos = parsed.suplementos.filter((m: any) => typeof m.nombre === 'string' && m.nombre.trim());
+        }
         console.log('[BedrockService] ✓ Parsed', {
           resumen: result.resumen?.slice(0, 100),
           propuestasCount: result.propuestas?.length || 0,
           secciones: (result.propuestas || []).map(p => p.seccion),
+          medicamentosCount: result.medicamentos?.length || 0,
         });
       } catch (parseErr) {
         console.error('[BedrockService] ✗ JSON.parse falló tras limpieza. Contenido problemático:', jsonStr.substring(0, 300));
