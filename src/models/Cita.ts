@@ -16,7 +16,9 @@ export interface ICita extends Document {
   grabacionUrl?: string;
   motivoConsulta?: string;
   motivoCancelacion?: string;
-  pdfResumenUrl?: string; // PDF resumen de la consulta (historia + fórmulas + incapacidades + etc.)
+  pdfResumenUrl?: string;
+  googleCalendarEventId?: string;
+  outlookCalendarEventId?: string;
   /** Documentos firmados digitalmente por el médico al finalizar la consulta */
   documentosFirmados?: { formula?: boolean; terapeutica?: boolean; examenes?: boolean };
   /** Marca de envío de recordatorio WhatsApp (~24 h antes de la cita) */
@@ -93,6 +95,8 @@ const CitaSchema = new Schema<ICita>(
     grabacionUrl: { type: String, trim: true },
     motivoConsulta: { type: String, trim: true },
     pdfResumenUrl: { type: String, trim: true },
+    googleCalendarEventId: { type: String, trim: true },
+    outlookCalendarEventId: { type: String, trim: true },
     documentosFirmados: { formula: { type: Boolean, default: false }, terapeutica: { type: Boolean, default: false }, examenes: { type: Boolean, default: false } },
     notifRecordatorio24hAt: { type: Date },
     notifRecordatorio2hAt: { type: Date },

@@ -407,7 +407,7 @@ export const endMeeting = async (req: AuthRequest, res: Response) => {
     }
 
     if (meeting.pipelineId) {
-      // Guardar solo la ruta donde Chime escribió: bucket/<pipelineId>/ (bucket desde .env, sin hardcodear)
+      // Guardar la ruta donde Chime escribirá la grabación
       const pathFromSink = buildRecordingPathFromSinkArn(meeting.recordingSinkArn, meeting.pipelineId);
       const bucketName = getBucketFromSinkArn(meeting.recordingSinkArn)
         || (videoCallConfig.s3BucketArn || '').replace(/^arn:aws:s3:::/, '').split('/')[0].trim();
@@ -417,11 +417,18 @@ export const endMeeting = async (req: AuthRequest, res: Response) => {
           ? `s3://${bucketName}/${meeting.pipelineId}/`
           : null;
       if (url) meeting.grabacionUrl = url;
-      try {
-        await chimeMediaClient.send(new DeleteMediaCapturePipelineCommand({ MediaPipelineId: meeting.pipelineId }));
-      } catch {
-        // ignorar
-      }
+
+      // Esperar 30s antes de eliminar el pipeline para que Chime termine de
+      // escribir los últimos chunks y finalice el multipart upload en S3.
+      const pipelineId = meeting.pipelineId;
+      setTimeout(async () => {
+        try {
+          await chimeMediaClient.send(new DeleteMediaCapturePipelineCommand({ MediaPipelineId: pipelineId }));
+          console.log('[Recording] Pipeline eliminado tras espera:', pipelineId);
+        } catch {
+          // Puede ya estar detenido automáticamente
+        }
+      }, 30_000);
     }
 
     const duracionMinutos = meeting.createdAt
