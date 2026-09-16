@@ -65,7 +65,7 @@ class AgendamientoService {
           aseguradora: pob.aseguradora || pob.eps,
         };
       } else {
-        pacienteIdStr = (cita.pacienteId as any).toString();
+        pacienteIdStr = cita.pacienteId ? (cita.pacienteId as any).toString() : '';
       }
 
       const citaRetorno: ICita & { pacienteNombre?: string; pacienteApellido?: string; paciente?: Record<string, unknown> } = {

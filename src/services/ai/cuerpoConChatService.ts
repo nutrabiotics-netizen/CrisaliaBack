@@ -389,6 +389,62 @@ s03: s03_sintomas_tabla (array de objetos), s03_limitacion, s03_ultima_vez_bien,
   return resp.output?.message?.content?.find((c: any) => c.text)?.text?.trim() ?? '';
 }
 
+/**
+ * Genera un resumen en lenguaje claro y empático para el paciente
+ * al finalizar la fase 2, a partir de las disfunciones del AnamnesisAgent.
+ */
+export async function generarResumenPaciente(params: {
+  disfunciones: Array<{ nombre: string; certeza: string; etapa?: number; evidencia?: string[] }>;
+  sintomaInicial: string;
+  nombrePaciente?: string;
+}): Promise<string[]> {
+  const { disfunciones, sintomaInicial, nombrePaciente } = params;
+
+  const listaDisfunciones = disfunciones
+    .map(d => `- ${d.nombre}`)
+    .join('\n');
+
+  const systemPrompt = `Eres Crisal-IA. Tu tarea es escribir un resumen empático y comprensible para un paciente (NO para el médico) sobre los hallazgos de su evaluación de salud funcional.
+
+REGLAS:
+1. USA lenguaje simple, cálido y esperanzador. NADA de términos médicos técnicos.
+2. NUNCA menciones nombres de disfunciones como "Disbiosis", "Glicotoxicidad", "HPA", "SIBO", etc.
+3. NUNCA menciones certeza, etapas, biomarcadores ni paraclínicos.
+4. Describe lo que el sistema encontró en términos del IMPACTO en la vida diaria del paciente.
+5. Responde SOLO con un array JSON de 4-5 frases cortas (sin markdown, sin texto antes ni después).
+
+Ejemplo de output:
+["Tu sistema digestivo muestra señales de que algo no está funcionando en equilibrio","Tu nivel de energía y recuperación pueden estar afectados por cómo tu cuerpo maneja el estrés","Se identificaron patrones que podrían explicar el cansancio que describes","El médico funcional tendrá un panorama completo para diseñar tu plan personalizado"]`;
+
+  const userPrompt = `El paciente${nombrePaciente ? ` ${nombrePaciente}` : ''} consultó por: "${sintomaInicial}".
+
+El sistema identificó estas áreas de atención (solo para referencia interna, NO las menciones por nombre):
+${listaDisfunciones}
+
+Genera el array JSON con el resumen para el paciente.`;
+
+  try {
+    const command = new ConverseCommand({
+      modelId: MODEL_ID,
+      system: [{ text: systemPrompt }],
+      messages: [{ role: 'user', content: [{ text: userPrompt }] }],
+      inferenceConfig: { maxTokens: 600, temperature: 0.4 },
+    });
+    const resp = await client.send(command);
+    const raw = (resp.output?.message?.content?.[0] as any)?.text ?? '';
+    const clean = raw.replace(/^```(?:json)?\s*/im, '').replace(/```\s*$/m, '').trim();
+    const arr = JSON.parse(clean);
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) {
+    console.warn('[generarResumenPaciente] Error:', (e as Error).message);
+    return [
+      'Tu evaluación de salud funcional ha sido completada',
+      'El sistema identificó varios aspectos de tu salud que merecen atención',
+      'El médico funcional revisará todos los hallazgos antes de tu consulta',
+    ];
+  }
+}
+
 export async function responderCuerpoConChat(params: {
   zonasDolorMarcadas: string[];
   historial: MensajeChat[];
@@ -723,8 +779,8 @@ NO hagas preguntas que no estén en esta lista.
 2. INTELIGENCIA CONTEXTUAL
 
 - NUNCA repitas una pregunta que ya hiciste — revisa el historial antes de cada turno.
-- Si el paciente ya respondió una pregunta de forma COMPLETA (número, opción seleccionada, texto claro que cubre lo que se pedía), acepta la respuesta y continúa con la siguiente. NO la repitas ni la presentes de nuevo con opciones.
-Sin embargo, si la respuesta es INCOMPLETA (ej: solo dio el nombre pero falta el teléfono, o dio una cantidad sin unidad cuando era necesaria), haz el seguimiento natural de forma conversacional para obtener el dato que falta — sin repetir la pregunta completa, solo pidiendo lo que falta. Esta regla aplica incluso cuando estás a punto de emitir [[FIN_RONDA]].
+- Si el paciente ya respondió una pregunta (sea con texto, número o seleccionando una opción), acepta esa respuesta INMEDIATAMENTE y pasa a la siguiente. NUNCA la repitas ni la presentes de nuevo con opciones — ni siquiera al emitir [[FIN_RONDA]]. Si dijo "No" a un checkbox, es respuesta válida y completa.
+- Solo pide información adicional si la respuesta es genuinamente incompleta (ej: solo dio nombre sin teléfono). En ese caso pide solo el dato faltante, sin repetir la pregunta.
 - Adapta el tono según lo que el paciente ya respondió.
 - Si una pregunta no aplica (ej: embarazo a un hombre), omítela y pasa a la siguiente.
 

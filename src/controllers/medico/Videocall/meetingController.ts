@@ -4,7 +4,8 @@ import { chimeClient, chimeMediaClient, videoCallConfig } from '../../../config/
 import {
   CreateMeetingCommand,
   CreateAttendeeCommand,
-  DeleteMeetingCommand
+  DeleteMeetingCommand,
+  GetMeetingCommand
 } from '@aws-sdk/client-chime-sdk-meetings';
 import {
   CreateMediaCapturePipelineCommand,
@@ -84,10 +85,20 @@ export const createMeeting = async (req: AuthRequest, res: Response) => {
       const existing = await Meeting.findOne({
         externalMeetingId: extId,
         status: { $in: ['created', 'active'] }
-      }).lean();
+      });
       if (existing) {
         console.log('[createMeeting] Meeting existente encontrado para', extId);
-        return res.status(200).json({ success: true, meeting: existing });
+        // Verificar que el meeting sigue activo en AWS
+        try {
+          await chimeClient.send(new GetMeetingCommand({ MeetingId: existing.meetingId }));
+          // Si no lanza excepción, el meeting sigue vivo → devolver
+          return res.status(200).json({ success: true, meeting: existing.toObject() });
+        } catch {
+          // Meeting ya no existe en AWS → marcar como ended y crear uno nuevo
+          console.log('[createMeeting] Meeting expirado en AWS, creando nuevo para', extId);
+          existing.status = 'ended';
+          await existing.save();
+        }
       }
     }
 

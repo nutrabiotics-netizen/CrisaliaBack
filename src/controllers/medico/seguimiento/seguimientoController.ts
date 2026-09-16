@@ -95,7 +95,7 @@ export const listarSeguimiento = async (
 
             Interrogatorio.findOne({ pacienteId })
               .sort({ createdAt: -1 })
-              .select('tipo estado progreso analisisIA objetivos notasMedico updatedAt')
+              .select('tipo estado progreso analisisIA objetivos notasMedico revisadoPorMedico updatedAt')
               .lean(),
 
             HistoriaClinica.countDocuments({
@@ -122,6 +122,7 @@ export const listarSeguimiento = async (
                 progreso: (ultimoInterrogatorio as any).progreso ?? 0,
                 tieneAnalisisIA: !!( ultimoInterrogatorio as any).analisisIA,
                 notasMedico: (ultimoInterrogatorio as any).notasMedico ?? null,
+                revisadoPorMedico: (ultimoInterrogatorio as any).revisadoPorMedico ?? null,
                 updatedAt: (ultimoInterrogatorio as any).updatedAt
               }
             : null,

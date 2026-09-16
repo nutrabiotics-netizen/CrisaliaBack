@@ -25,7 +25,8 @@
         { "value": "sintomas_neurologicos", "label": "Síntomas neurológicos o cognitivos" },
         { "value": "dolor_articular", "label": "Dolor articular o muscular" },
         { "value": "angioedema", "label": "Angioedema (hinchazón de labios, párpados o lengua)" },
-        { "value": "cambios_animo", "label": "Cambios del estado de ánimo" }
+        { "value": "cambios_animo", "label": "Cambios del estado de ánimo" },
+        { "value": "ninguno", "label": "Ninguno" }
       ]
     },
     {

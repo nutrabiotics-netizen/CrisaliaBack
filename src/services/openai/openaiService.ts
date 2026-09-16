@@ -35,7 +35,9 @@ class OpenAIService {
 
 La fecha actual es ${new Date().toISOString().slice(0, 10)}. Usa esta fecha para calcular edades.
 
-Usa lenguaje médico-clínico formal. Menciona mecanismos fisiopatológicos, ejes disfuncionales y biomarcadores relevantes cuando aplique. El documento será leído por el médico tratante, no por el paciente.`
+Usa lenguaje médico-clínico formal. Menciona mecanismos fisiopatológicos, ejes disfuncionales y biomarcadores relevantes cuando aplique. El documento será leído por el médico tratante, no por el paciente.
+
+IMPORTANTE: NUNCA incluyas identificadores técnicos de campo en tu análisis (como s01, s19, s22, s03, s04 u otros códigos alfanuméricos internos). Usa únicamente términos clínicos y nombres de sistemas fisiológicos.`
           },
           {
             role: 'user',
@@ -92,14 +94,27 @@ Usa lenguaje médico-clínico formal. Menciona mecanismos fisiopatológicos, eje
       camposClinicos.push(`${id}: ${valorStr}`);
     });
 
+    // Helper para limpiar IDs de campo (s01_, s19_sifo, (s04), etc.) de los textos
+    const limpiarIds = (texto: string): string =>
+      texto
+        .replace(/\bs\d{2}_\w+\s*/g, '')      // s19_sifo, s26_infecciones_cronicas, etc.
+        .replace(/\(s\d{2}[_\w]*\)\s*/g, '')  // (s04), (s19_sifo), etc.
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+
     // Síntesis del AnamnesisAgent como contexto clínico base
     let bloqueAgent = '';
     if (contextoAgent?.disfuncionesAgent?.length) {
-      const disfs = contextoAgent.disfuncionesAgent.map((d: any) =>
-        `- ${d.nombre || ''} (certeza: ${d.certeza || ''}, etapa: ${d.etapa || ''})${d.evidencia?.length ? ': ' + d.evidencia.slice(0,2).join('; ') : ''}`
-      ).join('\n');
-      bloqueAgent = `\n\nANÁLISIS DEL SISTEMA IA FUNCIONAL (úsalo como base clínica para tu análisis):\n${disfs}`;
-      if (contextoAgent.notaMedico) bloqueAgent += `\n\nNOTA AL MÉDICO: ${contextoAgent.notaMedico}`;
+      const disfs = contextoAgent.disfuncionesAgent.map((d: any) => {
+        const evidenciaLimpia = (d.evidencia || [])
+          .slice(0, 3)
+          .map((e: string) => limpiarIds(e))
+          .filter(Boolean)
+          .join('; ');
+        return `- ${d.nombre || ''} (certeza: ${d.certeza || ''}, etapa: ${d.etapa || ''})${evidenciaLimpia ? ': ' + evidenciaLimpia : ''}`;
+      }).join('\n');
+      bloqueAgent = `\n\nANÁLISIS DEL SISTEMA IA FUNCIONAL (úsalo como base clínica):\n${disfs}`;
+      if (contextoAgent.notaMedico) bloqueAgent += `\n\nNOTA AL MÉDICO: ${limpiarIds(contextoAgent.notaMedico)}`;
     }
 
     const prompt = `Integra el análisis fisiopatológico con los datos del interrogatorio de Medicina Funcional.${bloqueAgent}

@@ -21,7 +21,7 @@ export interface IPaciente extends Document {
   nombre: string;
   apellido: string;
   // Datos de identificación
-  tipoDocumento?: 'CC' | 'TI' | 'RC' | 'PA' | 'CE';
+  tipoDocumento?: 'CC' | 'TI' | 'RC' | 'PA' | 'CE' | 'PT' | 'PE' | 'SC' | 'DE' | 'CD';
   numeroDocumento?: string;
   fechaNacimiento?: Date;
   sexoBiologico?: 'masculino' | 'femenino' | 'intersexual';
@@ -125,7 +125,7 @@ const PacienteSchema = new Schema<IPaciente>(
     // Datos de identificación
     tipoDocumento: {
       type: String,
-      enum: ['CC', 'TI', 'RC', 'PA', 'CE'],
+      enum: ['CC', 'TI', 'RC', 'PA', 'CE', 'PT', 'PE', 'SC', 'DE', 'CD'],
       trim: true
     },
     numeroDocumento: {

@@ -48,6 +48,7 @@ export interface RegisterPacienteData {
   numeroDocumento?: string;
   tipoDocumento?: string;
   direccion?: string;
+  lugarResidencia?: string;
 }
 
 export interface AuthResponse {
@@ -205,7 +206,7 @@ export class AuthService {
   }
 
   async registerPaciente(data: RegisterPacienteData): Promise<AuthResponse> {
-    const { nombre, apellido, email, password, telefono, fechaNacimiento, genero, acudiente, aceptaTerminos, aceptaConsentimiento, zonasDolor, numeroDocumento, tipoDocumento, direccion } = data;
+    const { nombre, apellido, email, password, telefono, fechaNacimiento, genero, acudiente, aceptaTerminos, aceptaConsentimiento, zonasDolor, numeroDocumento, tipoDocumento, direccion, lugarResidencia } = data;
 
     const existingPaciente = await Paciente.findOne({ email });
     if (existingPaciente) {
@@ -248,6 +249,7 @@ export class AuthService {
       telefono: telefono?.trim() || undefined,
       ...(fechaNacimientoParsed && { fechaNacimiento: fechaNacimientoParsed }),
       ...(generoFinal && { genero: generoFinal }),
+      ...(['masculino', 'femenino'].includes(generoFinal ?? '') && { sexoBiologico: generoFinal as 'masculino' | 'femenino' }),
       acudiente:
         acudiente?.nombre?.trim() && acudiente?.parentesco?.trim()
           ? {
@@ -261,7 +263,8 @@ export class AuthService {
       ...(zonasDolor && zonasDolor.length > 0 && { zonasDolor }),
       ...(tipoDocumento?.trim() && { tipoDocumento: tipoDocumento.trim() }),
       ...(numeroDocumento?.trim() && { numeroDocumento: numeroDocumento.trim() }),
-      ...(direccion?.trim() && { direccion: direccion.trim() })
+      ...(direccion?.trim() && { direccion: direccion.trim() }),
+      ...(lugarResidencia?.trim() && { lugarResidencia: lugarResidencia.trim() })
     });
 
     await nuevoPaciente.save();

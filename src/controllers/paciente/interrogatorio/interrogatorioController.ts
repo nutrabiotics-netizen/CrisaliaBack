@@ -13,6 +13,7 @@ import {
   consultarSiguientePaso,
   generarSintesis as generarSintesisOrchestrator,
 } from '../../../services/ai/anamnesisOrchestratorService';
+import { generarResumenPaciente } from '../../../services/ai/cuerpoConChatService';
 
 export const crearInterrogatorio = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -511,6 +512,13 @@ export const generarSintesis = async (req: AuthRequest, res: Response): Promise<
       { accion: 'generar_sintesis', disfuncionesCount: sintesis.disfunciones_probables.length }
     );
 
+    // Generar resumen en lenguaje simple para el paciente (fire, no bloquea)
+    const resumenPaciente = await generarResumenPaciente({
+      disfunciones: sintesis.disfunciones_probables,
+      sintomaInicial: sintomaInicial,
+      nombrePaciente: interrogatorio.respuestas?.['s01_nombre'],
+    }).catch(() => [] as string[]);
+
     res.json({
       success: true,
       message: 'Síntesis funcional generada exitosamente.',
@@ -522,6 +530,7 @@ export const generarSintesis = async (req: AuthRequest, res: Response): Promise<
         notaMedico:              sintesis.nota_medico,
         banderasRojas:           sintesis.banderas_rojas,
         recomendacionAutomatica: interrogatorio.recomendacionAutomatica,
+        resumenPaciente,
       },
     });
   } catch (err: any) {
