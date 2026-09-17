@@ -153,10 +153,10 @@ ${input.transcriptionSegment}
 TAREA: Clasifica la información de la transcripción en las secciones correctas.
 
 SECCIONES VÁLIDAS (usa exactamente estas claves):
-- motivo_consulta: razón principal de la consulta en 1-2 frases (PACIENTE).
-- enfermedad_actual: cronología, intensidad, evolución del problema actual (PACIENTE).
-- antecedentes: historia PREVIA — patológicos, quirúrgicos, familiares, hábitos (PACIENTE).
-- revision_sistemas: síntomas en otros sistemas no relacionados al motivo (PACIENTE responde, MÉDICO pregunta).
+- motivo_consulta: razón de la consulta — devolver "contenido" como JSON STRING con 3 claves: {"principal":"motivo en 1 frase","tiempoEvolucion":"desde cuándo (ej: 2 semanas, 3 meses)","sintema":"síntoma o situación específica"}. VER FORMATO ESPECIAL ABAJO.
+- enfermedad_actual: cronología completa del problema — devolver "contenido" como JSON STRING con estas claves (omitir las vacías): {"inicio":"cuándo comenzó","formaAparicion":"gradual/brusca/etc","evolucion":"cómo ha progresado","sintomasAsociados":"otros síntomas","factoresDesencadenantes":"qué lo provoca","factoresMejoran":"qué mejora o empeora","tratamientosRealizados":"tratamientos previos","medicamentosUtilizados":"medicamentos tomados","examenesPrevios":"estudios hechos","resultadosRelevantes":"resultados importantes","consultasPrevias":"consultas anteriores por esto","estadoActual":"estado al momento de la consulta"}. VER FORMATO ESPECIAL ABAJO.
+- antecedentes: TODA la historia previa del paciente — devolver "contenido" como JSON STRING con las claves que apliquen (omitir las vacías): {"enfermedadesCronicas":"enf. crónicas personales","alergicos":"alergias","farmacologicos":"medicamentos actuales","quirurgicos":"cirugías","traumaticos":"traumatismos","hospitalizaciones":"hospitalizaciones previas","familiares":"enfermedades en familiares de primer grado","causaMuerte":"causa de muerte familiar","habitos":"tabaco/alcohol/café/ejercicio/sueño/sustancias","alimentacion":"dieta y nutrición","inmunizaciones":"vacunas","vivienda":"vivienda y entorno","embarazo":"descripción del embarazo","edadGestacional":"semanas de gestación al nacer","tipoParto":"vaginal/cesarea/instrumentado","motivoCesarea":"motivo si fue cesárea","complicacionesParto":"complicaciones del parto","presentacionFetal":"presentación fetal","pesoNacer":"peso al nacer en gramos","tallaNacer":"talla al nacer en cm","periodoNeonatal":"descripción del período neonatal","desarrolloPsicomotor":"desarrollo motor y lenguaje en infancia","desarrolloActual":"desarrollo actual","alimentacionInfancia":"alimentación en la infancia","crecimientoDesarrollo":"crecimiento y desarrollo","inmunizacionesInfancia":"vacunas en infancia","menarquia":"edad de menarquia","ritmoMenstrual":"ritmo menstrual","fur":"fecha última regla","formulaObstetrica":"G-P-A-C","vidaSexual":"inicio sexual y anticoncepción","tamizajes":"citología o mamografía"}. VER FORMATO ESPECIAL ABAJO.
+- revision_sistemas: hallazgos por sistema — devolver "contenido" como JSON STRING con las claves de los sistemas donde se detecte algo. Usa exactamente estas claves: generales, piel, cabeza, ojos, nariz, oidos, boca, respiratorio, cardiovascular, digestivo, genitourinario, musculoEsqueletico, sistemaNervioso, endocrino, hematologico. Para los sistemas sin síntomas omite la clave (el frontend pondrá "Niega síntomas"). VER FORMATO ESPECIAL ABAJO.
 - alertas_alergias: alergias conocidas + signos de alarma (PACIENTE).
 - resultados_paraclinicos: exámenes YA REALIZADOS y sus resultados (PACIENTE menciona).
 - examen_fisico: hallazgos físicos durante la consulta — signos vitales, inspección, palpación (MÉDICO observa).
@@ -292,10 +292,10 @@ Cada línea de la transcripción viene etiquetada con "PACIENTE:" o "MÉDICO:". 
 
 # SECCIONES VÁLIDAS (claves exactas)
 
-- motivo_consulta: razón principal de la consulta en 1-2 frases (PACIENTE).
-- enfermedad_actual: cronología, intensidad, evolución del problema actual (PACIENTE).
-- antecedentes: historia PREVIA — patológicos, quirúrgicos, familiares, hábitos (PACIENTE).
-- revision_sistemas: síntomas en otros sistemas no relacionados al motivo (PACIENTE responde, MÉDICO pregunta).
+- motivo_consulta: razón de la consulta — devolver "contenido" como JSON STRING con 3 claves: {"principal":"motivo en 1 frase","tiempoEvolucion":"desde cuándo (ej: 2 semanas, 3 meses)","sintema":"síntoma o situación específica"}. VER FORMATO ESPECIAL ABAJO.
+- enfermedad_actual: cronología completa del problema — devolver "contenido" como JSON STRING con estas claves (omitir las vacías): {"inicio":"cuándo comenzó","formaAparicion":"gradual/brusca/etc","evolucion":"cómo ha progresado","sintomasAsociados":"otros síntomas","factoresDesencadenantes":"qué lo provoca","factoresMejoran":"qué mejora o empeora","tratamientosRealizados":"tratamientos previos","medicamentosUtilizados":"medicamentos tomados","examenesPrevios":"estudios hechos","resultadosRelevantes":"resultados importantes","consultasPrevias":"consultas anteriores por esto","estadoActual":"estado al momento de la consulta"}. VER FORMATO ESPECIAL ABAJO.
+- antecedentes: TODA la historia previa del paciente — devolver "contenido" como JSON STRING con las claves que apliquen (omitir las vacías): {"enfermedadesCronicas":"enf. crónicas personales","alergicos":"alergias","farmacologicos":"medicamentos actuales","quirurgicos":"cirugías","traumaticos":"traumatismos","hospitalizaciones":"hospitalizaciones previas","familiares":"enfermedades en familiares de primer grado","causaMuerte":"causa de muerte familiar","habitos":"tabaco/alcohol/café/ejercicio/sueño/sustancias","alimentacion":"dieta y nutrición","inmunizaciones":"vacunas","vivienda":"vivienda y entorno","embarazo":"descripción del embarazo","edadGestacional":"semanas de gestación al nacer","tipoParto":"vaginal/cesarea/instrumentado","motivoCesarea":"motivo si fue cesárea","complicacionesParto":"complicaciones del parto","presentacionFetal":"presentación fetal","pesoNacer":"peso al nacer en gramos","tallaNacer":"talla al nacer en cm","periodoNeonatal":"descripción del período neonatal","desarrolloPsicomotor":"desarrollo motor y lenguaje en infancia","desarrolloActual":"desarrollo actual","alimentacionInfancia":"alimentación en la infancia","crecimientoDesarrollo":"crecimiento y desarrollo","inmunizacionesInfancia":"vacunas en infancia","menarquia":"edad de menarquia","ritmoMenstrual":"ritmo menstrual","fur":"fecha última regla","formulaObstetrica":"G-P-A-C","vidaSexual":"inicio sexual y anticoncepción","tamizajes":"citología o mamografía"}. VER FORMATO ESPECIAL ABAJO.
+- revision_sistemas: hallazgos por sistema — devolver "contenido" como JSON STRING con las claves de los sistemas donde se detecte algo. Usa exactamente estas claves: generales, piel, cabeza, ojos, nariz, oidos, boca, respiratorio, cardiovascular, digestivo, genitourinario, musculoEsqueletico, sistemaNervioso, endocrino, hematologico. Para los sistemas sin síntomas omite la clave (el frontend pondrá "Niega síntomas"). VER FORMATO ESPECIAL ABAJO.
 - alertas_alergias: alergias conocidas + signos de alarma (PACIENTE).
 - resultados_paraclinicos: exámenes YA REALIZADOS y sus resultados (PACIENTE menciona).
 - examen_fisico: hallazgos físicos durante la consulta — signos vitales, inspección, palpación (MÉDICO observa).
@@ -304,6 +304,36 @@ Cada línea de la transcripción viene etiquetada con "PACIENTE:" o "MÉDICO:". 
 - recomendaciones: instrucciones generales al paciente para casa (MÉDICO).
 - habitos_alimentacion: recomendaciones concretas de hábitos de vida y alimentación que el MÉDICO indica al paciente (ej: "caminar 30 min diarios", "reducir azúcar", "aumentar proteína", "dormir 8 horas"). SOLO lo que el médico recomienda explícitamente, NO los hábitos actuales del paciente.
 - seguimiento_terapeutico: indicaciones del MÉDICO sobre cuándo volver o próximo control (ej: "te veo en 3 semanas", "control en un mes", "vuelves si empeora"). SOLO cuando el médico lo menciona explícitamente.
+
+# FORMATO ESPECIAL PARA "motivo_consulta" (CRÍTICO)
+
+Cuando detectes el motivo de consulta, NO devuelvas texto libre. Devuelve el "contenido" como UN JSON STRING con exactamente 3 claves.
+
+Ejemplo correcto:
+{"seccion":"motivo_consulta","contenido":"{\"principal\":\"Dolor en ambos pies que impide trabajar\",\"tiempoEvolucion\":\"4 semanas\",\"sintema\":\"Dolor bilateral en pies de inicio gradual\"}"}
+
+NUNCA mezcles narrativa con el JSON. NUNCA devuelvas el objeto sin escapar las comillas. El "contenido" debe ser un STRING parseable con JSON.parse.
+
+# FORMATO ESPECIAL PARA "antecedentes" (CRÍTICO)
+
+Devuelve SOLO las claves con información real. Omite las vacías.
+
+Ejemplo:
+{"seccion":"antecedentes","contenido":"{\"familiares\":\"Diabetes mellitus tipo 1 en familiar\",\"habitos\":\"No consume alcohol, tabaco ni sustancias. Trabajo sedentario nocturno\",\"alimentacion\":\"2 comidas al día, patrón desordenado\",\"farmacologicos\":\"Sin medicamentos actuales\"}"}
+
+# FORMATO ESPECIAL PARA "revision_sistemas" (CRÍTICO)
+
+Devuelve SOLO los sistemas donde el PACIENTE mencionó síntomas. Omite los demás (el frontend pone "Niega síntomas" automáticamente).
+
+Ejemplo:
+{"seccion":"revision_sistemas","contenido":"{\"generales\":\"Fatiga y pérdida de peso\",\"digestivo\":\"Náuseas y dolor abdominal postprandial\",\"musculoEsqueletico\":\"Dolor en ambas rodillas\"}"}
+
+# FORMATO ESPECIAL PARA "enfermedad_actual" (CRÍTICO)
+
+Devuelve el "contenido" como UN JSON STRING con las claves de la enfermedad actual. Omite las claves sin información.
+
+Ejemplo:
+{"seccion":"enfermedad_actual","contenido":"{\"inicio\":\"Hace 4 semanas\",\"formaAparicion\":\"Gradual\",\"evolucion\":\"Progresivo\",\"sintomasAsociados\":\"Inflamación, calor local\",\"estadoActual\":\"Persiste con limitación funcional\"}"}
 
 # FORMATO ESPECIAL PARA "diagnosticos" (CRÍTICO)
 

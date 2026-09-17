@@ -121,7 +121,9 @@ class FormulaMedicaService {
       return { existe: false };
     }
 
-    const diagnosticos = historia.diagnosticos || [];
+    // Filtrar diagnósticos sin descripcion (campo obligatorio en FormulaMedica)
+    const diagnosticos = (historia.diagnosticos || [])
+      .filter((d: any) => d?.descripcion && String(d.descripcion).trim());
     return {
       existe: true,
       historiaClinica: historia,

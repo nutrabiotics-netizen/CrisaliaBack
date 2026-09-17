@@ -30,9 +30,97 @@ export interface IHistoriaClinica extends Document {
   acompananteTelefono?: string;
   acompananteIdentificacion?: string;
   
+  // Calidad de la información registrada
+  calidadInformacion?: 'buena' | 'regular' | 'limitada';
+
+  // Datos de identificación complementarios (doctor los llena si no vienen del perfil)
+  lugarNacimiento?: string;
+  nacionalidadHC?: string;
+
   // Motivo de Atención
   motivoConsulta?: string;
   motivoAtencion?: string;
+  // Sub-campos estructurados del motivo
+  motivoPrincipal?: string;
+  motivoTiempoEvolucion?: string;
+  motivoSintema?: string;
+
+  // Antecedentes Familiares y Hereditarios
+  afhEnfermedades?: string;
+  afhCausaMuerte?: string;
+
+  // Antecedentes Gineco-Obstétricos (solo mujeres)
+  agoMenarquia?: string;
+  agoRitmoMenstrual?: string;
+  agoFUR?: string;
+  agoFormulaObstetrica?: string;
+  agoVidaSexual?: string;
+  agoTamizajes?: string;
+
+  // Antecedentes Personales No Patológicos
+  anpHabitos?: string;
+  anpAlimentacion?: string;
+  anpInmunizaciones?: string;
+  anpVivienda?: string;
+
+  // Antecedentes Personales Patológicos
+  appEnfermedadesInfancia?: string;
+  appEnfermedadesCronicas?: string;
+  appQuirurgicos?: string;
+  appTraumaticos?: string;
+  appAlergicos?: string;
+  appFarmacologicos?: string;
+  appTransfusionales?: string;
+  appHospitalizaciones?: string;
+
+  // Antecedentes de infancia (pediátrico <14 años)
+  aiDesarrolloPsicomotor?: string;
+  aiDesarrolloActual?: string;
+  aiAlimentacion?: string;
+  aiCrecimientoDesarrollo?: string;
+  aiInmunizaciones?: string;
+
+  // Antecedentes perinatales
+  apEmbarazo?: string;
+  apEdadGestacional?: string;
+  apTipoParto?: 'vaginal' | 'cesarea' | 'instrumentado';
+  apMotivoCesarea?: string;
+  apComplicaciones?: string;
+  apPresentacionFetal?: string;
+  apPesoNacer?: string;
+  apTallaNacer?: string;
+  apPeriodoNeonatal?: string;
+
+  // Revisión por sistemas (15 aparatos/sistemas)
+  rsGenerales?: string;
+  rsPiel?: string;
+  rsCabeza?: string;
+  rsOjos?: string;
+  rsNariz?: string;
+  rsOidos?: string;
+  rsBoca?: string;
+  rsRespiratorio?: string;
+  rsCardiovascular?: string;
+  rsDigestivo?: string;
+  rsGenitourinario?: string;
+  rsMusculoEsqueletico?: string;
+  rsSistemaNervioso?: string;
+  rsEndocrino?: string;
+  rsHematologico?: string;
+
+  // Sub-campos estructurados de enfermedad actual
+  eaInicio?: string;
+  eaFormaAparicion?: string;
+  eaEvolucion?: string;
+  eaSintomasAsociados?: string;
+  eaFactoresDesencadenantes?: string;
+  eaFactoresMejoran?: string;
+  eaTratamientosRealizados?: string;
+  eaMedicamentosUtilizados?: string;
+  eaExamenesPrevios?: string;
+  eaResultadosRelevantes?: string;
+  eaConsultasPrevias?: string;
+  eaEstadoActual?: string;
   enfermedadActual?: string;
   
   // Revisión por Sistemas (solo Primera Vez)
@@ -191,8 +279,45 @@ const HistoriaClinicaSchema = new Schema<IHistoriaClinica>(
     acompananteParentesco: String,
     acompananteTelefono: String,
     acompananteIdentificacion: String,
+    calidadInformacion: { type: String, enum: ['buena', 'regular', 'limitada'] },
+    lugarNacimiento: String,
+    nacionalidadHC:  String,
     motivoConsulta: String,
     motivoAtencion: String,
+    motivoPrincipal: String,
+    motivoTiempoEvolucion: String,
+    motivoSintema: String,
+    afhEnfermedades: String, afhCausaMuerte: String,
+    agoMenarquia: String, agoRitmoMenstrual: String, agoFUR: String,
+    agoFormulaObstetrica: String, agoVidaSexual: String, agoTamizajes: String,
+    anpHabitos: String, anpAlimentacion: String, anpInmunizaciones: String, anpVivienda: String,
+    appEnfermedadesInfancia: String, appEnfermedadesCronicas: String,
+    appQuirurgicos: String, appTraumaticos: String, appAlergicos: String,
+    appFarmacologicos: String, appTransfusionales: String, appHospitalizaciones: String,
+    aiDesarrolloPsicomotor: String, aiDesarrolloActual: String,
+    aiAlimentacion: String, aiCrecimientoDesarrollo: String, aiInmunizaciones: String,
+    apEmbarazo: String, apEdadGestacional: String,
+    apTipoParto: { type: String, enum: ['vaginal', 'cesarea', 'instrumentado'] },
+    apMotivoCesarea: String, apComplicaciones: String,
+    apPresentacionFetal: String, apPesoNacer: String,
+    apTallaNacer: String, apPeriodoNeonatal: String,
+    rsGenerales: String, rsPiel: String, rsCabeza: String, rsOjos: String,
+    rsNariz: String, rsOidos: String, rsBoca: String, rsRespiratorio: String,
+    rsCardiovascular: String, rsDigestivo: String, rsGenitourinario: String,
+    rsMusculoEsqueletico: String, rsSistemaNervioso: String, rsEndocrino: String,
+    rsHematologico: String,
+    eaInicio: String,
+    eaFormaAparicion: String,
+    eaEvolucion: String,
+    eaSintomasAsociados: String,
+    eaFactoresDesencadenantes: String,
+    eaFactoresMejoran: String,
+    eaTratamientosRealizados: String,
+    eaMedicamentosUtilizados: String,
+    eaExamenesPrevios: String,
+    eaResultadosRelevantes: String,
+    eaConsultasPrevias: String,
+    eaEstadoActual: String,
     enfermedadActual: String,
     sistemas: [{
       sistema: String,
