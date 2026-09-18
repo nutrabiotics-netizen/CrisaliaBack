@@ -12,6 +12,7 @@ import {
   siguienteSeccion,
   generarSintesis,
   generarPerfilRadarInterrogatorio,
+  agregarParaclinicosOcr,
 } from '../../../controllers/paciente/interrogatorio/interrogatorioController';
 
 const router = Router();
@@ -31,6 +32,7 @@ router.post('/:interrogatorioId/analizar', authenticate, authorize(UserRole.PACI
 router.post('/:interrogatorioId/siguiente-seccion', authenticate, authorize(UserRole.PACIENTE), siguienteSeccion);
 router.post('/:interrogatorioId/generar-sintesis', authenticate, authorize(UserRole.PACIENTE), generarSintesis);
 router.post('/:interrogatorioId/perfil-radar', authenticate, authorize(UserRole.PACIENTE), generarPerfilRadarInterrogatorio);
+router.post('/:interrogatorioId/paraclinicos-ocr', authenticate, authorize(UserRole.PACIENTE), agregarParaclinicosOcr);
 
 export default router;
 

@@ -173,6 +173,7 @@ export const obtenerInterrogatorioPorId = async (req: AuthRequest, res: Response
         respuestas: interrogatorio.respuestas,
         observacionesIA: interrogatorio.observacionesIA,
         analisisIA: interrogatorio.analisisIA,
+        historiaClinica: (interrogatorio as any).historiaClinica,
         objetivos: interrogatorio.objetivos,
         createdAt: interrogatorio.createdAt,
         updatedAt: interrogatorio.updatedAt
@@ -563,6 +564,7 @@ export const generarAnalisisIA = async (req: AuthRequest, res: Response): Promis
       data: {
         _id: interrogatorio._id.toString(),
         analisisIA: interrogatorio.analisisIA,
+        historiaClinica: (interrogatorio as any).historiaClinica,
         objetivos: interrogatorio.objetivos,
         observacionesIA: interrogatorio.observacionesIA
       }
@@ -581,6 +583,51 @@ export const generarAnalisisIA = async (req: AuthRequest, res: Response): Promis
 // Llama al Crisal Agent en background para generar el perfil de radar de
 // disfunciones a partir de las respuestas s01 y s03. Guarda el resultado en
 // el interrogatorio. Fire-and-forget desde el frontend.
+/**
+ * POST /paciente/interrogatorio/:interrogatorioId/paraclinicos-ocr
+ * Recibe los ocrValores de los paraclinicos subidos y los guarda en
+ * interrogatorio.respuestas.examenes_paraclinicos para que el Agent los use.
+ */
+export const agregarParaclinicosOcr = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const pacienteId = req.userId!;
+    const { interrogatorioId } = req.params;
+    const { paraclinicos } = req.body as {
+      paraclinicos: Array<{ nombre: string; ocrValores: Array<{ nombre: string; valor: string; unidad?: string; referencia?: string }> }>;
+    };
+
+    if (!Array.isArray(paraclinicos) || paraclinicos.length === 0) {
+      res.status(400).json({ success: false, message: 'paraclinicos requerido' });
+      return;
+    }
+
+    const interrogatorio = await Interrogatorio.findOne({ _id: interrogatorioId, pacienteId });
+    if (!interrogatorio) {
+      res.status(404).json({ success: false, message: 'Interrogatorio no encontrado.' });
+      return;
+    }
+
+    // Aplanar todos los ocrValores en un array único con referencia al archivo
+    const examenesOcr = paraclinicos.flatMap(p =>
+      (p.ocrValores || []).map(v => ({ ...v, archivo: p.nombre }))
+    ).filter(v => v.nombre || v.valor);
+
+    interrogatorio.respuestas = {
+      ...interrogatorio.respuestas,
+      examenes_paraclinicos: examenesOcr,
+    };
+    interrogatorio.markModified('respuestas');
+    await interrogatorio.save();
+
+    console.log('[paraclinicosOcr] Guardados', examenesOcr.length, 'valores OCR para interrogatorio', interrogatorioId);
+
+    res.json({ success: true, data: { valoresGuardados: examenesOcr.length } });
+  } catch (err: any) {
+    console.error('[paraclinicosOcr] error:', err.message);
+    res.status(500).json({ success: false, message: 'Error al guardar paraclínicos.' });
+  }
+};
+
 export const generarPerfilRadarInterrogatorio = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const pacienteId = req.userId!;

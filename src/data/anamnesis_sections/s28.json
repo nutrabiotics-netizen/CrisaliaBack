@@ -37,7 +37,10 @@
       "text": "Indica la intensidad promedio del dolor (0 = ninguno, 10 = máximo imaginable)",
       "type": "scale",
       "min": 0,
-      "max": 10
+      "max": 10,
+      "step": 1,
+      "minLabel": "0 - Sin dolor",
+      "maxLabel": "10 - Máximo imaginable"
     },
     {
       "id": "s28_caracteristicas_dolor",

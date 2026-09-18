@@ -111,7 +111,7 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
         s01_educacion: !!datosExistentes.escolaridad,
         s01_ocupacion: !!datosExistentes.ocupacion,
       };
-      const pendientes = TODAS_LAS_PREGUNTAS.filter((q: any) => !IDS_CONOCIDOS_CTRL[q.id]);
+      const pendientes = TODAS_LAS_PREGUNTAS.filter((q: any) => !IDS_CONOCIDOS_CTRL[q.id] && q.type !== 'file_upload');
       const eraUltimoLote = (loteIndex + 1) * 5 >= pendientes.length;
 
       // Si Claude emitió [[FIN_CONVERSACION]] en un lote intermedio, limpiarlo
@@ -139,12 +139,30 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
         const respuestaSiguienteLote = await responderCuerpoConChat({
           zonasDolorMarcadas,
           historial: historialCascada,
-          mensajeUsuario: 'Haz la primera pregunta de tu lista actual.',
+          mensajeUsuario: 'Continúa la conversación. Haz la primera pregunta de tu lista actual sin saludar — ya estamos en medio de la entrevista.',
           nombrePaciente: paciente?.nombre,
           datosExistentes,
           loteIndex: nextLoteIndex,
         });
-        respuesta = respuestaSiguienteLote.replace('[[FIN_LOTE]]', '').replace('[[FIN_CONVERSACION]]', '').trim();
+
+        // Si la cascada también terminó y era el último lote → generar cierre
+        const cascadeEmitioFin = respuestaSiguienteLote.includes('[[FIN_LOTE]]') || respuestaSiguienteLote.includes('[[FIN_CONVERSACION]]');
+        const eraUltimoLoteCascada = (nextLoteIndex + 1) * 5 >= pendientes.length;
+
+        if (cascadeEmitioFin && eraUltimoLoteCascada) {
+          const historialCompleto: typeof historial = [
+            ...historial,
+            { rol: 'usuario', texto: mensajeUsuario.trim() },
+          ];
+          respuesta = await generarCierreFase1({
+            historial: historialCompleto,
+            nombrePaciente: paciente?.nombre,
+            zonasDolorMarcadas,
+            datosExistentes,
+          });
+        } else {
+          respuesta = respuestaSiguienteLote.replace('[[FIN_LOTE]]', '').replace('[[FIN_CONVERSACION]]', '').trim();
+        }
         (req as any)._nextLoteIndex = nextLoteIndex;
       }
     }
@@ -176,12 +194,10 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
     // ── Limpiar fences de markdown ────────────────────────────────────────────
     // Si hay un bloque ```json ... ``` embebido, extraer su contenido
     // y guardar el texto previo como preámbulo
-    let preambulo = '';
     let respuestaClean = respuestaSinMarcadores;
 
     const fenceMatch = respuestaSinMarcadores.match(/^([\s\S]*?)```(?:json)?\s*([\s\S]*?)```/m);
     if (fenceMatch) {
-      preambulo = fenceMatch[1].trim();
       respuestaClean = fenceMatch[2].trim();
     } else {
       // Sin fence embebido: limpiar solo fences al inicio/final
@@ -196,7 +212,8 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
     // Estrategia: encontrar el último {"texto" y parsear desde ahí hasta el último }
     let textoFinal = respuestaClean;
     let opciones: string[] = [];
-    let tipoOpciones: 'single' | 'checkbox' | 'tabla' | 'tabla_dinamica' | 'file_upload' = 'single';
+    let tipoOpciones: 'single' | 'checkbox' | 'tabla' | 'tabla_dinamica' | 'file_upload' | 'scale' = 'single';
+    let scaleFase1: { min?: number; max?: number; step?: number; minLabel?: string; maxLabel?: string; required?: boolean } | undefined;
     let columnasFase1: string[] = [];
     let tablaItemsFase1: { id: string; label: string }[] = [];
     let tablaEscalaFase1: 'frecuencia' | 'intensidad' = 'frecuencia';
@@ -226,18 +243,37 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
               if (parsed.escala) tablaEscalaFase1 = parsed.escala === 'intensidad' ? 'intensidad' : 'frecuencia';
             } else if (parsed.tipoOpciones === 'file_upload') {
               tipoOpciones = 'file_upload';
+            } else if (parsed.tipoOpciones === 'scale') {
+              tipoOpciones = 'scale';
+              // Buscar la pregunta scale en TODAS_LAS_PREGUNTAS por min/max/step exactos (más preciso que por lote)
+              const scaleMinVal = parsed.scaleMin;
+              const scaleMaxVal = parsed.scaleMax;
+              const scaleStepVal = parsed.scaleStep;
+              // Buscar primero en preguntas scale, luego en cualquier pregunta con min/max/step
+              const pregScaleExacta = TODAS_LAS_PREGUNTAS.find((q: any) =>
+                (scaleMinVal === undefined || q.min === scaleMinVal) &&
+                (scaleMaxVal === undefined || q.max === scaleMaxVal) &&
+                (scaleStepVal === undefined || q.step === scaleStepVal)
+              );
+              // scaleRequired: tomar de Claude primero, luego del JSON como fallback por coincidencia exacta
+              const scaleReq = parsed.scaleRequired !== undefined
+                ? parsed.scaleRequired
+                : (pregScaleExacta?.required !== false);
+              scaleFase1 = {
+                min: parsed.scaleMin ?? pregScaleExacta?.min,
+                max: parsed.scaleMax ?? pregScaleExacta?.max,
+                step: parsed.scaleStep ?? pregScaleExacta?.step,
+                minLabel: parsed.scaleMinLabel ?? pregScaleExacta?.minLabel,
+                maxLabel: parsed.scaleMaxLabel ?? pregScaleExacta?.maxLabel,
+                required: scaleReq,
+              };
             } else {
               tipoOpciones = parsed.tipoOpciones === 'checkbox' ? 'checkbox' : 'single';
             }
-            // Descartar preJson cuando hay card propia para evitar pregunta duplicada
-            const preJson = [preambulo, respuestaClean.slice(0, jsonStart).trim()].filter(Boolean).join('\n\n');
-            const esCard = opciones.length > 0 || resumenItems.length > 0 || tipoOpciones === 'tabla' || tipoOpciones === 'tabla_dinamica';
-            if (esCard) {
-              // El card muestra parsed.texto como encabezado — no mezclar con el preámbulo
-              textoFinal = parsed.texto;
-            } else {
-              textoFinal = [preJson, parsed.texto].filter(Boolean).join('\n\n');
-            }
+            // Siempre usar parsed.texto como fuente de verdad cuando el JSON se parsea correctamente.
+            // Ignorar texto previo al JSON — Claude a veces lo repite en el preámbulo (off-format),
+            // lo que causaría duplicados en el mensaje visible.
+            textoFinal = parsed.texto;
           }
         } catch {
           const preJson = respuestaClean.slice(0, jsonStart).trim();
@@ -260,11 +296,43 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
       textoFinal = mFinal ? mFinal[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : '';
     }
 
+    // Fallback scale: si Claude devolvió texto plano (tipoOpciones default 'single')
+    // y la siguiente pregunta sin responder en el lote es de tipo scale, inyectamos los datos.
+    // Fallback scale solo cuando: tipoOpciones single, sin opciones reales, y hay scale en el lote
+    if (tipoOpciones === 'single' && opciones.length === 0 && !scaleFase1) {
+      const inicioLote = loteIndex * 5;
+      const IDS_SCALE_KNOWN: Record<string, boolean> = {
+        s01_nombre: !!datosExistentes.nombre, s01_nacimiento: !!datosExistentes.fechaNacimiento,
+        s01_edad: datosExistentes.edad !== undefined, s01_sexo: !!datosExistentes.sexoBiologico,
+        s01_educacion: !!datosExistentes.escolaridad, s01_ocupacion: !!datosExistentes.ocupacion,
+      };
+      const pendientesScale2 = TODAS_LAS_PREGUNTAS.filter((q: any) => !IDS_SCALE_KNOWN[q.id] && q.type !== 'file_upload');
+      const loteActual = pendientesScale2.slice(inicioLote, inicioLote + 5);
+      // Fallback solo si Claude menciona el nombre de la pregunta scale en su texto
+      // (evitar falsos positivos cuando Claude hace una pregunta de seguimiento que
+      //  contiene unidades de medida del turno anterior, ej. "Anotado, 104.5 kg...")
+      const pregScaleFallback = loteActual.find((q: any) =>
+        q.type === 'scale' &&
+        textoFinal.toLowerCase().includes(q.text.toLowerCase().slice(0, 10))
+      );
+      if (pregScaleFallback) {
+        tipoOpciones = 'scale';
+        scaleFase1 = {
+          min: pregScaleFallback.min, max: pregScaleFallback.max, step: pregScaleFallback.step,
+          minLabel: pregScaleFallback.minLabel, maxLabel: pregScaleFallback.maxLabel,
+          required: pregScaleFallback.required !== false,
+        };
+        console.log('[cuerpoConChat] scale fallback aplicado para:', pregScaleFallback.id);
+      }
+    }
+
     console.log('[cuerpoConChat/responder] ◀ procesado', {
       textoFinalLen:   textoFinal.length,
       opcionesCount:   opciones.length,
+      tipoOpciones,
       finConversacion,
       causasCount:     causas.length,
+      scaleData:       scaleFase1,
       respuestasS01S03Keys: Object.keys(respuestasS01S03),
     });
 
@@ -364,6 +432,7 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
         tablaItems:       tablaItemsFase1,
         tablaEscala:      tablaEscalaFase1,
         columnas:         columnasFase1,
+        scaleData:        scaleFase1,
         alertaPresencial,
         resumenItems,
         enfoqueAbordaje,
@@ -525,10 +594,11 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
       const jsonEnd   = rawLimpio.lastIndexOf('}');
       let textoFinal  = rawLimpio;
       let opciones: string[] = [];
-      let tipoOpciones: 'single' | 'checkbox' | 'tabla' | 'tabla_dinamica' | 'file_upload' = 'single';
+      let tipoOpciones: 'single' | 'checkbox' | 'tabla' | 'tabla_dinamica' | 'file_upload' | 'scale' = 'single';
       let tablaItems: { id: string; label: string }[] = [];
       let tablaEscala: 'frecuencia' | 'intensidad' = 'frecuencia';
       let columnas: string[] = [];
+      let scaleDataFase2: { min?: number; max?: number; step?: number; minLabel?: string; maxLabel?: string } | undefined;
 
       if (jsonStart >= 0 && jsonEnd > jsonStart) {
         try {
@@ -549,6 +619,9 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
               tablaEscala = scaleFromJson === 'intensity' ? 'intensidad'
                 : scaleFromJson === 'frequency' ? 'frecuencia'
                 : parsed.escala === 'intensidad' ? 'intensidad' : 'frecuencia';
+            } else if (parsed.tipoOpciones === 'scale') {
+              tipoOpciones = 'scale';
+              scaleDataFase2 = { min: parsed.scaleMin, max: parsed.scaleMax, step: parsed.scaleStep, minLabel: parsed.scaleMinLabel, maxLabel: parsed.scaleMaxLabel };
             } else {
               tipoOpciones = parsed.tipoOpciones === 'checkbox' ? 'checkbox' : 'single';
             }
@@ -581,6 +654,7 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
           tablaItems:  finRonda ? [] : tablaItems,
           tablaEscala: tablaEscala,
           columnas:    finRonda ? [] : columnas,
+          scaleData:   scaleDataFase2,
           finRonda,
           progreso: interrogatorio.progreso,
         },

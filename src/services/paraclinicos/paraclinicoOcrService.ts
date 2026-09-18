@@ -4,7 +4,24 @@ import { TextractClient, AnalyzeDocumentCommand } from '@aws-sdk/client-textract
 const pdfParse: (buffer: Buffer) => Promise<{ text: string }> = require('pdf-parse');
 
 const STRUCTURE_MODEL = process.env.OPENAI_PARACLINICO_MODEL || 'gpt-4o-mini';
-const MIN_DIGITAL_TEXT = 100; // chars mínimos para considerar PDF digital
+const MIN_DIGITAL_TEXT = 100; // chars mínimos de texto útil para considerar PDF digital
+
+/** Devuelve solo el texto "útil" de un PDF — descarta URLs, timestamps, números de página y ruido */
+function limpiarTextoRuido(texto: string): string {
+  return texto
+    .split('\n')
+    .map(l => l.trim())
+    .filter(l => {
+      if (!l) return false;
+      if (/https?:\/\/\S+/i.test(l)) return false;          // líneas que son URLs
+      if (/^\d{1,2}\/\d{1,2}\/\d{2,4}[\s,]\s*\d{1,2}:\d{2}/.test(l)) return false; // timestamps
+      if (/^\d+\s*\/\s*\d+$/.test(l)) return false;          // "1/1", "2/5" (páginas)
+      if (/^\([\d×x]+\)$/.test(l)) return false;             // "(768×1024)"
+      if (l.length < 4) return false;                        // líneas muy cortas
+      return true;
+    })
+    .join('\n');
+}
 
 export type ParaclinicoOcrEstado = 'listo' | 'error' | 'omitido';
 export type ParaclinicoOcrMetodo = 'pdf-texto' | 'vision';
@@ -124,17 +141,18 @@ async function extraerTextoTextract(buffer: Buffer): Promise<string> {
 async function procesarPdfDigital(buffer: Buffer): Promise<ParaclinicoOcrOutcome> {
   const data = await pdfParse(buffer);
   const texto = data.text?.trim() ?? '';
-  if (texto.length < MIN_DIGITAL_TEXT) return procesarConTextract(buffer);
+  const textoUtil = limpiarTextoRuido(texto);
+  if (textoUtil.length < MIN_DIGITAL_TEXT) return procesarConTextract(buffer);
 
   const [valores, tipoDocumento] = await Promise.all([
-    process.env.OPENAI_API_KEY ? estructurarConOpenAI(texto) : Promise.resolve([]),
-    clasificarDocumento(texto),
+    process.env.OPENAI_API_KEY ? estructurarConOpenAI(textoUtil) : Promise.resolve([]),
+    clasificarDocumento(textoUtil),
   ]);
 
   return {
     ocrEstado: 'listo',
     ocrMetodo: 'pdf-texto',
-    ocrTextoPlano: texto.slice(0, 8000),
+    ocrTextoPlano: textoUtil.slice(0, 8000),
     ocrValores: valores,
     tipoDocumento,
   };

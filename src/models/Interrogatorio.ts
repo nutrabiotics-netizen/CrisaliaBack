@@ -8,6 +8,11 @@ export interface IInterrogatorio extends Document {
   respuestas: Record<string, any>;
   observacionesIA?: string[];
   analisisIA?: string;
+  historiaClinica?: {
+    motivoConsulta: { motivoPrincipal: string; tiempoEvolucion: string; sintomaConsulta: string };
+    enfermedadActual: { inicio: string; formaAparicion: string; evolucion: string; sintomasAsociados: string; factoresDesencadenantes: string; factoresMejoranEmpeoran: string; tratamientosRealizados: string; medicamentosUtilizados: string; examenesPrevios: string; resultadosRelevantes: string; consultasAnteriores: string; estadoActual: string };
+    antecedentes: { patologicos: string; farmacologicos: string; quirurgicos: string; alergicos: string; familiares: string; ginecologicos: string; toxicos: string };
+  };
   analisisFisiologicoIA?: any[];
   objetivos?: string[];
   recomendacionAutomatica?: {
@@ -69,6 +74,9 @@ const InterrogatorioSchema = new Schema<IInterrogatorio>(
     },
     analisisIA: {
       type: String
+    },
+    historiaClinica: {
+      type: Schema.Types.Mixed
     },
     analisisFisiologicoIA: {
       type: Schema.Types.Mixed,

@@ -114,7 +114,9 @@ Debes seguir este orden estrictamente. NO puedes pasar a la fase 2 sin completar
 
 FASE 1 — DATOS GENERALES (s01): Después del saludo, recopila PRIMERO los datos que nos faltan del perfil del paciente. Los datos que ya tenemos en el sistema están marcados como "ya conocidos" en el contexto — NO los preguntes. Solo pregunta los que faltan.
 
-FASE 2 — MOTIVO DE CONSULTA (s03): Solo después de completar los datos de s01 que faltan
+FASE 2 — MOTIVO DE CONSULTA (s03): Solo después de completar los datos de s01 que faltan.
+
+REGLA DE LOTE — APLICA SIN EXCEPCIÓN: El sistema te entrega las preguntas en lotes numerados. En cada turno SOLO puedes hacer preguntas que estén en el lote actual. NUNCA anticipes preguntas de lotes futuros, aunque el paciente haya mencionado información relacionada. Cada lote se cierra con [[FIN_LOTE]] cuando sus preguntas estén resueltas.
 
 ⸻
 
@@ -142,10 +144,10 @@ Si el campo tiene type: "table" en el JSON del cuestionario, usa este formato:
 {"texto": "Pregunta reformulada de forma empática", "opciones": [], "tipoOpciones": "tabla_dinamica", "columnas": ["Col1", "Col2", ...], "respuestaLibre": true}
 Las columnas son EXACTAMENTE las del array "columns" del JSON — no las modifiques.
 
-REGLA PARA PREGUNTAS type file_upload � APLICA SIN EXCEPCION:
-Si el campo tiene type: file_upload en el JSON del cuestionario, usa este formato:
-{texto: Pregunta reformulada de forma empatica invitando a subir archivos, opciones: [], tipoOpciones: file_upload, respuestaLibre: true}
-El paciente podra subir hasta 5 archivos (PDF, JPG, PNG, WEBP). Solo muestra este tipo UNA VEZ durante la conversacion.
+REGLA PARA PREGUNTAS type "scale":
+Si el campo tiene type: "scale" en el JSON, usa este formato:
+{"texto": "Pregunta reformulada", "opciones": [], "tipoOpciones": "scale", "scaleMin": min, "scaleMax": max, "scaleStep": step, "scaleMinLabel": "...", "scaleMaxLabel": "...", "respuestaLibre": true}
+Toma los valores de min, max, step, minLabel y maxLabel del JSON de la pregunta.
 
 PROHIBIDO: NUNCA menciones la palabra "tabla" en el campo "texto" ni en ningún texto visible al paciente para preguntas que NO sean type "table". Si necesitas agrupar varias preguntas de tipo text/scale/single, hazlo de forma conversacional en texto natural — nunca como tabla. NUNCA digas "completa la siguiente tabla" a menos que el campo sea explícitamente type "table".
 
@@ -212,7 +214,7 @@ Cuando detectes una de estas condiciones, incluye "alertaPresencial": true ÚNIC
 - Habla directamente al paciente usando "tú".
 - Evita tecnicismos. Si usas uno, explícalo.
 - Una pregunta principal por mensaje.
-- Cuando el paciente responde con un número a una pregunta numérica (peso, talla, edad, escala, años, etc.), acéptalo directamente y pasa a la siguiente pregunta. NUNCA digas "¿quisiste decir...?", "¿hubo un error de tipeo?" ni ninguna variante de confirmación. El número es válido tal como fue escrito.
+- Cuando el paciente responde con un número a una pregunta numérica, verifica si la pregunta tiene campos "min" y "max" en el JSON. Si los tiene y el valor está FUERA del rango, pide amablemente que lo corrija: "Ese valor parece estar fuera del rango esperado (min-max). ¿Podrías verificarlo?". Si está dentro del rango, acéptalo directamente y pasa a la siguiente pregunta. NUNCA digas "¿quisiste decir...?", "¿hubo un error de tipeo?" ni ninguna variante de confirmación. El número es válido tal como fue escrito.
 - Solo pide aclaración si la respuesta es genuinamente ambigua (ej: texto incomprensible, o respuesta a una pregunta de opciones que no corresponde a ninguna opción).
 - Si el paciente responde de forma COMPLETA (número, opción seleccionada, texto claro), acepta la respuesta y continúa. Si la respuesta es INCOMPLETA (ej: solo dio nombre pero falta teléfono), pide conversacionalmente solo el dato que falta — sin repetir la pregunta completa.
 - NUNCA repitas una pregunta que ya hayas hecho en esta conversación. Antes de formular cada pregunta, revisa el historial completo para verificar que no fue preguntada ni respondida ya, aunque con palabras ligeramente distintas.
@@ -259,8 +261,8 @@ Cuando hayas completado todos los criterios y entregado la RESPUESTA FINAL, agre
 
 2. Las respuestas estructuradas recopiladas de s01 y s03.
 Usa EXACTAMENTE estos IDs (NO inventes variaciones):
-s01: s01_nombre, s01_nacimiento, s01_edad, s01_sexo, s01_educacion, s01_ocupacion, s01_anos_ocupacion, s01_jornada, s01_contacto_emergencia, s01_como_nos_conociste, s01_talla, s01_peso_actual, s01_peso_habitual, s01_peso_deseado, s01_peso_max, s01_peso_max_edad, s01_peso_min, s01_peso_min_edad, s01_grasa_corporal, s01_masa_muscular, s01_perimetro_abdominal, s01_peso_12meses, s01_medicion_electronica, s01_dispositivos
-s03: s03_sintomas_tabla (guarda como array de objetos, ej: [{"sintoma":"...","intensidad":"...","frecuencia":"...","aparecio":"...","agrava":"...","evolucion":"...","agravantes":"...","alivian":"..."}]), s03_limitacion, s03_que_hacias_bien, s03_evento_inicio, s03_objetivo_a, s03_objetivo_b, s03_disposicion, s03_examenes_previos
+s01: s01_nombre, s01_nacimiento, s01_edad, s01_sexo, s01_educacion, s01_ocupacion, s01_anos_ocupacion, s01_jornada, s01_contacto_emergencia, s01_como_nos_conociste, s01_talla, s01_peso_actual, s01_grasa_corporal, s01_masa_muscular, s01_perimetro_abdominal, s01_diagonosticado_peso, s01_atleta, s01_peso_12meses, s01_medicion_electronica, s01_dispositivos
+s03: s03_sintomas_tabla (guarda como array de objetos, ej: [{"sintoma":"...","intensidad":"...","frecuencia":"...","aparecio":"...","agrava":"...","evolucion":"...","agravantes":"...","alivian":"..."}]), s03_limitacion, s03_que_hacias_bien, s03_evento_inicio, s03_objetivo_a, s03_objetivo_b, s03_disposicion
 [[RESPUESTAS_S01_S03]]
 
 [[/RESPUESTAS_S01_S03]]
@@ -361,8 +363,8 @@ Después del JSON agrega obligatoriamente:
 [[/RESPUESTAS_S01_S03]]
 
 Usa EXACTAMENTE estos IDs en [[RESPUESTAS_S01_S03]] (NO inventes variaciones):
-s01: s01_nombre, s01_nacimiento, s01_edad, s01_sexo, s01_educacion, s01_ocupacion, s01_anos_ocupacion, s01_jornada, s01_contacto_emergencia, s01_como_nos_conociste, s01_talla, s01_peso_actual, s01_peso_habitual, s01_peso_deseado, s01_peso_max, s01_peso_max_edad, s01_peso_min, s01_peso_min_edad, s01_grasa_corporal, s01_masa_muscular, s01_perimetro_abdominal, s01_peso_12meses, s01_medicion_electronica, s01_dispositivos
-s03: s03_sintomas_tabla (array de objetos), s03_limitacion, s03_ultima_vez_bien, s03_que_hacias_bien, s03_evento_inicio, s03_objetivo_a, s03_objetivo_b, s03_objetivo_c, s03_objetivo_d, s03_disposicion, s03_examenes_previos
+s01: s01_nombre, s01_nacimiento, s01_edad, s01_sexo, s01_educacion, s01_ocupacion, s01_anos_ocupacion, s01_jornada, s01_contacto_emergencia, s01_como_nos_conociste, s01_talla, s01_grasa_corporal, s01_masa_muscular, s01_perimetro_abdominal, s01_diagonosticado_peso, s01_atleta, s01_peso_12meses, s01_medicion_electronica, s01_dispositivos
+s03: s03_sintomas_tabla (array de objetos), s03_limitacion, s03_ultima_vez_bien, s03_que_hacias_bien, s03_evento_inicio, s03_objetivo_a, s03_objetivo_b, s03_disposicion
 
 [[FIN_CONVERSACION]]`;
 
@@ -494,7 +496,8 @@ export async function responderCuerpoConChat(params: {
     s01_educacion: !!d.escolaridad,
     s01_ocupacion: !!d.ocupacion,
   };
-  const preguntasPendientes = TODAS_LAS_PREGUNTAS.filter((q: any) => !IDS_CONOCIDOS[q.id]);
+  // file_upload se maneja aparte (fase 2 loading), no entra al sistema de lotes
+  const preguntasPendientes = TODAS_LAS_PREGUNTAS.filter((q: any) => !IDS_CONOCIDOS[q.id] && q.type !== 'file_upload');
 
   // Construir preguntas del lote actual (5 preguntas sobre pendientes)
   const inicio = loteIndex * 5;
@@ -510,14 +513,23 @@ export async function responderCuerpoConChat(params: {
     if (q.type === 'table' && Array.isArray(q.columns))
       linea += `, columnas: ${q.columns.join(' | ')}`;
     if (q.type === 'file_upload') linea += ', subida de archivos';
+    if (q.type === 'scale') {
+      linea += `, min: ${q.min ?? 0}, max: ${q.max ?? 10}, step: ${q.step ?? 1}`;
+      if (q.minLabel) linea += `, minLabel: "${q.minLabel}"`;
+      if (q.maxLabel) linea += `, maxLabel: "${q.maxLabel}"`;
+      linea += `, required: ${q.required !== false ? 'true' : 'false'}`;
+    }
     linea += ')';
+    if (q.nota_clinica) linea += `\n   ⚠ NOTA CLÍNICA: ${q.nota_clinica}`;
     return linea;
   }).join('\n') || '(sin preguntas en este lote)';
 
   // Instrucción de fin de lote: cuando es el último lote, solo mencionamos
   // [[FIN_CONVERSACION]]; para lotes intermedios, solo mencionamos [[FIN_LOTE]]
   // y NO mencionamos [[FIN_CONVERSACION]] para que Claude no lo use por cuenta propia.
-  const instruccionFinLote = 'Cuando hayas hecho y recibido respuesta de TODAS las preguntas de este lote, confirma brevemente ("Anotado.") y emite [[FIN_LOTE]] INMEDIATAMENTE al final. NUNCA emitas [[FIN_CONVERSACION]] — el backend controlará el cierre.';
+  const instruccionFinLote = `RESTRICCIÓN CRÍTICA DE LOTE — APLICA SIN EXCEPCIÓN:
+Solo puedes hacer las preguntas listadas arriba en "PREGUNTAS DEL LOTE ACTUAL". NO hagas ninguna pregunta que no esté en esa lista, aunque parezca lógica o relacionada con el síntoma. Las preguntas de otros lotes llegarán en turnos posteriores.
+Cuando hayas obtenido respuesta de TODAS las preguntas de este lote (o puedas inferirlas del contexto), confirma brevemente ("Anotado.") y emite [[FIN_LOTE]] INMEDIATAMENTE en el mismo mensaje. NUNCA emitas [[FIN_CONVERSACION]] — el backend controlará el cierre.`;
 
   const DEFAULT_PROMPT_CON_LOTE = DEFAULT_SYSTEM_PROMPT
     .replace('{{PREGUNTAS_LOTE}}', preguntasLoteTexto)
@@ -559,7 +571,8 @@ export async function responderCuerpoConChat(params: {
   });
 
   const contextoCompleto = `${systemPrompt}\n\nContexto del paciente: ${contextoSistema}\n\nRECUERDA — FORMATO OBLIGATORIO: Tu respuesta debe ser SIEMPRE un JSON válido que empiece con {"texto": y NUNCA texto libre. Ejemplos según el tipo de pregunta:
-- type "text" / "scale" / "single" / "checkbox": {"texto":"...","opciones":[...],"tipoOpciones":"single","respuestaLibre":true}
+- type "text" / "single" / "checkbox": {"texto":"...","opciones":[...],"tipoOpciones":"single","respuestaLibre":true}
+- type "scale": {"texto":"...","opciones":[],"tipoOpciones":"scale","scaleMin":min,"scaleMax":max,"scaleStep":step,"scaleMinLabel":"...","scaleMaxLabel":"...","scaleRequired":true_o_false,"respuestaLibre":true} — OBLIGATORIO para preguntas de escala numérica. Usa "scaleRequired":false si el campo tiene "required":false en el JSON, "scaleRequired":true si no tiene el campo o es true.
 - type "table": {"texto":"...","opciones":[],"tipoOpciones":"tabla_dinamica","columnas":["Col1","Col2"],"respuestaLibre":true}
 - type "file_upload": {"texto":"...","opciones":[],"tipoOpciones":"file_upload","respuestaLibre":true}
 NUNCA respondas en texto libre. SIEMPRE JSON.`;
@@ -788,6 +801,7 @@ NO hagas preguntas que no estén en esta lista.
 
 - type "single" → presenta opciones en "opciones", tipoOpciones: "single"
 - type "checkbox" → presenta opciones en "opciones", tipoOpciones: "checkbox"
+- type "scale" → usa formato: {"texto":"...","opciones":[],"tipoOpciones":"scale","scaleMin":min,"scaleMax":max,"scaleStep":step,"scaleMinLabel":"...","scaleMaxLabel":"...","respuestaLibre":true}
 - type "text" → opciones: []
 - type "symptom_table" → usa formato tabla:
   {"texto":"...","opciones":[],"tipoOpciones":"tabla","tabla":[{"id":"item_id","label":"Nombre síntoma"},...],"respuestaLibre":true}

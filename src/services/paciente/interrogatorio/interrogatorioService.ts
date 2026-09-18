@@ -169,6 +169,10 @@ class InterrogatorioService {
         );
         interrogatorio.analisisIA = analisis.analisisIA;
         interrogatorio.objetivos = analisis.objetivos;
+        if (analisis.historiaClinica) {
+          (interrogatorio as any).historiaClinica = analisis.historiaClinica;
+          interrogatorio.markModified('historiaClinica');
+        }
         if (analisis.observacionesIA && analisis.observacionesIA.length > 0) {
           interrogatorio.observacionesIA = analisis.observacionesIA;
         }
@@ -211,9 +215,16 @@ class InterrogatorioService {
     }
 
     try {
-      // Generar el análisis con la IA (Texto + Objetivos)
-      const analisis = await openaiService.analizarInterrogatorio(interrogatorioExistente.respuestas);
-      
+      // Generar el análisis con la IA (Historia Clínica + Objetivos)
+      const analisis = await openaiService.analizarInterrogatorio(
+        interrogatorioExistente.respuestas,
+        {
+          disfuncionesAgent: interrogatorioExistente.analisisFisiologicoIA,
+          notaMedico: (interrogatorioExistente.recomendacionAutomatica as any)?.llamadoAccion,
+          ordenAbordaje: (interrogatorioExistente.recomendacionAutomatica as any)?.estrategiasFuncionales,
+        }
+      );
+
       // A4: Generar Semaforización Fisiológica
       const semaforizacion = await AIService.generarSemaforizacion(interrogatorioId);
 
@@ -222,10 +233,11 @@ class InterrogatorioService {
         interrogatorioId,
         {
           analisisIA: analisis.analisisIA,
+          historiaClinica: analisis.historiaClinica,
           objetivos: analisis.objetivos,
           analisisFisiologicoIA: semaforizacion,
-          observacionesIA: analisis.observacionesIA && analisis.observacionesIA.length > 0 
-            ? analisis.observacionesIA 
+          observacionesIA: analisis.observacionesIA && analisis.observacionesIA.length > 0
+            ? analisis.observacionesIA
             : interrogatorioExistente.observacionesIA || []
         },
         { new: true, runValidators: true }

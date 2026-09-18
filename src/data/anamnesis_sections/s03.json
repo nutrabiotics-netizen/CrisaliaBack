@@ -61,13 +61,6 @@
         { "value": "medio", "label": "Medio: puedo hacer cambios graduales" },
         { "value": "bajo", "label": "Bajo: me cuesta mucho cambiar hábitos" }
       ]
-    },
-
-    {
-      "id": "s03_examenes_previos",
-      "text": "Exámenes médicos en los ultimos 6 meses",
-      "type": "file_upload",
-      "objetivo_clinico": "Recopilar los exámenes medicos del paciente para una mejor analisis"
     }
   ]
 }

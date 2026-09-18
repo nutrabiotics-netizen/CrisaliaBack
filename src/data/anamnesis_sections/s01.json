@@ -63,16 +63,11 @@
       ]
     },
 
-    { "id": "s01_talla", "text": "Talla (cm)", "type": "text" },
-    { "id": "s01_peso_actual", "text": "Peso actual (kg)", "type": "text" },
-    { "id": "s01_peso_habitual", "text": "Peso habitual (kg)", "type": "text" },
-    { "id": "s01_peso_deseado", "text": "Peso deseado (kg)", "type": "text" },
-    { "id": "s01_peso_max", "text": "Peso máximo alcanzado (kg)", "type": "text" },
-    { "id": "s01_peso_max_edad", "text": "¿A qué edad? (peso máximo)", "type": "text" },
-    { "id": "s01_peso_min", "text": "Peso mínimo (kg)", "type": "text" },
-    { "id": "s01_grasa_corporal", "text": "Porcentaje de grasa corporal", "type": "text" },
-    { "id": "s01_masa_muscular", "text": "Porcentaje de masa muscular", "type": "text" },
-    { "id": "s01_perimetro_abdominal", "text": "Perímetro abdominal (cm)", "type": "text" },
+    { "id": "s01_talla", "text": "Talla (cm)", "type": "scale", "min": 40, "max": 200, "step": 1, "minLabel": "40 cm", "maxLabel": "200 cm", "required": true },
+    { "id": "s01_peso_actual", "text": "Peso actual (kg)", "type": "scale", "min": 2.5, "max": 400, "step": 0.5, "minLabel": "2.5 kg", "maxLabel": "400 kg", "required": true, "nota_clinica": "Si el peso reportado, combinado con la talla ya conocida, sugiere un IMC ≥ 30 (obesidad), o si el peso supera los 100 kg sin importar la talla, pregunta inmediatamente: '¿Te han diagnosticado Obesidad o Sobrepeso?' antes de continuar." },
+    { "id": "s01_grasa_corporal", "text": "Porcentaje de grasa corporal", "type": "scale", "min": 6, "max": 50, "step": 0.5, "minLabel": "6 %", "maxLabel": "50 %", "required": false, "nota_clinica": "Solo aplica para adultos. (1) Si el valor es ≤ 6 % (masculino) o ≤ 10 % (femenino), pregunta: '¿Eres atleta de alto rendimiento?' (2) Si el valor es > 25 % (masculino) o > 35 % (femenino), pregunta: '¿Te han diagnosticado Obesidad o Sobrepeso?' Haz solo una pregunta de seguimiento según el caso que aplique." },
+    { "id": "s01_masa_muscular", "text": "Porcentaje de masa muscular", "type": "scale", "min": 20, "max": 50, "step": 0.5, "minLabel": "20 %", "maxLabel": "50 %", "required": false, "nota_clinica": "Solo aplica para adultos." },
+    { "id": "s01_perimetro_abdominal", "text": "Perímetro abdominal (cm)", "type": "scale", "min": 50, "max": 150, "step": 0.5, "minLabel": "50 cm", "maxLabel": "150 cm", "required": false, "nota_clinica": "Solo aplica para adultos." },
 
     {
       "id": "s01_peso_12meses",

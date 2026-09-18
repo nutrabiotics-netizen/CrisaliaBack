@@ -8,7 +8,10 @@
       "text": "En una escala de 0 a 10, ¿cuánto estrés consideras que tienes en tu vida? (0 = nada, 10 = extremo)",
       "type": "scale",
       "min": 0,
-      "max": 10
+      "max": 10,
+      "step": 1,
+      "minLabel": "0 - Nada",
+      "maxLabel": "10 - Extremo"
     },
     {
       "id": "s11_manejo_estres",
