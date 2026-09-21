@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 
 class AgendamientoService {
   async obtenerCitasMedico(medicoId: string, fechaInicio?: Date, fechaFin?: Date): Promise<ICita[]> {
-    const query: any = { medicoId, estado: { $ne: 'cancelada' } };
+    const query: any = { medicoId };
 
     if (fechaInicio || fechaFin) {
       query.fecha = {};
@@ -183,7 +183,7 @@ class AgendamientoService {
 
     cita.estado = 'cancelada';
     cita.motivoCancelacion = motivoCancelacion;
-    cita.canceladoPor = canceladoPor ? cita.medicoId : undefined;
+    cita.canceladoPor = canceladoPor ? new mongoose.Types.ObjectId(canceladoPor) : undefined;
     cita.canceladoPorRol = canceladoPorRol || 'Medico';
     await cita.save();
 

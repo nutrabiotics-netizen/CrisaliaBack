@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Medico from '../../../models/Medico';
 import Cita from '../../../models/Cita';
 import Interrogatorio from '../../../models/Interrogatorio';
@@ -430,7 +431,7 @@ class AgendamientoService {
 
     cita.estado = 'cancelada';
     cita.motivoCancelacion = motivoCancelacion;
-    cita.canceladoPor = canceladoPor ? cita.pacienteId : undefined;
+    cita.canceladoPor = canceladoPor ? new mongoose.Types.ObjectId(canceladoPor) : undefined;
     cita.canceladoPorRol = canceladoPorRol || 'Paciente';
     await cita.save();
 
