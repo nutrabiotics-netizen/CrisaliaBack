@@ -402,9 +402,9 @@ class AgendamientoService {
         documentosFirmados: (cita as any).documentosFirmados ?? {},
         modulo: (cita as any).modulo ?? 'general',
         modoAgendamiento: (cita as any).modoAgendamiento ?? null,
-        motivoCancelacion: cita.motivoCancelacion ?? null,
-        canceladoPor: cita.canceladoPor?.toString() ?? null,
-        canceladoPorRol: cita.canceladoPorRol ?? null,
+        motivoCancelacion: cita.motivoCancelacion ?? undefined,
+        canceladoPor: cita.canceladoPor?.toString() ?? undefined,
+        canceladoPorRol: cita.canceladoPorRol ?? undefined,
         createdAt: cita.createdAt,
         updatedAt: cita.updatedAt
       };
