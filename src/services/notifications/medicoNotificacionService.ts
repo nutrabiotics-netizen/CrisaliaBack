@@ -162,7 +162,7 @@ export async function notificarMedicoControlActualizado(
         titulo:         `Control actualizado — ${nombrePac}`,
         cuerpo:         `${nombrePac} completó el cuestionario de seguimiento. Accede al análisis evolutivo.`,
         requiereAccion: false,
-        accionUrl:      '/medico/pacientes',
+        accionUrl:      `/medico/pacientes?pacienteId=${pacienteId}`,
         accionLabel:    'Ver seguimiento',
         pacienteId,
         pacienteNombre: nombrePac,

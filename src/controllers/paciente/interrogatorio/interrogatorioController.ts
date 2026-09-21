@@ -4,6 +4,7 @@ import interrogatorioService from '../../../services/paciente/interrogatorio/int
 import { registrarAccion } from '../../../utils/auditoriaHelper';
 import Interrogatorio from '../../../models/Interrogatorio';
 import Cita from '../../../models/Cita';
+import Paciente from '../../../models/Paciente';
 import { crearNotificacionMedico } from '../../../utils/notificacionHelper';
 import { AIService } from '../../../services/ai/AIService';
 import {
@@ -342,16 +343,19 @@ export const completarInterrogatorio = async (req: AuthRequest, res: Response): 
       .lean();
     const medicoId = citaReciente?.medicoId;
     if (medicoId) {
+      const pac = await Paciente.findById(pacienteId).select('nombre apellido').lean();
+      const nombrePac = pac ? `${(pac as any).nombre ?? ''} ${(pac as any).apellido ?? ''}`.trim() : 'El paciente';
       void crearNotificacionMedico({
         medicoId: String(medicoId),
         tipo: 'seguimiento_evolucion',
         categoria: 'seguimiento_clinico',
         titulo: 'Cuestionario de seguimiento completado',
-        cuerpo: 'El paciente completó su cuestionario de seguimiento clínico.',
+        cuerpo: `${nombrePac} completó su cuestionario de seguimiento clínico.`,
         requiereAccion: false,
-        accionUrl: '/medico/pacientes',
+        accionUrl: `/medico/pacientes?pacienteId=${String(pacienteId)}`,
         accionLabel: 'Ver seguimiento',
         pacienteId: String(pacienteId),
+        pacienteNombre: nombrePac,
       });
     }
   } catch (error: any) {
