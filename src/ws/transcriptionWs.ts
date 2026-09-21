@@ -22,6 +22,7 @@ import {
 } from '../services/transcription/streaming/transcribeStreamingService';
 import { invokeBedrockAgent, parseBedrockResponse } from '../services/ai/bedrock.service';
 import Paciente from '../models/Paciente';
+import Interrogatorio from '../models/Interrogatorio';
 import Material from '../models/Material';
 import { cargarCatalogo, corregirTranscript } from '../services/transcription/correccionMedicamentos';
 
@@ -341,9 +342,14 @@ export function registerTranscriptionHandlers(wss: WebSocketServer): void {
       }
 
       if (msg.type === 'process_with_agent' && citaIdStr) {
+        const hasPreconsulta = (msg.transcription || '').includes('=== DATOS DE PRECONSULTA ===');
         console.log('[TranscriptionWS] ▶ process_with_agent recibido', {
           citaId: citaIdStr,
           transcriptionLen: msg.transcription?.length || 0,
+          hasPreconsultaBlock: hasPreconsulta,
+          preconsultaPreview: hasPreconsulta
+            ? msg.transcription.slice(msg.transcription.indexOf('=== DATOS DE PRECONSULTA ==='), msg.transcription.indexOf('=== DATOS DE PRECONSULTA ===') + 300)
+            : '(ninguno)',
           isPartial: msg.isPartial,
           activeSection: msg.activeSection,
           currentSectionsKeys: msg.currentSections ? Object.keys(msg.currentSections) : [],
@@ -361,14 +367,149 @@ export function registerTranscriptionHandlers(wss: WebSocketServer): void {
         try {
           // Obtener contexto del paciente para Bedrock
           const pId = pacienteIdStr;
-          const paciente = pId ? await Paciente.findById(pId).lean() : null;
-          const patientContext = paciente ? `
-            Paciente: ${paciente.nombre} ${paciente.apellido}
-            Edad: ${paciente.fechaNacimiento ? Math.floor((new Date().getTime() - new Date(paciente.fechaNacimiento).getTime()) / 31557600000) : 'N/A'}
-            Sexo: ${paciente.sexoBiologico || 'N/A'}
-            EPS: ${paciente.eps || 'N/A'}
-            Aseguradora: ${paciente.aseguradora || 'N/A'}
-          `.trim() : 'Información del paciente no disponible.';
+          const [paciente, interrogatorio] = await Promise.all([
+            pId ? Paciente.findById(pId).lean() : null,
+            pId ? Interrogatorio.findOne({ pacienteId: pId })
+                    .sort({ updatedAt: -1 }).lean() : null,
+          ]);
+          console.log('[TranscriptionWS] interrogatorio lookup', {
+            pId,
+            found: !!interrogatorio,
+            estado: (interrogatorio as any)?.estado,
+            tieneHC: !!(interrogatorio as any)?.historiaClinica,
+            tieneMotivo: !!(interrogatorio as any)?.historiaClinica?.motivoConsulta,
+            tieneEA: !!(interrogatorio as any)?.historiaClinica?.enfermedadActual,
+            tieneAnt: !!(interrogatorio as any)?.historiaClinica?.antecedentes,
+            tieneAnalisis: Array.isArray((interrogatorio as any)?.analisisFisiologicoIA) && (interrogatorio as any).analisisFisiologicoIA.length > 0,
+          });
+          let patientContext = paciente ? [
+            `Paciente: ${paciente.nombre} ${paciente.apellido}`,
+            `Edad: ${paciente.fechaNacimiento ? Math.floor((new Date().getTime() - new Date(paciente.fechaNacimiento).getTime()) / 31557600000) : 'N/A'} años`,
+            `Sexo: ${(paciente as any).sexoBiologico || 'N/A'}`,
+            `EPS: ${(paciente as any).eps || 'N/A'}`,
+          ].join('\n') : 'Información del paciente no disponible.';
+
+          // Enriquecer con preconsulta desde Interrogatorio
+          if (interrogatorio) {
+            const parts: string[] = [];
+            const hc = (interrogatorio as any).historiaClinica;
+            if (hc) {
+              // motivoConsulta ya estructurado
+              const mc = hc.motivoConsulta;
+              if (mc?.motivoPrincipal)  parts.push(`Motivo principal (preconsulta): ${mc.motivoPrincipal}`);
+              if (mc?.tiempoEvolucion)  parts.push(`Tiempo de evolución (preconsulta): ${mc.tiempoEvolucion}`);
+              if (mc?.sintomaConsulta)  parts.push(`Síntoma principal (preconsulta): ${mc.sintomaConsulta}`);
+              // enfermedadActual ya estructurada
+              const ea = hc.enfermedadActual;
+              if (ea) {
+                const eaLineas = Object.entries(ea)
+                  .filter(([, v]) => v && String(v).trim())
+                  .map(([k, v]) => `  ${k}: ${v}`);
+                if (eaLineas.length) parts.push(`Enfermedad actual (preconsulta):\n${eaLineas.join('\n')}`);
+              }
+              // antecedentes ya estructurados
+              const ant = hc.antecedentes;
+              if (ant) {
+                const antLineas = Object.entries(ant)
+                  .filter(([, v]) => v && String(v).trim())
+                  .map(([k, v]) => `  ${k}: ${v}`);
+                if (antLineas.length) parts.push(`Antecedentes (preconsulta):\n${antLineas.join('\n')}`);
+              }
+            }
+            // analisisIA (texto de síntesis clínica generado por OpenAI en preconsulta)
+            const analisisTexto = (interrogatorio as any).analisisIA;
+            if (analisisTexto && String(analisisTexto).trim()) {
+              parts.push(`Análisis clínico IA (preconsulta):\n${String(analisisTexto).slice(0, 800)}`);
+            }
+
+            // analisisFisiologicoIA
+            const analisis = (interrogatorio as any).analisisFisiologicoIA;
+            if (Array.isArray(analisis) && analisis.length) {
+              const resumen = analisis
+                .filter((a: any) => a && (a.sistema || a.nombre || a.disfuncion))
+                .map((a: any) => {
+                  const nombre = a.sistema || a.nombre || a.disfuncion || '';
+                  const nivel  = a.nivel ?? a.semaforo ?? '';
+                  const hallazgos = Array.isArray(a.hallazgos) ? a.hallazgos.slice(0, 3).join('; ') : (a.descripcion || a.hallazgo || '');
+                  return [nombre, nivel ? `(${nivel})` : '', hallazgos].filter(Boolean).join(' — ');
+                })
+                .join('\n- ');
+              if (resumen) parts.push(`Análisis fisiológico IA (preconsulta):\n- ${resumen}`);
+            }
+
+            // Peso, talla e IMC desde respuestas (s01)
+            const resp = (interrogatorio as any).respuestas ?? {};
+            const pesoActual  = resp.s01_peso_actual;
+            const tallaActual = resp.s01_talla;
+            if (pesoActual || tallaActual) {
+              const svPartes: string[] = [];
+              if (pesoActual)  svPartes.push(`peso: ${pesoActual} kg`);
+              if (tallaActual) svPartes.push(`talla: ${tallaActual} cm`);
+              if (pesoActual && tallaActual) {
+                const tallaMt = parseFloat(String(tallaActual)) > 10
+                  ? parseFloat(String(tallaActual)) / 100
+                  : parseFloat(String(tallaActual));
+                const imc = (parseFloat(String(pesoActual)) / (tallaMt * tallaMt)).toFixed(1);
+                if (!isNaN(Number(imc))) svPartes.push(`imc: ${imc}`);
+              }
+              if (resp.s01_grasa_corporal)        svPartes.push(`grasa_corporal: ${resp.s01_grasa_corporal}%`);
+              if (resp.s01_masa_muscular)          svPartes.push(`masa_muscular: ${resp.s01_masa_muscular} kg`);
+              if (resp.s01_perimetro_abdominal)    svPartes.push(`perimetro_abdominal: ${resp.s01_perimetro_abdominal} cm`);
+              if (resp.s01_diagonosticado_peso)    svPartes.push(`diagnostico_peso: ${resp.s01_diagonosticado_peso}`);
+              // Instrucción explícita para el AI
+              parts.push(`DATOS PARA SECCIÓN examen_fisico (ponlos EXACTAMENTE en la sección examen_fisico con estas claves JSON):\n${svPartes.join('\n')}`);
+            }
+
+            // Datos perinatales y de infancia desde respuestas (s04)
+            const perinatalesPartes: string[] = [];
+            if (resp.s04_peso_nacer)           perinatalesPartes.push(`pesoNacer: ${resp.s04_peso_nacer}`);
+            if (resp.s04_semanas_gestacion)     perinatalesPartes.push(`semanasGestacion: ${resp.s04_semanas_gestacion}`);
+            if (resp.s04_tipo_parto)            perinatalesPartes.push(`tipoParto: ${resp.s04_tipo_parto}`);
+            if (resp.s04_prematuro)             perinatalesPartes.push(`prematuro: ${resp.s04_prematuro}`);
+            if (resp.s04_uci_neonatal)          perinatalesPartes.push(`uciNeonatal: ${resp.s04_uci_neonatal}`);
+            if (resp.s04_complicaciones_parto)  perinatalesPartes.push(`complicacionesParto: ${resp.s04_complicaciones_parto}`);
+            if (resp.s04_lactancia)             perinatalesPartes.push(`lactancia: ${resp.s04_lactancia}`);
+            if (resp.s04_primera_infancia)      perinatalesPartes.push(`primeraInfancia: ${JSON.stringify(resp.s04_primera_infancia)}`);
+            if (resp.s04_madre_antes_embarazo)  perinatalesPartes.push(`madreAntesEmbarazo: ${resp.s04_madre_antes_embarazo}`);
+            if (resp.s04_madre_durante_embarazo)perinatalesPartes.push(`madreDuranteEmbarazo: ${resp.s04_madre_durante_embarazo}`);
+            if (perinatalesPartes.length) parts.push(`Perinatales (preconsulta):\n${perinatalesPartes.join('\n')}`);
+
+            // Enfermedades familiares (s04)
+            if (resp.s04_enfermedades_familia) {
+              const ef = Array.isArray(resp.s04_enfermedades_familia)
+                ? resp.s04_enfermedades_familia.join(', ')
+                : String(resp.s04_enfermedades_familia);
+              if (ef) parts.push(`Enfermedades familiares (preconsulta): ${ef}`);
+            }
+            if (resp.s04_cancer_tipo) parts.push(`Cáncer familiar: ${resp.s04_cancer_tipo}`);
+
+            // Historia médica personal (s05)
+            const s05Partes: string[] = [];
+            if (resp.s05_cirugias)           s05Partes.push(`cirugias: ${resp.s05_cirugias}`);
+            if (resp.s05_hospitalizaciones)  s05Partes.push(`hospitalizaciones: ${resp.s05_hospitalizaciones}`);
+            const s05Dx = ['s05_dx_metabolicas','s05_dx_cardiovascular','s05_dx_digestivas','s05_dx_neurologicas','s05_dx_inmunologicas','s05_dx_otras']
+              .flatMap(k => Array.isArray(resp[k]) ? resp[k] : (resp[k] ? [resp[k]] : []));
+            if (s05Dx.length) s05Partes.push(`diagnosticos: ${s05Dx.join(', ')}`);
+            if (s05Partes.length) parts.push(`Historia médica personal (preconsulta):\n${s05Partes.join('\n')}`);
+
+            // Medicamentos y suplementos actuales (s06)
+            if (resp.s06_detalle_tabla && Array.isArray(resp.s06_detalle_tabla) && resp.s06_detalle_tabla.length) {
+              const meds = resp.s06_detalle_tabla
+                .map((m: any) => m?.nombre || m?.medicamento || JSON.stringify(m))
+                .filter(Boolean).join(', ');
+              if (meds) parts.push(`Medicamentos/suplementos actuales (preconsulta): ${meds}`);
+            }
+
+            if (parts.length > 0) {
+              patientContext += `\n\nDATOS DE PRECONSULTA (recopilados antes de la consulta — úsalos para completar la historia clínica):\n${parts.join('\n\n')}`;
+            }
+          }
+
+          console.log('[TranscriptionWS] patientContext preview', {
+            totalLen: patientContext.length,
+            tienePreconsulta: patientContext.includes('DATOS DE PRECONSULTA'),
+            preview: patientContext.slice(0, 400),
+          });
 
           const responseText = await invokeBedrockAgent({
             patientHistoryContext: patientContext,

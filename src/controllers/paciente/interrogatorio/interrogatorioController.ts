@@ -607,19 +607,28 @@ export const agregarParaclinicosOcr = async (req: AuthRequest, res: Response): P
       return;
     }
 
-    // Aplanar todos los ocrValores en un array único con referencia al archivo
-    const examenesOcr = paraclinicos.flatMap(p =>
-      (p.ocrValores || []).map(v => ({ ...v, archivo: p.nombre }))
-    ).filter(v => v.nombre || v.valor);
+    // Guardar por archivo: cada entrada tiene nombre del archivo + sus valores OCR
+    const examenesOcr = paraclinicos
+      .map(p => ({
+        archivo: p.nombre,
+        valores: (p.ocrValores || []).filter(v => v.nombre || v.valor),
+      }))
+      .filter(p => p.valores.length > 0);
+
+    // Merge con los archivos ya guardados (evita pisar subidas anteriores)
+    const previos: typeof examenesOcr = interrogatorio.respuestas?.examenes_paraclinicos || [];
+    const archivosNuevos = new Set(examenesOcr.map(e => e.archivo));
+    const merged = [...previos.filter((p: any) => !archivosNuevos.has(p.archivo)), ...examenesOcr];
 
     interrogatorio.respuestas = {
       ...interrogatorio.respuestas,
-      examenes_paraclinicos: examenesOcr,
+      examenes_paraclinicos: merged,
     };
     interrogatorio.markModified('respuestas');
     await interrogatorio.save();
 
-    console.log('[paraclinicosOcr] Guardados', examenesOcr.length, 'valores OCR para interrogatorio', interrogatorioId);
+    const totalValores = examenesOcr.reduce((sum, p) => sum + p.valores.length, 0);
+    console.log('[paraclinicosOcr] Guardados', examenesOcr.length, 'archivos,', totalValores, 'valores OCR para interrogatorio', interrogatorioId);
 
     res.json({ success: true, data: { valoresGuardados: examenesOcr.length } });
   } catch (err: any) {

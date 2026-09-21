@@ -363,7 +363,7 @@ Después del JSON agrega obligatoriamente:
 [[/RESPUESTAS_S01_S03]]
 
 Usa EXACTAMENTE estos IDs en [[RESPUESTAS_S01_S03]] (NO inventes variaciones):
-s01: s01_nombre, s01_nacimiento, s01_edad, s01_sexo, s01_educacion, s01_ocupacion, s01_anos_ocupacion, s01_jornada, s01_contacto_emergencia, s01_como_nos_conociste, s01_talla, s01_grasa_corporal, s01_masa_muscular, s01_perimetro_abdominal, s01_diagonosticado_peso, s01_atleta, s01_peso_12meses, s01_medicion_electronica, s01_dispositivos
+s01: s01_nombre, s01_nacimiento, s01_edad, s01_sexo, s01_educacion, s01_ocupacion, s01_anos_ocupacion, s01_jornada, s01_contacto_emergencia, s01_como_nos_conociste, s01_peso_actual, s01_talla, s01_grasa_corporal, s01_masa_muscular, s01_perimetro_abdominal, s01_diagonosticado_peso, s01_atleta, s01_peso_12meses, s01_medicion_electronica, s01_dispositivos
 s03: s03_sintomas_tabla (array de objetos), s03_limitacion, s03_ultima_vez_bien, s03_que_hacias_bien, s03_evento_inicio, s03_objetivo_a, s03_objetivo_b, s03_disposicion
 
 [[FIN_CONVERSACION]]`;
@@ -425,6 +425,14 @@ ${listaDisfunciones}
 
 Genera el array JSON con el resumen para el paciente.`;
 
+  if (!disfunciones?.length) {
+    return [
+      'Tu evaluación de salud funcional ha sido completada',
+      'El médico funcional revisará todos los hallazgos antes de tu consulta',
+      'Muy pronto recibirás un plan personalizado basado en tu caso',
+    ];
+  }
+
   try {
     const command = new ConverseCommand({
       modelId: MODEL_ID,
@@ -434,11 +442,24 @@ Genera el array JSON con el resumen para el paciente.`;
     });
     const resp = await client.send(command);
     const raw = (resp.output?.message?.content?.[0] as any)?.text ?? '';
-    const clean = raw.replace(/^```(?:json)?\s*/im, '').replace(/```\s*$/m, '').trim();
-    const arr = JSON.parse(clean);
-    return Array.isArray(arr) ? arr : [];
+    console.log('[generarResumenPaciente] raw:', raw.slice(0, 200));
+
+    // Intentar extraer array JSON aunque venga con texto antes/después
+    const clean = raw
+      .replace(/^```(?:json)?\s*/im, '')
+      .replace(/```\s*$/m, '')
+      .trim();
+
+    // Buscar el primer [ y el último ] para extraer el array
+    const start = clean.indexOf('[');
+    const end   = clean.lastIndexOf(']');
+    if (start === -1 || end === -1 || end <= start) throw new Error('No se encontró array JSON en la respuesta');
+
+    const arr = JSON.parse(clean.slice(start, end + 1));
+    if (!Array.isArray(arr) || arr.length === 0) throw new Error('Array vacío o inválido');
+    return arr.filter((item: any) => typeof item === 'string' && item.trim().length > 0);
   } catch (e) {
-    console.warn('[generarResumenPaciente] Error:', (e as Error).message);
+    console.warn('[generarResumenPaciente] Error, usando fallback:', (e as Error).message);
     return [
       'Tu evaluación de salud funcional ha sido completada',
       'El sistema identificó varios aspectos de tu salud que merecen atención',
@@ -496,8 +517,14 @@ export async function responderCuerpoConChat(params: {
     s01_educacion: !!d.escolaridad,
     s01_ocupacion: !!d.ocupacion,
   };
-  // file_upload se maneja aparte (fase 2 loading), no entra al sistema de lotes
-  const preguntasPendientes = TODAS_LAS_PREGUNTAS.filter((q: any) => !IDS_CONOCIDOS[q.id] && q.type !== 'file_upload');
+  // file_upload se maneja aparte (fase 2 loading), no entra al sistema de lotes.
+  // adultoOnly se omite si la edad del paciente es conocida y es menor de 18.
+  const esMenor = d.edad !== undefined && d.edad < 18;
+  const preguntasPendientes = TODAS_LAS_PREGUNTAS.filter((q: any) =>
+    !IDS_CONOCIDOS[q.id] &&
+    q.type !== 'file_upload' &&
+    !(esMenor && q.adultoOnly)
+  );
 
   // Construir preguntas del lote actual (5 preguntas sobre pendientes)
   const inicio = loteIndex * 5;
@@ -845,12 +872,18 @@ ${resumenRespuestas || 'Primera sesión del interrogatorio.'}`;
     // Primera llamada sin historial: añadir par priming user+assistant
     messages.push({ role: 'user', content: [{ text: primedUserMsg }] });
     messages.push({ role: 'assistant', content: [{ text: '{"texto":"Perfecto, continuemos. Voy a hacerte algunas preguntas más sobre tu salud.","opciones":[],"tipoOpciones":"single","respuestaLibre":true}' }] });
-  } else if (historial[0]?.rol === 'ia') {
-    // El historial empieza por un mensaje IA (primera pregunta de la ronda guardada
-    // como contexto). Anteponer mensaje de priming explícito que deje claro que
-    // esa pregunta YA fue hecha y la respuesta del paciente la sigue inmediatamente.
-    const primedExplicito = `${primedUserMsg}\nIMPORTANTE: La primera pregunta que aparece en el historial YA fue formulada al paciente. La respuesta que el paciente acaba de dar corresponde a ESA pregunta. NO la repitas. Avanza directamente a la siguiente pregunta de tu lista que aún no haya sido respondida.`;
-    messages.push({ role: 'user', content: [{ text: primedExplicito }] });
+  } else {
+    // Hay historial previo: el mensajeUsuario actual responde a la ÚLTIMA pregunta del historial.
+    // Indicar esto explícitamente para que Claude no repita preguntas ya respondidas.
+    const primedExplicito = `${primedUserMsg}\nIMPORTANTE: Cada mensaje del paciente en el historial es la respuesta a la pregunta inmediatamente anterior. La respuesta que el paciente acaba de dar ahora corresponde a la ÚLTIMA pregunta del historial. NO repitas ninguna pregunta que ya tenga respuesta. Avanza directamente a la siguiente pregunta de tu lista que aún no haya sido respondida.`;
+    if (historial[0]?.rol === 'ia') {
+      // El historial empieza con mensaje IA: insertar primer mensaje user de priming
+      // para mantener la alternancia user/assistant requerida por Bedrock.
+      messages.push({ role: 'user', content: [{ text: primedExplicito }] });
+    } else {
+      // El historial empieza con usuario: no necesitamos insertar nada extra,
+      // el priming irá embebido en el system prompt (ya tiene la regla de no repetir).
+    }
   }
 
   for (const msg of historial) {

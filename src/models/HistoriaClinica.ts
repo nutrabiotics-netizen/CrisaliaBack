@@ -155,6 +155,10 @@ export interface IHistoriaClinica extends Document {
     talla?: string;
     imc?: string;
     saturacionOxigeno?: string;
+    grasaCorporal?: string;
+    masaMuscular?: string;
+    perimetroAbdominal?: string;
+    diagnosticoPeso?: string;
   };
   examenMedico?: {
     cabeza?: string;
@@ -345,7 +349,11 @@ const HistoriaClinicaSchema = new Schema<IHistoriaClinica>(
       peso: String,
       talla: String,
       imc: String,
-      saturacionOxigeno: String
+      saturacionOxigeno: String,
+      grasaCorporal: String,
+      masaMuscular: String,
+      perimetroAbdominal: String,
+      diagnosticoPeso: String
     },
     examenMedico: {
       cabeza: String,

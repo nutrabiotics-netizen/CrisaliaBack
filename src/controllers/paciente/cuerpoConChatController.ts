@@ -111,7 +111,12 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
         s01_educacion: !!datosExistentes.escolaridad,
         s01_ocupacion: !!datosExistentes.ocupacion,
       };
-      const pendientes = TODAS_LAS_PREGUNTAS.filter((q: any) => !IDS_CONOCIDOS_CTRL[q.id] && q.type !== 'file_upload');
+      const esMenorCtrl = datosExistentes.edad !== undefined && datosExistentes.edad < 18;
+      const pendientes = TODAS_LAS_PREGUNTAS.filter((q: any) =>
+        !IDS_CONOCIDOS_CTRL[q.id] &&
+        q.type !== 'file_upload' &&
+        !(esMenorCtrl && q.adultoOnly)
+      );
       const eraUltimoLote = (loteIndex + 1) * 5 >= pendientes.length;
 
       // Si Claude emitió [[FIN_CONVERSACION]] en un lote intermedio, limpiarlo
@@ -306,7 +311,12 @@ export const responder = async (req: AuthRequest, res: Response): Promise<void> 
         s01_edad: datosExistentes.edad !== undefined, s01_sexo: !!datosExistentes.sexoBiologico,
         s01_educacion: !!datosExistentes.escolaridad, s01_ocupacion: !!datosExistentes.ocupacion,
       };
-      const pendientesScale2 = TODAS_LAS_PREGUNTAS.filter((q: any) => !IDS_SCALE_KNOWN[q.id] && q.type !== 'file_upload');
+      const esMenorScale = datosExistentes.edad !== undefined && datosExistentes.edad < 18;
+      const pendientesScale2 = TODAS_LAS_PREGUNTAS.filter((q: any) =>
+        !IDS_SCALE_KNOWN[q.id] &&
+        q.type !== 'file_upload' &&
+        !(esMenorScale && q.adultoOnly)
+      );
       const loteActual = pendientesScale2.slice(inicioLote, inicioLote + 5);
       // Fallback solo si Claude menciona el nombre de la pregunta scale en su texto
       // (evitar falsos positivos cuando Claude hace una pregunta de seguimiento que

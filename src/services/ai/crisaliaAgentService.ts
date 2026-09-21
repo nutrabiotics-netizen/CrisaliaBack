@@ -139,8 +139,8 @@ export async function invokeCrisaliaAgent(
       ms: Date.now() - t0,
       len: raw.length,
       lenLimpio: limpio.length,
-      preview: limpio.slice(0, 200)
     });
+    console.log('[CrisaliaAgent] ◀ respuesta completa:\n', limpio);
     return limpio;
   } catch (err: any) {
     clearTimeout(timer);
@@ -423,4 +423,76 @@ Al final, el bloque JSON en este formato exacto:
     .trim();
 
   return { textoAnalisis, perfilRadar };
+}
+
+/**
+ * Recomienda medicamentos y suplementos/nutracéuticos a partir de la
+ * preconsulta del paciente y la transcripción de la consulta.
+ * Devuelve JSON estructurado: { medicamentos: [...], suplementos: [...] }
+ */
+export async function recomendarMedicamentosConsulta(input: {
+  pacienteNombre?: string;
+  edad?: number;
+  sexo?: string;
+  motivoConsulta?: string;
+  enfermedadActual?: string;
+  antecedentes?: string;
+  medicamentosActuales?: string;
+  alergias?: string;
+  sistemasComprometidos?: string;
+  transcripcion?: string;
+  timeoutMs?: number;
+}): Promise<{ medicamentos: any[]; suplementos: any[] }> {
+  const partes: string[] = [];
+  if (input.pacienteNombre) partes.push(`Paciente: ${input.pacienteNombre}${input.edad ? `, ${input.edad} años` : ''}${input.sexo ? `, sexo: ${input.sexo}` : ''}`);
+  if (input.motivoConsulta)    partes.push(`Motivo de consulta: ${input.motivoConsulta}`);
+  if (input.enfermedadActual)  partes.push(`Enfermedad actual: ${input.enfermedadActual}`);
+  if (input.antecedentes)      partes.push(`Antecedentes: ${input.antecedentes}`);
+  if (input.medicamentosActuales) partes.push(`Medicamentos/suplementos que el paciente ya tomaba: ${input.medicamentosActuales}`);
+  if (input.alergias)          partes.push(`Alergias: ${input.alergias}`);
+  if (input.sistemasComprometidos) partes.push(`Sistemas comprometidos: ${input.sistemasComprometidos}`);
+
+  const prompt = `El médico acaba de terminar una consulta y necesita tu apoyo para decidir qué prescribir.
+
+Tu tarea: basándote en el cuadro clínico completo del paciente, recomienda al médico:
+1. Medicamentos que podrían ser apropiados para el cuadro. (Es importante que des los componentes del medicamento)
+2. Suplementos y nutracéuticos que sean clínicamente relevantes para este paciente. (Es importante que des los componentes del suplemento/nutraceutico)
+
+El médico DECIDE si los prescribe o no — tú solo recomiendas con base clínica.
+
+CONTEXTO CLÍNICO DEL PACIENTE:
+${partes.join('\n') || '(sin datos de preconsulta)'}
+
+${input.transcripcion ? `LO DISCUTIDO EN LA CONSULTA:\n${input.transcripcion}` : ''}
+
+Devuelve EXCLUSIVAMENTE un JSON válido sin markdown:
+{
+  "medicamentos": [
+    {"nombre":"...","dosis":"...","frecuencia":"...","via":"...","indicacion":"...","componentes":"..."}
+  ],
+  "suplementos": [
+    {"nombre":"...","dosis":"...","frecuencia":"...","indicacion":"...","beneficio":"...","componentes":"..."}
+  ]
+}
+NUNCA incluyas texto fuera del JSON. NUNCA escribas en inglés ni comentarios meta.`;
+
+  const raw = await invokeCrisaliaAgent(prompt, {
+    sessionId: `meds-1-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    timeoutMs: input.timeoutMs ?? 300000,
+  });
+
+  try {
+    // Extraer JSON: buscar primer { y último } ignorando texto previo o markdown
+    const start = raw.indexOf('{');
+    const end   = raw.lastIndexOf('}');
+    if (start === -1 || end === -1 || end <= start) return { medicamentos: [], suplementos: [] };
+    const jsonStr = raw.slice(start, end + 1);
+    const parsed = JSON.parse(jsonStr);
+    return {
+      medicamentos: Array.isArray(parsed.medicamentos) ? parsed.medicamentos : [],
+      suplementos:  Array.isArray(parsed.suplementos)  ? parsed.suplementos  : [],
+    };
+  } catch {
+    return { medicamentos: [], suplementos: [] };
+  }
 }

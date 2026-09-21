@@ -32,6 +32,7 @@ import wearablesRoutes from './wearables';
 import recordatoriosRoutes from './recordatorios';
 import notificacionesRoutes from './notificaciones';
 import historialCompartidoRoutes from './historial-compartido';
+import recomendacionIARoutes from './recomendacion-ia';
 // import consultaRapidaRoutes from './consulta-rapida';
 
 const router = Router();
@@ -69,6 +70,7 @@ router.use('/wearables', wearablesRoutes);
 router.use('/recordatorios', recordatoriosRoutes);
 router.use('/notificaciones', notificacionesRoutes);
 router.use('/historial-compartido', historialCompartidoRoutes);
+router.use('/recomendacion-ia', recomendacionIARoutes);
 // router.use('/consulta-rapida', consultaRapidaRoutes);
 
 export default router;

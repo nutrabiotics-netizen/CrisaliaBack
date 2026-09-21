@@ -156,45 +156,45 @@ class InterrogatorioService {
       throw new Error('Interrogatorio no encontrado');
     }
 
-    // Si no se proporciona análisis IA, generarlo automáticamente
-    if (!analisisIA && Object.keys(interrogatorio.respuestas).length > 0) {
-      try {
-        const analisis = await openaiService.analizarInterrogatorio(
-          interrogatorio.respuestas,
-          {
-            disfuncionesAgent: interrogatorio.analisisFisiologicoIA,
-            notaMedico: (interrogatorio.recomendacionAutomatica as any)?.llamadoAccion,
-            ordenAbordaje: (interrogatorio.recomendacionAutomatica as any)?.estrategiasFuncionales,
-          }
-        );
-        interrogatorio.analisisIA = analisis.analisisIA;
-        interrogatorio.objetivos = analisis.objetivos;
-        if (analisis.historiaClinica) {
-          (interrogatorio as any).historiaClinica = analisis.historiaClinica;
-          interrogatorio.markModified('historiaClinica');
-        }
-        if (analisis.observacionesIA && analisis.observacionesIA.length > 0) {
-          interrogatorio.observacionesIA = analisis.observacionesIA;
-        }
-      } catch (error: any) {
-        console.error('Error al generar análisis con IA:', error);
-        // No guardar mensaje de error, dejar sin análisis para poder reintentar
-      }
-    } else {
-      // Usar los valores proporcionados si existen
-      if (analisisIA) {
-        interrogatorio.analisisIA = analisisIA;
-      }
-      
-      if (objetivos && objetivos.length > 0) {
-        interrogatorio.objetivos = objetivos;
-      }
-    }
-
-    interrogatorio.estado = 'completado';
+    // Marcar completado inmediatamente para que el dashboard no muestre "Completar Preconsulta"
+    // mientras OpenAI sigue procesando en segundo plano
+    interrogatorio.estado   = 'completado';
     interrogatorio.progreso = 100;
 
+    // Usar valores proporcionados si existen
+    if (analisisIA) interrogatorio.analisisIA = analisisIA;
+    if (objetivos && objetivos.length > 0) interrogatorio.objetivos = objetivos;
+
     await interrogatorio.save();
+
+    // Generar análisis IA en segundo plano (no bloquea la respuesta al cliente)
+    if (!analisisIA && Object.keys(interrogatorio.respuestas).length > 0) {
+      openaiService.analizarInterrogatorio(
+        interrogatorio.respuestas,
+        {
+          disfuncionesAgent: interrogatorio.analisisFisiologicoIA,
+          notaMedico: (interrogatorio.recomendacionAutomatica as any)?.llamadoAccion,
+          ordenAbordaje: (interrogatorio.recomendacionAutomatica as any)?.estrategiasFuncionales,
+        }
+      ).then(async (analisis) => {
+        try {
+          const update: Record<string, any> = {
+            analisisIA:    analisis.analisisIA,
+            objetivos:     analisis.objetivos,
+          };
+          if (analisis.historiaClinica) update.historiaClinica = analisis.historiaClinica;
+          if (analisis.observacionesIA && analisis.observacionesIA.length > 0) {
+            update.observacionesIA = analisis.observacionesIA;
+          }
+          await Interrogatorio.findByIdAndUpdate(interrogatorio._id, update);
+          console.info('[completarInterrogatorio] análisis OpenAI guardado para', interrogatorio._id.toString());
+        } catch (e) {
+          console.error('[completarInterrogatorio] error guardando análisis OpenAI:', e);
+        }
+      }).catch(err => {
+        console.error('[completarInterrogatorio] error generando análisis OpenAI:', err);
+      });
+    }
 
     return interrogatorio;
   }
