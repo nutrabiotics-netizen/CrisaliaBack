@@ -107,7 +107,7 @@ async function procesarResumenMedico(medicoId: string, slot: string): Promise<vo
       titulo:     `${saludo}, Dr. ${medico.nombre ?? ''} — Resumen del día`,
       cuerpo:     lineas.join(' '),
       requiereAccion: false,
-      accionUrl:  '/medico/centro-notificaciones',
+      accionUrl:  '/medico/dashboard',
       accionLabel: 'Ver bandeja',
     });
 

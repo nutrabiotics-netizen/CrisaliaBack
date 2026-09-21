@@ -71,16 +71,19 @@ export const subirParaclinico = async (req: AuthRequest, res: Response): Promise
     // Notificar al médico in-app
     const medicoIdResuelto = await resolverMedicoPaciente(String(pacienteId));
     if (medicoIdResuelto) {
+      const pac = await Paciente.findById(pacienteId).select('nombre apellido').lean();
+      const nombrePac = pac ? `${(pac as any).nombre ?? ''} ${(pac as any).apellido ?? ''}`.trim() : 'El paciente';
       void crearNotificacionMedico({
         medicoId: medicoIdResuelto,
         tipo: 'resultados_cargados',
         categoria: 'laboratorios_resultados',
         titulo: 'Resultados de laboratorio cargados',
-        cuerpo: 'El paciente subió nuevos resultados de laboratorio pendientes de revisión.',
+        cuerpo: `${nombrePac} subió nuevos resultados de laboratorio pendientes de revisión.`,
         requiereAccion: true,
-        accionUrl: '/medico/pacientes',
+        accionUrl: `/medico/pacientes?pacienteId=${String(pacienteId)}&modal=laboratorios`,
         accionLabel: 'Ver resultados',
         pacienteId: String(pacienteId),
+        pacienteNombre: nombrePac,
       });
     }
   } catch (error) {
@@ -168,16 +171,19 @@ export const subirParaclinicoArchivo = async (req: AuthRequest, res: Response): 
     // Notificar al médico in-app
     const medicoIdResuelto = await resolverMedicoPaciente(String(pacienteId));
     if (medicoIdResuelto) {
+      const pac = await Paciente.findById(pacienteId).select('nombre apellido').lean();
+      const nombrePac = pac ? `${(pac as any).nombre ?? ''} ${(pac as any).apellido ?? ''}`.trim() : 'El paciente';
       void crearNotificacionMedico({
         medicoId: medicoIdResuelto,
         tipo: 'resultados_cargados',
         categoria: 'laboratorios_resultados',
         titulo: 'Resultados de laboratorio cargados',
-        cuerpo: 'El paciente subió nuevos resultados de laboratorio pendientes de revisión.',
+        cuerpo: `${nombrePac} subió nuevos resultados de laboratorio pendientes de revisión.`,
         requiereAccion: true,
-        accionUrl: '/medico/pacientes',
+        accionUrl: `/medico/pacientes?pacienteId=${String(pacienteId)}&modal=laboratorios`,
         accionLabel: 'Ver resultados',
         pacienteId: String(pacienteId),
+        pacienteNombre: nombrePac,
       });
     }
   } catch (error) {
