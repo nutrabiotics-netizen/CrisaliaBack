@@ -37,6 +37,7 @@ app.use(
     origin: (origin, callback) => {
       const allowed = [
         "https://nutrabiotics.mozartai.com.co",
+        "https://api.nutrabiotics.mozartai.com.co",
         "https://app.nutrabiotics.mozartia.com",
         "http://localhost:5173",
       ];
