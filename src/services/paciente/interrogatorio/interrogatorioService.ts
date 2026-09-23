@@ -145,7 +145,8 @@ class InterrogatorioService {
     interrogatorioId: string,
     pacienteId: string,
     analisisIA?: string,
-    objetivos?: string[]
+    objetivos?: string[],
+    alertaMedica?: { motivo: string; instruccion: string; mensajeUrgencias: string; banderasRojas: string[] }
   ): Promise<IInterrogatorio> {
     const interrogatorio = await Interrogatorio.findOne({
       _id: interrogatorioId,
@@ -160,6 +161,11 @@ class InterrogatorioService {
     // mientras OpenAI sigue procesando en segundo plano
     interrogatorio.estado   = 'completado';
     interrogatorio.progreso = 100;
+
+    if (alertaMedica) {
+      interrogatorio.alertaMedica = { ...alertaMedica, registradoEn: new Date() };
+      interrogatorio.markModified('alertaMedica');
+    }
 
     // Usar valores proporcionados si existen
     if (analisisIA) interrogatorio.analisisIA = analisisIA;

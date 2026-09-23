@@ -27,25 +27,7 @@
     {
       "id": "s03_evento_inicio",
       "text": "¿Con qué eventos coincidieron el inicio o el empeoramiento de tu condición? (marca todos los que apliquen)",
-      "type": "checkbox",
-      "options": [
-        { "value": "infeccion_aguda", "label": "Una infección aguda" },
-        { "value": "cirugia", "label": "Una cirugía" },
-        { "value": "embarazo_posparto", "label": "Un embarazo o posparto" },
-        { "value": "trauma_fisico", "label": "Un trauma físico o accidente" },
-        { "value": "perdida_duelo", "label": "Una pérdida o duelo" },
-        { "value": "ruptura_relacional", "label": "Una ruptura o conflicto relacional" },
-        { "value": "cambio_trabajo", "label": "Un cambio de trabajo o desempleo" },
-        { "value": "viaje_mudanza", "label": "Un viaje o cambio de residencia" },
-        { "value": "antibiotico_prolongado", "label": "Un tratamiento antibiótico prolongado" },
-        { "value": "corticoides_quimio", "label": "Un ciclo de corticoides o quimioterapia" },
-        { "value": "anticoncepcion_hormonal", "label": "Inicio o suspensión de anticoncepción hormonal" },
-        { "value": "intoxicacion_alimentaria", "label": "Una intoxicación alimentaria" },
-        { "value": "vacuna", "label": "Una vacuna" },
-        { "value": "moho", "label": "Una mudanza a vivienda con humedad o moho" },
-        { "value": "estres_extremo", "label": "Un periodo de estrés extremo sostenido" },
-        { "value": "ningun_evento", "label": "No lo relaciono con ningún evento" }
-      ]
+      "type": "text"
     },
     
     { "id": "s03_objetivo_a", "text": "Objetivo de bienestar a", "type": "text" },

@@ -320,9 +320,15 @@ export const completarInterrogatorio = async (req: AuthRequest, res: Response): 
       return;
     }
 
+    const { analisisIA, objetivos, alertaMedica } = req.body ?? {};
+    const hayAlertaMedica = !!(alertaMedica?.motivo);
+
     const interrogatorio = await interrogatorioService.completarInterrogatorio(
       interrogatorioId as string,
-      pacienteId
+      pacienteId,
+      analisisIA,
+      objetivos,
+      alertaMedica
     );
 
     res.json({
@@ -357,6 +363,21 @@ export const completarInterrogatorio = async (req: AuthRequest, res: Response): 
         pacienteId: String(pacienteId),
         pacienteNombre: nombrePac,
       });
+
+      if (hayAlertaMedica) {
+        void crearNotificacionMedico({
+          medicoId: String(medicoId),
+          tipo: 'alerta_medica',
+          categoria: 'seguimiento_clinico',
+          titulo: '🚨 Alerta médica detectada',
+          cuerpo: `${nombrePac} activó una alerta médica durante la preconsulta: ${alertaMedica.motivo}`,
+          requiereAccion: true,
+          accionUrl: `/medico/pacientes?pacienteId=${String(pacienteId)}&modal=preconsulta`,
+          accionLabel: 'Ver alerta',
+          pacienteId: String(pacienteId),
+          pacienteNombre: nombrePac,
+        });
+      }
     }
   } catch (error: any) {
     console.error('Error al completar interrogatorio:', error);

@@ -86,6 +86,7 @@ export interface AgentDecisionAlertaMedica {
   seccion_item: string;
   valor_reportado: number;
   instruccion: string;
+  mensaje_urgencias: string;
   banderas_rojas: string[];
 }
 

@@ -262,7 +262,7 @@ La entrevista debe ser ADAPTATIVA: no hagas preguntas por completar casillas. Ex
 
 Basándote en toda la información disponible:
 
-- Si hay banderas rojas que requieren atención médica inmediata → accion: "alerta_medica"
+- Si hay banderas rojas que requieren atención médica inmediata → accion: "alerta_medica". En este caso incluye el campo "mensaje_urgencias": una frase corta y clara (máximo 2 oraciones) que el paciente debe decir en voz alta al llegar a urgencias para que el personal identifique rápidamente su cuadro. Redáctala en primera persona, sin tecnicismos, usando el lenguaje del paciente. Ejemplo: "Tengo un dolor opresivo en el pecho que se irradia al brazo izquierdo, comenzó hace 2 horas y es muy intenso."
 - Si falta información clínicamente relevante, ya sea del motivo de consulta O de otras áreas del perfil clínico → accion: "entrevistar"
 - Si el motivo de consulta está suficientemente caracterizado Y las áreas transversales relevantes ya fueron exploradas Y no identificas vacíos clínicamente importantes → accion: "generar_s37"
 

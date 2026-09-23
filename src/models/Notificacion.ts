@@ -11,6 +11,7 @@ export type TipoNotificacion =
   | 'preconsulta_100'
   | 'resultados_cargados'
   | 'seguimiento_evolucion'
+  | 'alerta_medica'
   | 'sugerencia_ia'
   | 'prescripcion_pendiente'
   | 'nuevo_paciente'
