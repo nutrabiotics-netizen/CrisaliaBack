@@ -76,6 +76,7 @@ class AgendamientoService {
         hora: this.formatearHoraDesde24Horas(cita.hora),
         tipo: cita.tipo,
         modalidad: cita.modalidad,
+        modoAgendamiento: cita.modoAgendamiento,
         estado: cita.estado,
         meetingId: cita.meetingId,
         grabacionUrl: cita.grabacionUrl,
