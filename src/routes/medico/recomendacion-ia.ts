@@ -73,7 +73,7 @@ router.post(
       let result: { medicamentos: any[]; suplementos: any[] };
       try {
         // Intentar con el Bedrock Agent (timeout generoso)
-        result = await recomendarMedicamentosConsulta({ ...inputAgent, timeoutMs: 300000 });
+        result = await recomendarMedicamentosConsulta({ ...inputAgent, timeoutMs: 600000 });
       } catch (agentErr: any) {
         // Fallback a Claude directo si el agent falla o tarda demasiado
         console.warn('[RecomendacionIA] Agent falló, usando Claude directo como fallback:', agentErr.message);

@@ -135,11 +135,14 @@ async function procesarRecordatorio(
   if (!citas.length) return;
 
   const medico = await Medico.findById(medicoId)
-    .select('nombre apellido especialidad direccionConsultorioHabilitado direccionVivienda')
+    .select('nombre apellido especialidad preajustes direccionConsultorioHabilitado direccionVivienda')
     .lean() as any;
   const nombreMed = medico ? `${medico.nombre ?? ''} ${medico.apellido ?? ''}`.trim() : 'tu médico';
   const especialidadMed = medico?.especialidad || 'Medicina Funcional';
-  const lugarCita = medico?.direccionConsultorioHabilitado || medico?.direccionVivienda || 'Consulta virtual';
+  const lugarCita = medico?.preajustes?.direccionAtencionPresencial
+    || medico?.direccionConsultorioHabilitado
+    || medico?.direccionVivienda
+    || 'Consulta presencial';
   const clave = claveRecordatorio(String(rec._id));
 
   for (const cita of citas) {

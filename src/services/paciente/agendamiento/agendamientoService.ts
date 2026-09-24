@@ -436,6 +436,13 @@ class AgendamientoService {
     cita.motivoCancelacion = motivoCancelacion;
     cita.canceladoPor = canceladoPor ? new mongoose.Types.ObjectId(canceladoPor) : undefined;
     cita.canceladoPorRol = canceladoPorRol || 'Paciente';
+    (cita.historial as any[]).push({
+      accion: 'cancelada',
+      fechaEvento: new Date(),
+      motivo: motivoCancelacion,
+      por: canceladoPor ? new mongoose.Types.ObjectId(canceladoPor) : undefined,
+      porRol: canceladoPorRol || 'Paciente',
+    });
     await cita.save();
 
     return {

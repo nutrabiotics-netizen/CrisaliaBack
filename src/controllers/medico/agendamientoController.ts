@@ -639,9 +639,27 @@ export const reagendarCita = async (req: AuthRequest, res: Response): Promise<vo
     const { parseFechaColombia } = await import('../../utils/dateHelper');
     const nuevaFechaObj = parseFechaColombia(String(nuevaFecha));
 
+    const citaActual = await Cita.findOne({ _id: citaId, medicoId });
+    if (!citaActual) { res.status(404).json({ success: false, message: 'Cita no encontrada' }); return; }
+
+    const fechaAnterior = citaActual.fecha;
+    const horaAnterior = citaActual.hora;
+
     const citaActualizada = await Cita.findOneAndUpdate(
       { _id: citaId, medicoId },
-      { $set: { fecha: nuevaFechaObj, hora: String(nuevaHora), estado: 'confirmada', actualizadoPor: medicoId, actualizadoPorRol: 'Medico' } },
+      {
+        $set: { fecha: nuevaFechaObj, hora: String(nuevaHora), estado: 'confirmada', actualizadoPor: medicoId, actualizadoPorRol: 'Medico' },
+        $push: {
+          historial: {
+            accion: 'reagendada',
+            fechaEvento: new Date(),
+            fechaAnterior,
+            horaAnterior,
+            por: medicoId,
+            porRol: 'Medico',
+          }
+        }
+      },
       { new: true }
     );
 

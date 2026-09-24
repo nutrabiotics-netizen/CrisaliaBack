@@ -107,12 +107,61 @@ class AgendamientoService {
   }
 
   async obtenerCitasHoy(medicoId: string): Promise<ICita[]> {
+    // Citas guardadas a T05:00:00Z (medianoche Colombia). Usamos $lt mañana midnight
+    // para no pasar por el finDia-extension de obtenerCitasMedico que incluiría mañana.
     const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
+    hoy.setUTCHours(0, 0, 0, 0);
     const mañana = new Date(hoy);
-    mañana.setDate(mañana.getDate() + 1);
+    mañana.setUTCDate(mañana.getUTCDate() + 1);
 
-    return this.obtenerCitasMedico(medicoId, hoy, mañana);
+    const query: any = {
+      medicoId,
+      fecha: { $gte: hoy, $lt: mañana },
+    };
+
+    const citas = await Cita.find(query)
+      .populate('pacienteId', 'nombre apellido email telefono tipoDocumento numeroDocumento fechaNacimiento genero sexoBiologico direccion estadoCivil grupoSanguineo rh escolaridad ocupacion condicionDesplazamiento grupoEtnico eps aseguradora')
+      .sort({ fecha: 1, hora: 1 })
+      .lean();
+
+    return citas.map(cita => {
+      let pacienteIdStr: string;
+      let pacienteNombre: string | undefined;
+      let pacienteApellido: string | undefined;
+      let paciente: Record<string, unknown> | undefined;
+
+      if (typeof cita.pacienteId === 'object' && cita.pacienteId !== null && '_id' in cita.pacienteId) {
+        const pob = cita.pacienteId as any;
+        pacienteIdStr = pob._id.toString();
+        pacienteNombre = pob.nombre;
+        pacienteApellido = pob.apellido;
+        paciente = { _id: pob._id.toString(), nombre: pob.nombre, apellido: pob.apellido, email: pob.email, telefono: pob.telefono, fechaNacimiento: pob.fechaNacimiento, genero: pob.genero };
+      } else {
+        pacienteIdStr = cita.pacienteId ? (cita.pacienteId as any).toString() : '';
+      }
+
+      const citaRetorno: any = {
+        _id: cita._id.toString(),
+        pacienteId: pacienteIdStr,
+        medicoId: cita.medicoId.toString(),
+        fecha: cita.fecha,
+        hora: this.formatearHoraDesde24Horas(cita.hora),
+        tipo: cita.tipo,
+        modalidad: cita.modalidad,
+        modoAgendamiento: cita.modoAgendamiento,
+        estado: cita.estado,
+        meetingId: cita.meetingId,
+        motivoCancelacion: cita.motivoCancelacion,
+        createdAt: cita.createdAt,
+        updatedAt: cita.updatedAt,
+      };
+
+      if (pacienteNombre) citaRetorno.pacienteNombre = pacienteNombre;
+      if (pacienteApellido) citaRetorno.pacienteApellido = pacienteApellido;
+      if (paciente) citaRetorno.paciente = paciente;
+
+      return citaRetorno;
+    });
   }
 
   async confirmarCita(
@@ -186,6 +235,13 @@ class AgendamientoService {
     cita.motivoCancelacion = motivoCancelacion;
     cita.canceladoPor = canceladoPor ? new mongoose.Types.ObjectId(canceladoPor) : undefined;
     cita.canceladoPorRol = canceladoPorRol || 'Medico';
+    (cita.historial as any[]).push({
+      accion: 'cancelada',
+      fechaEvento: new Date(),
+      motivo: motivoCancelacion,
+      por: canceladoPor ? new mongoose.Types.ObjectId(canceladoPor) : undefined,
+      porRol: canceladoPorRol || 'Medico',
+    });
     await cita.save();
 
     return {

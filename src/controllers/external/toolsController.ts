@@ -549,6 +549,15 @@ export const reagendarCita = async (req: ExternalPhoneRequest, res: Response): P
     (citaActual as any).motivoCancelacion = motivo?.trim() || 'Reagendada por el paciente';
     (citaActual as any).canceladoPor = pacienteId;
     (citaActual as any).canceladoPorRol = 'Paciente';
+    (citaActual.historial as any[]).push({
+      accion: 'reagendada',
+      fechaEvento: new Date(),
+      fechaAnterior: citaActual.fecha,
+      horaAnterior: citaActual.hora,
+      motivo: motivo?.trim() || 'Reagendada por el paciente',
+      por: pacienteId,
+      porRol: 'Paciente',
+    });
     await citaActual.save();
 
     // 5. Crear nueva cita con mismos datos pero nueva fecha/hora

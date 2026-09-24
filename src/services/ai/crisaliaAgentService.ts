@@ -478,7 +478,7 @@ NUNCA incluyas texto fuera del JSON. NUNCA escribas en inglés ni comentarios me
 
   const raw = await invokeCrisaliaAgent(prompt, {
     sessionId: `meds-1-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-    timeoutMs: input.timeoutMs ?? 300000,
+    timeoutMs: input.timeoutMs ?? 600000,
   });
 
   try {

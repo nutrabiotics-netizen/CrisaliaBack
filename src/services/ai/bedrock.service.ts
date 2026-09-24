@@ -168,7 +168,7 @@ async function invokeClaudeDirect(input: BedrockAgentInput): Promise<string> {
     const t0 = Date.now();
     const raw = await invokeBedrockText(userPrompt, {
       system: CLINICAL_DOCUMENTATION_SYSTEM_PROMPT,
-      maxTokens: 2000,
+      maxTokens: 4096,
       temperature: 0.1
     });
     console.log('[BedrockService] ◀ Claude direct respuesta', {

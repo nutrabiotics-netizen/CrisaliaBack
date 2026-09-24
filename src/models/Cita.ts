@@ -40,6 +40,15 @@ export interface ICita extends Document {
     motivo?: string;
     registradoPor?: mongoose.Types.ObjectId;
   };
+  historial?: Array<{
+    accion: 'creada' | 'cancelada' | 'reagendada' | 'confirmada' | 'completada';
+    fechaEvento: Date;
+    fechaAnterior?: Date;
+    horaAnterior?: string;
+    motivo?: string;
+    por?: mongoose.Types.ObjectId;
+    porRol?: string;
+  }>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -137,6 +146,18 @@ const CitaSchema = new Schema<ICita>(
         registradoPor: { type: Schema.Types.ObjectId }
       }, { _id: false }),
       default: undefined
+    },
+    historial: {
+      type: [new Schema({
+        accion: { type: String, enum: ['creada', 'cancelada', 'reagendada', 'confirmada', 'completada'], required: true },
+        fechaEvento: { type: Date, required: true },
+        fechaAnterior: { type: Date },
+        horaAnterior: { type: String },
+        motivo: { type: String, trim: true },
+        por: { type: Schema.Types.ObjectId },
+        porRol: { type: String }
+      }, { _id: false })],
+      default: []
     }
   },
   {
