@@ -1,11 +1,10 @@
 import { Router } from 'express';
-import { authenticate, authorize } from '../../middleware/auth';
-import { UserRole } from '../../types/index';
+import { authenticate } from '../../middleware/auth';
 import { getVideoUrl } from '../../controllers/medico/videosController';
 
 const router = Router();
 
 // GET /api/medico/videos/url?key=video.mp4
-router.get('/url', authenticate, authorize(UserRole.MEDICO), getVideoUrl);
+router.get('/url', authenticate, getVideoUrl);
 
 export default router;
