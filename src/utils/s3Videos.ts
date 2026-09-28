@@ -10,7 +10,9 @@ const s3VideosClient = new S3Client({
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
       }
-    : undefined
+    : undefined,
+  requestChecksumCalculation: 'WHEN_REQUIRED',
+  responseChecksumValidation: 'WHEN_REQUIRED',
 });
 
 // Genera una URL prefirmada válida por 1 hora para reproducir un video del bucket privado
@@ -18,9 +20,6 @@ export async function getVideoSignedUrl(videoKey: string): Promise<string> {
   if (!VIDEOS_BUCKET) {
     throw new Error('AWS_S3_VIDEOS_BUCKET no configurado');
   }
-  const command = new GetObjectCommand({ Bucket: VIDEOS_BUCKET, Key: videoKey });
-  return getSignedUrl(s3VideosClient, command, {
-    expiresIn: 3600,
-    unhoistableHeaders: new Set(['x-amz-checksum-mode']),
-  });
+  const command = new GetObjectCommand({ Bucket: VIDEOS_BUCKET, Key: videoKey, ChecksumMode: undefined });
+  return getSignedUrl(s3VideosClient, command, { expiresIn: 3600 });
 }
