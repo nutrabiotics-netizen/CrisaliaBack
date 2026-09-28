@@ -19,5 +19,8 @@ export async function getVideoSignedUrl(videoKey: string): Promise<string> {
     throw new Error('AWS_S3_VIDEOS_BUCKET no configurado');
   }
   const command = new GetObjectCommand({ Bucket: VIDEOS_BUCKET, Key: videoKey });
-  return getSignedUrl(s3VideosClient, command, { expiresIn: 3600 });
+  return getSignedUrl(s3VideosClient, command, {
+    expiresIn: 3600,
+    unhoistableHeaders: new Set(['x-amz-checksum-mode']),
+  });
 }
