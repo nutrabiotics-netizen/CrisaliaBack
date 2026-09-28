@@ -110,7 +110,7 @@ export interface AnamnesisAgentOptions {
  */
 async function invokeRaw(prompt: string, opts: AnamnesisAgentOptions = {}): Promise<string> {
   const sessionId = opts.sessionId || `anamnesis-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const timeoutMs = opts.timeoutMs ?? 100000;
+  const timeoutMs = opts.timeoutMs ?? 180000;
   const t0        = Date.now();
 
   console.log('[AnamnesisAgent] ▶ invoke', {

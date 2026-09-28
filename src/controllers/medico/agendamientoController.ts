@@ -18,6 +18,7 @@ import Medico from '../../models/Medico';
 import Meeting from '../../models/Meeting';
 import mongoose from 'mongoose';
 import { fetchImageAsBuffer } from '../../utils/pdfGenerator';
+import { crearNotificacionPaciente } from '../../utils/notificacionPacienteHelper';
 import { notificarCitaConfirmadaPorMedico, notificarCitaReagendadaPaciente, notificarCitaCanceladaPorMedico } from '../../services/notifications/citaWhatsAppNotifier';
 
 const crearJornadasPorDefecto = (): IJornadaConfig[] => {
@@ -384,6 +385,13 @@ export const confirmarCita = async (req: AuthRequest, res: Response): Promise<vo
     });
 
     void notificarCitaConfirmadaPorMedico(citaId as string);
+    void crearNotificacionPaciente({
+      pacienteId: String(citaAnterior.pacienteId),
+      tipo: 'cita_confirmada',
+      titulo: 'Cita confirmada',
+      mensaje: `Tu cita ha sido confirmada por tu médico.`,
+      datos: { citaId },
+    });
   } catch (error: any) {
     console.error('Error al confirmar cita:', error);
     
@@ -505,6 +513,13 @@ export const cancelarCita = async (req: AuthRequest, res: Response): Promise<voi
     });
 
     void notificarCitaCanceladaPorMedico(String(citaAnterior._id), tipoCancelacion, mensajeAdicional);
+    void crearNotificacionPaciente({
+      pacienteId: String(citaAnterior.pacienteId),
+      tipo: 'cita_cancelada',
+      titulo: 'Cita cancelada',
+      mensaje: motivoCancelacion ? `Tu cita fue cancelada. Motivo: ${motivoCancelacion}` : 'Tu cita ha sido cancelada por tu médico.',
+      datos: { citaId },
+    });
     void import('../../utils/googleCalendarSync').then(m =>
       m.syncCitaGoogleCalendar(String(req.userId), String(citaAnterior._id), 'eliminar')
     );
@@ -669,6 +684,13 @@ export const reagendarCita = async (req: AuthRequest, res: Response): Promise<vo
     res.json({ success: true, message: 'Cita reagendada correctamente', data: citaActualizada });
 
     void notificarCitaReagendadaPaciente(String(citaActualizada._id), mensajeAdicionalReagendar);
+    void crearNotificacionPaciente({
+      pacienteId: String(citaActual.pacienteId),
+      tipo: 'cita_reagendada',
+      titulo: 'Cita reagendada',
+      mensaje: `Tu cita fue reagendada para el ${nuevaFecha} a las ${nuevaHora}.`,
+      datos: { citaId, nuevaFecha, nuevaHora },
+    });
     void import('../../utils/googleCalendarSync').then(m =>
       m.syncCitaGoogleCalendar(String(req.userId), String(citaActualizada._id), 'actualizar')
     );

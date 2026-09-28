@@ -442,7 +442,7 @@ export async function recomendarMedicamentosConsulta(input: {
   sistemasComprometidos?: string;
   transcripcion?: string;
   timeoutMs?: number;
-}): Promise<{ medicamentos: any[]; suplementos: any[] }> {
+}): Promise<{ medicamentos: any[]; suplementos: any[]; habitos: any[]; laboratorios: any[] }> {
   const partes: string[] = [];
   if (input.pacienteNombre) partes.push(`Paciente: ${input.pacienteNombre}${input.edad ? `, ${input.edad} años` : ''}${input.sexo ? `, sexo: ${input.sexo}` : ''}`);
   if (input.motivoConsulta)    partes.push(`Motivo de consulta: ${input.motivoConsulta}`);
@@ -452,13 +452,15 @@ export async function recomendarMedicamentosConsulta(input: {
   if (input.alergias)          partes.push(`Alergias: ${input.alergias}`);
   if (input.sistemasComprometidos) partes.push(`Sistemas comprometidos: ${input.sistemasComprometidos}`);
 
-  const prompt = `El médico acaba de terminar una consulta y necesita tu apoyo para decidir qué prescribir.
+  const prompt = `El médico acaba de terminar una consulta y necesita tu apoyo clínico integral.
 
 Tu tarea: basándote en el cuadro clínico completo del paciente, recomienda al médico:
-1. Medicamentos que podrían ser apropiados para el cuadro. (Es importante que des los componentes del medicamento)
-2. Suplementos y nutracéuticos que sean clínicamente relevantes para este paciente. (Es importante que des los componentes del suplemento/nutraceutico)
+1. Medicamentos que podrían ser apropiados para el cuadro (Es importante que des los componentes del suplemento/nutraceutico).
+2. Suplementos y nutracéuticos que sean clínicamente relevantes para este paciente. (Es importante que des los componentes del suplemento/nutraceutico).
+3. Hábitos y alimentación: cambios de estilo de vida, dieta, ejercicio, sueño y hábitos específicos para este paciente.
+4. Laboratorios y estudios: exámenes de laboratorio o estudios diagnósticos recomendados para este caso.
 
-El médico DECIDE si los prescribe o no — tú solo recomiendas con base clínica.
+El médico DECIDE qué prescribir — tú solo recomiendas con base clínica.
 
 CONTEXTO CLÍNICO DEL PACIENTE:
 ${partes.join('\n') || '(sin datos de preconsulta)'}
@@ -472,6 +474,12 @@ Devuelve EXCLUSIVAMENTE un JSON válido sin markdown:
   ],
   "suplementos": [
     {"nombre":"...","dosis":"...","frecuencia":"...","indicacion":"...","beneficio":"...","componentes":"..."}
+  ],
+  "habitos": [
+    {"categoria":"alimentacion|ejercicio|sueño|estres|otro","recomendacion":"...","razon":"..."}
+  ],
+  "laboratorios": [
+    {"nombre":"...","codigoCups":"código CUPS Colombia si lo conoces, ej: 902336","tipo":"laboratorio|imagenologia|otro","indicacion":"...","prioridad":"urgente|rutina"}
   ]
 }
 NUNCA incluyas texto fuera del JSON. NUNCA escribas en inglés ni comentarios meta.`;
@@ -485,14 +493,16 @@ NUNCA incluyas texto fuera del JSON. NUNCA escribas en inglés ni comentarios me
     // Extraer JSON: buscar primer { y último } ignorando texto previo o markdown
     const start = raw.indexOf('{');
     const end   = raw.lastIndexOf('}');
-    if (start === -1 || end === -1 || end <= start) return { medicamentos: [], suplementos: [] };
+    if (start === -1 || end === -1 || end <= start) return { medicamentos: [], suplementos: [], habitos: [], laboratorios: [] };
     const jsonStr = raw.slice(start, end + 1);
     const parsed = JSON.parse(jsonStr);
     return {
-      medicamentos: Array.isArray(parsed.medicamentos) ? parsed.medicamentos : [],
-      suplementos:  Array.isArray(parsed.suplementos)  ? parsed.suplementos  : [],
+      medicamentos:  Array.isArray(parsed.medicamentos)  ? parsed.medicamentos  : [],
+      suplementos:   Array.isArray(parsed.suplementos)   ? parsed.suplementos   : [],
+      habitos:       Array.isArray(parsed.habitos)       ? parsed.habitos       : [],
+      laboratorios:  Array.isArray(parsed.laboratorios)  ? parsed.laboratorios  : [],
     };
   } catch {
-    return { medicamentos: [], suplementos: [] };
+    return { medicamentos: [], suplementos: [], habitos: [], laboratorios: [] };
   }
 }

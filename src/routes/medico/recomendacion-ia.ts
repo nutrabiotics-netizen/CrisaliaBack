@@ -5,8 +5,9 @@ import { recomendarMedicamentosConsulta } from '../../services/ai/crisaliaAgentS
 import { invokeBedrockText } from '../../services/ai/bedrockTextService';
 import Interrogatorio from '../../models/Interrogatorio';
 import Paciente from '../../models/Paciente';
+import Cups2026 from '../../models/Cups2026';
 
-const MEDS_FALLBACK_SYSTEM = `Eres un asistente clínico de apoyo al médico. A partir del contexto del paciente y la transcripción de la consulta, identifica medicamentos prescritos y suplementos relevantes. Devuelve SOLO JSON válido: {"medicamentos":[{"nombre":"...","dosis":"...","frecuencia":"...","indicacion":"..."}],"suplementos":[{"nombre":"...","dosis":"...","frecuencia":"...","beneficio":"..."}]}. Si no hay nada, devuelve {"medicamentos":[],"suplementos":[]}.`;
+const MEDS_FALLBACK_SYSTEM = `Eres un asistente clínico de apoyo al médico. Basándote en el cuadro clínico, recomienda: medicamentos, suplementos/nutracéuticos, hábitos/alimentación y laboratorios/estudios. Devuelve SOLO JSON válido: {"medicamentos":[{"nombre":"...","dosis":"...","frecuencia":"...","indicacion":"...","componentes":"..."}],"suplementos":[{"nombre":"...","dosis":"...","frecuencia":"...","indicacion":"...","beneficio":"...","componentes":"..."}],"habitos":[{"categoria":"alimentacion|ejercicio|sueño|estres|otro","recomendacion":"...","razon":"..."}],"laboratorios":[{"nombre":"...","codigoCups":"código CUPS Colombia si lo conoces","tipo":"laboratorio|imagenologia|otro","indicacion":"...","prioridad":"urgente|rutina"}]}. Si no hay nada en alguna categoría devuelve array vacío.`;
 
 const router = Router();
 
@@ -67,15 +68,13 @@ router.post(
       }
 
       if (!inputAgent.transcripcion && !inputAgent.motivoConsulta) {
-        return res.json({ medicamentos: [], suplementos: [] });
+        return res.json({ medicamentos: [], suplementos: [], habitos: [], laboratorios: [] });
       }
 
-      let result: { medicamentos: any[]; suplementos: any[] };
+      let result: { medicamentos: any[]; suplementos: any[]; habitos: any[]; laboratorios: any[] };
       try {
-        // Intentar con el Bedrock Agent (timeout generoso)
         result = await recomendarMedicamentosConsulta({ ...inputAgent, timeoutMs: 600000 });
       } catch (agentErr: any) {
-        // Fallback a Claude directo si el agent falla o tarda demasiado
         console.warn('[RecomendacionIA] Agent falló, usando Claude directo como fallback:', agentErr.message);
         const partes = [
           inputAgent.pacienteNombre && `Paciente: ${inputAgent.pacienteNombre}${inputAgent.edad ? `, ${inputAgent.edad} años` : ''}`,
@@ -87,22 +86,42 @@ router.post(
         ].filter(Boolean).join('\n');
         const raw = await invokeBedrockText(
           `${partes || '(sin datos de preconsulta)'}\n\n${inputAgent.transcripcion ? `Transcripción:\n${inputAgent.transcripcion}` : ''}`,
-          { system: MEDS_FALLBACK_SYSTEM, maxTokens: 800, temperature: 0.1 }
+          { system: MEDS_FALLBACK_SYSTEM, maxTokens: 1500, temperature: 0.1 }
         );
         try {
-          const parsed = JSON.parse(raw.replace(/```json\s*/gi, '').replace(/```/g, '').trim());
+          const start = raw.indexOf('{'); const end = raw.lastIndexOf('}');
+          const parsed = start !== -1 && end > start ? JSON.parse(raw.slice(start, end + 1)) : {};
           result = {
-            medicamentos: Array.isArray(parsed.medicamentos) ? parsed.medicamentos : [],
-            suplementos:  Array.isArray(parsed.suplementos)  ? parsed.suplementos  : [],
+            medicamentos:  Array.isArray(parsed.medicamentos)  ? parsed.medicamentos  : [],
+            suplementos:   Array.isArray(parsed.suplementos)   ? parsed.suplementos   : [],
+            habitos:       Array.isArray(parsed.habitos)       ? parsed.habitos       : [],
+            laboratorios:  Array.isArray(parsed.laboratorios)  ? parsed.laboratorios  : [],
           };
         } catch {
-          result = { medicamentos: [], suplementos: [] };
+          result = { medicamentos: [], suplementos: [], habitos: [], laboratorios: [] };
         }
       }
-      return res.json(result);
+      // Enriquecer laboratorios con código CUPS desde la BD
+      const laboratoriosEnriquecidos = await Promise.all(
+        (result.laboratorios || []).map(async (lab: any) => {
+          if (lab.codigoCups) return lab;
+          if (!lab.nombre) return lab;
+          try {
+            const palabras = lab.nombre.replace(/[^\w\sáéíóúñ]/gi, '').trim()
+              .split(/\s+/).filter((w: string) => w.length > 3).slice(0, 3);
+            if (!palabras.length) return lab;
+            const regex = new RegExp(palabras.join('.*'), 'i');
+            const cups = await Cups2026.findOne({ nombre: { $regex: regex } }).lean();
+            if (cups) return { ...lab, codigoCups: (cups as any).codigo, nombre: (cups as any).nombre };
+          } catch { /* ignorar */ }
+          return lab;
+        })
+      );
+
+      return res.json({ ...result, laboratorios: laboratoriosEnriquecidos });
     } catch (err: any) {
       console.error('[RecomendacionIA] error:', err.message);
-      return res.status(500).json({ error: err.message, medicamentos: [], suplementos: [] });
+      return res.status(500).json({ error: err.message, medicamentos: [], suplementos: [], habitos: [], laboratorios: [] });
     }
   }
 );

@@ -28,6 +28,12 @@ import chatRoutes from './chat';
 import wearablesRoutes from './wearables';
 import compartirHistorialRoutes from './compartir-historial';
 import { obtenerMiHistorial } from '../../controllers/paciente/miHistorialController';
+import {
+  listarNotificaciones,
+  marcarLeida,
+  marcarTodasLeidas,
+  eliminarNotificacion,
+} from '../../controllers/paciente/notificacionesPacienteController';
 // import consultaRapidaRoutes from './consulta-rapida';
 
 const router = Router();
@@ -53,6 +59,10 @@ router.use('/chat', chatRoutes);
 router.use('/wearables', wearablesRoutes);
 router.use('/compartir-historial', compartirHistorialRoutes);
 router.get('/mi-historial', authenticate, authorize(UserRole.PACIENTE), obtenerMiHistorial);
+router.get('/notificaciones', authenticate, authorize(UserRole.PACIENTE), listarNotificaciones);
+router.put('/notificaciones/leer-todas', authenticate, authorize(UserRole.PACIENTE), marcarTodasLeidas);
+router.put('/notificaciones/:id/leer', authenticate, authorize(UserRole.PACIENTE), marcarLeida);
+router.delete('/notificaciones/:id', authenticate, authorize(UserRole.PACIENTE), eliminarNotificacion);
 // router.use('/consulta-rapida', consultaRapidaRoutes);
 
 router.get('/heridas-cita/:citaId/info', authenticate, authorize(UserRole.PACIENTE), infoCitaHeridas);

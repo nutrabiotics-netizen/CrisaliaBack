@@ -18,7 +18,13 @@ export const verificarYCrearFormulaMedica = async (req: AuthRequest, res: Respon
       return;
     }
 
-    const { citaId, pacienteId, doctorId, medicamentos, sobrescribir } = req.body;
+    const { citaId, pacienteId, doctorId, sobrescribir } = req.body;
+    // Filtrar medicamentos sin campos requeridos (concentracion y formaFarmaceutica son required en el modelo)
+    const medicamentos = (req.body.medicamentos || []).filter((m: any) =>
+      m?.denominacionComun?.trim() &&
+      m?.concentracion?.trim() &&
+      m?.formaFarmaceutica?.trim()
+    );
 
     // Validar datos requeridos
     if (!citaId || !pacienteId || !doctorId || !medicamentos || !Array.isArray(medicamentos) || medicamentos.length === 0) {

@@ -20,6 +20,8 @@ import ConfiguracionRecordatorios, { IRecordatorio } from '../../models/Configur
 import { combineFechaCitaConHora } from '../../utils/citaFechaHora';
 import { normalizarTelefono } from '../whatsapp/whatsappService';
 import sgMail from '@sendgrid/mail';
+import { crearNotificacionPaciente } from '../../utils/notificacionPacienteHelper';
+import Interrogatorio from '../../models/Interrogatorio';
 
 const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'nutrabiotics@mozartai.com.co';
 if (process.env.SENDGRID_API_KEY) sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -199,6 +201,15 @@ async function procesarRecordatorio(
         });
       }
 
+      // Notificación web interna
+      void crearNotificacionPaciente({
+        pacienteId: String(cita.pacienteId),
+        tipo: 'recordatorio_cita',
+        titulo: 'Recordatorio de cita',
+        mensaje: `Tienes una cita con ${nombreMed} en ${tiempoTexto} — ${fechaFmt}.`,
+        datos: { citaId: String(cita._id) },
+      });
+
       // Marcar como enviado
       await Cita.findByIdAndUpdate(cita._id, {
         $addToSet: { notificacionesEnviadas: clave }
@@ -210,7 +221,83 @@ async function procesarRecordatorio(
   }
 }
 
+/**
+ * Busca citas en modo IA en los próximos 3 días donde el paciente
+ * no ha completado la preconsulta y le manda una notificación web.
+ * Se envía una sola vez por cita (clave notif_preconsulta_<citaId>).
+ */
+async function recordatorioPreconsulta(): Promise<void> {
+  const ahora = new Date();
+  const en3Dias = new Date(ahora.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+  const citas = await Cita.find({
+    modoAgendamiento: 'ia',
+    estado: { $in: ['pendiente', 'confirmada'] },
+    fecha: { $gte: ahora, $lte: en3Dias },
+  }).lean();
+
+  const hoyStr = ahora.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' }); // YYYY-MM-DD
+
+  for (const cita of citas) {
+    const claveHoy = `notif_preconsulta_${cita._id}_${hoyStr}`;
+    if ((cita.notificacionesEnviadas ?? []).includes(claveHoy)) continue;
+
+    const interrogatorio = await Interrogatorio.findOne({
+      pacienteId: cita.pacienteId,
+      estado: 'completado',
+    }).lean();
+
+    if (interrogatorio) continue; // ya completó
+
+    const paciente = await Paciente.findById(cita.pacienteId).select('nombre email').lean() as any;
+    if (!paciente) continue;
+
+    const fechaCita = new Date(cita.fecha).toLocaleDateString('es-CO', {
+      weekday: 'long', day: '2-digit', month: 'long', timeZone: 'America/Bogota',
+    });
+    const linkPreconsulta = `${process.env.FRONTEND_URL ?? 'https://nutrabiotics.mozartai.com.co'}/paciente/interrogatorio`;
+
+    // Notificación web
+    await crearNotificacionPaciente({
+      pacienteId: String(cita.pacienteId),
+      tipo: 'recordatorio_preconsulta',
+      titulo: 'Completa tu preconsulta',
+      mensaje: `Recuerda completar tu preconsulta antes de tu cita el ${fechaCita}.`,
+      datos: { citaId: String(cita._id) },
+    });
+
+    // Correo
+    if (paciente.email && process.env.SENDGRID_API_KEY) {
+      await sgMail.send({
+        to: paciente.email,
+        from: FROM_EMAIL,
+        subject: `Recuerda completar tu preconsulta — Crisal·IA`,
+        html: `
+          <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#f9f6fd;border-radius:12px">
+            <h2 style="color:#443c92;margin-bottom:8px">Completa tu preconsulta</h2>
+            <p style="color:#4470b2">Hola${paciente.nombre ? ` <strong>${paciente.nombre}</strong>` : ''},</p>
+            <p style="color:#4470b2">Recuerda completar tu formulario de preconsulta antes de tu cita el <strong>${fechaCita}</strong>. Esto nos ayuda a optimizar tu atención.</p>
+            <div style="margin:20px 0;text-align:center">
+              <a href="${linkPreconsulta}" style="display:inline-block;background:#FA867B;color:#fff;padding:12px 28px;border-radius:999px;text-decoration:none;font-weight:bold;font-size:14px">
+                Completar ahora
+              </a>
+            </div>
+            <p style="color:#6b7280;font-size:12px;margin-top:20px">Crisal·IA — Nutrabiotics</p>
+          </div>
+        `,
+      }).catch(e => console.error('[RecordatorioJob] Error correo preconsulta:', e));
+    }
+
+    await Cita.findByIdAndUpdate(cita._id, {
+      $addToSet: { notificacionesEnviadas: claveHoy },
+    });
+  }
+}
+
 export async function runRecordatorioJob(): Promise<void> {
+  // Recordatorio de preconsulta IA (independiente de la config de recordatorios del médico)
+  await recordatorioPreconsulta().catch(e => console.error('[RecordatorioJob] Error preconsulta:', e));
+
   const configs = await ConfiguracionRecordatorios.find({}).lean();
   if (!configs.length) return;
 
