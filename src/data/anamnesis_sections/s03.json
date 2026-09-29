@@ -22,7 +22,7 @@
       ]
     },
 
-    { "id": "s03_que_hacías_bien", "text": "¿Qué hacías en esa época que te permitía sentirte así de bien?", "type": "text" },
+    { "id": "s03_que_hacias_bien", "text": "¿Qué hacías en esa época que te permitía sentirte así de bien?", "type": "text" },
 
     {
       "id": "s03_evento_inicio",

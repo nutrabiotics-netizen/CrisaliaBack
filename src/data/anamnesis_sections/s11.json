@@ -165,7 +165,8 @@
         { "value": "trabajo_nocturno", "label": "Trabajo nocturno o por turnos" },
         { "value": "rechazo_afectivo", "label": "Rechazo afectivo" },
         { "value": "ejercicio_excesivo", "label": "Ejercicio físico excesivo sin recuperación" },
-        { "value": "privacion_sueno", "label": "Privación de sueño consciente y sostenida" }
+        { "value": "privacion_sueno", "label": "Privación de sueño consciente y sostenida" },
+        { "value": "ninguno", "label": "Ninguno"}
       ]
     },
     {

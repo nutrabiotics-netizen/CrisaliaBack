@@ -491,10 +491,11 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
     const {
       interrogatorioId,
       mensajeUsuario,
-      historial = [],
+      historial: historialCliente = [],
       seccionesActivas = {},
       idsPreguntaActivos = [],
       sintomaInicial = '',
+      requestId,
     } = req.body;
 
     if (!interrogatorioId || typeof interrogatorioId !== 'string') {
@@ -510,9 +511,13 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
 
     const respuestas = interrogatorio.respuestas || {};
 
-    // ── Construir resumen de respuestas ────────────────────────────────────────
+    // ── Construir resumen de respuestas (fuente de verdad para inferencia) ─────
     const CAMPOS_EXCLUIDOS = new Set(['historialChat', 'mensajeFinal', 'causas', 'zonasDolor']);
+    // ESCALA_LABELS solo aplica a ítems scale_0_3 (s11_, s12_, s13_... etc.), no a campos de texto o años
     const ESCALA_LABELS: Record<number, string> = { 0: 'nunca', 1: 'leve', 2: 'moderado', 3: 'intenso' };
+    const PREFIJOS_ESCALA = ['s10_', 's11_', 's12_', 's13_', 's14_', 's15_', 's16_', 's17_', 's18_', 's19_', 's20_', 's21_', 's22_', 's23_', 's24_', 's25_', 's26_', 's27_', 's28_', 's29_', 's30_', 's31_', 's32_', 's33_', 's34_', 's35_', 's36_'];
+    const esEscala = (k: string) => PREFIJOS_ESCALA.some(p => k.startsWith(p));
+
     const resumenRespuestas = Object.entries(respuestas)
       .filter(([k, v]) => {
         if (CAMPOS_EXCLUIDOS.has(k)) return false;
@@ -521,13 +526,35 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
         return true;
       })
       .map(([k, v]) => {
-        const valorStr = typeof v === 'number'
-          ? `${v} (${ESCALA_LABELS[v] ?? v})`
-          : Array.isArray(v) ? v.join(', ')
-          : String(v);
+        let valorStr: string;
+        if (typeof v === 'number') {
+          valorStr = esEscala(k) ? `${v} (${ESCALA_LABELS[v] ?? v})` : String(v);
+        } else if (Array.isArray(v)) {
+          valorStr = v.length > 0 && typeof v[0] === 'object'
+            ? JSON.stringify(v).slice(0, 300)
+            : v.join(', ');
+        } else if (typeof v === 'object') {
+          valorStr = JSON.stringify(v).slice(0, 300);
+        } else {
+          valorStr = String(v).slice(0, 300);
+        }
         return `${k}: ${valorStr}`;
       })
       .join('\n') || 'sin respuestas previas';
+
+    // ── Historial desde DB (fuente de verdad) ──────────────────────────────────
+    const historialDB: { rol: 'ia' | 'usuario'; texto: string }[] = (respuestas.historialChat ?? [])
+      .filter((m: any) => m.texto?.trim() && (m.rol === 'ia' || m.rol === 'usuario'))
+      .map((m: any) => ({ rol: m.rol as 'ia' | 'usuario', texto: m.texto }));
+
+    // Warning temporal de migración: detectar divergencia entre cliente y DB
+    if (historialCliente.length > 0 && Math.abs(historialCliente.length - historialDB.length) > 2) {
+      console.warn('[responderInterrogatorio] ⚠ historial cliente diverge de DB', {
+        cliente: historialCliente.length,
+        db: historialDB.length,
+        interrogatorioId,
+      });
+    }
 
     // ── MODO B: el paciente envió un mensaje → Claude responde ────────────────
     // También entra en Modo B si hay mensaje aunque seccionesActivas esté vacío
@@ -559,8 +586,24 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
         ? preguntasFiltradasModoB
         : [{ id: 'edicion_libre', text: 'Recoge la corrección o aclaración del paciente, actualiza internamente los campos correspondientes, confirma lo recibido brevemente y emite [[FIN_RONDA]].', type: 'text' }];
 
+      // Idempotencia por requestId: si ya guardamos este turno, devolver el último guardado
+      if (requestId) {
+        const ultimoTurno = historialDB[historialDB.length - 1];
+        if (ultimoTurno?.rol === 'usuario' && (ultimoTurno as any).requestId === requestId) {
+          const ultimaRespuesta = historialDB[historialDB.length - 2];
+          if (ultimaRespuesta?.rol === 'ia') {
+            console.log('[responderInterrogatorio] Modo B — requestId duplicado, devolviendo respuesta cacheada');
+            res.json({ success: true, data: { respuesta: ultimaRespuesta.texto, opciones: [], tipoOpciones: 'single', finRonda: false, progreso: interrogatorio.progreso } });
+            return;
+          }
+        }
+      }
+
+      // Historial para Claude: desde DB (últimos 20), el mensaje actual NO está aún en DB
+      const historialParaClaude = historialDB.slice(-20);
+
       const rawClaude = await responderInterrogatorioConClaude({
-        historial,
+        historial: historialParaClaude,
         mensajeUsuario: mensajeUsuario.trim(),
         sintomaInicial: sintomaInicial || respuestas['s03_sintoma_principal'] || 'consulta general',
         preguntasFiltradas: preguntasParaClaude,
@@ -568,21 +611,33 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
         nombrePaciente: respuestas['s01_nombre'] || undefined,
       });
 
-      // Extraer [[RESPUESTAS_RONDA]] si las hay y persistir
+      // Extraer [[RESPUESTAS_RONDA]] con lista blanca de IDs permitidos
       const respuestasRondaMatch = rawClaude.match(/\[\[RESPUESTAS_RONDA\]\]([\s\S]*?)\[\[\/RESPUESTAS_RONDA\]\]/);
       if (respuestasRondaMatch) {
         try {
           const respuestasRonda = JSON.parse(respuestasRondaMatch[1].trim());
-          interrogatorio.respuestas = { ...respuestas, ...respuestasRonda };
-          interrogatorio.markModified('respuestas');
-          await interrogatorio.save();
+          // Lista blanca: solo IDs de preguntas activas + sus ítems de tabla
+          const idsPermitidos = new Set<string>();
+          for (const q of preguntasParaClaude) {
+            idsPermitidos.add(q.id);
+            if (q.type === 'symptom_table' && Array.isArray(q.items)) {
+              q.items.forEach((it: any) => idsPermitidos.add(it.id));
+            }
+          }
+          const respuestasFiltradas = Object.fromEntries(
+            Object.entries(respuestasRonda).filter(([k]) => idsPermitidos.has(k))
+          );
+          if (Object.keys(respuestasFiltradas).length > 0) {
+            interrogatorio.respuestas = { ...interrogatorio.respuestas, ...respuestasFiltradas };
+            interrogatorio.markModified('respuestas');
+          }
         } catch { /* ignorar si falla el parse */ }
       }
 
       const finRonda = rawClaude.includes('[[FIN_RONDA]]');
 
       console.log('[responderInterrogatorio] Modo B — rawClaude preview:', rawClaude.slice(0, 300));
-      console.log('[responderInterrogatorio] Modo B — historialLen:', historial.length);
+      console.log('[responderInterrogatorio] Modo B — historialLen:', historialDB.length);
 
       // Encontrar el JSON ANTES de los bloques técnicos
       // Los bloques [[RESPUESTAS_RONDA]] y [[FIN_RONDA]] van después del JSON
@@ -642,13 +697,15 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
       console.log('[responderInterrogatorio] Modo B — textoFinal:', textoFinal.slice(0, 200));
       console.log('[responderInterrogatorio] Modo B — tipoOpciones:', tipoOpciones, '| tablaItems:', tablaItems.length, '| opciones:', opciones);
 
-      // Guardar historial con texto limpio (no JSON crudo) para que Claude no lo reproduzca
-      const historialExistente: any[] = respuestas.historialChat ?? [];
+      // Guardar historial: dos entradas atómicas (usuario + ia)
+      // requestId en el turno usuario permite detectar reintentos
+      const turnoUsuario: any = { rol: 'usuario', texto: mensajeUsuario.trim() };
+      if (requestId) turnoUsuario.requestId = requestId;
       interrogatorio.respuestas = {
         ...interrogatorio.respuestas,
         historialChat: [
-          ...historialExistente,
-          { rol: 'usuario', texto: mensajeUsuario.trim() },
+          ...(interrogatorio.respuestas?.historialChat ?? []),
+          turnoUsuario,
           { rol: 'ia', texto: textoFinal },
         ],
       };
@@ -756,19 +813,15 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
 
     console.log('[responderInterrogatorio] Modo A — preguntasFiltradas:', preguntasFiltradas.map(q => q.id));
 
-    // Historial previo — últimos 20 turnos para no exceder tokens
-    const todosLosTurnos: { rol: 'ia' | 'usuario'; texto: string }[] = (respuestas.historialChat ?? [])
-      .filter((m: any) => m.texto?.trim() && (m.rol === 'ia' || m.rol === 'usuario'))
-      .map((m: any) => ({ rol: m.rol as 'ia' | 'usuario', texto: m.texto }));
-    const historialPrevio = todosLosTurnos.slice(-20);
+    // Historial desde DB (fuente de verdad) — últimos 20 turnos
+    const historialPrevio = historialDB.slice(-20);
 
-    const instruccionNuevaRonda = historialPrevio.length > 0
-      ? `Continúa el interrogatorio con las siguientes preguntas. Empieza con la primera que no hayas hecho todavía.`
-      : `Inicia el interrogatorio con las siguientes preguntas.`;
+    // Mensaje neutro — el contenido va en el system prompt, no como instrucción del "usuario"
+    const mensajeArranque = historialPrevio.length > 0 ? 'Continuemos.' : 'Empecemos.';
 
     const primerMensaje = await responderInterrogatorioConClaude({
       historial: historialPrevio,
-      mensajeUsuario: instruccionNuevaRonda,
+      mensajeUsuario: mensajeArranque,
       sintomaInicial: sintomaInicial || respuestas['s03_sintoma_principal'] || 'consulta general',
       preguntasFiltradas,
       resumenRespuestas,
@@ -794,14 +847,23 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
     let tablaEscalaPrimer: 'frecuencia' | 'intensidad' = 'frecuencia';
     let columnasPrimer: string[] = [];
 
-    // Guardar respuestas del primer mensaje si Claude ya las incluyó
+    // Guardar respuestas del primer mensaje con lista blanca
     const respuestasRondaMatchA = primerMensaje.match(/\[\[RESPUESTAS_RONDA\]\]([\s\S]*?)\[\[\/RESPUESTAS_RONDA\]\]/);
     if (respuestasRondaMatchA) {
       try {
         const respuestasRonda = JSON.parse(respuestasRondaMatchA[1].trim());
-        interrogatorio.respuestas = { ...interrogatorio.respuestas, ...respuestasRonda };
-        interrogatorio.markModified('respuestas');
-        await interrogatorio.save();
+        const idsPermitidosA = new Set<string>();
+        for (const q of preguntasFiltradas) {
+          idsPermitidosA.add(q.id);
+          if (q.type === 'symptom_table' && Array.isArray(q.items)) {
+            q.items.forEach((it: any) => idsPermitidosA.add(it.id));
+          }
+        }
+        const filtradas = Object.fromEntries(Object.entries(respuestasRonda).filter(([k]) => idsPermitidosA.has(k)));
+        if (Object.keys(filtradas).length > 0) {
+          interrogatorio.respuestas = { ...interrogatorio.respuestas, ...filtradas };
+          interrogatorio.markModified('respuestas');
+        }
       } catch { /* ignorar */ }
     }
 
@@ -831,13 +893,16 @@ export const responderInterrogatorio = async (req: AuthRequest, res: Response): 
       } catch { /* usar texto completo */ }
     }
 
-    // Guardar primerMensaje en historialChat para que el siguiente Modo A
-    // lo vea en historialPrevio y no repita la pregunta.
+    // Guardar par usuario+ia en historialChat para mantener alternancia real en DB
     if (textoPrimer) {
       const histExistente: any[] = interrogatorio.respuestas?.historialChat ?? [];
       interrogatorio.respuestas = {
         ...interrogatorio.respuestas,
-        historialChat: [...histExistente, { rol: 'ia', texto: textoPrimer }],
+        historialChat: [
+          ...histExistente,
+          { rol: 'usuario', texto: mensajeArranque },   // turno neutro de arranque
+          { rol: 'ia', texto: textoPrimer },
+        ],
       };
       interrogatorio.markModified('respuestas');
       await interrogatorio.save();

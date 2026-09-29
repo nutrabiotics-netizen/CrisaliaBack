@@ -455,7 +455,7 @@ export function registerTranscriptionHandlers(wss: WebSocketServer): void {
               if (resp.s01_grasa_corporal)        svPartes.push(`grasa_corporal: ${resp.s01_grasa_corporal}%`);
               if (resp.s01_masa_muscular)          svPartes.push(`masa_muscular: ${resp.s01_masa_muscular} kg`);
               if (resp.s01_perimetro_abdominal)    svPartes.push(`perimetro_abdominal: ${resp.s01_perimetro_abdominal} cm`);
-              if (resp.s01_diagonosticado_peso)    svPartes.push(`diagnostico_peso: ${resp.s01_diagonosticado_peso}`);
+              if (resp.s01_diagnosticado_peso)    svPartes.push(`diagnostico_peso: ${resp.s01_diagnosticado_peso}`);
               // Instrucción explícita para el AI
               parts.push(`DATOS PARA SECCIÓN examen_fisico (ponlos EXACTAMENTE en la sección examen_fisico con estas claves JSON):\n${svPartes.join('\n')}`);
             }

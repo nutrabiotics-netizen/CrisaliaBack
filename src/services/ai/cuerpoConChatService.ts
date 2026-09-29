@@ -116,8 +116,6 @@ FASE 1 — DATOS GENERALES (s01): Después del saludo, recopila PRIMERO los dato
 
 FASE 2 — MOTIVO DE CONSULTA (s03): Solo después de completar los datos de s01 que faltan.
 
-REGLA DE LOTE — APLICA SIN EXCEPCIÓN: El sistema te entrega las preguntas en lotes numerados. En cada turno SOLO puedes hacer preguntas que estén en el lote actual. NUNCA anticipes preguntas de lotes futuros, aunque el paciente haya mencionado información relacionada. Cada lote se cierra con [[FIN_LOTE]] cuando sus preguntas estén resueltas.
-
 ⸻
 
 3. ESTRUCTURA DE PREGUNTAS
@@ -158,8 +156,6 @@ Usa la información ya recopilada para inferir respuestas cuando sean obvias. Ej
 - Si el paciente dijo "llevo 5 semanas con este dolor", NO preguntes "¿cuándo fue la última vez que te sentiste bien?" — la respuesta es obvia: hace 5 semanas. Registra internamente s03_ultima_vez_bien = "hace aproximadamente 5 semanas" y pasa a la siguiente pregunta.
 - Si el paciente describió un evento claro que inició el dolor, NO preguntes "¿con qué evento coincidió el inicio?" — ya lo sabes.
 En general: si una pregunta tiene una respuesta que puedes deducir con certeza razonable del contexto previo, infiere el valor internamente y salta esa pregunta.
-
-Para las tablas de síntomas (type: "symptom_table"), agrupa los ítems de forma conversacional. Incluye SIEMPRE el campo "escala" en el JSON de respuesta: usa "escala":"frecuencia" cuando la sección mide con qué frecuencia ocurre un síntoma (ej. alimentación, hábitos, síntomas digestivos); usa "escala":"intensidad" cuando mide con qué intensidad o gravedad se siente (ej. dolor, energía). Escala frecuencia: 0=Raro/excepcional, 1=Ocasional, 2=Frecuente, 3=Muy frecuente. Escala intensidad: 0=Nunca, 1=Leve, 2=Moderado, 3=Intenso/permanente.
 
 PREGUNTAS DEL LOTE ACTUAL (solo estas, en orden):
 {{PREGUNTAS_LOTE}}
@@ -204,8 +200,6 @@ Condiciones:
 - IRA pediátrica (2 meses a 5 años): episodios bronco-obstructivos, cuadros respiratorios agudos, EDA, bronquiolitis, neumonía, tosferina, crisis aguda de asma.
 - Dengue con signos de alarma: extravasación de plasma, sangrado espontáneo, disfunción orgánica, condiciones de mayor riesgo (embarazo, <1 año, >65 años, obesidad mórbida, HTA, diabetes, daño renal, hepatopatía crónica, anticoagulación).
 
-Cuando detectes una de estas condiciones, incluye "alertaPresencial": true ÚNICAMENTE en el PRIMER mensaje donde la identifiques. En todos los mensajes posteriores NO vuelvas a incluir este campo aunque el síntoma siga presente. Si el paciente ya respondió "Entendido" o similar, la alerta fue reconocida — continúa el flujo normal sin volver a emitirla SOLO si entendió la alerta.
-
 ⸻
 
 7. ESTILO DE COMUNICACIÓN
@@ -214,83 +208,16 @@ Cuando detectes una de estas condiciones, incluye "alertaPresencial": true ÚNIC
 - Habla directamente al paciente usando "tú".
 - Evita tecnicismos. Si usas uno, explícalo.
 - Una pregunta principal por mensaje.
-- Cuando el paciente responde con un número a una pregunta numérica, verifica si la pregunta tiene campos "min" y "max" en el JSON. Si los tiene y el valor está FUERA del rango, pide amablemente que lo corrija: "Ese valor parece estar fuera del rango esperado (min-max). ¿Podrías verificarlo?". Si está dentro del rango, acéptalo directamente y pasa a la siguiente pregunta. NUNCA digas "¿quisiste decir...?", "¿hubo un error de tipeo?" ni ninguna variante de confirmación. El número es válido tal como fue escrito.
+- Cuando el paciente responde con un número, acéptalo DIRECTAMENTE y pasa a la siguiente pregunta. La única excepción es si la pregunta tiene explícitamente los campos "min" y "max" definidos en el JSON del cuestionario (solo aplica a preguntas type "scale") Y el valor está FUERA de ese rango — en ese caso pide amablemente que lo corrija. NUNCA apliques validación de rango a preguntas type "text" ni a preguntas sin campos min/max en el JSON. NUNCA inventes rangos. NUNCA digas "¿quisiste decir...?", "¿hubo un error de tipeo?" ni ninguna variante de confirmación. El número es válido tal como fue escrito.
 - Solo pide aclaración si la respuesta es genuinamente ambigua (ej: texto incomprensible, o respuesta a una pregunta de opciones que no corresponde a ninguna opción).
 - Si el paciente responde de forma COMPLETA (número, opción seleccionada, texto claro), acepta la respuesta y continúa. Si la respuesta es INCOMPLETA (ej: solo dio nombre pero falta teléfono), pide conversacionalmente solo el dato que falta — sin repetir la pregunta completa.
 - NUNCA repitas una pregunta que ya hayas hecho en esta conversación. Antes de formular cada pregunta, revisa el historial completo para verificar que no fue preguntada ni respondida ya, aunque con palabras ligeramente distintas.
 
 ⸻
 
-8. RESPUESTA FINAL OBLIGATORIA
+8. FINALIZACIÓN
 
-SOLO genera la respuesta final cuando el sistema de lotes te indique que es el último lote (la instrucción dirá [[FIN_CONVERSACION]] en lugar de [[FIN_LOTE]]). NUNCA cierres la conversación por tu propia decisión antes de eso.
-
-Cuando el sistema indique el último lote y hayas completado sus preguntas, genera el JSON con el resumen:
-
-- El campo "texto" es el mensaje empático corto de cierre (máx 2 frases): "Gracias, {nombre}. Antes de continuar, revisemos lo que entendí hasta ahora."
-- El campo "resumen" contiene 4-6 ítems concretos de los síntomas del paciente (sin emojis, sin markdown).
-- El campo "enfoque" (OBLIGATORIO) es un párrafo sobre cómo Crisal-IA abordará el caso usando la sección 11 como referencia.
-- "opciones" debe ser [].
-
-Ejemplo:
-{
-  "texto": "Gracias, {nombre}. Antes de continuar, revisemos lo que entendí hasta ahora.",
-  "resumen": ["El dolor se encuentra en la zona lumbar", "Comenzó hace 3 días", "..."],
-  "enfoque": "Con base en lo que describes, el enfoque de Crisal-IA buscará...",
-  "opciones": [],
-  "tipoOpciones": "single",
-  "respuestaLibre": true
-}
-
-⸻
-
-9. FINALIZACIÓN
-
-REGLA: NUNCA emitas [[FIN_CONVERSACION]] por tu propia decisión. Solo usa [[FIN_LOTE]] al terminar las preguntas de cada lote. El sistema controlará cuándo termina la conversación.
-
-⸻
-
-10. INSTRUCCIÓN TÉCNICA FINAL (no visible para el paciente)
-
-Cuando hayas completado todos los criterios y entregado la RESPUESTA FINAL, agrega DESPUÉS del JSON los siguientes bloques:
-
-1. Tres posibles factores generales relacionados con los síntomas:
-[[CAUSAS]]
-[{"titulo":"...","desc":"..."},{"titulo":"...","desc":"..."},{"titulo":"...","desc":"..."}]
-[[/CAUSAS]]
-
-2. Las respuestas estructuradas recopiladas de s01 y s03.
-Usa EXACTAMENTE estos IDs (NO inventes variaciones):
-s01: s01_nombre, s01_nacimiento, s01_edad, s01_sexo, s01_educacion, s01_ocupacion, s01_anos_ocupacion, s01_jornada, s01_contacto_emergencia, s01_como_nos_conociste, s01_talla, s01_peso_actual, s01_grasa_corporal, s01_masa_muscular, s01_perimetro_abdominal, s01_diagonosticado_peso, s01_atleta, s01_peso_12meses, s01_medicion_electronica, s01_dispositivos
-s03: s03_sintomas_tabla (guarda como array de objetos, ej: [{"sintoma":"...","intensidad":"...","frecuencia":"...","aparecio":"...","agrava":"...","evolucion":"...","agravantes":"...","alivian":"..."}]), s03_limitacion, s03_que_hacias_bien, s03_evento_inicio, s03_objetivo_a, s03_objetivo_b, s03_disposicion
-[[RESPUESTAS_S01_S03]]
-
-[[/RESPUESTAS_S01_S03]]
-
-3. Inmediatamente después:
-[[FIN_CONVERSACION]]
-
-Los tres bloques van DESPUÉS del JSON de respuesta. No los incluyas en ningún otro mensaje.
-
-⸻
-
-FORMATO DE RESPUESTA OBLIGATORIO:
-
-Cada respuesta debe ser un JSON válido. SIN markdown, SIN bloques de código, sin texto antes o después del JSON (excepto los bloques técnicos que van DESPUÉS):
-
-Respuesta normal:
-{"texto":"El mensaje empático para el paciente","opciones":["Opción 1","Opción 2"],"tipoOpciones":"single","respuestaLibre":true}
-
-Respuesta final:
-{"texto":"Mensaje corto de cierre","resumen":["ítem 1","ítem 2","ítem 3","ítem 4"],"opciones":[],"tipoOpciones":"single","respuestaLibre":true}
-
-Reglas del JSON:
-- "texto": el mensaje principal, empático y en español
-- "resumen": SOLO en la respuesta final. Array de frases cortas que resumen lo que el paciente describió.
-- "opciones": incluye opciones cuando preguntes sobre campos con type "single" o "checkbox". Solo usa [] para preguntas abiertas y en la respuesta final.
-- "tipoOpciones": "single" o "checkbox" según el tipo del campo. Omitir si no hay opciones.
-- "respuestaLibre": siempre true
-- Los bloques técnicos van DESPUÉS del JSON, no dentro del campo "texto"`;
+NUNCA emitas [[FIN_CONVERSACION]]. Solo usa [[FIN_LOTE]] al completar cada lote. El backend controla el cierre.`;
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -351,7 +278,9 @@ Genera EXACTAMENTE este JSON:
 }
 
 El campo "resumen" debe tener 4-6 ítems concretos de los síntomas del paciente.
-El campo "enfoque" describe cómo Crisal-IA abordará el caso (elige la disfunción más relevante del historial).
+El campo "enfoque" describe cómo Crisal-IA abordará el caso usando el catálogo de disfunciones de referencia. Elige UNA sola disfunción — la que mejor explique el conjunto de síntomas del paciente. No mezcles ni combines varias disfunciones.
+
+${SECCION_11_DISFUNCIONES}
 
 Después del JSON agrega obligatoriamente:
 [[CAUSAS]]
@@ -363,7 +292,7 @@ Después del JSON agrega obligatoriamente:
 [[/RESPUESTAS_S01_S03]]
 
 Usa EXACTAMENTE estos IDs en [[RESPUESTAS_S01_S03]] (NO inventes variaciones):
-s01: s01_nombre, s01_nacimiento, s01_edad, s01_sexo, s01_educacion, s01_ocupacion, s01_anos_ocupacion, s01_jornada, s01_contacto_emergencia, s01_como_nos_conociste, s01_peso_actual, s01_talla, s01_grasa_corporal, s01_masa_muscular, s01_perimetro_abdominal, s01_diagonosticado_peso, s01_atleta, s01_peso_12meses, s01_medicion_electronica, s01_dispositivos
+s01: s01_nombre, s01_nacimiento, s01_edad, s01_sexo, s01_educacion, s01_ocupacion, s01_anos_ocupacion, s01_jornada, s01_contacto_emergencia, s01_como_nos_conociste, s01_peso_actual, s01_talla, s01_grasa_corporal, s01_masa_muscular, s01_perimetro_abdominal, s01_diagnosticado_peso, s01_atleta, s01_peso_12meses, s01_medicion_electronica, s01_dispositivos
 s03: s03_sintomas_tabla (array de objetos), s03_limitacion, s03_ultima_vez_bien, s03_que_hacias_bien, s03_evento_inicio, s03_objetivo_a, s03_objetivo_b, s03_disposicion
 
 [[FIN_CONVERSACION]]`;
@@ -562,15 +491,9 @@ Cuando hayas obtenido respuesta de TODAS las preguntas de este lote (o puedas in
     .replace('{{PREGUNTAS_LOTE}}', preguntasLoteTexto)
     .replace('{{INSTRUCCION_FIN_LOTE}}', instruccionFinLote);
 
-  // Sección 11 solo cuando el historial indica que estamos cerca del cierre
-  const inyectarSeccion11 = historial.length >= 18;
-  const basePrompt = process.env.CUERPO_CHAT_SYSTEM_PROMPT?.trim() || DEFAULT_PROMPT_CON_LOTE;
-  const systemPrompt = inyectarSeccion11
-    ? `${basePrompt}\n\n${SECCION_11_DISFUNCIONES}`
-    : basePrompt;
+  const systemPrompt = process.env.CUERPO_CHAT_SYSTEM_PROMPT?.trim() || DEFAULT_PROMPT_CON_LOTE;
 
-  // Truncar historial a los últimos 24 mensajes para evitar input descontrolado
-  const historialTruncado = historial.length > 24 ? historial.slice(-40) : historial;
+  const historialTruncado = historial.length > 24 ? historial.slice(-24) : historial;
 
   const messages: any[] = [];
 
@@ -614,7 +537,6 @@ NUNCA respondas en texto libre. SIEMPRE JSON.`;
     esUltimoLote,
     systemPromptLen:  contextoCompleto.length,
   });
-
   const command = new ConverseCommand({
     modelId: MODEL_ID,
     system: [{ text: contextoCompleto }],
@@ -779,25 +701,65 @@ ${JSON.stringify(preguntasSimplificadas)}`;
  * Devuelve el string crudo de Claude (mismo formato que responderCuerpoConChat).
  * El controller extrae: texto, opciones, tipoOpciones, [[FIN_RONDA]], [[RESPUESTAS_RONDA]].
  */
+/**
+ * Construye el array de messages para Bedrock garantizando alternancia user/assistant.
+ * - Inserta un mensaje user neutro entre dos assistant consecutivos (turnos ia,ia de BD).
+ * - El array siempre empieza con user y termina con el mensajeUsuario actual.
+ */
+function construirMessages(
+  primedUserMsg: string,
+  historial: MensajeChat[],
+  mensajeUsuario: string
+): any[] {
+  const msgs: any[] = [];
+
+  // Mensaje de priming inicial (siempre user)
+  msgs.push({ role: 'user', content: [{ text: primedUserMsg }] });
+
+  // Construir desde historial garantizando alternancia
+  let ultimoRol: 'user' | 'assistant' = 'user';
+  for (const m of historial) {
+    const rol = m.rol === 'usuario' ? 'user' : 'assistant';
+    // Si hay dos assistant seguidos, insertar user neutro
+    if (rol === 'assistant' && ultimoRol === 'assistant') {
+      msgs.push({ role: 'user', content: [{ text: 'Continuemos.' }] });
+    }
+    msgs.push({ role: rol, content: [{ text: m.texto }] });
+    ultimoRol = rol;
+  }
+
+  // Añadir el mensaje actual del usuario (siempre al final)
+  if (ultimoRol === 'user') {
+    // Dos user seguidos: insertar assistant neutro
+    msgs.push({ role: 'assistant', content: [{ text: '{"texto":"Entendido.","opciones":[],"tipoOpciones":"single","respuestaLibre":true}' }] });
+  }
+  msgs.push({ role: 'user', content: [{ text: mensajeUsuario }] });
+
+  return msgs;
+}
+
 export async function responderInterrogatorioConClaude(params: {
   historial: MensajeChat[];
   mensajeUsuario: string;
   sintomaInicial: string;
-  preguntasFiltradas: any[];   // preguntas extraídas del JSON según id_pregunta del Agent
+  preguntasFiltradas: any[];
   resumenRespuestas: string;
   nombrePaciente?: string;
 }): Promise<string> {
   const { historial, mensajeUsuario, sintomaInicial, preguntasFiltradas, resumenRespuestas, nombrePaciente } = params;
 
-  // Serializar las preguntas de forma concisa para Claude
+  // Serializar preguntas — incluye valores de opciones y datos de scale
   const preguntasTexto = preguntasFiltradas.map((q, i) => {
     let linea = `${i + 1}. [${q.id}] ${q.text || q.title || ''} (tipo: ${q.type}`;
-    if (q.type === 'single' && q.options?.length) {
-      linea += `, opciones: ${q.options.map((o: any) => o.label).join(' / ')}`;
-    } else if (q.type === 'checkbox' && q.options?.length) {
-      linea += `, opciones múltiples: ${q.options.map((o: any) => o.label).join(' / ')}`;
+    if ((q.type === 'single' || q.type === 'checkbox') && q.options?.length) {
+      const etiqueta = q.type === 'checkbox' ? 'opciones múltiples' : 'opciones';
+      linea += `, ${etiqueta}: ${q.options.map((o: any) => `${o.label}=${o.value ?? o.label}`).join(' / ')}`;
+    } else if (q.type === 'scale') {
+      linea += `, min: ${q.min ?? 0}, max: ${q.max ?? 10}, step: ${q.step ?? 1}`;
+      if (q.minLabel) linea += `, minLabel: "${q.minLabel}"`;
+      if (q.maxLabel) linea += `, maxLabel: "${q.maxLabel}"`;
     } else if (q.type === 'symptom_table' && q.items?.length) {
-      linea += `, escala: ${q.scale_type || 'frequency'}, ítems de tabla: ${q.items.map((it: any) => it.label).join(', ')}`;
+      linea += `, escala: ${q.scale_type || 'frequency'}, ítems con escala 0-3: ${q.items.map((it: any) => `${it.id}="${it.label}"`).join(', ')}`;
     } else if (q.type === 'table' && q.columns?.length) {
       linea += `, columnas: ${q.columns.join(' | ')}`;
     }
@@ -805,96 +767,62 @@ export async function responderInterrogatorioConClaude(params: {
     return linea;
   }).join('\n');
 
+  // IDs válidos para [[RESPUESTAS_RONDA]] (lista blanca)
+  const idsPermitidos = new Set<string>();
+  for (const q of preguntasFiltradas) {
+    idsPermitidos.add(q.id);
+    if (q.type === 'symptom_table' && q.items?.length) {
+      for (const it of q.items) idsPermitidos.add(it.id);
+    }
+  }
+
   const systemPrompt = `FASE 2 DEL INTERROGATORIO CLÍNICO — CRISAL-IA
 
 Eres Crisal-IA, recopilando información clínica del paciente para el médico funcional.
 
-1. PREGUNTAS A REALIZAR (en orden, una a la vez)
+━━━ DATOS YA CONOCIDOS DEL PACIENTE ━━━
+${resumenRespuestas || 'Sin datos previos.'}
 
+━━━ PREGUNTAS DE ESTA RONDA (en orden, una a la vez) ━━━
 ${preguntasTexto}
 
-Cuando hayas hecho TODAS las preguntas y recibido respuesta de cada una, emite [[FIN_RONDA]].
-NO hagas preguntas que no estén en esta lista.
+━━━ REGLAS ━━━
 
-2. INTELIGENCIA CONTEXTUAL
+1. INFERENCIA — usa los datos conocidos para evitar preguntas redundantes:
+   Antes de cada turno, compara CADA pregunta pendiente con los DATOS YA CONOCIDOS y con el historial. Si la respuesta puede deducirse con certeza (ej: está registrado que trabaja en turnos rotativos → NO preguntes tipo de jornada; registrado que no hace ejercicio → NO preguntes tipo de ejercicio), regístrala en [[RESPUESTAS_RONDA]] y pasa a la siguiente SIN formularla. PROHIBIDO: mencionar un dato que ya conoces y luego preguntarlo en el mismo turno. Ante duda razonable, pregunta.
 
-- NUNCA repitas una pregunta que ya hiciste — revisa el historial antes de cada turno.
-- Si el paciente ya respondió una pregunta (sea con texto, número o seleccionando una opción), acepta esa respuesta INMEDIATAMENTE y pasa a la siguiente. NUNCA la repitas ni la presentes de nuevo con opciones — ni siquiera al emitir [[FIN_RONDA]]. Si dijo "No" a un checkbox, es respuesta válida y completa.
-- Solo pide información adicional si la respuesta es genuinamente incompleta (ej: solo dio nombre sin teléfono). En ese caso pide solo el dato faltante, sin repetir la pregunta.
-- Adapta el tono según lo que el paciente ya respondió.
-- Si una pregunta no aplica (ej: embarazo a un hombre), omítela y pasa a la siguiente.
+2. PREGUNTAS: Solo de la lista de esta ronda. Una por turno. Si la respuesta ya se conoce o se puede inferir, omítela. Si no queda ninguna por hacer, cierra con un JSON breve (sin opciones) y emite [[FIN_RONDA]] en ese mismo mensaje.
 
-3. FORMATO DE OPCIONES Y TABLAS
+3. FORMATO DE RESPUESTA:
+   CADA respuesta es ÚNICAMENTE el JSON, sin texto antes ni después:
+   {"texto":"Comentario empático breve (opcional) + la siguiente pregunta","opciones":[...],"tipoOpciones":"single","respuestaLibre":true}
+   Los bloques técnicos van SIEMPRE DESPUÉS del JSON.
 
-- type "single" → presenta opciones en "opciones", tipoOpciones: "single"
-- type "checkbox" → presenta opciones en "opciones", tipoOpciones: "checkbox"
-- type "scale" → usa formato: {"texto":"...","opciones":[],"tipoOpciones":"scale","scaleMin":min,"scaleMax":max,"scaleStep":step,"scaleMinLabel":"...","scaleMaxLabel":"...","respuestaLibre":true}
-- type "text" → opciones: []
-- type "symptom_table" → usa formato tabla:
-  {"texto":"...","opciones":[],"tipoOpciones":"tabla","tabla":[{"id":"item_id","label":"Nombre síntoma"},...],"respuestaLibre":true}
-  NUNCA listes ítems como texto — SIEMPRE usa la tabla cuando hay múltiples ítems 0-3. Incluye "escala":"frecuencia" o "escala":"intensidad" según la sección. En el campo "texto" NO expliques la escala numérica (no digas "0=nunca, 1=leve..." ni "califica del 0 al 3") — el componente de la UI ya muestra los valores y su descripción al paciente. Solo formula la pregunta empáticamente.
-- type "table" → tabla dinámica donde el paciente ingresa filas libres:
-  {"texto":"Pregunta reformulada","opciones":[],"tipoOpciones":"tabla_dinamica","columnas":["Col1","Col2",...],"respuestaLibre":true}
-  Las columnas son EXACTAMENTE las del campo "columns" de la definición de la pregunta. No las modifiques.
+4. TIPOS DE PREGUNTAS:
+   IMPORTANTE: el array "opciones" en el JSON de respuesta SIEMPRE contiene strings de etiquetas visibles (lo que el paciente ve), NUNCA objetos. Los values van únicamente en [[RESPUESTAS_RONDA]].
+   - single → "opciones": ["Etiqueta 1", "Etiqueta 2", ...], tipoOpciones: "single". En [[RESPUESTAS_RONDA]] guarda el value (ej: "diurna_fija"), no la etiqueta.
+   - checkbox → "opciones": ["Etiqueta 1", "Etiqueta 2", ...], tipoOpciones: "checkbox". En [[RESPUESTAS_RONDA]] guarda array de values.
+   - scale → {"texto":"...","opciones":[],"tipoOpciones":"scale","scaleMin":min,"scaleMax":max,"scaleStep":step,"scaleMinLabel":"...","scaleMaxLabel":"...","respuestaLibre":true}
+   - text → opciones: []
+   - symptom_table → {"texto":"...","opciones":[],"tipoOpciones":"tabla","tabla":[{"id":"item_id","label":"etiqueta"},...],"escala":"frecuencia|intensidad","respuestaLibre":true}. NUNCA listes ítems como texto. NO expliques la escala numérica en el texto.
+   - table → {"texto":"...","opciones":[],"tipoOpciones":"tabla_dinamica","columnas":["Col1","Col2",...],"respuestaLibre":true}
 
-4. SEÑALES DE ALARMA
+5. EXTRACCIÓN — OBLIGATORIO EN CADA TURNO:
+   [[RESPUESTAS_RONDA]]
+   {"campo_id": valor}
+   [[/RESPUESTAS_RONDA]]
+   Solo incluye respuestas NUEVAS de este turno. IDs exactos de la lista de preguntas.
+   Valores: scale_0_3 → número; single → value; checkbox → array de values; tabla → {item_id: valor}; text → string.
+   SOLO los IDs de la lista de esta ronda — no inventes campos.
 
-Si el paciente menciona síntomas graves, indica: "Lo que describes podría requerir atención médica urgente."
-
-5. EXTRACCIÓN — OBLIGATORIO EN CADA TURNO
-
-Después del JSON de respuesta, agrega SIEMPRE (acumulando todas las respuestas de la ronda):
-[[RESPUESTAS_RONDA]]
-{"campo_id": valor, ...}
-[[/RESPUESTAS_RONDA]]
-
-- Usa los IDs exactos de la lista de preguntas (ej: s28_dolor_cronico, s13_horas_sueno)
-- scale_0_3 → número; single → value; checkbox → array; tabla → {item_id: valor}; text → string
-
-6. FORMATO DE RESPUESTA — CRÍTICO
-
-CADA respuesta debe ser ÚNICAMENTE el JSON, sin texto antes ni después:
-{"texto":"Comentario empático + la pregunta en una sola frase","opciones":[...],"tipoOpciones":"single","respuestaLibre":true}
-
-Los bloques técnicos ([[RESPUESTAS_RONDA]], [[FIN_RONDA]]) van DESPUÉS del JSON.
-
-INFORMACIÓN DEL PACIENTE YA RECOPILADA:
-${resumenRespuestas || 'Primera sesión del interrogatorio.'}`;
-
-  const messages: any[] = [];
+6. SEÑALES DE ALARMA: Si el paciente menciona síntomas graves, indica: "Lo que describes podría requerir atención médica urgente."`;
 
   const intro = nombrePaciente
     ? `Soy ${nombrePaciente}. Continúa el interrogatorio.`
     : 'Continúa el interrogatorio.';
   const primedUserMsg = `Síntoma principal: "${sintomaInicial}". ${intro}`;
 
-  if (historial.length === 0) {
-    // Primera llamada sin historial: añadir par priming user+assistant
-    messages.push({ role: 'user', content: [{ text: primedUserMsg }] });
-    messages.push({ role: 'assistant', content: [{ text: '{"texto":"Perfecto, continuemos. Voy a hacerte algunas preguntas más sobre tu salud.","opciones":[],"tipoOpciones":"single","respuestaLibre":true}' }] });
-  } else {
-    // Hay historial previo: el mensajeUsuario actual responde a la ÚLTIMA pregunta del historial.
-    // Indicar esto explícitamente para que Claude no repita preguntas ya respondidas.
-    const primedExplicito = `${primedUserMsg}\nIMPORTANTE: Cada mensaje del paciente en el historial es la respuesta a la pregunta inmediatamente anterior. La respuesta que el paciente acaba de dar ahora corresponde a la ÚLTIMA pregunta del historial. NO repitas ninguna pregunta que ya tenga respuesta. Avanza directamente a la siguiente pregunta de tu lista que aún no haya sido respondida.`;
-    if (historial[0]?.rol === 'ia') {
-      // El historial empieza con mensaje IA: insertar primer mensaje user de priming
-      // para mantener la alternancia user/assistant requerida por Bedrock.
-      messages.push({ role: 'user', content: [{ text: primedExplicito }] });
-    } else {
-      // El historial empieza con usuario: no necesitamos insertar nada extra,
-      // el priming irá embebido en el system prompt (ya tiene la regla de no repetir).
-    }
-  }
-
-  for (const msg of historial) {
-    if (msg.rol === 'usuario') {
-      messages.push({ role: 'user', content: [{ text: msg.texto }] });
-    } else {
-      messages.push({ role: 'assistant', content: [{ text: msg.texto }] });
-    }
-  }
-
-  messages.push({ role: 'user', content: [{ text: mensajeUsuario }] });
+  const messages = construirMessages(primedUserMsg, historial, mensajeUsuario);
 
   console.log('[responderInterrogatorioConClaude] messages enviados:', JSON.stringify(messages.map(m => ({ role: m.role, text: m.content[0].text.slice(0, 80) }))));
 
@@ -902,18 +830,24 @@ ${resumenRespuestas || 'Primera sesión del interrogatorio.'}`;
     modelId: MODEL_ID,
     system: [{ text: systemPrompt }],
     messages,
-    inferenceConfig: { maxTokens: 2048, temperature: 0.4 },
+    inferenceConfig: { maxTokens: 2048, temperature: 0.2 },
   });
 
   const response = await client.send(command);
-  const raw = (response.output?.message?.content?.[0] as any)?.text ?? '';
+  const raw = response.output?.message?.content?.find((c: any) => c.text)?.text ?? '';
 
   console.log('[responderInterrogatorioConClaude] ◀', {
     historialLen: historial.length,
     preguntasCount: preguntasFiltradas.length,
     rawLen: raw.length,
     tieneFIN: raw.includes('[[FIN_RONDA]]'),
+    stopReason: (response as any).stopReason,
   });
+
+  // Advertir si el modelo cortó por max_tokens (puede dejar el JSON incompleto)
+  if ((response as any).stopReason === 'max_tokens') {
+    console.warn('[responderInterrogatorioConClaude] ⚠ Respuesta cortada por max_tokens — puede haber JSON incompleto');
+  }
 
   return raw;
 }
