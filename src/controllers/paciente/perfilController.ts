@@ -75,6 +75,12 @@ export const actualizarPerfil = async (req: AuthRequest, res: Response): Promise
       estadoCivil,
       nacionalidad,
       lugarResidencia,
+      paisResidencia,
+      municipioResidencia,
+      zonaResidencia,
+      paisNacimiento,
+      pertEtnica,
+      entidadSalud,
       direccion,
       telefono,
       contactoEmergencia,
@@ -156,6 +162,12 @@ export const actualizarPerfil = async (req: AuthRequest, res: Response): Promise
     
     if (nacionalidad !== undefined) paciente.nacionalidad = nacionalidad.trim() || undefined;
     if (lugarResidencia !== undefined) paciente.lugarResidencia = lugarResidencia.trim() || undefined;
+    if (paisResidencia !== undefined) paciente.paisResidencia = paisResidencia.trim() || undefined;
+    if (municipioResidencia !== undefined) paciente.municipioResidencia = municipioResidencia.trim() || undefined;
+    if (zonaResidencia !== undefined) paciente.zonaResidencia = zonaResidencia.trim() !== '' ? zonaResidencia : undefined;
+    if (paisNacimiento !== undefined) paciente.paisNacimiento = paisNacimiento.trim() || undefined;
+    if (pertEtnica !== undefined) paciente.pertEtnica = pertEtnica.trim() || undefined;
+    if (entidadSalud !== undefined) paciente.entidadSalud = entidadSalud.trim() || undefined;
     if (direccion !== undefined) paciente.direccion = direccion.trim() || undefined;
     if (telefono !== undefined) paciente.telefono = telefono.trim() || undefined;
     if (contactoEmergencia !== undefined) {

@@ -35,6 +35,12 @@ export interface IPaciente extends Document {
   estadoCivil?: 'soltero' | 'casado' | 'union-libre' | 'divorciado' | 'viudo';
   nacionalidad?: string;
   lugarResidencia?: string;
+  paisResidencia?: string;
+  municipioResidencia?: string;
+  zonaResidencia?: 'Urbana' | 'Rural';
+  paisNacimiento?: string;
+  pertEtnica?: string;
+  entidadSalud?: string;
   // Datos de contacto
   direccion?: string;
   telefono?: string;
@@ -163,6 +169,12 @@ const PacienteSchema = new Schema<IPaciente>(
       type: String,
       trim: true
     },
+    paisResidencia: { type: String, trim: true },
+    municipioResidencia: { type: String, trim: true },
+    zonaResidencia: { type: String, enum: ['Urbana', 'Rural'], trim: true },
+    paisNacimiento: { type: String, trim: true },
+    pertEtnica: { type: String, trim: true },
+    entidadSalud: { type: String, trim: true },
     // Datos sociodemográficos y clínicos (perfil del paciente)
     grupoSanguineo: { type: String, trim: true },
     rh: { type: String, trim: true },
