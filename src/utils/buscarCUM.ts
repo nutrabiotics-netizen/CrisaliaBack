@@ -1,6 +1,6 @@
-import catalogo from '../data/cums_catalogo.json';
-
 export interface EntradaCUM { codigo: string; nombre: string; descripcion: string }
+// Cargar como datos evita que TypeScript infiera el tipo de las 100.000 filas del JSON.
+const catalogo = require('../data/cums_catalogo.json') as { registros: EntradaCUM[] };
 const normalizar = (texto: string) => texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
 const entradas = catalogo.registros as EntradaCUM[];
 const porCodigo = new Map(entradas.map(e => [e.codigo, e]));

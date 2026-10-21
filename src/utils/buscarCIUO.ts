@@ -1,9 +1,9 @@
-import ciuoData from '../data/ciuo_ocupaciones.json';
-
 export interface CiuoEntry {
   codigo: string;
   nombre: string;
 }
+
+const ciuoData = require('../data/ciuo_ocupaciones.json') as CiuoEntry[];
 
 const STOP_WORDS = new Set([
   'de', 'del', 'la', 'el', 'los', 'las', 'y', 'en', 'a', 'para',

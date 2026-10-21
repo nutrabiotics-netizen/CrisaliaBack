@@ -1,6 +1,5 @@
-import catalogo from '../data/cie10_catalogo.json';
-
 export interface EntradaCIE10 { codigo: string; nombre: string; descripcion: string }
+const catalogo = require('../data/cie10_catalogo.json') as { registros: EntradaCIE10[] };
 const normalizar = (texto: string) => texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
 const codigoNormalizado = (texto: string) => texto.toUpperCase().replace(/[.\s]/g, '');
 const entradas = catalogo.registros as EntradaCIE10[];
