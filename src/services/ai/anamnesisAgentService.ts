@@ -25,6 +25,7 @@ import {
   BedrockAgentRuntimeClient,
   InvokeAgentCommand,
 } from '@aws-sdk/client-bedrock-agent-runtime';
+import { AppError } from '../../utils/errors';
 
 const AGENT_ID    = (process.env.ANAMNESIS_AGENT_ID       || 'HLL3N4JICQ').trim();
 const AGENT_ALIAS = (process.env.ANAMNESIS_AGENT_ALIAS_ID || 'ON5FNONHCI').trim();
@@ -32,6 +33,8 @@ const REGION      = (process.env.ANAMNESIS_AGENT_REGION   || process.env.AWS_REG
 
 const client = new BedrockAgentRuntimeClient({
   region: REGION,
+  // Un único presupuesto de reintentos cubre tanto send como el stream de completion.
+  maxAttempts: 1,
   credentials:
     process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
       ? {
@@ -101,65 +104,122 @@ export interface AnamnesisAgentOptions {
   /** sessionId — mantiene contexto entre rondas del mismo interrogatorio */
   sessionId?: string;
   timeoutMs?: number;
+  abortSignal?: AbortSignal;
 }
 
 // ─── Invocación raw ──────────────────────────────────────────────────────────
 
-/**
- * Invoca al Agent y devuelve el texto crudo concatenado de todos los chunks.
- */
+const MAX_INTENTOS = 3;
+const NOMBRES_TRANSITORIOS = new Set([
+  'InternalServerException', 'ServiceUnavailableException', 'BadGatewayException',
+  'ThrottlingException', 'ModelNotReadyException',
+]);
+
+function esErrorTransitorio(error: any): boolean {
+  return NOMBRES_TRANSITORIOS.has(error?.name)
+    || [429, 500, 502, 503, 504].includes(error?.$metadata?.httpStatusCode);
+}
+
+function esperarReintento(ms: number, signal: AbortSignal): Promise<void> {
+  signal.throwIfAborted();
+  return new Promise((resolve, reject) => {
+    const terminar = () => { signal.removeEventListener('abort', cancelar); resolve(); };
+    const timer = setTimeout(terminar, ms);
+    const cancelar = () => {
+      clearTimeout(timer);
+      signal.removeEventListener('abort', cancelar);
+      reject(signal.reason);
+    };
+    signal.addEventListener('abort', cancelar, { once: true });
+    if (signal.aborted) cancelar();
+  });
+}
+
+/** Reintenta fallos transitorios con la misma sesión y un plazo total de 180 s. */
 async function invokeRaw(prompt: string, opts: AnamnesisAgentOptions = {}): Promise<string> {
   const sessionId = opts.sessionId || `anamnesis-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const timeoutMs = opts.timeoutMs ?? 180000;
-  const t0        = Date.now();
-
-  console.log('[AnamnesisAgent] ▶ invoke', {
-    sessionId,
-    promptLen: prompt.length,
-    preview: prompt.slice(0, 120),
-  });
+  const t0 = Date.now();
+  console.log('[AnamnesisAgent] ▶ invoke', { sessionId, promptLen: prompt.length, timeoutMs });
 
   const abort = new AbortController();
-  const timer = setTimeout(() => abort.abort(), timeoutMs);
+  let plazoAgotado = false;
+  const timer = setTimeout(() => { plazoAgotado = true; abort.abort(); }, timeoutMs);
+  const cancelar = () => abort.abort();
+  if (opts.abortSignal?.aborted) cancelar();
+  else opts.abortSignal?.addEventListener('abort', cancelar, { once: true });
 
   try {
-    const command = new InvokeAgentCommand({
-      agentId:      AGENT_ID,
-      agentAliasId: AGENT_ALIAS,
-      sessionId,
-      inputText:    prompt,
-    });
-
-    const response = await client.send(command, { abortSignal: abort.signal });
-    const chunks: string[] = [];
-
-    if (response.completion) {
-      for await (const event of response.completion) {
-        if (event.chunk?.bytes) {
-          chunks.push(new TextDecoder().decode(event.chunk.bytes));
+    for (let intento = 1; intento <= MAX_INTENTOS; intento++) {
+      abort.signal.throwIfAborted();
+      const inicioIntento = Date.now();
+      let requestId: string | undefined;
+      try {
+        const response = await client.send(new InvokeAgentCommand({
+          agentId: AGENT_ID, agentAliasId: AGENT_ALIAS, sessionId, inputText: prompt,
+        }), { abortSignal: abort.signal });
+        requestId = response.$metadata?.requestId;
+        abort.signal.throwIfAborted();
+        // Nunca combinar texto de una respuesta interrumpida con la del siguiente intento.
+        const chunks: string[] = [];
+        const decoder = new TextDecoder();
+        if (response.completion) {
+          for await (const event of response.completion) {
+            abort.signal.throwIfAborted();
+            // Algunos transportes lanzan la excepción; otros la entregan como evento.
+            const fallo = Object.entries(event).find(([key, value]) => key.endsWith('Exception') && value);
+            if (fallo) {
+              const [key, value] = fallo;
+              throw Object.assign(new Error((value as any).message || key), value, {
+                name: key[0].toUpperCase() + key.slice(1),
+                $metadata: (value as any).$metadata || response.$metadata,
+              });
+            }
+            if (event.chunk?.bytes) chunks.push(decoder.decode(event.chunk.bytes, { stream: true }));
+          }
         }
+        chunks.push(decoder.decode());
+        abort.signal.throwIfAborted();
+        const raw = chunks.join('');
+        console.log('[AnamnesisAgent] ◀ respuesta', { sessionId, intento, ms: Date.now() - t0, len: raw.length });
+        return raw;
+      } catch (error: any) {
+        abort.signal.throwIfAborted();
+        console.warn('[AnamnesisAgent] intento fallido', {
+          sessionId, intento, maxIntentos: MAX_INTENTOS,
+          msIntento: Date.now() - inicioIntento, msTotal: Date.now() - t0,
+          name: error?.name, message: String(error?.message || '').slice(0, 1000),
+          reason: error?.reason, httpStatusCode: error?.$metadata?.httpStatusCode,
+          requestId: error?.$metadata?.requestId || requestId,
+        });
+        if (!esErrorTransitorio(error)) throw error;
+        if (intento === MAX_INTENTOS) {
+          throw Object.assign(new AppError('El servicio de IA no está disponible temporalmente. Puedes reintentar el turno para continuar.', 503), {
+            name: 'AnamnesisAgentUnavailableError', cause: error,
+          });
+        }
+        const demoraMs = 1000 * 2 ** (intento - 1) + Math.floor(Math.random() * 250);
+        console.warn('[AnamnesisAgent] reintento', {
+          sessionId, intento, maxIntentos: MAX_INTENTOS, demoraMs, name: error?.name,
+          requestId: error?.$metadata?.requestId,
+        });
+        await esperarReintento(demoraMs, abort.signal);
       }
     }
-
-    clearTimeout(timer);
-    const raw = chunks.join('');
-
-    console.log('[AnamnesisAgent] ◀ respuesta', {
-      sessionId,
-      ms: Date.now() - t0,
-      len: raw.length,
-      preview: raw.slice(0, 200),
-    });
-
-    return raw;
-  } catch (err: any) {
-    clearTimeout(timer);
+    throw new Error('No se recibió una respuesta del Agent');
+  } catch (error: any) {
     console.error('[AnamnesisAgent] ✗ error', {
-      name:    err?.name,
-      message: err?.message,
-      aborted: abort.signal.aborted,
+      name: error?.name, causeName: error?.cause?.name, reason: error?.cause?.reason,
+      requestId: error?.cause?.$metadata?.requestId,
+      ms: Date.now() - t0, timeoutMs, aborted: abort.signal.aborted, plazoAgotado,
     });
-    throw err;
+    if (plazoAgotado && !opts.abortSignal?.aborted) {
+      throw new AppError('El servicio de IA tardó demasiado en responder. Puedes reintentar el turno para continuar.', 503);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
+    opts.abortSignal?.removeEventListener('abort', cancelar);
   }
 }
 
@@ -180,7 +240,15 @@ function extraerJSON(texto: string): string {
 
   let profundidad = 0;
   let fin = -1;
+  let enTexto = false, escape = false;
   for (let i = inicio; i < texto.length; i++) {
+    if (enTexto) {
+      if (escape) escape = false;
+      else if (texto[i] === '\\') escape = true;
+      else if (texto[i] === '"') enTexto = false;
+      continue;
+    }
+    if (texto[i] === '"') { enTexto = true; continue; }
     if (texto[i] === '{') profundidad++;
     else if (texto[i] === '}') {
       profundidad--;
@@ -218,7 +286,7 @@ export async function invokeAnamnesisAgent(
       );
       parsed = JSON.parse(jsonReparado);
     } catch (e2) {
-      console.error('[AnamnesisAgent] JSON inválido:', json.slice(0, 300));
+      console.error('[AnamnesisAgent] JSON inválido', { length: json.length });
       throw new Error(`El Agent devolvió JSON inválido: ${(e2 as Error).message}`);
     }
   }

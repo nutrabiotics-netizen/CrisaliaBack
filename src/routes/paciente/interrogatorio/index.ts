@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../../../middleware/auth';
 import { UserRole } from '../../../types';
+import { obtenerPreguntasRDA, responderPreguntaRDA } from '../../../controllers/paciente/preguntasRDAController';
+import { reiniciarFase2 } from '../../../controllers/paciente/reiniciarFase2Controller';
 import {
   crearInterrogatorio,
   obtenerInterrogatorios,
@@ -20,6 +22,9 @@ const router = Router();
 router.post('/', authenticate, authorize(UserRole.PACIENTE), crearInterrogatorio);
 router.get('/', authenticate, authorize(UserRole.PACIENTE), obtenerInterrogatorios);
 router.get('/:interrogatorioId', authenticate, authorize(UserRole.PACIENTE), obtenerInterrogatorioPorId);
+router.get('/:interrogatorioId/preguntas-rda', authenticate, authorize(UserRole.PACIENTE), obtenerPreguntasRDA);
+router.post('/:interrogatorioId/preguntas-rda', authenticate, authorize(UserRole.PACIENTE), responderPreguntaRDA);
+router.post('/:interrogatorioId/reiniciar-fase2', authenticate, authorize(UserRole.PACIENTE), reiniciarFase2);
 router.post('/:interrogatorioId/verificar-incoherencias', authenticate, authorize(UserRole.PACIENTE), verificarIncoherencias);
 router.put('/:interrogatorioId/respuestas', authenticate, authorize(UserRole.PACIENTE), actualizarRespuestas);
 router.put('/:interrogatorioId/completar', authenticate, authorize(UserRole.PACIENTE), completarInterrogatorio);

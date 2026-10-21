@@ -1,0 +1,108 @@
+[
+  {
+    "id": "rda_oposicion_donacion",
+    "type": "single",
+    "text": "¿Has dejado por escrito tu decisión de no donar órganos y tejidos después de fallecer?",
+    "description": "Como parte de la información que el Ministerio de Salud contempla para tu historia clínica, necesitamos conocer si has dejado por escrito tu decisión sobre la donación de órganos y tejidos.",
+    "options": [
+      {
+        "value": "si_escrita",
+        "label": "Sí, lo he dejado por escrito."
+      },
+      {
+        "value": "no_escrita",
+        "label": "No, no lo he dejado por escrito."
+      },
+      {
+        "value": "sin_certeza",
+        "label": "No tengo certeza"
+      },
+      {
+        "value": "prefiero_no_responder",
+        "label": "Prefiero no responder"
+      }
+    ]
+  },
+  {
+    "id": "rda_discapacidad",
+    "type": "single",
+    "text": "¿Con cuál de estas categorías de discapacidad te identificas?",
+    "description": "",
+    "options": [
+      {
+        "value": "01",
+        "label": "Discapacidad física"
+      },
+      {
+        "value": "02",
+        "label": "Discapacidad visual"
+      },
+      {
+        "value": "03",
+        "label": "Discapacidad auditiva"
+      },
+      {
+        "value": "04",
+        "label": "Discapacidad intelectual"
+      },
+      {
+        "value": "05",
+        "label": "Discapacidad sicosocial (mental)"
+      },
+      {
+        "value": "06",
+        "label": "Sordoceguera"
+      },
+      {
+        "value": "07",
+        "label": "Discapacidad múltiple"
+      },
+      {
+        "value": "08",
+        "label": "Sin discapacidad"
+      }
+    ]
+  },
+  {
+    "id": "rda_factores_riesgo",
+    "type": "checkbox",
+    "text": "En tu trabajo o en tus actividades diarias, ¿a qué tipo de factor estás expuesto?",
+    "description": "",
+    "options": [
+      {
+        "value": "01",
+        "nombre": "Químico",
+        "label": "Químico. Por ejemplo, productos de limpieza, solventes u otras sustancias. Entre otros."
+      },
+      {
+        "value": "02",
+        "nombre": "Físicos",
+        "label": "Físico. Por ejemplo, ruido, vibraciones o temperaturas extremas. Entre otros."
+      },
+      {
+        "value": "03",
+        "nombre": "Biomecánicos",
+        "label": "Biomecánico. Por ejemplo, cargas, movimientos repetidos o posturas prolongadas. Entre otros."
+      },
+      {
+        "value": "04",
+        "nombre": "Psicosociales",
+        "label": "Psicosocial. Por ejemplo, presión, conflictos o situaciones de estrés. Entre otros."
+      },
+      {
+        "value": "05",
+        "nombre": "Biológicos",
+        "label": "Biológico. Por ejemplo, contacto con microorganismos o material biológico. Entre otros."
+      },
+      {
+        "value": "06",
+        "nombre": "Otro",
+        "label": "Otro. Por ejemplo, un factor diferente de los anteriores. Entre otros."
+      },
+      {
+        "value": "sin_certeza",
+        "label": "No tengo certeza"
+      }
+    ]
+  }
+]

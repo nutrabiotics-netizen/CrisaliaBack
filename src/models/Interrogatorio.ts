@@ -6,6 +6,11 @@ export interface IInterrogatorio extends Document {
   estado: 'en_proceso' | 'completado' | 'pendiente';
   progreso: number;
   respuestas: Record<string, any>;
+  fase1?: import('../services/ai/fase1Flow').EstadoFase1;
+  fase2?: import('../services/ai/fase2Flow').EstadoFase2;
+  fase2Generacion?: number;
+  fase2Reinicio?: { requestId: string; pendiente: boolean; generacion: number };
+  fase2Operacion?: { token: string; requestId: string; venceEn: Date; preparandoExamenes?: boolean; contextoRDA?: string; reiniciando?: boolean };
   observacionesIA?: string[];
   analisisIA?: string;
   historiaClinica?: {
@@ -75,6 +80,11 @@ const InterrogatorioSchema = new Schema<IInterrogatorio>(
       type: Schema.Types.Mixed,
       default: {}
     },
+    fase1: { type: Schema.Types.Mixed },
+    fase2: { type: Schema.Types.Mixed },
+    fase2Generacion: Number,
+    fase2Reinicio: { type: Schema.Types.Mixed },
+    fase2Operacion: { type: Schema.Types.Mixed },
     observacionesIA: {
       type: [String],
       default: []
@@ -138,6 +148,9 @@ const InterrogatorioSchema = new Schema<IInterrogatorio>(
 // Índice compuesto para búsquedas frecuentes
 InterrogatorioSchema.index({ pacienteId: 1, tipo: 1 });
 InterrogatorioSchema.index({ pacienteId: 1, estado: 1 });
+// Las sesiones antiguas quedan fuera; dos pestañas no pueden crear dos fases 1 activas.
+InterrogatorioSchema.index({ pacienteId: 1 }, { unique: true, name: 'fase1_activa_por_paciente',
+  partialFilterExpression: { 'fase1.version': { $exists: true }, tipo: 'primera_vez', estado: 'en_proceso' } });
 
 export default mongoose.model<IInterrogatorio>('Interrogatorio', InterrogatorioSchema);
 

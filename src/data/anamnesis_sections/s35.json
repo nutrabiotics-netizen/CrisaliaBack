@@ -5,7 +5,7 @@
   "questions":[
     {
       "id":"s35_hipofuncion",
-      "text":"Síntomas de hipofunción tiroidea",
+      "text": "Síntomas de hipofunción tiroidea",
       "type":"symptom_table",
       "scale_type":"frequency",
       "items":[
@@ -28,7 +28,7 @@
     },
     {
       "id":"s35_hiperfuncion",
-      "text":"Síntomas de hiperfunción tiroidea",
+      "text": "Síntomas de hiperfunción tiroidea",
       "type":"symptom_table",
       "scale_type":"frequency",
       "items":[

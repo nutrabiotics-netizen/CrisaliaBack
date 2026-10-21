@@ -7,6 +7,7 @@ import {
   precargar as precargarCuerpoChat,
   responderInterrogatorio as responderCuerpoInterrogatorio,
 } from '../../controllers/paciente/cuerpoConChatController';
+import { buscarOcupacionesFase1, buscarEnfermedadesFase1, buscarMedicamentosFase1 } from '../../controllers/paciente/fase1Controller';
 import perfilRoutes from './perfil';
 import agendamientoRoutes from './agendamiento';
 import interrogatorioRoutes from './interrogatorio';
@@ -67,6 +68,9 @@ router.delete('/notificaciones/:id', authenticate, authorize(UserRole.PACIENTE),
 
 router.get('/heridas-cita/:citaId/info', authenticate, authorize(UserRole.PACIENTE), infoCitaHeridas);
 router.get('/heridas-cita/:citaId/meeting', authenticate, authorize(UserRole.PACIENTE), getMeetingHeridas);
+router.get('/enfermedades-cie10', authenticate, authorize(UserRole.PACIENTE), buscarEnfermedadesFase1);
+router.get('/medicamentos', authenticate, authorize(UserRole.PACIENTE), buscarMedicamentosFase1);
+router.get('/ocupaciones', authenticate, authorize(UserRole.PACIENTE), buscarOcupacionesFase1);
 router.post('/cuerpo-chat', authenticate, authorize(UserRole.PACIENTE), responderCuerpoChat);
 router.post('/cuerpo-chat/precargar', authenticate, authorize(UserRole.PACIENTE), precargarCuerpoChat);
 router.post('/cuerpo-chat/interrogatorio', authenticate, authorize(UserRole.PACIENTE), responderCuerpoInterrogatorio);

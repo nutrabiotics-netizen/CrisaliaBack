@@ -34,6 +34,10 @@ export interface AcudienteTutorData {
 export interface RegisterPacienteData {
   nombre: string;
   apellido: string;
+  primerNombre?: string;
+  segundoNombre?: string;
+  primerApellido?: string;
+  segundoApellido?: string;
   email: string;
   password: string;
   telefono?: string;
@@ -70,7 +74,7 @@ export interface AuthResponse {
     aceptaTerminos?: boolean;
     aceptaConsentimiento?: boolean;
     firstAppointment?: boolean;
-    genero?: string;
+    genero?: { codigo: string; descripcion: string } | string;
     numeroDocumento?: string;
   };
 }
@@ -206,7 +210,23 @@ export class AuthService {
   }
 
   async registerPaciente(data: RegisterPacienteData): Promise<AuthResponse> {
-    const { nombre, apellido, email, password, telefono, fechaNacimiento, genero, acudiente, aceptaTerminos, aceptaConsentimiento, zonasDolor, numeroDocumento, tipoDocumento, direccion, lugarResidencia } = data;
+    const { nombre, apellido, primerNombre, segundoNombre, primerApellido, segundoApellido, email, password, telefono, fechaNacimiento, genero, acudiente, aceptaTerminos, aceptaConsentimiento, zonasDolor, numeroDocumento, tipoDocumento, direccion, lugarResidencia } = data;
+
+    // Derivar nombre/apellido desde campos divididos si se proveyeron
+    const nombreFinal = primerNombre
+      ? [primerNombre.trim(), segundoNombre?.trim()].filter(Boolean).join(' ')
+      : nombre;
+    const apellidoFinal = primerApellido
+      ? [primerApellido.trim(), segundoApellido?.trim()].filter(Boolean).join(' ')
+      : apellido;
+
+    // Si solo llegaron nombre/apellido completos, derivar los campos divididos
+    const [pNombre, ...sNombreArr] = (primerNombre ? nombreFinal : nombre).trim().split(' ');
+    const [pApellido, ...sApellidoArr] = (primerApellido ? apellidoFinal : apellido).trim().split(' ');
+    const primerNombreFinal = primerNombre?.trim() || pNombre;
+    const segundoNombreFinal = segundoNombre?.trim() || sNombreArr.join(' ') || undefined;
+    const primerApellidoFinal = primerApellido?.trim() || pApellido;
+    const segundoApellidoFinal = segundoApellido?.trim() || sApellidoArr.join(' ') || undefined;
 
     const existingPaciente = await Paciente.findOne({ email });
     if (existingPaciente) {
@@ -242,8 +262,12 @@ export class AuthService {
     const generoFinal = generoNormalizado && generosValidos.includes(generoNormalizado) ? generoNormalizado : undefined;
 
     const nuevoPaciente = new Paciente({
-      nombre,
-      apellido,
+      nombre: nombreFinal,
+      apellido: apellidoFinal,
+      primerNombre: primerNombreFinal,
+      ...(segundoNombreFinal && { segundoNombre: segundoNombreFinal }),
+      primerApellido: primerApellidoFinal,
+      ...(segundoApellidoFinal && { segundoApellido: segundoApellidoFinal }),
       email,
       password,
       telefono: telefono?.trim() || undefined,

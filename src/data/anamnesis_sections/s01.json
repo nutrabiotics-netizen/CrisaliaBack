@@ -18,6 +18,19 @@
       ]
     },
     {
+      "id": "s01_identidad_genero",
+      "text": "Identidad de género",
+      "type": "single",
+      "options": [
+        { "value": "01", "label": "Masculino" },
+        { "value": "02", "label": "Femenino" },
+        { "value": "03", "label": "Transgénero" },
+        { "value": "04", "label": "Neutro" },
+        { "value": "05", "label": "No lo declaro" }
+      ]
+    },
+
+    {
       "id": "s01_educacion",
       "text": "Nivel educativo",
       "type": "single",
@@ -30,7 +43,17 @@
       ]
     },
     
-    { "id": "s01_ocupacion", "text": "Ocupación actual", "type": "text" },
+    {
+      "id": "s01_ocupacion",
+      "text": "Ocupación actual",
+      "type": "search",
+      "search": {
+        "source": "ocupaciones",
+        "placeholder": "Busca tu ocupación",
+        "allowCustom": true,
+        "notFoundLabel": "No encuentro mi ocupación"
+      }
+    },
     { "id": "s01_anos_ocupacion", "text": "Años en esa ocupación", "type": "text" },
 
     {
@@ -109,6 +132,82 @@
         { "value": "uricemia_capilar", "label": "Uricemia capilar (Sejoy, Lysun)" },
         { "value": "ninguno", "label": "Ninguno" }
       ]
+    },
+    {
+      "id": "s01_tipo_alergia",
+      "allergyRole": "type",
+      "allergyIndex": 1,
+      "text": "¿A qué tipo de sustancias tienes alergia?",
+      "type": "single",
+      "options": [
+        { "value": "medicamentos", "label": "Medicamentos", "requiresFollowUp": true },
+        { "value": "alimentos", "label": "Alimentos", "requiresFollowUp": true },
+        { "value": "ambiente", "label": "Sustancias del ambiente", "requiresFollowUp": true },
+        { "value": "contacto_piel", "label": "Sustancias en contacto con la piel", "requiresFollowUp": true },
+        { "value": "picaduras_insectos", "label": "Picaduras de insectos", "requiresFollowUp": true },
+        { "value": "otra", "label": "Otra", "requiresFollowUp": true },
+        { "value": "sin_alergias_conocidas", "label": "No tengo alergias conocidas", "requiresFollowUp": false }
+      ]
+    },
+    {
+      "id": "s01_sustancia_alergia",
+      "text": "¿Qué medicamento, alimento o sustancia te causa alergia?",
+      "type": "text",
+      "allergyRole": "substance",
+      "allergyIndex": 1,
+      "showIf": { "questionId": "s01_tipo_alergia", "notIn": ["sin_alergias_conocidas"] }
+    },
+    {
+      "id": "s01_mas_alergias",
+      "text": "¿Tienes alguna otra alergia que quieras registrar?",
+      "type": "single",
+      "allergyRole": "more",
+      "allergyIndex": 1,
+      "showIf": { "questionId": "s01_sustancia_alergia" },
+      "options": [
+        { "value": "si", "label": "Sí, tengo otra alergia" },
+        { "value": "no", "label": "No, no tengo más alergias" }
+      ]
+    },
+    {
+      "id": "s01_enfermedades_familia",
+      "text": "¿Qué enfermedades conoces en tu familia?",
+      "type": "search",
+      "search": {
+        "source": "cie10",
+        "placeholder": "Busca una enfermedad o su código CIE-10",
+        "multiple": true,
+        "allowCustom": false,
+        "showCode": true,
+        "showDescription": true,
+        "unknownLabel": "No conozco enfermedades en mi familia",
+        "selectedLabel": "Enfermedades seleccionadas",
+        "parentescos": [
+          { "codigo": "01", "descripcion": "Padre" },
+          { "codigo": "02", "descripcion": "Hermano" },
+          { "codigo": "03", "descripcion": "Tío" },
+          { "codigo": "04", "descripcion": "Abuelo" }
+        ]
+      }
+    },
+    {
+      "id": "s01_medicamentos_actuales",
+      "text": "¿Qué medicamentos tomas actualmente?",
+      "type": "search",
+      "search": {
+        "source": "medicamentos",
+        "placeholder": "Busca un medicamento o su código CUM",
+        "multiple": true,
+        "allowCustom": true,
+        "showCode": true,
+        "showDescription": true,
+        "unknownLabel": "No tomo medicamentos",
+        "notFoundLabel": "No encuentro mi medicamento",
+        "manualLabel": "Escribe el nombre del medicamento",
+        "manualAddLabel": "Añadir medicamento",
+        "manualHelp": "Escríbelo como lo conoces. Lo guardaremos con tus palabras si no aparece en el catálogo.",
+        "selectedLabel": "Medicamentos seleccionados"
+      }
     }
   ]
 }

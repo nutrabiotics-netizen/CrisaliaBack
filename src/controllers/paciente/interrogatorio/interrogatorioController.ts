@@ -3,18 +3,11 @@ import { AuthRequest } from '../../../middleware/auth';
 import interrogatorioService from '../../../services/paciente/interrogatorio/interrogatorioService';
 import { registrarAccion } from '../../../utils/auditoriaHelper';
 import Interrogatorio from '../../../models/Interrogatorio';
-import Cita from '../../../models/Cita';
-import Paciente from '../../../models/Paciente';
-import { crearNotificacionMedico } from '../../../utils/notificacionHelper';
 import { AIService } from '../../../services/ai/AIService';
-import {
-  cargarSecciones,
-  cargarIndex,
-  calcularScores,
-  consultarSiguientePaso,
-  generarSintesis as generarSintesisOrchestrator,
-} from '../../../services/ai/anamnesisOrchestratorService';
-import { generarResumenPaciente } from '../../../services/ai/cuerpoConChatService';
+import { calcularProgresoFase1 } from '../../../services/ai/fase1Flow';
+import { guardarRDAInicial } from '../../../services/paciente/registroRDAInicialService';
+import { cancelarPreparacionFase2, responderFase2 } from '../fase2Controller';
+import { filtroGeneracionFase2, solicitudDeGeneracionActual } from '../../../services/paciente/reinicioFase2Flow';
 
 export const crearInterrogatorio = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -80,6 +73,7 @@ export const crearInterrogatorio = async (req: AuthRequest, res: Response): Prom
         estado: interrogatorio.estado,
         progreso: interrogatorio.progreso,
         respuestas: interrogatorio.respuestas,
+        fase1: interrogatorio.fase1 ? { estado: interrogatorio.fase1.estado, version: interrogatorio.fase1.version, preguntaId: interrogatorio.fase1.preguntaId } : undefined,
         createdAt: interrogatorio.createdAt,
         updatedAt: interrogatorio.updatedAt
       }
@@ -114,6 +108,11 @@ export const obtenerInterrogatorios = async (req: AuthRequest, res: Response): P
       estado as any
     );
 
+    // Recuperar también entrevistas confirmadas antes de que existiera el guardado automático del RDA.
+    const confirmada = [...interrogatorios].filter(i => i.tipo === 'primera_vez' && i.fase1?.confirmada)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+    if (confirmada) await guardarRDAInicial(confirmada);
+
     res.json({
       success: true,
       data: interrogatorios.map(i => ({
@@ -123,6 +122,10 @@ export const obtenerInterrogatorios = async (req: AuthRequest, res: Response): P
         progreso: i.progreso,
         analisisIA: i.analisisIA,
         respuestas: i.respuestas,
+        fase1: i.fase1,
+        fase2: i.fase2,
+        fase2Generacion: i.fase2Generacion || 0,
+        progresoFase1: i.fase1 ? calcularProgresoFase1(i.fase1, i.respuestas || {}) : undefined,
         createdAt: i.createdAt,
         updatedAt: i.updatedAt
       }))
@@ -172,6 +175,7 @@ export const obtenerInterrogatorioPorId = async (req: AuthRequest, res: Response
         estado: interrogatorio.estado,
         progreso: interrogatorio.progreso,
         respuestas: interrogatorio.respuestas,
+        fase1: interrogatorio.fase1 ? { estado: interrogatorio.fase1.estado, version: interrogatorio.fase1.version, preguntaId: interrogatorio.fase1.preguntaId } : undefined,
         observacionesIA: interrogatorio.observacionesIA,
         analisisIA: interrogatorio.analisisIA,
         historiaClinica: (interrogatorio as any).historiaClinica,
@@ -282,6 +286,7 @@ export const actualizarRespuestas = async (req: AuthRequest, res: Response): Pro
       datosAnteriores,
       {
         respuestas: interrogatorio.respuestas,
+        fase1: interrogatorio.fase1 ? { estado: interrogatorio.fase1.estado, version: interrogatorio.fase1.version, preguntaId: interrogatorio.fase1.preguntaId } : undefined,
         progreso: interrogatorio.progreso,
         estado: interrogatorio.estado
       }
@@ -308,261 +313,36 @@ export const actualizarRespuestas = async (req: AuthRequest, res: Response): Pro
 };
 
 export const completarInterrogatorio = async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const pacienteId = req.userId;
-    const { interrogatorioId } = req.params;
-
-    if (!pacienteId) {
-      res.status(401).json({
-        success: false,
-        message: 'Usuario no autenticado'
-      });
-      return;
-    }
-
-    const { analisisIA, objetivos, alertaMedica } = req.body ?? {};
-    const hayAlertaMedica = !!(alertaMedica?.motivo);
-
-    const interrogatorio = await interrogatorioService.completarInterrogatorio(
-      interrogatorioId as string,
-      pacienteId,
-      analisisIA,
-      objetivos,
-      alertaMedica
-    );
-
-    res.json({
-      success: true,
-      message: 'Interrogatorio completado exitosamente',
-      data: {
-        _id: interrogatorio._id.toString(),
-        estado: interrogatorio.estado,
-        analisisIA: interrogatorio.analisisIA,
-        objetivos: interrogatorio.objetivos
-      }
-    });
-
-    // Notificar al médico in-app que el paciente completó su seguimiento
-    const citaReciente = await Cita.findOne({ pacienteId })
-      .sort({ fecha: -1 })
-      .select('medicoId')
-      .lean();
-    const medicoId = citaReciente?.medicoId;
-    if (medicoId) {
-      const pac = await Paciente.findById(pacienteId).select('nombre apellido').lean();
-      const nombrePac = pac ? `${(pac as any).nombre ?? ''} ${(pac as any).apellido ?? ''}`.trim() : 'El paciente';
-      void crearNotificacionMedico({
-        medicoId: String(medicoId),
-        tipo: 'seguimiento_evolucion',
-        categoria: 'seguimiento_clinico',
-        titulo: 'Cuestionario de seguimiento completado',
-        cuerpo: `${nombrePac} completó su cuestionario de seguimiento clínico.`,
-        requiereAccion: false,
-        accionUrl: `/medico/pacientes?pacienteId=${String(pacienteId)}`,
-        accionLabel: 'Ver seguimiento',
-        pacienteId: String(pacienteId),
-        pacienteNombre: nombrePac,
-      });
-
-      if (hayAlertaMedica) {
-        void crearNotificacionMedico({
-          medicoId: String(medicoId),
-          tipo: 'alerta_medica',
-          categoria: 'seguimiento_clinico',
-          titulo: '🚨 Alerta médica detectada',
-          cuerpo: `${nombrePac} activó una alerta médica durante la preconsulta: ${alertaMedica.motivo}`,
-          requiereAccion: true,
-          accionUrl: `/medico/pacientes?pacienteId=${String(pacienteId)}&modal=preconsulta`,
-          accionLabel: 'Ver alerta',
-          pacienteId: String(pacienteId),
-          pacienteNombre: nombrePac,
-        });
-      }
-    }
-  } catch (error: any) {
-    console.error('Error al completar interrogatorio:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error al completar interrogatorio',
-      error: error.message
-    });
+  if (!req.userId) { res.status(401).json({ success: false, message: 'No autenticado' }); return; }
+  const doc = await Interrogatorio.findOne({ _id: req.params.interrogatorioId, pacienteId: req.userId }).lean();
+  if (doc?.tipo === 'control') {
+    try {
+      const resultado = await interrogatorioService.completarInterrogatorio(String(req.params.interrogatorioId), req.userId,
+        req.body?.analisisIA, req.body?.objetivos, req.body?.alertaMedica);
+      res.json({ success: true, data: { _id: resultado._id.toString(), estado: resultado.estado, analisisIA: resultado.analisisIA, objetivos: resultado.objetivos } });
+    } catch { res.status(500).json({ success: false, message: 'No se pudo completar el control.' }); }
+    return;
   }
+  req.body = { ...req.body, interrogatorioId: String(req.params.interrogatorioId), accion: 'confirmar' };
+  await responderFase2(req, res);
 };
 
-// ─── Flujo orquestado por Bedrock Agent ──────────────────────────────────────
-
-/**
- * POST /paciente/interrogatorio/:interrogatorioId/siguiente-seccion
- *
- * Consulta al Agent orquestador qué secciones del cuestionario debe hacer
- * el paciente a continuación, según el síntoma inicial y las respuestas ya guardadas.
- *
- * Body: { sintomaInicial: string }
- *
- * Respuesta:
- *   - accion: "entrevistar" → secciones[] + estructura JSON de cada sección
- *   - accion: "generar_s37" → indicación de que ya se puede generar la síntesis
- *   - accion: "alerta_medica" → bandera roja detectada, suspender entrevista
- */
 export const siguienteSeccion = async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const pacienteId           = req.userId!;
-    const { interrogatorioId } = req.params;
-    const { sintomaInicial }   = req.body;
-
-    if (!sintomaInicial || typeof sintomaInicial !== 'string') {
-      res.status(400).json({ success: false, message: 'El campo sintomaInicial es requerido.' });
-      return;
-    }
-
-    const interrogatorio = await Interrogatorio.findOne({ _id: interrogatorioId, pacienteId }).lean();
-    if (!interrogatorio) {
-      res.status(404).json({ success: false, message: 'Interrogatorio no encontrado.' });
-      return;
-    }
-
-    const index  = cargarIndex();
-    const scores = calcularScores(interrogatorio.respuestas || {}, index.sections);
-
-    // Secciones ya completadas = tienen al menos 1 respuesta guardada
-    const respuestas           = interrogatorio.respuestas || {};
-    const seccionesCompletadas = index.sections
-      .filter((s: any) => {
-        const seccion = cargarSecciones([s.id])[s.id];
-        if (!seccion?.questions) return false;
-        return seccion.questions.some((q: any) => {
-          if (q.type === 'symptom_table') return q.items?.some((i: any) => respuestas[i.id] !== undefined);
-          return respuestas[q.id] !== undefined;
-        });
-      })
-      .map((s: any) => s.id);
-
-    const medicacionActual = respuestas['s06_detalle']
-      ? JSON.stringify(respuestas['s06_detalle'])
-      : undefined;
-
-    const decision = await consultarSiguientePaso(
-      { sintomaInicial, seccionesCompletadas, scores, medicacionActual },
-      { sessionId: `interrogatorio-${interrogatorioId}` }
-    );
-
-    let seccionesEstructura: Record<string, any> = {};
-    if (decision.accion === 'entrevistar') {
-      seccionesEstructura = cargarSecciones(decision.secciones);
-    }
-
-    res.json({
-      success: true,
-      data: {
-        decision,
-        seccionesEstructura,
-        scores: {
-          rojas:     scores.seccRojas,
-          amarillas: scores.seccAmarillas,
-          criticos:  scores.itemsCriticos.slice(0, 20),
-        },
-      },
-    });
-  } catch (err: any) {
-    console.error('[siguienteSeccion] error:', err);
-    res.status(500).json({ success: false, message: 'Error al consultar al agente de anamnesis.', error: err.message });
-  }
+  req.body = { ...req.body, interrogatorioId: String(req.params.interrogatorioId), accion: 'continuar' };
+  await responderFase2(req, res);
 };
 
-/**
- * POST /paciente/interrogatorio/:interrogatorioId/generar-sintesis
- *
- * Genera la síntesis funcional completa (Sección 37).
- * Guarda el resultado en analisisFisiologicoIA y recomendacionAutomatica.
- *
- * Body: { sintomaInicial: string }
- */
 export const generarSintesis = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const pacienteId           = req.userId!;
-    const { interrogatorioId } = req.params;
-    const { sintomaInicial, sintesisAgent } = req.body;
-
-    if (!sintomaInicial || typeof sintomaInicial !== 'string') {
-      res.status(400).json({ success: false, message: 'El campo sintomaInicial es requerido.' });
-      return;
+    const doc = await Interrogatorio.findOne({ _id: req.params.interrogatorioId, pacienteId: req.userId }).lean();
+    if (!doc) { res.status(404).json({ success: false, message: 'Interrogatorio no encontrado.' }); return; }
+    if (!doc.fase2 || !['resumen', 'confirmada'].includes(doc.fase2.estado) || doc.fase2.decision?.accion !== 'generar_s37') {
+      res.status(409).json({ success: false, message: 'El Agent todavía no ha generado el informe de esta entrevista.' }); return;
     }
-
-    const interrogatorio = await Interrogatorio.findOne({ _id: interrogatorioId, pacienteId });
-    if (!interrogatorio) {
-      res.status(404).json({ success: false, message: 'Interrogatorio no encontrado.' });
-      return;
-    }
-
-    const index  = cargarIndex();
-    const scores = calcularScores(interrogatorio.respuestas || {}, index.sections);
-
-    // Si el frontend ya envió la síntesis del Agent, usarla directamente sin volver a invocar Bedrock
-    let sintesis: any;
-    if (sintesisAgent && sintesisAgent.disfunciones_probables) {
-      console.log('[generarSintesis] Usando síntesis del Agent enviada por el frontend');
-      sintesis = sintesisAgent;
-    } else {
-      const medicacionActual = interrogatorio.respuestas?.['s06_detalle']
-        ? JSON.stringify(interrogatorio.respuestas['s06_detalle'])
-        : '';
-      sintesis = await generarSintesisOrchestrator(
-        interrogatorio.respuestas || {},
-        scores,
-        sintomaInicial,
-        medicacionActual,
-        { sessionId: `interrogatorio-${interrogatorioId}` }
-      );
-    }
-
-    interrogatorio.analisisFisiologicoIA  = sintesis.disfunciones_probables;
-    interrogatorio.recomendacionAutomatica = {
-      semaforizacion:         Object.values(scores.porSeccion),
-      recomendacionesOTC:     sintesis.disfunciones_probables.flatMap((d: any) => d.productos),
-      estiloVida:             [],
-      estrategiasFuncionales: sintesis.disfunciones_probables,
-      llamadoAccion:          sintesis.nota_medico || '',
-      generadoEn:             new Date(),
-    };
-    // No marcar como completado aquí — se completa cuando el paciente confirma el resumen
-    interrogatorio.estado   = 'en_proceso';
-    interrogatorio.progreso = 100;
-    await interrogatorio.save();
-
-    await registrarAccion(
-      req,
-      'actualizar',
-      'Interrogatorio',
-      String(interrogatorioId),
-      undefined,
-      { accion: 'generar_sintesis', disfuncionesCount: sintesis.disfunciones_probables.length }
-    );
-
-    // Generar resumen en lenguaje simple para el paciente (fire, no bloquea)
-    const resumenPaciente = await generarResumenPaciente({
-      disfunciones: sintesis.disfunciones_probables,
-      sintomaInicial: sintomaInicial,
-      nombrePaciente: interrogatorio.respuestas?.['s01_nombre'],
-    }).catch(() => [] as string[]);
-
-    res.json({
-      success: true,
-      message: 'Síntesis funcional generada exitosamente.',
-      data: {
-        _id:                     interrogatorio._id.toString(),
-        analisisFisiologicoIA:   sintesis.disfunciones_probables,
-        paraclinicos:            sintesis.disfunciones_a_descartar_con_paraclinicos,
-        ordenAbordaje:           sintesis.orden_abordaje,
-        notaMedico:              sintesis.nota_medico,
-        banderasRojas:           sintesis.banderas_rojas,
-        recomendacionAutomatica: interrogatorio.recomendacionAutomatica,
-        resumenPaciente,
-      },
-    });
-  } catch (err: any) {
-    console.error('[generarSintesis] error:', err);
-    res.status(500).json({ success: false, message: 'Error al generar la síntesis funcional.', error: err.message });
-  }
+    res.json({ success: true, data: { _id: doc._id.toString(), analisisFisiologicoIA: doc.analisisFisiologicoIA,
+      recomendacionAutomatica: doc.recomendacionAutomatica, resumenPaciente: doc.fase2.resumenPaciente,
+      paraclinicos: doc.fase2.decision.disfunciones_a_descartar_con_paraclinicos, ordenAbordaje: doc.fase2.decision.orden_abordaje } });
+  } catch (err: any) { res.status(500).json({ success: false, message: 'No se pudo recuperar el informe guardado.' }); }
 };
 
 export const generarAnalisisIA = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -617,45 +397,79 @@ export const agregarParaclinicosOcr = async (req: AuthRequest, res: Response): P
   try {
     const pacienteId = req.userId!;
     const { interrogatorioId } = req.params;
-    const { paraclinicos } = req.body as {
+    const { paraclinicos, reemplazarPreparacion } = req.body as {
+      reemplazarPreparacion?: boolean;
       paraclinicos: Array<{ nombre: string; ocrValores: Array<{ nombre: string; valor: string; unidad?: string; referencia?: string }> }>;
     };
 
-    if (!Array.isArray(paraclinicos) || paraclinicos.length === 0) {
+    if (!Array.isArray(paraclinicos) || paraclinicos.length === 0 || paraclinicos.length > 30 || paraclinicos.some(p =>
+      !p || typeof p.nombre !== 'string' || !p.nombre.trim() || p.nombre.length > 255 || !Array.isArray(p.ocrValores) || p.ocrValores.length > 1000 ||
+      p.ocrValores.some(v => !v || typeof v.nombre !== 'string' || v.nombre.length > 255 || !['string', 'number'].includes(typeof v.valor)))) {
       res.status(400).json({ success: false, message: 'paraclinicos requerido' });
       return;
     }
 
-    const interrogatorio = await Interrogatorio.findOne({ _id: interrogatorioId, pacienteId });
-    if (!interrogatorio) {
-      res.status(404).json({ success: false, message: 'Interrogatorio no encontrado.' });
+    for (let intento = 0; intento < 3; intento++) {
+      const interrogatorio = await Interrogatorio.findOne({ _id: interrogatorioId, pacienteId }).lean();
+      if (!interrogatorio) {
+        res.status(404).json({ success: false, message: 'Interrogatorio no encontrado.' });
+        return;
+      }
+
+      if (interrogatorio.fase2Reinicio?.pendiente || !solicitudDeGeneracionActual(interrogatorio, req.body.generacion)) {
+        res.status(409).json({ success: false, message: 'La entrevista fue reiniciada o tiene un reinicio pendiente. Recarga la página.' }); return;
+      }
+
+      const preparacionActiva = interrogatorio.fase2Operacion?.preparandoExamenes === true;
+      if (interrogatorio.estado === 'completado' || (!interrogatorio.fase2?.examenesPendientes && ['resumen', 'confirmada', 'alerta'].includes(interrogatorio.fase2?.estado || ''))) {
+        res.status(409).json({ success: false, message: 'La entrevista ya tiene un informe. No se pueden añadir resultados sin una nueva valoración.' }); return;
+      }
+      // Guardar por archivo: cada entrada tiene nombre del archivo + sus valores OCR
+      const examenesOcr = paraclinicos
+        .map(p => ({
+          archivo: p.nombre,
+          valores: (p.ocrValores || []).filter(v => v.nombre || v.valor),
+        }))
+        .filter(p => p.valores.length > 0);
+      if (!examenesOcr.length) { res.status(400).json({ success: false, message: 'No hay resultados que guardar.' }); return; }
+
+      // Merge con los archivos ya guardados (evita pisar subidas anteriores)
+      const previos: typeof examenesOcr = interrogatorio.respuestas?.examenes_paraclinicos || [];
+      const archivosNuevos = new Set(examenesOcr.map(e => e.archivo));
+      const merged = [...previos.filter((p: any) => !archivosNuevos.has(p.archivo)), ...examenesOcr];
+      const campos: Record<string, any> = { 'respuestas.examenes_paraclinicos': merged };
+      const eliminar: Record<string, 1> = {};
+      const prepararConResultados = reemplazarPreparacion === true && !interrogatorio.fase2 && interrogatorio.fase1?.confirmada;
+      if ((interrogatorio.fase2?.examenesPendientes || preparacionActiva || prepararConResultados) && JSON.stringify(previos) !== JSON.stringify(merged)) {
+        // La primera decisión anticipada ya no tiene todo el contexto: el Agent debe revisarla.
+        const inicial = interrogatorio.fase2 || { version: 0, estado: 'decidiendo' as const, ronda: 0,
+          preguntas: [], preguntaId: null, respondidas: [], historial: [], turnos: [], progreso: interrogatorio.progreso || 0 };
+        const fase2 = { ...inicial, examenesPendientes: true, version: inicial.version + 1,
+          estado: 'decidiendo' as const, preguntaId: null, preguntas: [], turnos: [], progreso: Math.min(95, inicial.progreso) };
+        delete fase2.decision; delete fase2.resumenPaciente;
+        fase2.ultimaRespuesta = { interrogatorioId, fase2Version: fase2.version, fase2Estado: 'decidiendo',
+          questionId: null, guardado: true, examenesPendientes: true, progreso: fase2.progreso, finRonda: true };
+        campos.fase2 = fase2; campos.progreso = fase2.progreso;
+        Object.assign(eliminar, { analisisFisiologicoIA: 1, recomendacionAutomatica: 1, alertaMedica: 1 });
+      }
+      if (preparacionActiva) eliminar.fase2Operacion = 1;
+
+      const guardado = await Interrogatorio.findOneAndUpdate({ _id: interrogatorioId, pacienteId, estado: { $ne: 'completado' },
+        ...filtroGeneracionFase2(interrogatorio), 'fase2Reinicio.pendiente': { $ne: true },
+        ...(preparacionActiva ? { 'fase2Operacion.token': interrogatorio.fase2Operacion!.token } : { fase2Operacion: { $exists: false } }),
+        ...(interrogatorio.fase2 ? { 'fase2.version': interrogatorio.fase2.version } : { fase2: { $exists: false } }), updatedAt: interrogatorio.updatedAt },
+        { $set: campos, ...(Object.keys(eliminar).length ? { $unset: eliminar } : {}) }, { new: true }).lean();
+      if (!guardado) continue;
+      if (preparacionActiva) cancelarPreparacionFase2(interrogatorio.fase2Operacion!.token);
+
+      const totalValores = examenesOcr.reduce((sum, p) => sum + p.valores.length, 0);
+      console.log('[paraclinicosOcr] Guardados', examenesOcr.length, 'archivos,', totalValores, 'valores OCR para interrogatorio', interrogatorioId);
+
+      res.json({ success: true, data: { valoresGuardados: examenesOcr.length,
+        ...(guardado.fase2 ? { fase2Version: guardado.fase2.version, questionId: guardado.fase2.preguntaId } : {}) } });
       return;
     }
-
-    // Guardar por archivo: cada entrada tiene nombre del archivo + sus valores OCR
-    const examenesOcr = paraclinicos
-      .map(p => ({
-        archivo: p.nombre,
-        valores: (p.ocrValores || []).filter(v => v.nombre || v.valor),
-      }))
-      .filter(p => p.valores.length > 0);
-
-    // Merge con los archivos ya guardados (evita pisar subidas anteriores)
-    const previos: typeof examenesOcr = interrogatorio.respuestas?.examenes_paraclinicos || [];
-    const archivosNuevos = new Set(examenesOcr.map(e => e.archivo));
-    const merged = [...previos.filter((p: any) => !archivosNuevos.has(p.archivo)), ...examenesOcr];
-
-    interrogatorio.respuestas = {
-      ...interrogatorio.respuestas,
-      examenes_paraclinicos: merged,
-    };
-    interrogatorio.markModified('respuestas');
-    await interrogatorio.save();
-
-    const totalValores = examenesOcr.reduce((sum, p) => sum + p.valores.length, 0);
-    console.log('[paraclinicosOcr] Guardados', examenesOcr.length, 'archivos,', totalValores, 'valores OCR para interrogatorio', interrogatorioId);
-
-    res.json({ success: true, data: { valoresGuardados: examenesOcr.length } });
+    res.status(409).json({ success: false, message: 'La entrevista está cambiando. Reintenta guardar los resultados.' });
   } catch (err: any) {
     console.error('[paraclinicosOcr] error:', err.message);
     res.status(500).json({ success: false, message: 'Error al guardar paraclínicos.' });
@@ -670,6 +484,14 @@ export const generarPerfilRadarInterrogatorio = async (req: AuthRequest, res: Re
     const interrogatorio = await Interrogatorio.findOne({ _id: interrogatorioId, pacienteId });
     if (!interrogatorio) {
       res.status(404).json({ success: false, message: 'Interrogatorio no encontrado.' });
+      return;
+    }
+
+    // El cierre de fase 2 envía su generación; una petición tardía no inicia un radar tras reiniciar.
+    if (req.body?.generacion !== undefined && (!solicitudDeGeneracionActual(interrogatorio, req.body.generacion)
+      || interrogatorio.fase2Reinicio?.pendiente || interrogatorio.fase2?.estado !== 'confirmada'
+      || interrogatorio.estado !== 'completado')) {
+      res.status(409).json({ success: false, message: 'La fase 2 debe estar confirmada y corresponder al intento actual.' });
       return;
     }
 
@@ -733,13 +555,13 @@ export const generarPerfilRadarInterrogatorio = async (req: AuthRequest, res: Re
     });
 
     // Guardar en el interrogatorio
-    interrogatorio.perfilRadar = {
+    const radarGuardado = {
       textoAnalisis,
       json: perfilRadar,
       generadoEn: new Date(),
     };
-    interrogatorio.markModified('perfilRadar');
-    await interrogatorio.save();
+    await Interrogatorio.findOneAndUpdate({ _id: interrogatorio._id, pacienteId, ...filtroGeneracionFase2(interrogatorio),
+      'fase2Reinicio.pendiente': { $ne: true } }, { $set: { perfilRadar: radarGuardado } });
 
     console.log('[perfilRadar] Guardado para interrogatorio', interrogatorioId,
       '| ejes:', perfilRadar?.ejes?.length ?? 0);

@@ -20,7 +20,11 @@
     "load-parametros-nutrabiotics": "ts-node src/scripts/loadParametrosNutrabiotics.ts",
     "import-materiales": "ts-node src/scripts/importMaterialesRegulatorios.ts",
     "import-materiales-json": "ts-node src/scripts/importMaterialesFromJson.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:fase1": "node --test scripts/test-fase1.cjs",
+    "test:rda": "node --test scripts/test-fase1-rda.cjs scripts/test-rda-inicial.cjs scripts/test-preguntas-rda.cjs",
+    "test:fase2": "node --test scripts/test-fase2.cjs scripts/test-reinicio-fase2.cjs",
+    "migrate:rda-indexes": "ts-node src/scripts/migrarIndicesRDA.ts"
   },
   "keywords": [
     "medical",

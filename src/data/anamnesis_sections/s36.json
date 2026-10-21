@@ -17,7 +17,7 @@
     {"id":"s36_acciones_impulsivas","text":"¿Qué acciones sueles tomar de manera impulsiva cuando estás bajo la influencia de emociones como pesar, enojo o rabia?","type":"text"},
     {
       "id":"s36_emociones_negativas",
-      "text":"¿Con qué frecuencia sientes estas emociones? (emociones de baja vibración)",
+      "text": "¿Con qué frecuencia sientes estas emociones? (emociones de baja vibración)",
       "type":"symptom_table",
       "scale_type":"frequency",
       "items":[
@@ -43,7 +43,7 @@
     },
     {
       "id":"s36_emociones_positivas",
-      "text":"¿Con qué frecuencia sientes estas emociones? (emociones de alta vibración)",
+      "text": "¿Con qué frecuencia sientes estas emociones? (emociones de alta vibración)",
       "type":"symptom_table",
       "scale_type":"frequency",
       "items":[

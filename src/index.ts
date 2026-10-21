@@ -147,6 +147,7 @@ import './models/ConfiguracionRecordatorios';
 import './models/ConfiguracionNotificacionesMedico';
 import './models/Notificacion';
 import './models/CompartirHistorial';
+import './models/RegistroRDA';
 // import './models/ConsultaRapida';
 // Fase 5
 import {

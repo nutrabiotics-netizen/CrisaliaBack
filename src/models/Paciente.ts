@@ -20,12 +20,18 @@ export interface IPaciente extends Document {
   role: UserRole.PACIENTE;
   nombre: string;
   apellido: string;
+  // Nombre dividido (requerido para RDA/MINSALUD)
+  primerNombre?: string;
+  segundoNombre?: string;
+  primerApellido?: string;
+  segundoApellido?: string;
   // Datos de identificación
-  tipoDocumento?: 'CC' | 'TI' | 'RC' | 'PA' | 'CE' | 'PT' | 'PE' | 'SC' | 'DE' | 'CD';
+  tipoDocumento?: 'AS' | 'CC' | 'CD' | 'CE' | 'MS' | 'NV' | 'PE' | 'PT' | 'RC' | 'TI';
   numeroDocumento?: string;
   fechaNacimiento?: Date;
   sexoBiologico?: 'masculino' | 'femenino' | 'intersexual';
-  genero?: 'masculino' | 'femenino' | 'no-binario' | 'otro' | 'prefiero-no-decir';
+  genero?: { codigo: string; descripcion: string };
+  ocupacionCIUO?: { codigo: string; nombre: string };
   estadoCivil?: 'soltero' | 'casado' | 'union-libre' | 'divorciado' | 'viudo';
   nacionalidad?: string;
   lugarResidencia?: string;
@@ -114,6 +120,10 @@ const PacienteSchema = new Schema<IPaciente>(
       required: [true, 'El apellido es requerido'],
       trim: true
     },
+    primerNombre: { type: String, trim: true },
+    segundoNombre: { type: String, trim: true },
+    primerApellido: { type: String, trim: true },
+    segundoApellido: { type: String, trim: true },
     fechaNacimiento: {
       type: Date,
       trim: true
@@ -125,7 +135,7 @@ const PacienteSchema = new Schema<IPaciente>(
     // Datos de identificación
     tipoDocumento: {
       type: String,
-      enum: ['CC', 'TI', 'RC', 'PA', 'CE', 'PT', 'PE', 'SC', 'DE', 'CD'],
+      enum: ['AS', 'CC', 'CD', 'CE', 'MS', 'NV', 'PE', 'PT', 'RC', 'TI'],
       trim: true
     },
     numeroDocumento: {
@@ -137,11 +147,8 @@ const PacienteSchema = new Schema<IPaciente>(
       enum: ['masculino', 'femenino', 'intersexual'],
       trim: true
     },
-    genero: {
-      type: String,
-      enum: ['masculino', 'femenino', 'no-binario', 'otro', 'prefiero-no-decir'],
-      trim: true
-    },
+    genero: { type: Schema.Types.Mixed },
+    ocupacionCIUO: { type: Schema.Types.Mixed },
     estadoCivil: {
       type: String,
       enum: ['soltero', 'casado', 'union-libre', 'divorciado', 'viudo'],

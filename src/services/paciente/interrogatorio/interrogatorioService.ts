@@ -2,6 +2,7 @@ import Interrogatorio, { IInterrogatorio } from '../../../models/Interrogatorio'
 import openaiService from '../../openai/openaiService';
 import { AIService } from '../../ai/AIService';
 import { notificarMedicoProgresoAnamnesis } from '../../notifications/medicoNotificacionService';
+import { filtroGeneracionFase2 } from '../reinicioFase2Flow';
 
 export interface RespuestaInterrogatorio {
   preguntaId: string;
@@ -99,6 +100,7 @@ class InterrogatorioService {
       throw new Error('Interrogatorio no encontrado');
     }
 
+    if (interrogatorio.tipo === 'primera_vez') throw new Error('Usa el flujo versionado de la entrevista para guardar respuestas.');
     // Actualizar respuestas
     interrogatorio.respuestas = {
       ...interrogatorio.respuestas,
@@ -157,6 +159,9 @@ class InterrogatorioService {
       throw new Error('Interrogatorio no encontrado');
     }
 
+    if (interrogatorio.tipo === 'primera_vez' && (!interrogatorio.fase1?.confirmada || interrogatorio.fase2?.estado !== 'confirmada' ||
+      interrogatorio.fase2.decision?.accion !== 'generar_s37')) throw new Error('La entrevista todavía no tiene un informe del Agent confirmado.');
+    if (interrogatorio.fase2Reinicio?.pendiente) throw new Error('Hay un reinicio pendiente.');
     // Marcar completado inmediatamente para que el dashboard no muestre "Completar Preconsulta"
     // mientras OpenAI sigue procesando en segundo plano
     interrogatorio.estado   = 'completado';
@@ -171,7 +176,13 @@ class InterrogatorioService {
     if (analisisIA) interrogatorio.analisisIA = analisisIA;
     if (objetivos && objetivos.length > 0) interrogatorio.objetivos = objetivos;
 
-    await interrogatorio.save();
+    if (interrogatorio.tipo === 'primera_vez') {
+      const guardado = await Interrogatorio.findOneAndUpdate({ _id: interrogatorio._id, pacienteId,
+        ...filtroGeneracionFase2(interrogatorio), 'fase2Reinicio.pendiente': { $ne: true }, 'fase2.estado': 'confirmada' },
+        { $set: { estado: 'completado', progreso: 100, ...(analisisIA ? { analisisIA } : {}), ...(objetivos ? { objetivos } : {}),
+          ...(alertaMedica ? { alertaMedica: interrogatorio.alertaMedica } : {}) } });
+      if (!guardado) throw new Error('La entrevista fue reiniciada.');
+    } else await interrogatorio.save();
 
     // Generar análisis IA en segundo plano (no bloquea la respuesta al cliente)
     if (!analisisIA && Object.keys(interrogatorio.respuestas).length > 0) {
@@ -192,7 +203,8 @@ class InterrogatorioService {
           if (analisis.observacionesIA && analisis.observacionesIA.length > 0) {
             update.observacionesIA = analisis.observacionesIA;
           }
-          await Interrogatorio.findByIdAndUpdate(interrogatorio._id, update);
+          await Interrogatorio.findOneAndUpdate({ _id: interrogatorio._id, pacienteId, ...filtroGeneracionFase2(interrogatorio),
+            'fase2Reinicio.pendiente': { $ne: true }, estado: 'completado' }, { $set: update });
           console.info('[completarInterrogatorio] análisis OpenAI guardado para', interrogatorio._id.toString());
         } catch (e) {
           console.error('[completarInterrogatorio] error guardando análisis OpenAI:', e);
@@ -215,6 +227,7 @@ class InterrogatorioService {
     if (!interrogatorioExistente) {
       throw new Error('Interrogatorio no encontrado');
     }
+    if (interrogatorioExistente.fase2Reinicio?.pendiente) throw new Error('Hay un reinicio pendiente.');
 
     if (Object.keys(interrogatorioExistente.respuestas).length === 0) {
       throw new Error('El interrogatorio no tiene respuestas para analizar');
@@ -235,8 +248,8 @@ class InterrogatorioService {
       const semaforizacion = await AIService.generarSemaforizacion(interrogatorioId);
 
       // Actualizar usando findByIdAndUpdate para evitar conflictos de versión
-      const interrogatorioActualizado = await Interrogatorio.findByIdAndUpdate(
-        interrogatorioId,
+      const interrogatorioActualizado = await Interrogatorio.findOneAndUpdate(
+        { _id: interrogatorioId, pacienteId, ...filtroGeneracionFase2(interrogatorioExistente), 'fase2Reinicio.pendiente': { $ne: true } },
         {
           analisisIA: analisis.analisisIA,
           historiaClinica: analisis.historiaClinica,

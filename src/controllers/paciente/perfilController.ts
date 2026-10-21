@@ -63,6 +63,10 @@ export const actualizarPerfil = async (req: AuthRequest, res: Response): Promise
       // Datos del paciente
       nombre,
       apellido,
+      primerNombre,
+      segundoNombre,
+      primerApellido,
+      segundoApellido,
       tipoDocumento,
       numeroDocumento,
       fechaNacimiento,
@@ -121,6 +125,20 @@ export const actualizarPerfil = async (req: AuthRequest, res: Response): Promise
     // Actualizar campos del paciente
     if (nombre !== undefined && nombre.trim() !== '') paciente.nombre = nombre;
     if (apellido !== undefined && apellido.trim() !== '') paciente.apellido = apellido;
+
+    // Campos de nombre dividido (RDA/MINSALUD)
+    if (primerNombre !== undefined && primerNombre.trim() !== '') {
+      paciente.primerNombre = primerNombre.trim();
+      paciente.segundoNombre = segundoNombre?.trim() || undefined;
+      // Sincronizar nombre completo
+      paciente.nombre = [primerNombre.trim(), segundoNombre?.trim()].filter(Boolean).join(' ');
+    }
+    if (primerApellido !== undefined && primerApellido.trim() !== '') {
+      paciente.primerApellido = primerApellido.trim();
+      paciente.segundoApellido = segundoApellido?.trim() || undefined;
+      // Sincronizar apellido completo
+      paciente.apellido = [primerApellido.trim(), segundoApellido?.trim()].filter(Boolean).join(' ');
+    }
     if (tipoDocumento !== undefined && tipoDocumento.trim() !== '') paciente.tipoDocumento = tipoDocumento;
     if (numeroDocumento !== undefined) paciente.numeroDocumento = numeroDocumento.trim() || undefined;
     if (fechaNacimiento !== undefined) paciente.fechaNacimiento = fechaNacimiento || undefined;
