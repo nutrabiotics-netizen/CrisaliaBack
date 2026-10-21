@@ -98,6 +98,20 @@ const registerPacienteValidation = [
   body('segundoApellido')
     .optional()
     .trim(),
+  body('fechaNacimiento')
+    .optional()
+    .trim(),
+  body('sexoBiologico')
+    .optional()
+    .trim()
+    .isIn(['masculino', 'femenino', 'intersexual'])
+    .withMessage('sexoBiologico debe ser masculino, femenino o intersexual'),
+  body('tipoDocumento')
+    .optional()
+    .trim(),
+  body('numeroDocumento')
+    .optional()
+    .trim(),
   body('aceptaTerminos')
     .optional()
     .isBoolean(),

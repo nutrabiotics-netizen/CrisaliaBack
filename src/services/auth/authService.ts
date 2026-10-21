@@ -45,6 +45,7 @@ export interface RegisterPacienteData {
   fechaNacimiento?: string;
   /** Género auto-declarado del paciente */
   genero?: 'masculino' | 'femenino' | 'no-binario' | 'otro' | 'prefiero-no-decir';
+  sexoBiologico?: 'masculino' | 'femenino' | 'intersexual';
   acudiente?: AcudienteTutorData;
   aceptaTerminos?: boolean;
   aceptaConsentimiento?: boolean;
@@ -75,7 +76,13 @@ export interface AuthResponse {
     aceptaConsentimiento?: boolean;
     firstAppointment?: boolean;
     genero?: { codigo: string; descripcion: string } | string;
+    sexoBiologico?: string;
     numeroDocumento?: string;
+    tipoDocumento?: string;
+    primerNombre?: string;
+    segundoNombre?: string;
+    primerApellido?: string;
+    segundoApellido?: string;
   };
 }
 
@@ -210,7 +217,7 @@ export class AuthService {
   }
 
   async registerPaciente(data: RegisterPacienteData): Promise<AuthResponse> {
-    const { nombre, apellido, primerNombre, segundoNombre, primerApellido, segundoApellido, email, password, telefono, fechaNacimiento, genero, acudiente, aceptaTerminos, aceptaConsentimiento, zonasDolor, numeroDocumento, tipoDocumento, direccion, lugarResidencia } = data;
+    const { nombre, apellido, primerNombre, segundoNombre, primerApellido, segundoApellido, email, password, telefono, fechaNacimiento, genero, sexoBiologico, acudiente, aceptaTerminos, aceptaConsentimiento, zonasDolor, numeroDocumento, tipoDocumento, direccion, lugarResidencia } = data;
 
     // Derivar nombre/apellido desde campos divididos si se proveyeron
     const nombreFinal = primerNombre
@@ -273,7 +280,9 @@ export class AuthService {
       telefono: telefono?.trim() || undefined,
       ...(fechaNacimientoParsed && { fechaNacimiento: fechaNacimientoParsed }),
       ...(generoFinal && { genero: generoFinal }),
-      ...(['masculino', 'femenino'].includes(generoFinal ?? '') && { sexoBiologico: generoFinal as 'masculino' | 'femenino' }),
+      ...(sexoBiologico?.trim()
+        ? { sexoBiologico: sexoBiologico as 'masculino' | 'femenino' | 'intersexual' }
+        : ['masculino', 'femenino'].includes(generoFinal ?? '') && { sexoBiologico: generoFinal as 'masculino' | 'femenino' }),
       acudiente:
         acudiente?.nombre?.trim() && acudiente?.parentesco?.trim()
           ? {
@@ -324,7 +333,13 @@ export class AuthService {
       aceptaConsentimiento: configSeguridad?.aceptaConsentimiento ?? false,
       firstAppointment: false,
       genero: nuevoPaciente.genero,
-      numeroDocumento: nuevoPaciente.numeroDocumento
+      sexoBiologico: nuevoPaciente.sexoBiologico,
+      numeroDocumento: nuevoPaciente.numeroDocumento,
+      tipoDocumento: nuevoPaciente.tipoDocumento,
+      primerNombre: nuevoPaciente.primerNombre,
+      segundoNombre: nuevoPaciente.segundoNombre,
+      primerApellido: nuevoPaciente.primerApellido,
+      segundoApellido: nuevoPaciente.segundoApellido
     };
 
     return {
