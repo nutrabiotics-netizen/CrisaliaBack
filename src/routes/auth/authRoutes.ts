@@ -92,6 +92,12 @@ const registerPacienteValidation = [
   body('acudiente.telefono')
     .optional()
     .trim(),
+  body('segundoNombre')
+    .optional()
+    .trim(),
+  body('segundoApellido')
+    .optional()
+    .trim(),
   body('aceptaTerminos')
     .optional()
     .isBoolean(),
