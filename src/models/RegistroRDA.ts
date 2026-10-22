@@ -27,7 +27,7 @@ export interface SeccionInterrogatorioInicial {
   ocupacionCodigo?: string | null;
   ocupacionNombre?: string;
   indicadorAlergia?: boolean;
-  antecedentesAlergias?: { tipo: string; nombreAlergeno: string }[];
+  antecedentesAlergias?: { tipo: string; tipoCodigo?: '01' | '02' | '03' | '04' | '05' | '06'; tipoNombre?: string; nombreAlergeno: string }[];
   antecedentesFamiliares?: AntecedenteFamiliar[];
   estadoAntecedentesFamiliares?: 'registradas' | 'no_conoce';
   estadoAntecedentesFarmacologicos?: 'toma' | 'no_toma';
@@ -36,6 +36,9 @@ export interface SeccionInterrogatorioInicial {
 
 // Sección 3 — Datos de facturación
 interface SeccionFacturacion {
+  paisResidenciaNombre?: string;
+  municipioResidenciaNombre?: string;
+  etniaNombre?: string;
   paisResidenciaCodigo?: string;
   municipioResidenciaCodigo?: string;
   etniaCodigo?: string;
@@ -135,6 +138,8 @@ interface SeccionConsulta {
 export interface IRegistroRDA extends Document {
   pacienteId: mongoose.Types.ObjectId;
   tipoRegistro: 'inicial' | 'consulta';
+  origenCuenta?: boolean;
+  fuenteRespuestasFase1?: SeccionInterrogatorioInicial;
   generacionPruebasFase2?: number;
   medicoId?: mongoose.Types.ObjectId;
   citaId?: mongoose.Types.ObjectId;
@@ -146,6 +151,7 @@ export interface IRegistroRDA extends Document {
   seccionInterrogatorioPrincipal: SeccionInterrogatorioPrincipal;
   seccionConsulta: SeccionConsulta;
   fuenteFase1?: { interrogatorioId: mongoose.Types.ObjectId; version: number; incorporadoEn: Date };
+  fuenteDemografiaPaciente?: { actualizadoEn?: Date; seccionCuenta: Record<string, any>; seccionFacturacion: Record<string, any> };
 
   estado: 'borrador' | 'listo' | 'transmitido';
   activo?: boolean;
@@ -163,6 +169,8 @@ const RegistroRDASchema = new Schema<IRegistroRDA>(
   {
     pacienteId: { type: Schema.Types.ObjectId, ref: 'Paciente', required: true },
     tipoRegistro: { type: String, enum: ['inicial', 'consulta'], default: 'consulta' },
+    origenCuenta: Boolean,
+    fuenteRespuestasFase1: Schema.Types.Mixed,
     generacionPruebasFase2: Number,
     medicoId: { type: Schema.Types.ObjectId, ref: 'Medico', required: function () { return this.tipoRegistro !== 'inicial'; } },
     citaId: { type: Schema.Types.ObjectId, ref: 'Cita', required: function () { return this.tipoRegistro !== 'inicial'; } },
@@ -186,7 +194,8 @@ const RegistroRDASchema = new Schema<IRegistroRDA>(
       ocupacionCodigo: String,
       ocupacionNombre: String,
       indicadorAlergia: Boolean,
-      antecedentesAlergias: [{ tipo: String, nombreAlergeno: String }],
+      antecedentesAlergias: [{ tipo: String, tipoCodigo: { type: String, enum: ['01', '02', '03', '04', '05', '06'] },
+        tipoNombre: String, nombreAlergeno: String }],
       estadoAntecedentesFamiliares: { type: String, enum: ['registradas', 'no_conoce'] },
       antecedentesFamiliares: [{ codigoCIE10: String, nombreCIE10: String, parentesco: String, parentescoNombre: String }],
       estadoAntecedentesFarmacologicos: { type: String, enum: ['toma', 'no_toma'] },
@@ -202,7 +211,11 @@ const RegistroRDASchema = new Schema<IRegistroRDA>(
       default: undefined,
     },
 
+    fuenteDemografiaPaciente: Schema.Types.Mixed,
     seccionFacturacion: {
+      paisResidenciaNombre: String,
+      municipioResidenciaNombre: String,
+      etniaNombre: String,
       paisResidenciaCodigo: String,
       municipioResidenciaCodigo: String,
       etniaCodigo: String,
@@ -314,5 +327,7 @@ RegistroRDASchema.index({ citaId: 1 }, { unique: true, name: 'rda_cita_unica', p
 RegistroRDASchema.index({ 'fuenteFase1.interrogatorioId': 1 }, { unique: true, name: 'rda_inicial_por_interrogatorio',
   partialFilterExpression: { tipoRegistro: 'inicial', 'fuenteFase1.interrogatorioId': { $type: 'objectId' } } });
 RegistroRDASchema.index({ estado: 1 });
+RegistroRDASchema.index({ pacienteId: 1 }, { unique: true, name: 'rda_inicial_por_cuenta',
+  partialFilterExpression: { tipoRegistro: 'inicial', origenCuenta: true } });
 
 export default mongoose.model<IRegistroRDA>('RegistroRDA', RegistroRDASchema);

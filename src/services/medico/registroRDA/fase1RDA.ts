@@ -1,5 +1,14 @@
 import type { SeccionInterrogatorioInicial } from '../../../models/RegistroRDA';
 
+const categoriasAlergia: Record<string, { tipoCodigo: '01' | '02' | '03' | '04' | '05' | '06'; tipoNombre: string }> = {
+  medicamentos: { tipoCodigo: '01', tipoNombre: 'Medicamento' },
+  alimentos: { tipoCodigo: '02', tipoNombre: 'Alimento' },
+  ambiente: { tipoCodigo: '03', tipoNombre: 'Sustancia del ambiente' },
+  contacto_piel: { tipoCodigo: '04', tipoNombre: 'Sustancia que entran en contacto con la piel' },
+  picaduras_insectos: { tipoCodigo: '05', tipoNombre: 'Picadura de insectos' },
+  otra: { tipoCodigo: '06', tipoNombre: 'Otra' },
+};
+
 /** Proyección de respuestas declaradas. No deduce diagnósticos ni completa códigos ausentes. */
 export function proyectarFase1RDA(r: Record<string, any>): SeccionInterrogatorioInicial {
   const resultado: SeccionInterrogatorioInicial = {};
@@ -16,7 +25,9 @@ export function proyectarFase1RDA(r: Record<string, any>): SeccionInterrogatorio
     const alergias = r.s01_alergias.filter((a: any) => typeof a?.tipo === 'string' && typeof a.sustancia === 'string' && a.sustancia.trim());
     if (alergias.length === r.s01_alergias.length) {
       resultado.indicadorAlergia = true;
-      resultado.antecedentesAlergias = alergias.map((a: any) => ({ tipo: a.tipo, nombreAlergeno: a.sustancia }));
+      resultado.antecedentesAlergias = alergias.map((a: any) => ({ tipo: a.tipo,
+        ...(Object.prototype.hasOwnProperty.call(categoriasAlergia, a.tipo) ? categoriasAlergia[a.tipo] : {}),
+        nombreAlergeno: a.sustancia }));
     }
   }
   const familiares = r.s01_enfermedades_familia;

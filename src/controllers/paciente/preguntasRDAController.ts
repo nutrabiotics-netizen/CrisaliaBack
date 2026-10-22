@@ -7,6 +7,7 @@ import { guardarRDAInicial } from '../../services/paciente/registroRDAInicialSer
 import { filtroOposicionRDA, quitarOposicionLegacy, completarPreguntasRDA, fechaRespuestaRDA, preguntasRDAParaRespuestas, normalizarRespuestaRDA, etiquetaRespuestaRDA, respuestaRDAValida, siguientePreguntaRDA, contextoClinicoRDA, preguntasRDACompletas } from '../../services/paciente/preguntasRDAFlow';
 import { cancelarPreparacionFase2 } from './fase2Controller';
 import { filtroGeneracionFase2, generacionFase2, solicitudDeGeneracionActual } from '../../services/paciente/reinicioFase2Flow';
+import { crearOpcionesRespondidas } from '../../services/ai/fase1Flow';
 
 async function obtenerDocumento(req: AuthRequest) {
   if (!req.userId) throw new AppError('No autenticado', 401);
@@ -72,7 +73,8 @@ async function actualizarPreparacionRDA(inicial: Awaited<ReturnType<typeof obten
 const presentar = (respuestas: Record<string, any>) => {
   const pregunta = siguientePreguntaRDA(respuestas);
   const historial = preguntasRDAParaRespuestas(respuestas).filter(p => respuestaRDAValida(p, respuestas)).flatMap(p => [
-    { rol: 'ia', texto: [p.text, p.description].filter(Boolean).join('\n\n') }, { rol: 'usuario', texto: etiquetaRespuestaRDA(p, respuestas[p.id].valor) }]);
+    { rol: 'ia', texto: [p.text, p.description].filter(Boolean).join('\n\n'), opcionesRespondidas: respuestas[p.id].opcionesRespondidas },
+    { rol: 'usuario', texto: etiquetaRespuestaRDA(p, respuestas[p.id].valor) }]);
   return { completo: !pregunta, pregunta: pregunta || null, historial };
 };
 
@@ -101,11 +103,12 @@ export const responderPreguntaRDA = async (req: AuthRequest, res: Response): Pro
     } else {
       if (siguientePreguntaRDA(doc.respuestas || {})?.id !== pregunta.id) throw new AppError('Responde primero la pregunta RDA pendiente.', 409);
       const respondidoEn = new Date().toISOString();
+      const opcionesRespondidas = crearOpcionesRespondidas(pregunta, valor);
       const guardado = await Interrogatorio.findOneAndUpdate({ _id: doc._id, pacienteId: req.userId, estado: { $ne: 'completado' }, ...filtroGeneracionFase2(doc),
         'fase2Reinicio.pendiente': { $ne: true },
         'fase1.confirmada': true, [`respuestas.${pregunta.id}`]: { $exists: false } },
-        { $set: { [`respuestas.${pregunta.id}`]: { valor, etiqueta: etiquetaRespuestaRDA(pregunta, valor), respondidoEn, fechaRespuesta: fechaRespuestaRDA(respondidoEn), requestId } },
-          $push: { 'respuestas.historialChat': { $each: [{ rol: 'ia', texto: [pregunta.text, pregunta.description].filter(Boolean).join('\n\n') }, { rol: 'usuario', texto: etiquetaRespuestaRDA(pregunta, valor) }] } } },
+        { $set: { [`respuestas.${pregunta.id}`]: { valor, etiqueta: etiquetaRespuestaRDA(pregunta, valor), respondidoEn, fechaRespuesta: fechaRespuestaRDA(respondidoEn), requestId, opcionesRespondidas } },
+          $push: { 'respuestas.historialChat': { $each: [{ rol: 'ia', texto: [pregunta.text, pregunta.description].filter(Boolean).join('\n\n'), opcionesRespondidas }, { rol: 'usuario', texto: etiquetaRespuestaRDA(pregunta, valor) }] } } },
         { new: true, runValidators: true }).lean();
       if (!guardado) throw new AppError('La entrevista cambió. Reintenta el guardado de la misma respuesta.', 409);
       doc = guardado;

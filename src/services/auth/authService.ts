@@ -5,6 +5,7 @@ import ConfiguracionSeguridadPaciente from '../../models/ConfiguracionSeguridadP
 import { generateToken } from '../../utils/jwt';
 import { AppError } from '../../utils/errors';
 import { UserRole } from '../../types';
+import { crearRDACuenta } from '../paciente/registroRDACuentaService';
 import {
   envioCodigoWhatsApp,
   verificarCodigoWhatsApp,
@@ -130,6 +131,8 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new AppError('Credenciales inválidas', 401);
     }
+
+    if (userRole === UserRole.PACIENTE) await crearRDACuenta(user);
 
     // Generar token
     const token = generateToken(user._id.toString(), userRole);
@@ -317,6 +320,12 @@ export class AuthService {
       fechaAceptacionConsentimiento: aceptaConsentimiento ? ahora : undefined
     });
 
+    try {
+      await crearRDACuenta(nuevoPaciente);
+    } catch (error: any) {
+      console.warn('[Registro] RDA de cuenta pendiente', { name: error.name, code: error.code });
+      throw new AppError('Tu cuenta está creada, pero falta guardar su borrador RDA. Inicia sesión para reintentar el guardado.', 503);
+    }
     const configSeguridad = await ConfiguracionSeguridadPaciente.findOne({ paciente: nuevoPaciente._id });
     const token = generateToken(nuevoPaciente._id.toString(), UserRole.PACIENTE);
     const userResponse: AuthResponse['user'] = {

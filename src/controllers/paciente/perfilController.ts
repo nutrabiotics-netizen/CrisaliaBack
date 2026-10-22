@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthRequest } from '../../middleware/auth';
 import Paciente from '../../models/Paciente';
 import ConfiguracionSeguridadPaciente from '../../models/ConfiguracionSeguridadPaciente';
+import { sincronizarDemografiaPaciente } from '../../services/paciente/demografiaRDASyncService';
 
 export const obtenerPerfil = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -132,18 +133,20 @@ export const actualizarPerfil = async (req: AuthRequest, res: Response): Promise
     if (nombre !== undefined && nombre.trim() !== '') paciente.nombre = nombre;
     if (apellido !== undefined && apellido.trim() !== '') paciente.apellido = apellido;
 
-    // Campos de nombre dividido (RDA/MINSALUD)
-    if (primerNombre !== undefined && primerNombre.trim() !== '') {
-      paciente.primerNombre = primerNombre.trim();
-      paciente.segundoNombre = segundoNombre?.trim() || undefined;
-      // Sincronizar nombre completo
-      paciente.nombre = [primerNombre.trim(), segundoNombre?.trim()].filter(Boolean).join(' ');
+    // Una edición parcial conserva los componentes omitidos y permite borrar los segundos.
+    if (primerNombre !== undefined || segundoNombre !== undefined || nombre !== undefined) {
+      const partes = paciente.nombre.trim().split(/\s+/);
+      paciente.primerNombre = primerNombre?.trim() || (nombre !== undefined ? partes[0] : paciente.primerNombre || partes[0]);
+      paciente.segundoNombre = segundoNombre !== undefined ? segundoNombre.trim() || undefined
+        : nombre !== undefined ? partes.slice(1).join(' ') || undefined : paciente.segundoNombre || partes.slice(1).join(' ') || undefined;
+      paciente.nombre = [paciente.primerNombre, paciente.segundoNombre].filter(Boolean).join(' ');
     }
-    if (primerApellido !== undefined && primerApellido.trim() !== '') {
-      paciente.primerApellido = primerApellido.trim();
-      paciente.segundoApellido = segundoApellido?.trim() || undefined;
-      // Sincronizar apellido completo
-      paciente.apellido = [primerApellido.trim(), segundoApellido?.trim()].filter(Boolean).join(' ');
+    if (primerApellido !== undefined || segundoApellido !== undefined || apellido !== undefined) {
+      const partes = paciente.apellido.trim().split(/\s+/);
+      paciente.primerApellido = primerApellido?.trim() || (apellido !== undefined ? partes[0] : paciente.primerApellido || partes[0]);
+      paciente.segundoApellido = segundoApellido !== undefined ? segundoApellido.trim() || undefined
+        : apellido !== undefined ? partes.slice(1).join(' ') || undefined : paciente.segundoApellido || partes.slice(1).join(' ') || undefined;
+      paciente.apellido = [paciente.primerApellido, paciente.segundoApellido].filter(Boolean).join(' ');
     }
     if (tipoDocumento !== undefined && tipoDocumento.trim() !== '') paciente.tipoDocumento = tipoDocumento;
     if (numeroDocumento !== undefined) paciente.numeroDocumento = numeroDocumento.trim() || undefined;
@@ -238,6 +241,13 @@ export const actualizarPerfil = async (req: AuthRequest, res: Response): Promise
       await configuracionSeguridad.save();
     }
 
+    try {
+      await sincronizarDemografiaPaciente(paciente);
+    } catch (error) {
+      console.error('[Perfil] sincronización RDA pendiente', { name: error instanceof Error ? error.name : 'Error' });
+      res.status(503).json({ message: 'Tu perfil está guardado, pero falta actualizar el borrador RDA. Reintenta guardar los datos.' });
+      return;
+    }
     // Obtener datos actualizados
     const pacienteActualizado = await Paciente.findById(pacienteId).select('-password');
     const configuracionActualizada = await ConfiguracionSeguridadPaciente.findOne({ paciente: pacienteId });

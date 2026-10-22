@@ -17,11 +17,12 @@ function load(file, deps = {}) {
   } }); return module.exports;
 }
 const mapper = load('src/services/medico/registroRDA/fase1RDA.ts');
+const demografia = load('src/services/medico/registroRDA/demografiaRDA.ts');
 const errors = load('src/utils/errors.ts');
 const codigo = c => c.repeat(24);
-function storage() {
+function storage(perfil = {}) {
   const rows = []; let fallar = false, inserts = 0;
-  const match = (row, query) => row.tipoRegistro === query.tipoRegistro && row.pacienteId === query.pacienteId && row.fuenteFase1.interrogatorioId === query['fuenteFase1.interrogatorioId'];
+  const match = (row, query) => row.tipoRegistro === query.tipoRegistro && row.pacienteId === query.pacienteId && row.fuenteFase1?.interrogatorioId === query['fuenteFase1.interrogatorioId'];
   const model = {
     findOne: q => ({ lean: async () => clone(rows.find(r => match(r, q))) }),
     findOneAndUpdate: (q, update, options) => ({ lean: async () => {
@@ -34,8 +35,10 @@ function storage() {
     } }),
   };
   const { guardarRDAInicial } = load('src/services/paciente/registroRDAInicialService.ts', {
-    '../../models/RegistroRDA': model, '../../models/Paciente': { findById: () => ({ lean: async () => ({ nombre: 'Persona Sintética', apellido: 'Prueba', email: 'sintetico@example.invalid' }) }) },
+    '../../models/RegistroRDA': model, '../../models/Paciente': { findById: () => ({ lean: async () => ({ nombre: 'Persona Sintética', apellido: 'Prueba', email: 'sintetico@example.invalid', ...perfil }) }) },
     '../medico/registroRDA/fase1RDA': mapper, '../../utils/errors': errors,
+    '../medico/registroRDA/demografiaRDA': demografia, './demografiaRDASyncService': { sincronizarDemografiaRegistro: async r => r },
+    './registroRDAFase1Sync': { sincronizarFase1RDA: async r => r },
   });
   return { guardarRDAInicial, rows, get inserts() { return inserts; }, fail: v => { fallar = v; } };
 }
@@ -92,6 +95,21 @@ test('borrador conserva negativas y medicamentos sin código; dos pacientes gene
   assert.equal(ii.indicadorAlergia, false); assert.equal(ii.estadoAntecedentesFamiliares, 'no_conoce');
   assert.equal(ii.antecedentesFarmacologicos[0].codigoCUMS, null); assert.equal(ii.antecedentesFarmacologicos[0].origen, 'declarado');
 });
+test('el borrador inicial guarda el código y nombre de alergia junto al alérgeno del paciente', async () => {
+  const db = storage(); const doc = fuente();
+  doc.respuestas.s01_tipo_alergia = 'medicamentos';
+  doc.respuestas.s01_alergias = [{ tipo: 'medicamentos', sustancia: 'Penicilina' }, { tipo: 'otra', sustancia: 'Producto declarado' }];
+  await db.guardarRDAInicial(doc);
+  assert.deepEqual(db.rows[0].seccionInterrogatorioInicial.antecedentesAlergias, [
+    { tipo: 'medicamentos', tipoCodigo: '01', tipoNombre: 'Medicamento', nombreAlergeno: 'Penicilina' },
+    { tipo: 'otra', tipoCodigo: '06', tipoNombre: 'Otra', nombreAlergeno: 'Producto declarado' },
+  ]);
+  const antes = clone(db.rows[0]);
+  doc.respuestas.s01_alergias = [{ tipo: 'alimentos', sustancia: 'Camarón' }];
+  await db.guardarRDAInicial(doc);
+  assert.deepEqual(db.rows[0], antes);
+});
+
 test('repeticiones concurrentes insertan un solo borrador y un registro transmitido no se modifica', async () => {
   const db = storage(); await Promise.all([db.guardarRDAInicial(fuente()), db.guardarRDAInicial(fuente())]);
   assert.equal(db.rows.length, 1);
@@ -103,22 +121,35 @@ test('borrador inicial no se crea para una entrevista sin confirmar', async () =
   const db = storage(); const doc = fuente(); doc.fase1.confirmada = false;
   assert.equal(await db.guardarRDAInicial(doc), null); assert.equal(db.inserts, 0);
 });
+
+test('el RDA inicial incorpora la facturación del perfil y conserva su origen', async () => {
+  const db=storage({paisResidencia:'Colombia',municipioResidencia:'Medellín',zonaResidencia:'Rural',paisNacimiento:'Venezuela',nacionalidad:'Colombia',pertEtnica:'Ninguna',entidadSalud:'Entidad sintética'});
+  await db.guardarRDAInicial(fuente());const r=db.rows[0];
+  assert.equal(r.seccionFacturacion.municipioResidenciaNombre,'Medellín');assert.equal(r.seccionFacturacion.zonaResidencia,'R');
+  assert.equal(r.seccionFacturacion.paisNacimientoNombre,'Venezuela');assert.equal(r.seccionFacturacion.paisNacionalidadNombre,'Colombia');
+  assert.deepEqual(r.fuenteDemografiaPaciente.seccionFacturacion,r.seccionFacturacion);
+});
 test('esquema admite borradores de paciente sin cita y sigue exigiéndola para consulta', async () => {
   const mongoose = require('mongoose'); const Model = load('src/models/RegistroRDA.ts', { mongoose }).default;
-  const inicial = new Model({ pacienteId: codigo('a'), tipoRegistro: 'inicial', estado: 'borrador' });
+  const inicial = new Model({ pacienteId: codigo('a'), tipoRegistro: 'inicial', estado: 'borrador',
+    origenCuenta: true, fuenteRespuestasFase1: { identidadGenero: '02' } });
   await inicial.validate(); assert.equal(Model.collection.collectionName, 'registrordas');
+  assert.equal(inicial.toObject().origenCuenta, true);
+  assert.equal(inicial.toObject().fuenteRespuestasFase1.identidadGenero, '02');
   const consulta = new Model({ pacienteId: codigo('a'), tipoRegistro: 'consulta' });
   await assert.rejects(consulta.validate(), /citaId|medicoId/);
   const indexes = Model.schema.indexes();
   assert(indexes.some(([keys, options]) => keys.citaId && options.unique && options.partialFilterExpression?.citaId?.$type === 'objectId'));
+  assert(indexes.some(([keys, options]) => keys.pacienteId === 1 && options.unique &&
+    options.partialFilterExpression?.origenCuenta === true && options.partialFilterExpression?.tipoRegistro === 'inicial'));
 });
 test('migración de índices: simula sin escribir y crea protecciones antes de retirar el índice antiguo', async () => {
   const { prepararIndicesRDA } = load('src/utils/indicesRDA.ts'); const operations = [];
   const collection = { indexes: async () => [{ key: { citaId: 1 }, name: 'citaId_1', unique: true }],
     createIndex: async (_keys, options) => { operations.push(options.name); }, dropIndex: async name => { operations.push('drop:' + name); } };
-  const plan = await prepararIndicesRDA(collection); assert.equal(plan.length, 3); assert.equal(operations.length, 0);
+  const plan = await prepararIndicesRDA(collection); assert.equal(plan.length, 4); assert.equal(operations.length, 0);
   await prepararIndicesRDA(collection, true);
-  assert.deepEqual(operations, ['rda_cita_unica', 'rda_inicial_por_interrogatorio', 'drop:citaId_1']);
+  assert.deepEqual(operations, ['rda_cita_unica', 'rda_inicial_por_interrogatorio', 'rda_inicial_por_cuenta', 'drop:citaId_1']);
 });
 test('si no se pueden crear los índices de reemplazo, no se retira el índice anterior', async () => {
   const { prepararIndicesRDA } = load('src/utils/indicesRDA.ts'); let dropped = false;

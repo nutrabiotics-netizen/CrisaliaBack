@@ -1,4 +1,5 @@
-import { normalizarRespuesta, PreguntaFase1 } from './fase1Flow';
+import { normalizarRespuesta, PreguntaFase1, OpcionesRespondidas } from './fase1Flow';
+export { registrarOpcionesRespondidas } from './fase1Flow';
 import { contextoClinicoRDA } from '../paciente/preguntasRDAFlow';
 import type { AgentDecision } from './anamnesisAgentService';
 
@@ -18,7 +19,7 @@ export interface EstadoFase2 {
   preguntaId: string | null;
   progreso: number;
   respondidas: string[];
-  historial: { rol: 'ia' | 'usuario'; texto: string; payload?: Record<string, any> }[];
+  historial: { rol: 'ia' | 'usuario'; texto: string; payload?: Record<string, any>; opcionesRespondidas?: OpcionesRespondidas }[];
   turnos: { id: string; respuesta: Record<string, any> }[];
   decision?: AgentDecision;
   resumenPaciente?: string[];

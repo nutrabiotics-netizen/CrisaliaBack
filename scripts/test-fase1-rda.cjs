@@ -17,6 +17,7 @@ function load(file, deps = {}) {
   return module.exports;
 }
 const mapper = load('src/services/medico/registroRDA/fase1RDA.ts');
+const demografia = load('src/services/medico/registroRDA/demografiaRDA.ts');
 const errors = load('src/utils/errors.ts');
 const rdaFlow = load('src/services/paciente/preguntasRDAFlow.ts', { '../../data/rda_questions.json': require('../src/data/rda_questions.json') });
 const id = c => c.repeat(24);
@@ -53,7 +54,7 @@ function matches(o, query) {
     return value instanceof Date ? actual?.getTime() === value.getTime() : String(actual) === String(value);
   });
 }
-function harness({ docs = [], interviews = [source()], validCita = true, beforeUpdate } = {}) {
+function harness({ docs = [], interviews = [source()], validCita = true, beforeUpdate, perfil = {} } = {}) {
   let records = clone(docs), writes = 0, reads = 0;
   const document = data => data && Object.assign(clone(data), { toObject: () => clone(data) });
   function query(find) {
@@ -86,10 +87,11 @@ function harness({ docs = [], interviews = [source()], validCita = true, beforeU
   const service = load('src/services/medico/registroRDA/registroRDAService.ts', {
     '../../../models/RegistroRDA': model,
     '../../../models/Paciente': { findById: () => query(() => ({ nombre: 'Paciente sintético', apellido: 'Prueba', genero: { codigo: '01' },
-      ocupacionCIUO: { codigo: 'ANTERIOR', nombre: 'Ocupación anterior' } })) },
+      ocupacionCIUO: { codigo: 'ANTERIOR', nombre: 'Ocupación anterior' }, ...perfil })) },
     '../../../models/Interrogatorio': { findOne: q => { reads++; return query(() => interviews.filter(r => matches(r, q)).sort((a,b) => b.createdAt - a.createdAt)[0]); } },
     '../../../models/Cita': { findOne: q => query(() => validCita && matches({ _id: citaId, pacienteId: patientId, medicoId }, q) ? { _id: citaId } : null) },
     '../../../utils/errors': errors, './fase1RDA': mapper, '../../paciente/preguntasRDAFlow': rdaFlow,
+    './demografiaRDA': demografia, '../../paciente/demografiaRDASyncService': { sincronizarDemografiaRegistro: async r => r },
   }).default;
   return { service, get docs() { return clone(records); }, get writes() { return writes; }, get reads() { return reads; } };
 }
@@ -106,6 +108,38 @@ test('proyección conserva CIUO, todas las alergias, enfermedades por parentesco
     { codigoCUMS: null, nombre: 'Nombre declarado', origen: 'declarado' },
   ]);
 });
+
+test('RDA de consulta recibe demografía del perfil y respeta los códigos y nombres manuales', async () => {
+  const h=harness({perfil:{paisResidencia:'Colombia',municipioResidencia:'Medellín',zonaResidencia:'Urbana',entidadSalud:'Paciente'}});
+  const r=await h.service.crear({pacienteId:patientId,medicoId,citaId,seccionFacturacion:{aseguradoraCodigo:'MEDICO',paisResidenciaNombre:'Valor médico'}});
+  assert.equal(r.seccionFacturacion.paisResidenciaNombre,'Valor médico');assert.equal(r.seccionFacturacion.municipioResidenciaNombre,'Medellín');
+  assert.equal(r.seccionFacturacion.aseguradoraCodigo,'MEDICO');assert.equal(r.seccionFacturacion.aseguradoraNombre,undefined);
+});
+test('las seis categorías de alergia se proyectan con código y nombre conservando cada sustancia', () => {
+  const categorias = [
+    ['medicamentos', '01', 'Medicamento'], ['alimentos', '02', 'Alimento'],
+    ['ambiente', '03', 'Sustancia del ambiente'],
+    ['contacto_piel', '04', 'Sustancia que entran en contacto con la piel'],
+    ['picaduras_insectos', '05', 'Picadura de insectos'], ['otra', '06', 'Otra'],
+  ];
+  const r = { s01_tipo_alergia: 'medicamentos', s01_alergias: categorias.map(([tipo], i) =>
+    ({ tipo, sustancia: `Sustancia declarada ${i}`, tipoCodigo: '99', tipoNombre: 'Manipulado' })) };
+  r.s01_alergias.push({ tipo: 'medicamentos', sustancia: 'Segundo medicamento' });
+  const antes = clone(r);
+  const proyectado = mapper.proyectarFase1RDA(r);
+  assert.equal(proyectado.indicadorAlergia, true);
+  assert.deepEqual(clone(proyectado.antecedentesAlergias), [
+    ...categorias.map(([tipo, tipoCodigo, tipoNombre], i) =>
+      ({ tipo, tipoCodigo, tipoNombre, nombreAlergeno: `Sustancia declarada ${i}` })),
+    { tipo: 'medicamentos', tipoCodigo: '01', tipoNombre: 'Medicamento', nombreAlergeno: 'Segundo medicamento' },
+  ]);
+  assert.deepEqual(r, antes);
+  const ninguna = mapper.proyectarFase1RDA({ ...r, s01_tipo_alergia: 'sin_alergias_conocidas' });
+  assert.equal(ninguna.indicadorAlergia, false); assert.deepEqual(clone(ninguna.antecedentesAlergias), []);
+  const desconocida = mapper.proyectarFase1RDA({ s01_alergias: [{ tipo: 'categoria_antigua', sustancia: 'Declarada' }] });
+  assert.equal(desconocida.antecedentesAlergias[0].tipoCodigo, undefined);
+});
+
 test('RDA de consulta incorpora las cuatro respuestas y la fecha YYYY-MM-DD desde la misma entrevista',async()=>{
   for(const [valor,esperado] of [['si_escrita',true],['no_escrita',false],['sin_certeza',null],['prefiero_no_responder',null]]){
     const entrevista=source();entrevista.respuestas.rda_oposicion_donacion={valor,respondidoEn:'2026-10-19T02:00:00Z'};
@@ -258,6 +292,14 @@ test('esquema Mongoose conserva null, origen y negativas al serializar y valida 
   assert.equal(obj.seccionInterrogatorioInicial.antecedentesFarmacologicos[1].origen, 'declarado');
   assert.equal(obj.seccionInterrogatorioInicial.antecedentesFamiliares[0].parentesco, '01');
   assert.equal(obj.seccionInterrogatorioInicial.antecedentesFamiliares[0].parentescoNombre, 'Padre');
+  assert.equal(obj.seccionInterrogatorioInicial.antecedentesAlergias[0].tipoCodigo, '01');
+  assert.equal(obj.seccionInterrogatorioInicial.antecedentesAlergias[0].tipoNombre, 'Medicamento');
+  assert.equal(obj.seccionInterrogatorioInicial.antecedentesAlergias[1].tipoCodigo, '02');
+  registro.seccionInterrogatorioInicial.antecedentesAlergias[0].tipoCodigo = '99';
+  await assert.rejects(registro.validate(), /tipoCodigo/);
+  // Los documentos anteriores siguen siendo válidos mientras no tengan el campo nuevo.
+  registro.seccionInterrogatorioInicial.antecedentesAlergias[0].tipoCodigo = undefined;
+  await registro.validate();
   const sin = new Model({ pacienteId: patientId, medicoId, citaId, seccionInterrogatorioInicial: mapper.proyectarFase1RDA(negativas) });
   await sin.validate(); assert.equal(sin.toObject().seccionInterrogatorioInicial.estadoAntecedentesFarmacologicos, 'no_toma');
   sin.seccionInterrogatorioInicial.estadoAntecedentesFamiliares = 'INVENTADO';

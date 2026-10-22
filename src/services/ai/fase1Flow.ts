@@ -1,3 +1,28 @@
+/** Opciones ofrecidas y selección validada en el momento de responder. */
+export interface OpcionesRespondidas {
+  preguntaId: string;
+  tipo: 'single' | 'checkbox';
+  opciones: string[];
+  seleccionadas: string[];
+}
+
+export function crearOpcionesRespondidas(q: Pick<PreguntaFase1, 'id' | 'type' | 'options'>, valor: unknown): OpcionesRespondidas | undefined {
+  if ((q.type !== 'single' && q.type !== 'checkbox') || !q.options?.length) return;
+  const valores = q.type === 'checkbox' ? valor : [valor];
+  if (!Array.isArray(valores) || !valores.length || valores.some(v => !q.options!.some(o => o.value === v))) return;
+  return { preguntaId: q.id, tipo: q.type, opciones: q.options.map(o => o.label),
+    seleccionadas: q.options.filter(o => valores.includes(o.value)).map(o => o.label) };
+}
+
+export function registrarOpcionesRespondidas(historial: { rol: string; opcionesRespondidas?: OpcionesRespondidas }[], q: PreguntaFase1, valor: unknown) {
+  const opciones = crearOpcionesRespondidas(q, valor);
+  if (!opciones) return;
+  for (let i = historial.length - 1; i >= 0; i--) {
+    if (historial[i].rol === 'ia') { historial[i].opcionesRespondidas = opciones; break; }
+  }
+  return opciones;
+}
+
 /** Estado de la primera entrevista. El avance depende de respuestas, no de texto del LLM. */
 export interface PreguntaFase1 {
   id: string;
@@ -27,7 +52,7 @@ export interface EstadoFase1 {
   estado: 'recopilando' | 'resumen' | 'alerta';
   preguntaId: string | null;
   preguntas: PreguntaFase1[];
-  historial: { rol: 'usuario' | 'ia'; texto: string }[];
+  historial: { rol: 'usuario' | 'ia'; texto: string; opcionesRespondidas?: OpcionesRespondidas }[];
   ultimaRespuesta?: Record<string, any>;
   turnos: { id: string; respuesta: Record<string, any> }[];
   ciuoCandidatos?: { codigo: string; nombre: string }[];
@@ -311,7 +336,23 @@ export function aclararPregunta(q: PreguntaFase1, mensaje: string, historial: { 
   return `Quiero asegurarme de entenderte bien. ${textos[q.id] || q.text}`;
 }
 
-export function presentarPregunta(q: PreguntaFase1): Record<string, any> {
+/** Usa la categoría del mismo ciclo, sin convertir los ejemplos en respuestas. */
+export function personalizarPreguntaAlergia(q: PreguntaFase1, respuestas: Record<string, any>): PreguntaFase1 {
+  if (q.allergyRole !== 'substance' || !q.showIf) return q;
+  const preguntas: Record<string, string> = {
+    medicamentos: '¿Qué medicamento te causa alergia? Por ejemplo, penicilina o ibuprofeno.',
+    alimentos: '¿Qué alimento te causa alergia? Por ejemplo, camarón, maní o leche.',
+    ambiente: '¿Qué sustancia del ambiente te causa alergia? Por ejemplo, polvo, polen o ácaros.',
+    contacto_piel: '¿Qué sustancia te causa alergia al entrar en contacto con tu piel? Por ejemplo, látex, níquel o algún cosmético.',
+    picaduras_insectos: '¿La picadura de qué insecto te causa alergia? Por ejemplo, una abeja o una avispa.',
+    otra: '¿Qué otra sustancia te causa alergia? Por ejemplo, un tinte para el cabello. Puedes escribir su nombre o describirla con tus palabras.',
+  };
+  const texto = preguntas[respuestas[q.showIf.questionId]];
+  return texto ? { ...q, text: texto } : q;
+}
+
+export function presentarPregunta(q: PreguntaFase1, respuestas: Record<string, any> = {}): Record<string, any> {
+  q = personalizarPreguntaAlergia(q, respuestas);
   if (['single', 'checkbox'].includes(q.type) && !q.options?.length) throw new Error(`Faltan opciones en ${q.id}`);
   if (q.type === 'search' && !q.search?.source) throw new Error(`Falta catálogo de búsqueda en ${q.id}`);
   if (q.type === 'table' && !q.columns?.length) throw new Error(`Faltan columnas en ${q.id}`);

@@ -183,7 +183,7 @@
         "unknownLabel": "No conozco enfermedades en mi familia",
         "selectedLabel": "Enfermedades seleccionadas",
         "parentescos": [
-          { "codigo": "01", "descripcion": "Padre" },
+          { "codigo": "01", "descripcion": "Padres" },
           { "codigo": "02", "descripcion": "Hermano" },
           { "codigo": "03", "descripcion": "Tío" },
           { "codigo": "04", "descripcion": "Abuelo" }

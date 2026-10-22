@@ -211,3 +211,15 @@ test('esquema Mongoose conserva código de factor y estado de incertidumbre',asy
   const mongoose=require('mongoose');const Model=mongoose.models.RegistroRDA || load('src/models/RegistroRDA.ts',{mongoose}).default;
   const d=new Model({pacienteId:'a'.repeat(24),tipoRegistro:'inicial',seccionInterrogatorioPrincipal:{factoresRiesgo:[{codigo:'01',tipo:'Químico',nombre:'Limpieza'}],estadoFactoresRiesgo:'registrados',interrogatorioFactoresRiesgoId:'c'.repeat(24)}});await d.validate();assert.equal(d.toObject().seccionInterrogatorioPrincipal.factoresRiesgo[0].codigo,'01');
 });
+
+
+test('historial RDA conserva las opciones y selección única o múltiple al responder y recargar',async()=>{
+  const h=harness({rdaPendiente:true,factoresPendientes:true});
+  const single=await h.rda('POST',body('sin_certeza'));assert.equal(single.statusCode,200);
+  const snap=single.body.data.historial[0].opcionesRespondidas;assert.equal(snap.tipo,'single');assert.deepEqual(snap.seleccionadas,['No tengo certeza']);assert.equal(snap.opciones.length,4);
+  const multi=await h.rda('POST',{questionId:'rda_factores_riesgo',valorRespuesta:['01','02'],requestId:'factores-opciones-historial'});assert.equal(multi.statusCode,200);
+  const mark=multi.body.data.historial.find(m=>m.opcionesRespondidas?.tipo==='checkbox').opcionesRespondidas;
+  assert.equal(mark.seleccionadas.length,2);assert.equal(mark.opciones.length,7);
+  const reload=await h.rda();assert.deepEqual(reload.body.data.historial,multi.body.data.historial);
+  assert.deepEqual(h.doc.respuestas.rda_factores_riesgo.opcionesRespondidas,mark);
+});

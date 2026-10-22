@@ -681,7 +681,7 @@ test('alergias: sustancia text, pregunta por más y No cierra el bloque conserva
   const h = harness({ interpret: accepted }); await complete(h, 's01_tipo_alergia');
   await h.send('Medicamentos', { valorRespuesta: 'medicamentos' });
   assert.equal(h.last.questionId, 's01_sustancia_alergia');
-  assert.equal(h.last.respuesta, '¿Qué medicamento, alimento o sustancia te causa alergia?');
+  assert.equal(h.last.respuesta, '¿Qué medicamento te causa alergia? Por ejemplo, penicilina o ibuprofeno.');
   assert.equal(h.last.questionType, 'text'); assert.deepEqual(h.last.opciones, []);
   await h.send('Penicilina');
   assert.equal(h.last.questionId, 's01_mas_alergias');
@@ -701,7 +701,9 @@ test('añadir varias alergias conserva cada una, respeta el orden y no retrocede
   const n = h.doc.fase1.preguntas.length;
   await h.send('Sí, tengo otra alergia', seguir.request); assert.equal(h.doc.fase1.preguntas.length, n);
   await h.send('Alimentos', { valorRespuesta: 'alimentos' });
-  assert.equal(h.last.questionId, 's01_sustancia_alergia_2'); await h.send('Camarón');
+  assert.equal(h.last.questionId, 's01_sustancia_alergia_2');
+  assert.equal(h.last.respuesta, '¿Qué alimento te causa alergia? Por ejemplo, camarón, maní o leche.');
+  await h.send('Camarón');
   assert.equal(h.last.questionId, 's01_mas_alergias_2');
   await h.send('No, no tengo más alergias', { valorRespuesta: 'no' });
   assert.equal(h.last.questionId, 's01_enfermedades_familia');
@@ -710,6 +712,50 @@ test('añadir varias alergias conserva cada una, respeta el orden y no retrocede
   const cierre = flow.cierreDeterminista(h.doc.respuestas, h.doc.fase1.preguntas);
   assert(cierre.resumenItems.some(s => s.includes('Penicilina') && s.includes('Camarón')));
   assert.equal(flow.datosParaCierre(h.doc.respuestas).s01_alergias.length, 2);
+});
+
+test('cada categoría de alergia pregunta por su sustancia con un ejemplo y conserva el texto al reanudar', async () => {
+  const base = harness({ interpret: accepted }); await complete(base, 's01_tipo_alergia');
+  const casos = {
+    medicamentos: ['¿Qué medicamento te causa alergia?', 'penicilina'],
+    alimentos: ['¿Qué alimento te causa alergia?', 'camarón'],
+    ambiente: ['¿Qué sustancia del ambiente te causa alergia?', 'polen'],
+    contacto_piel: ['¿Qué sustancia te causa alergia al entrar en contacto con tu piel?', 'látex'],
+    picaduras_insectos: ['¿La picadura de qué insecto te causa alergia?', 'abeja'],
+    otra: ['¿Qué otra sustancia te causa alergia?', 'tinte'],
+  };
+  for (const [tipo, [pregunta, ejemplo]] of Object.entries(casos)) {
+    const h = harness({ doc: base.doc, interpret: accepted });
+    await h.send(tipo, { valorRespuesta: tipo, requestId: `categoria-${tipo}`, version: base.doc.fase1.version, questionId: 's01_tipo_alergia' });
+    assert.equal(h.last.questionId, 's01_sustancia_alergia');
+    assert.equal(h.last.questionType, 'text');
+    assert(h.last.respuesta.startsWith(pregunta));
+    assert(h.last.respuesta.includes('Por ejemplo,'));
+    assert(h.last.respuesta.includes(ejemplo));
+    assert.equal(h.doc.respuestas.s01_sustancia_alergia, undefined);
+    assert.deepEqual(h.doc.respuestas.s01_alergias, []);
+    const texto = h.last.respuesta;
+    const recargado = harness({ doc: h.doc, interpret: accepted });
+    const resume = await recargado.send('', { accion: 'reanudar' });
+    assert.equal(resume.body.data.respuesta, texto);
+    assert.equal(recargado.doc.fase1.historial.at(-1).texto, texto);
+    // Las plantillas originales y los otros ciclos permanecen independientes.
+    assert.equal(h.doc.fase1.preguntas.find(q => q.id === 's01_sustancia_alergia').text,
+      '¿Qué medicamento, alimento o sustancia te causa alergia?');
+  }
+});
+
+test('aclarar una alergia mantiene la categoría y el ejemplo también para el intérprete', async () => {
+  const h = harness({ interpret: accepted }); await complete(h, 's01_tipo_alergia');
+  await h.send('Medicamentos', { valorRespuesta: 'medicamentos' });
+  const texto = h.last.respuesta;
+  let preguntaInterpretada;
+  h.interpretWith(input => { preguntaInterpretada = input.pregunta; return accepted(input); });
+  await h.send('Sí');
+  assert.equal(h.last.questionId, 's01_sustancia_alergia');
+  assert.equal(preguntaInterpretada.text, texto);
+  assert(h.last.respuesta.endsWith(texto));
+  assert.deepEqual(h.doc.respuestas.s01_alergias, []);
 });
 
 test('ninguna alergia conocida omite sustancia y más alergias y deja el registro vacío', async () => {
@@ -762,7 +808,7 @@ test('antecedentes familiares es search en s01 con los cuatro parentescos y cód
   const h = harness({ interpret: accepted }); await complete(h, 's01_enfermedades_familia');
   assert.equal(h.last.respuesta, '¿Qué enfermedades conoces en tu familia?'); assert.equal(h.last.tipoOpciones, 'search');
   assert.equal(h.last.busqueda.source, 'cie10'); assert.equal(h.last.busqueda.multiple, true);
-  assert.deepEqual(h.last.busqueda.parentescos, [{ codigo: '01', descripcion: 'Padre' }, { codigo: '02', descripcion: 'Hermano' }, { codigo: '03', descripcion: 'Tío' }, { codigo: '04', descripcion: 'Abuelo' }]);
+  assert.deepEqual(h.last.busqueda.parentescos, [{ codigo: '01', descripcion: 'Padres' }, { codigo: '02', descripcion: 'Hermano' }, { codigo: '03', descripcion: 'Tío' }, { codigo: '04', descripcion: 'Abuelo' }]);
   assert(h.doc.fase1.preguntas.every(q => q.id.startsWith('s01_') || q.id.startsWith('s03_')));
 });
 
@@ -776,7 +822,7 @@ test('guarda varias enfermedades por parentesco con los textos del catálogo y e
   assert.equal(result.statusCode, 200); assert.equal(h.aiCalls, calls);
   const r = h.doc.respuestas.s01_enfermedades_familia;
   assert.equal(r.estado, 'registradas'); assert.equal(r.familiares.length, 2);
-  assert.deepEqual(r.familiares[0].parentesco, { codigo: '01', descripcion: 'Padre' });
+  assert.deepEqual(r.familiares[0].parentesco, { codigo: '01', descripcion: 'Padres' });
   assert.equal(r.familiares[0].enfermedades.length, 2);
   assert.deepEqual(r.familiares[0].enfermedades[1], clone(cie10.obtenerCIE10('E119')));
   assert.deepEqual(r.familiares[1].parentesco, { codigo: '04', descripcion: 'Abuelo' });
@@ -905,3 +951,26 @@ test('medicamentos: actualiza entrevistas en curso una vez, conserva datos y no 
 });
 
 }
+
+
+test('historial de selección única guarda opciones y etiqueta canónica, conserva reintentos y recargas',async()=>{
+  const h=harness({patient:{...patient,genero:undefined,escolaridad:undefined},interpret:accepted});
+  await h.send('Molestia sintética');assert.equal(h.last.questionId,'s01_identidad_genero');
+  const result=await h.send('Femenino',{valorRespuesta:'02'});
+  const dato=result.body.data.opcionesRespuestaAnterior;
+  assert.equal(dato.preguntaId,'s01_identidad_genero');assert.equal(dato.tipo,'single');
+  assert.deepEqual(dato.seleccionadas,['Femenino']);assert(dato.opciones.includes('Masculino'));assert(dato.opciones.includes('No lo declaro'));
+  const history=h.doc.fase1.historial;assert.deepEqual(history.find(m=>m.opcionesRespondidas)?.opcionesRespondidas,dato);
+  await h.send('Femenino',result.request);assert.deepEqual(h.doc.fase1.historial,history);
+  const reload=harness({doc:h.doc,interpret:accepted});const resumed=await reload.send('',{accion:'reanudar'});
+  assert.deepEqual(resumed.body.data.historial.find(m=>m.opcionesRespondidas)?.opcionesRespondidas,dato);
+});
+test('opciones históricas distinguen selecciones múltiples y no inventan respuestas inválidas ni cambian el catálogo',()=>{
+  const q={id:'q',type:'checkbox',options:[{value:'a',label:'Opción, con coma'},{value:'b',label:'B'},{value:'c',label:'C'}]};
+  const original=clone(q);const historial=[{rol:'ia',texto:'Pregunta'},{rol:'usuario',texto:'Respuesta'}];
+  const snap=flow.registrarOpcionesRespondidas(historial,q,['a','c']);
+  assert.deepEqual(clone(snap.seleccionadas),['Opción, con coma','C']);assert.deepEqual(clone(snap.opciones),['Opción, con coma','B','C']);
+  assert.deepEqual(q,original);assert.deepEqual(clone(historial[0].opcionesRespondidas),clone(snap));
+  const antes=clone(historial);assert.equal(flow.registrarOpcionesRespondidas(historial,q,['inexistente']),undefined);assert.deepEqual(clone(historial),antes);
+  assert.equal(flow.crearOpcionesRespondidas({...q,type:'text'},'a'),undefined);
+});

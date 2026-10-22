@@ -5,13 +5,8 @@ import Cita from '../../../models/Cita';
 import { AppError } from '../../../utils/errors';
 import { proyectarFase1RDA, completarInicialRDA } from './fase1RDA';
 import { filtroOposicionRDA, quitarOposicionLegacy, completarPreguntasRDA } from '../../paciente/preguntasRDAFlow';
-
-// Mapeo de sexo biológico → código MINSALUD
-const SEXO_MAP: Record<string, '01' | '02' | '03'> = {
-  masculino:   '01',
-  femenino:    '02',
-  intersexual: '03',
-};
+import { proyectarDemografiaPaciente, facturacionInicialRDA } from './demografiaRDA';
+import { sincronizarDemografiaRegistro } from '../../paciente/demografiaRDASyncService';
 
 // ─── Completitud auto-calculada ───────────────────────────────────────────────
 
@@ -100,6 +95,9 @@ class RegistroRDAService {
   /** Una sola incorporación por RDA, con su origen persistido; nunca cambia una cita histórica por una entrevista posterior. */
   private async incorporarFase1(registro: any) {
     if (registro.estado === 'transmitido' || registro.activo === false) return registro;
+    const paciente = await Paciente.findById(registro.pacienteId).lean();
+    if (paciente) registro = await sincronizarDemografiaRegistro(registro, paciente);
+    if (!registro || registro.estado === 'transmitido' || registro.activo === false) return registro;
     if (registro.fuenteFase1) return this.incorporarOposicion(registro);
     const fuente = await this.obtenerFase1(registro.pacienteId.toString(), registro.createdAt);
     if (!fuente) return registro;
@@ -117,24 +115,7 @@ class RegistroRDAService {
     const paciente = await Paciente.findById(pacienteId).lean();
     if (!paciente) throw new AppError('Paciente no encontrado', 404);
 
-    // Usar campos divididos si existen; si no, hacer split de nombre/apellido (pacientes legacy)
-    const primerNombre    = paciente.primerNombre    || (paciente.nombre   || '').trim().split(' ')[0];
-    const segundoNombre   = paciente.segundoNombre   || (paciente.nombre   || '').trim().split(' ').slice(1).join(' ') || undefined;
-    const primerApellido  = paciente.primerApellido  || (paciente.apellido || '').trim().split(' ')[0];
-    const segundoApellido = paciente.segundoApellido || (paciente.apellido || '').trim().split(' ').slice(1).join(' ') || undefined;
-
-    return {
-      primerNombre,
-      segundoNombre,
-      primerApellido,
-      segundoApellido,
-      telefono:            paciente.telefono,
-      correoElectronico:   paciente.email,
-      tipoDocumentoCodigo: paciente.tipoDocumento,
-      numeroDocumento:     paciente.numeroDocumento,
-      sexoBiologico:       paciente.sexoBiologico ? SEXO_MAP[paciente.sexoBiologico] : undefined,
-      fechaNacimiento:     paciente.fechaNacimiento,
-    };
+    return proyectarDemografiaPaciente(paciente).seccionCuenta;
   }
 
   private enriquecer(registro: any) {
@@ -165,6 +146,7 @@ class RegistroRDAService {
 
     const seccionCuentaAuto = await this.construirSeccionCuenta(data.pacienteId.toString());
     const seccionCuenta = { ...seccionCuentaAuto, ...(data.seccionCuenta || {}) };
+    const demografia = proyectarDemografiaPaciente(await Paciente.findById(data.pacienteId).lean() || {});
 
     const fuente = await this.obtenerFase1(data.pacienteId.toString(), new Date());
     const perfil = await this.construirSeccionInterrogatorioInicial(data.pacienteId.toString());
@@ -179,7 +161,9 @@ class RegistroRDAService {
 
     const registro = await RegistroRDA.create({ ...data, tipoRegistro: 'consulta', registroInicialId: inicial?._id, fuenteFase1: fuente ? {
       interrogatorioId: fuente._id, version: fuente.fase1!.version, incorporadoEn: new Date(),
-    } : undefined, seccionCuenta, seccionInterrogatorioInicial, seccionInterrogatorioPrincipal });
+    } : undefined, seccionCuenta, seccionInterrogatorioInicial, seccionInterrogatorioPrincipal,
+    seccionFacturacion: facturacionInicialRDA(demografia, data.seccionFacturacion),
+    fuenteDemografiaPaciente: demografia });
     return this.enriquecer(registro.toObject()) as IRegistroRDA;
   }
 

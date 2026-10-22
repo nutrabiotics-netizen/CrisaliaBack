@@ -99,6 +99,7 @@ function harness(options = {}) {
   })};
   const rdaController=load('src/controllers/paciente/preguntasRDAController.ts', {
     '../../models/Interrogatorio':model,'../../utils/errors':errors,'../../services/paciente/preguntasRDAFlow':rdaFlow,
+    '../../services/ai/fase1Flow':fase1,
     '../../services/paciente/registroRDAInicialService':{guardarRDAInicial:async()=>clone(rdaRecord)},
     '../../models/RegistroRDA':rdaModel,'../../services/paciente/reinicioFase2Flow':resetFlow,'./fase2Controller':controller,
   });
@@ -643,6 +644,25 @@ test('un pronóstico antiguo o de otro usuario no se inicia ni se guarda despué
 test('la ruta anterior de radar sigue admitiendo la fase 1 sin generar una segunda fase',async()=>{
   const h=harness();const antes=h.doc.respuestas;assert.equal((await h.radar()).statusCode,200);
   assert(h.doc.perfilRadar);assert.equal(h.doc.fase2,undefined);assert.deepEqual(h.doc.respuestas,antes);
+});
+
+test('fase 2 conserva las opciones respondidas en selección única, reintentos y reanudación',async()=>{
+  const h=harness({decisions:[seleccionar('s06_toma_medicamentos','s11_nivel_estres')]});await h.send();
+  const invalid=await h.send({mensajeUsuario:'Inventada',valorRespuesta:'inventada'});assert.equal(invalid.statusCode,400);
+  assert(!h.doc.fase2.historial.some(m=>m.opcionesRespondidas));
+  const ok=await h.send({mensajeUsuario:'No',valorRespuesta:'no'});const snapshot=ok.body.data.opcionesRespuestaAnterior;
+  assert.deepEqual(snapshot.seleccionadas,['No']);assert(snapshot.opciones.length>1);
+  const history=h.doc.fase2.historial;await h.send(ok.request);assert.deepEqual(h.doc.fase2.historial,history);
+  const reload=harness({doc:h.doc});const resumed=await reload.send({accion:'reanudar'});
+  assert.deepEqual(resumed.body.data.historial.find(m=>m.opcionesRespondidas).opcionesRespondidas,snapshot);assert.equal(reload.agentCalls,0);
+});
+test('fase 2 conserva todas las opciones del checkbox y solo marca la selección válida',async()=>{
+  const h=harness({decisions:[seleccionar('s06_digestivos','s13_hora_acostarse')]});await h.send();
+  const q=h.doc.fase2.preguntas[0];const elegidas=q.options.filter(o=>o.value!=='ninguno').slice(0,2);
+  const ok=await h.send({mensajeUsuario:elegidas.map(o=>o.label).join(', '),valorRespuesta:elegidas.map(o=>o.value)});
+  assert.equal(ok.statusCode,200);assert.deepEqual(ok.body.data.opcionesRespuestaAnterior.seleccionadas,elegidas.map(o=>o.label));
+  assert.deepEqual(ok.body.data.opcionesRespuestaAnterior.opciones,q.options.map(o=>o.label));
+  assert.deepEqual(h.doc.fase2.historial[0].opcionesRespondidas,ok.body.data.opcionesRespuestaAnterior);
 });
 
 }

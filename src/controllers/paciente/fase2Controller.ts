@@ -9,7 +9,7 @@ import { registrarAccion } from '../../utils/auditoriaHelper';
 import { cargarIndex, cargarSecciones, calcularScores, consultarSiguientePaso } from '../../services/ai/anamnesisOrchestratorService';
 import { interpretarRespuestaFase2, resumirInformeFase2, redactarPreguntasFase2 } from '../../services/ai/fase2Interpreter';
 import { EstadoFase2, catalogoFase2, contextoClinicoFase2, elegirPreguntasAgent, guardarRespuestaFase2,
-  medicacionFase2, presentarPreguntaFase2, textoRespaldoFase2, respuestaGuardadaFase2, validarDecisionFase2, validarRespuestaFase2 } from '../../services/ai/fase2Flow';
+  medicacionFase2, presentarPreguntaFase2, textoRespaldoFase2, respuestaGuardadaFase2, validarDecisionFase2, validarRespuestaFase2, registrarOpcionesRespondidas } from '../../services/ai/fase2Flow';
 import interrogatorioService from '../../services/paciente/interrogatorio/interrogatorioService';
 import { contextoClinicoRDA, preguntasRDACompletas } from '../../services/paciente/preguntasRDAFlow';
 import { filtroGeneracionFase2, generacionFase2, solicitudDeGeneracionActual } from '../../services/paciente/reinicioFase2Flow';
@@ -187,6 +187,7 @@ export const responderFase2 = async (req: AuthRequest, res: Response): Promise<v
         payload = siguiente ? presentarPreguntaFase2(siguiente) : { respuesta: 'Tus respuestas están guardadas. Revisemos qué información necesitamos ahora.', opciones: [], questionId: null, finRonda: true };
         if (!resultado.valido) payload.respuesta = aclaracion || `Para poder registrarlo, necesito que aclares tu respuesta. ${q.textoPaciente || textoRespaldoFase2(q)}`;
       }
+      payload.opcionesRespuestaAnterior = resultado.valido ? registrarOpcionesRespondidas(estado.historial, q, resultado.valor) : undefined;
       nuevos.push({ rol: 'usuario', texto: mensajeUsuario.trim() });
     } else {
       if (estado.estado !== 'decidiendo') throw new AppError('La ronda actual aún tiene una pregunta pendiente.', 409);

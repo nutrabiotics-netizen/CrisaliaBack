@@ -12,14 +12,14 @@ import { registrarAccion } from '../../utils/auditoriaHelper';
 import { cargarSecciones } from '../../services/ai/anamnesisOrchestratorService';
 import { interpretarTurnoFase1, generarCierrePersonalizadoFase1 } from '../../services/ai/fase1Interpreter';
 import { agregarSeguimientos, cierreDeterminista, EstadoFase1, normalizarRespuesta, preguntasIniciales,
-  presentarPregunta, respuestasDelPerfil, siguientePregunta, PreguntaFase1, declaracionSinContacto,
+  presentarPregunta, personalizarPreguntaAlergia, respuestasDelPerfil, siguientePregunta, PreguntaFase1, declaracionSinContacto, registrarOpcionesRespondidas,
   aclararPregunta, datosParaCierre, calcularProgresoFase1, obtenerSeguimientoAlergia, esPreguntaAplicable, agregarOtraAlergia, actualizarRegistroAlergias } from '../../services/ai/fase1Flow';
 
 const preguntaCIUO = (s: EstadoFase1): PreguntaFase1 => ({ id: '_ciuo', text: '¿Cuál de estas describe mejor tu ocupación actual?', type: 'single',
   options: [...(s.ciuoCandidatos || []).map(c => ({ value: c.codigo, label: c.nombre })), { value: 'ninguna', label: 'Ninguna de estas' }] });
 
 async function respuestaConRDA(doc: any, respuesta: Record<string, any>) {
-  if (!doc?.fase1?.confirmada) return respuesta;
+  if (!doc?.fase1) return respuesta;
   try {
     const registro = await guardarRDAInicial(doc);
     return { ...respuesta, registroRDAInicialId: registro?._id.toString() };
@@ -154,7 +154,8 @@ export const responderFase1 = async (req: AuthRequest, res: Response): Promise<v
     }
     const editando = estado.estado === 'resumen';
     const ocupacionAnterior = r.s01_ocupacion;
-    const pregunta = estado.ciuoCandidatos?.length ? preguntaCIUO(estado) : estado.preguntas.find(q => q.id === estado.preguntaId);
+    const preguntaBase = estado.ciuoCandidatos?.length ? preguntaCIUO(estado) : estado.preguntas.find(q => q.id === estado.preguntaId);
+    const pregunta = preguntaBase ? personalizarPreguntaAlergia(preguntaBase, r) : undefined;
     let aceptada = !pregunta && !editando;
     let aclaracion = '';
     let urgente = false, presencial = false;
@@ -275,6 +276,8 @@ export const responderFase1 = async (req: AuthRequest, res: Response): Promise<v
       if (esPreguntaAplicable(q, r, estado.preguntas)) agregarOtraAlergia(estado, q, r);
     }
     actualizarRegistroAlergias(estado, r);
+    const opcionesRespuestaAnterior = aceptada && !editando && pregunta
+      ? registrarOpcionesRespondidas(estado.historial, pregunta, r[pregunta.id] ?? (pregunta.id === '_ciuo' ? r.s01_ocupacion_ciuo?.codigo || 'ninguna' : undefined)) : undefined;
     estado.historial.push({ rol: 'usuario', texto: mensajeUsuario.trim() });
     if (Array.isArray(zonas)) r.zonasDolor = zonas;
     let payload: Record<string, any>;
@@ -290,7 +293,10 @@ export const responderFase1 = async (req: AuthRequest, res: Response): Promise<v
       const siguiente = !aceptada && pregunta ? pregunta : estado.ciuoCandidatos?.length ? preguntaCIUO(estado) : siguientePregunta(estado, r);
       estado.preguntaId = siguiente?.id || null;
       estado.estado = siguiente ? 'recopilando' : 'resumen';
-      payload = siguiente ? presentarPregunta(siguiente) : cierreDeterminista(r, estado.preguntas);
+      payload = siguiente ? presentarPregunta(siguiente, r) : cierreDeterminista(r, estado.preguntas);
+      if (!pregunta && !editando && siguiente?.id.startsWith('s01_')) {
+        payload.respuesta = 'Antes de profundizar en tus síntomas, vamos a completar algunos datos personales para preparar mejor tu consulta.\n\n' + payload.respuesta;
+      }
       if (!siguiente) {
         const hash = createHash('sha256').update('cierre-personalizado-v1:' + JSON.stringify(datosParaCierre(r))).digest('hex');
         if (estado.cierre?.hash !== hash || accion === 'regenerar_cierre') {
@@ -323,7 +329,7 @@ export const responderFase1 = async (req: AuthRequest, res: Response): Promise<v
       payload.respuesta = 'Lo que describes requiere valoración médica presencial. ' + payload.respuesta;
     }
     estado.version++;
-    Object.assign(payload, { interrogatorioId: doc!._id.toString(), fase1Version: estado.version,
+    Object.assign(payload, { opcionesRespuestaAnterior, interrogatorioId: doc!._id.toString(), fase1Version: estado.version,
       fase1Estado: estado.estado, fase1Confirmada: estado.confirmada === true,
       seguimientoAlergia: obtenerSeguimientoAlergia(estado, r), progresoFase1: calcularProgresoFase1(estado, r), sintomaInicial: r.s03_sintoma_principal || 'Consulta general', guardado: true });
     estado.historial.push({ rol: 'ia', texto: payload.respuesta });

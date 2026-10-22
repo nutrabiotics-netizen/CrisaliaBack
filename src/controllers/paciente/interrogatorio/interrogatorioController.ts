@@ -108,10 +108,10 @@ export const obtenerInterrogatorios = async (req: AuthRequest, res: Response): P
       estado as any
     );
 
-    // Recuperar también entrevistas confirmadas antes de que existiera el guardado automático del RDA.
-    const confirmada = [...interrogatorios].filter(i => i.tipo === 'primera_vez' && i.fase1?.confirmada)
+    // Recuperar la sincronización pendiente de la entrevista más reciente.
+    const reciente = [...interrogatorios].filter(i => i.tipo === 'primera_vez' && i.fase1)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
-    if (confirmada) await guardarRDAInicial(confirmada);
+    if (reciente) await guardarRDAInicial(reciente);
 
     res.json({
       success: true,
