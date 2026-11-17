@@ -114,7 +114,13 @@ export function validarDecisionFase2(d: any): AgentDecision {
       !x || typeof x.nombre !== 'string' || !x.nombre.trim() ||
       (x.evidencia !== undefined && (!Array.isArray(x.evidencia) || x.evidencia.some((e: any) => typeof e !== 'string'))) ||
       (x.productos !== undefined && (!Array.isArray(x.productos) || x.productos.some((p: any) => typeof p !== 'string'))))) throw Error('Informe incompleto del Agent');
-    return { ...d, disfunciones_probables: d.disfunciones_probables.map((x: any) => ({ ...x, productos: x.productos || [] })) };
+    if (!Array.isArray(d.preguntas_medico) || d.preguntas_medico.length < 1 || d.preguntas_medico.length > 8 ||
+      d.preguntas_medico.some((p: unknown) => typeof p !== 'string' || p.trim().length > 1000 || !/^¿\s*\S[\s\S]*\?$/.test(p.trim()))) {
+      throw Error('El informe generar_s37 debe incluir preguntas_medico: entre 1 y 8 preguntas para el MD, entre ¿ y ?, de máximo 1000 caracteres');
+    }
+    const preguntasMedico = [...new Set<string>(d.preguntas_medico.map((p: string) => p.trim()))];
+    return { ...d, preguntas_medico: preguntasMedico,
+      disfunciones_probables: d.disfunciones_probables.map((x: any) => ({ ...x, productos: x.productos || [] })) };
   }
   if (d.accion === 'alerta_medica' && (typeof d.motivo !== 'string' || !d.motivo.trim() || typeof d.instruccion !== 'string')) throw Error('Alerta incompleta del Agent');
   return d;

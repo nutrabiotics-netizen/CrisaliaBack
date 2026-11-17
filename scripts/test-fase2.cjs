@@ -24,7 +24,8 @@ const orchestrator = load('src/services/ai/anamnesisOrchestratorService.ts', { p
 const index = orchestrator.cargarIndex();
 const sections = orchestrator.cargarSecciones(index.sections.map(s => s.id));
 const informe = { accion: 'generar_s37', progreso: 100, disfunciones_probables: [{ id: 1, nombre: 'Aspecto sintético para revisión médica',
-  certeza: 'baja', etapa: 1, evidencia: ['s11_nivel_estres'], productos: [] }], disfunciones_a_descartar_con_paraclinicos: [], orden_abordaje: [], banderas_rojas: [], nota_medico: 'Revisar en consulta' };
+  certeza: 'baja', etapa: 1, evidencia: ['s11_nivel_estres'], productos: [] }], disfunciones_a_descartar_con_paraclinicos: [], orden_abordaje: [], banderas_rojas: [], nota_medico: 'Revisar en consulta',
+  preguntas_medico: ['¿Cómo afecta el estrés que reportaste a tus actividades diarias?'] };
 const seleccionar = (...ids) => ({ accion: 'entrevistar', secciones: [...new Set(ids.map(id => id.slice(0,3)))], id_pregunta: ids, progreso: 35 });
 function valorEn(o, key) { return key.split('.').reduce((v,k) => v?.[k],o); }
 function matches(o, query) {
@@ -167,6 +168,7 @@ test('resultados nuevos invalidan la preparación y el Agent reevalúa con OCR a
   const body={paraclinicos:[{nombre:'Prueba',ocrValores:[{nombre:'Resultado sintético',valor:'1'}]}]};
   const r=await h.ocr(body);assert.equal(r.statusCode,200);assert.equal(r.body.data.fase2Version,anterior+1);
   assert.equal(h.doc.analisisFisiologicoIA,undefined);assert.equal(h.doc.fase2.decision,undefined);
+  assert.equal(h.doc.preguntasSugeridasMedico,undefined);
   assert.equal(h.doc.fase2.estado,'decidiendo');assert.equal(h.doc.fase2.examenesPendientes,true);
   const repetido=await h.ocr(body);assert.equal(repetido.body.data.fase2Version,r.body.data.fase2Version);
   await h.send({accion:'continuar',version:r.body.data.fase2Version,questionId:null});
@@ -215,6 +217,52 @@ test('el Agent puede generar el informe sin exigir preguntas ni todas las seccio
   const h=harness({ decisions:[informe] }); await h.send();
   assert.equal(h.last.fase2Estado,'resumen'); assert.equal(h.doc.fase2.preguntas.length,0); assert.equal(h.agentCalls,1);
 });
+
+test('la síntesis guarda las preguntas del MD y las conserva al confirmar y consultar la anamnesis', async () => {
+  const doc=harness().doc;doc.observacionesIA=['Incoherencia previa'];
+  const h=harness({doc,decisions:[informe]});await h.send();
+  assert.deepEqual(h.doc.preguntasSugeridasMedico,informe.preguntas_medico);
+  await h.send({accion:'confirmar',mensajeUsuario:'Sí'});
+  assert.deepEqual(h.doc.preguntasSugeridasMedico,informe.preguntas_medico);
+  assert.deepEqual(h.doc.observacionesIA,['Incoherencia previa']);
+  const controller=load('src/controllers/medico/anamnesis/anamnesisController.ts',{
+    mongoose:{Types:{ObjectId:class{constructor(id){return id;}}}},
+    '../../../models/Cita':{findOne:()=>({select(){return this;},lean:async()=>({_id:'cita'})})},
+    '../../../models/CompartirHistorial':{findOne:()=>({select(){return this;},lean:async()=>null})},
+    '../../../models/Paciente':{findById:()=>({select(){return this;},lean:async()=>({nombre:'Prueba'})})},
+    '../../../models/Interrogatorio':{find:()=>({sort(){return this;},select(fields){this.fields=fields.split(' ');return this;},
+      async lean(){return [Object.fromEntries(this.fields.filter(k=>Object.hasOwn(h.doc,k)).map(k=>[k,h.doc[k]]))];}})},
+    '../../../utils/errors':errors,'../../../utils/auditoriaHelper':{},
+  });
+  const res={statusCode:200,status(c){this.statusCode=c;return this;},json(body){this.body=clone(body);}};
+  await controller.listarAnamnesisDelPaciente({userId:'medico',params:{pacienteId:doc.pacienteId}},res);
+  assert.equal(res.statusCode,200);
+  assert.deepEqual(res.body.data.interrogatorios[0].preguntasSugeridasMedico,informe.preguntas_medico);
+});
+
+test('el Agent puede corregir un informe sin preguntas; una respuesta inválida persistente no se guarda', async () => {
+  const sinPreguntas={...informe};delete sinPreguntas.preguntas_medico;
+  const h=harness({decisions:[sinPreguntas,informe]});
+  assert.equal((await h.send()).statusCode,200);assert.equal(h.agentCalls,2);
+  assert.match(h.agentInputs[1].errorDecision,/preguntas_medico/);
+  assert.deepEqual(h.doc.preguntasSugeridasMedico,informe.preguntas_medico);
+  for(const preguntas of [undefined,[],[null],['Observación sin pregunta'],['¿'+'a'.repeat(1000)+'?'],Array(9).fill('¿Pregunta?')]){
+    const invalid=harness({decisions:[{...informe,preguntas_medico:preguntas}]});
+    assert.equal((await invalid.send()).statusCode,503);
+    assert.equal(invalid.doc.preguntasSugeridasMedico,undefined);
+    assert.equal(invalid.doc.fase2,undefined);
+  }
+});
+
+test('aclarar el caso descarta preguntas anteriores y la siguiente síntesis genera las del contexto actualizado', async () => {
+  const nuevas=['¿Qué actividades desencadenan la molestia que acabas de describir?'];
+  const h=harness({decisions:[informe,{...informe,preguntas_medico:nuevas}]});await h.send();
+  await h.send({accion:'aclarar',mensajeUsuario:'La molestia aparece al caminar'});
+  assert.equal(h.doc.preguntasSugeridasMedico,undefined);
+  await h.send({accion:'continuar'});
+  assert(h.agentInputs[1].resumenRespuestas.includes('La molestia aparece al caminar'));
+  assert.deepEqual(h.doc.preguntasSugeridasMedico,nuevas);
+});
 test('reanudar conserva exactamente pregunta, escala y versión sin invocar de nuevo al Agent', async () => {
   const h=harness(); await h.send(); const first=h.last;
   const recovered=harness({ doc:h.doc }); await recovered.send({ accion:'reanudar' });
@@ -257,6 +305,7 @@ test('editar respuestas guardadas invalida el informe y vuelve a preguntar al Ag
   const h=harness({ interpret:()=>({ respuestas:[{id:'s11_nivel_estres',valor:2},{id:'s01_identidad_genero',valor:'05'}] }) });
   await h.send(); await h.send({mensajeUsuario:'5',valorRespuesta:5}); await h.send({accion:'continuar'});
   assert.equal(h.last.fase2Estado,'resumen'); await h.send({accion:'editar',mensajeUsuario:'Corrige mi estrés a dos'});
+  assert.equal(h.doc.preguntasSugeridasMedico,undefined);
   assert.equal(h.doc.respuestas.s11_nivel_estres,2); assert.equal(h.doc.respuestas.s01_identidad_genero,undefined);
   assert.equal(h.last.fase2Estado,'decidiendo'); assert.equal(h.doc.analisisFisiologicoIA,undefined);
   h.decisions([seleccionar('s06_toma_medicamentos')]); await h.send({accion:'continuar'});
@@ -413,6 +462,27 @@ test('el prompt real del Agent incluye preguntas disponibles, contestadas, negat
   await service.consultarSiguientePaso({sintomaInicial:'Prueba',seccionesCompletadas:['s11'],scores:{seccRojas:[],seccAmarillas:[],itemsCriticos:[]},
     preguntasContestadas:['s11_nivel_estres'],preguntasDisponibles:[{id:'s06_toma_medicamentos',seccion:'s06'}],resumenRespuestas:'no_toma',historialReciente:[{rol:'usuario',texto:'Aclaración sintética'}]});
   for(const esperado of ['s11_nivel_estres','s06_toma_medicamentos','no_toma','Aclaración sintética'])assert(prompt.includes(esperado));
+  assert(prompt.includes('"preguntas_medico"'));assert(prompt.includes('médico tratante (MD)'));
+  await service.generarSintesis({s03_sintoma_principal:'Prueba'},{seccRojas:[],seccAmarillas:[],itemsCriticos:[]},'Prueba','No registrada');
+  assert(prompt.includes('"preguntas_medico"'));assert(prompt.includes('médico tratante (MD)'));
+});
+
+test('el análisis posterior de OpenAI conserva las preguntas de la síntesis aunque genere incoherencias', async () => {
+  const h=harness({decisions:[informe]});await h.send();await h.send({accion:'confirmar',mensajeUsuario:'Sí'});
+  let terminar;const terminado=new Promise(resolve=>{terminar=resolve;});
+  const original=h.model.findOneAndUpdate;
+  h.model.findOneAndUpdate=(q,u,...args)=>{
+    const resultado=original(q,u,...args);if(!u.$set?.analisisIA)return resultado;
+    return{then(resolve,reject){return resultado.then(x=>{terminar();resolve(x);},reject);}};
+  };
+  const analisis={analisisIA:'Análisis sintético',objetivos:[],observacionesIA:['Incoherencia encontrada']};
+  const service=load('src/services/paciente/interrogatorio/interrogatorioService.ts',{
+    '../../../models/Interrogatorio':h.model,'../../openai/openaiService':{analizarInterrogatorio:async()=>analisis},
+    '../../ai/AIService':{},'../../notifications/medicoNotificacionService':{},'../reinicioFase2Flow':resetFlow,
+  }).default;
+  await service.completarInterrogatorio(h.doc._id,h.doc.pacienteId);await terminado;
+  assert.deepEqual(h.doc.observacionesIA,analisis.observacionesIA);
+  assert.deepEqual(h.doc.preguntasSugeridasMedico,informe.preguntas_medico);
 });
 test('cuando el Agent selecciona secciones sin IDs se conserva su orden de prioridad', () => {
   const catalogo=flow.catalogoFase2(sections,{s01_sexo:'femenino'});

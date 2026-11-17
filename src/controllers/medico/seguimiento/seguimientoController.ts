@@ -17,6 +17,7 @@ import HistoriaClinica from '../../../models/HistoriaClinica';
 import Paciente from '../../../models/Paciente';
 import CompartirHistorial from '../../../models/CompartirHistorial';
 import { handleError } from '../../../utils/errors';
+import { elegirProximaCita } from '../../../utils/citaFechaHora';
 
 // ─── Listar pacientes con su estado de seguimiento ───────────────────────────
 
@@ -68,13 +69,13 @@ export const listarSeguimiento = async (
 
     const resultados = await Promise.all(
       pacientesIds.map(async (pacienteId) => {
-        const [paciente, proximaCita, ultimaCita, ultimoInterrogatorio, totalHC] =
+        const [paciente, citasPendientes, ultimaCita, ultimoInterrogatorio, totalHC] =
           await Promise.all([
             Paciente.findById(pacienteId)
               .select('nombre apellido email foto fechaNacimiento')
               .lean(),
 
-            Cita.findOne({
+            Cita.find({
               medicoId: medicoObjId,
               pacienteId,
               fecha: { $gte: inicioDia },
@@ -107,6 +108,7 @@ export const listarSeguimiento = async (
 
         if (!paciente) return null;
 
+        const proximaCita = elegirProximaCita(citasPendientes, ahora);
         const pacienteIdStr = pacienteId.toString();
         const seccionesCompartidas = compartidoMap.get(pacienteIdStr);
 
@@ -209,11 +211,7 @@ export const obtenerSeguimientoPaciente = async (
     }));
 
     // Próxima cita
-    const proximaCita = citas.find(
-      (c: any) =>
-        new Date(c.fecha) >= ahora &&
-        ['pendiente', 'confirmada'].includes(c.estado)
-    ) ?? null;
+    const proximaCita = elegirProximaCita(citas, ahora);
 
     res.json({
       success: true,

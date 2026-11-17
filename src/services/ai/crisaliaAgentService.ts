@@ -425,6 +425,13 @@ Al final, el bloque JSON en este formato exacto:
   return { textoAnalisis, perfilRadar };
 }
 
+export const INSTRUCCIONES_CONCENTRACION_RECOMENDACIONES = `CONCENTRACIÓN DE MEDICAMENTOS Y SUPLEMENTOS:
+- Para CADA medicamento y suplemento/nutracéutico incluye siempre "concentracion" y "unidadMedida" como campos de texto separados.
+- "concentracion" corresponde a la concentración o cantidad de principio activo de la presentación recomendada; "unidadMedida" contiene su unidad exacta, incluyendo el denominador cuando corresponda (por ejemplo: "mg", "mcg", "mg/mL" o "mg/5 mL"). No repitas la unidad dentro de "concentracion".
+- Diferencia la concentración de la presentación de la "dosis", que es la cantidad a administrar por toma. No deduzcas la concentración únicamente a partir de la dosis ni de la cantidad diaria.
+- Si no puedes determinar con fundamento la concentración y su unidad, devuelve ambos campos como "" e indica en "indicacion" que el médico debe completar o verificar la concentración. No inventes una presentación.
+- Si hay varios componentes, detalla sus cantidades conocidas en "componentes"; no sumes concentraciones de principios activos distintos para crear una concentración única.`;
+
 /**
  * Recomienda medicamentos y suplementos/nutracéuticos a partir de la
  * preconsulta del paciente y la transcripción de la consulta.
@@ -462,6 +469,8 @@ Tu tarea: basándote en el cuadro clínico completo del paciente, recomienda al 
 
 El médico DECIDE qué prescribir — tú solo recomiendas con base clínica.
 
+${INSTRUCCIONES_CONCENTRACION_RECOMENDACIONES}
+
 CONTEXTO CLÍNICO DEL PACIENTE:
 ${partes.join('\n') || '(sin datos de preconsulta)'}
 
@@ -470,10 +479,10 @@ ${input.transcripcion ? `LO DISCUTIDO EN LA CONSULTA:\n${input.transcripcion}` :
 Devuelve EXCLUSIVAMENTE un JSON válido sin markdown:
 {
   "medicamentos": [
-    {"nombre":"...","dosis":"...","frecuencia":"...","via":"...","indicacion":"...","componentes":"..."}
+    {"nombre":"...","concentracion":"...","unidadMedida":"...","dosis":"...","frecuencia":"...","via":"...","indicacion":"...","componentes":"..."}
   ],
   "suplementos": [
-    {"nombre":"...","dosis":"...","frecuencia":"...","indicacion":"...","beneficio":"...","componentes":"..."}
+    {"nombre":"...","concentracion":"...","unidadMedida":"...","dosis":"...","frecuencia":"...","indicacion":"...","beneficio":"...","componentes":"..."}
   ],
   "habitos": [
     {"categoria":"alimentacion|ejercicio|sueño|estres|otro","recomendacion":"...","razon":"..."}

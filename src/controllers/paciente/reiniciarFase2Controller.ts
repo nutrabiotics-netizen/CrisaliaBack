@@ -58,7 +58,7 @@ export const reiniciarFase2 = async (req: AuthRequest, res: Response): Promise<v
       if (!guardado) throw new AppError('El RDA cambió durante el reinicio. No se ha modificado ningún registro transmitido. Reintenta.', 409);
     }
     const quitar = Object.fromEntries(['fase2', 'fase2Operacion', 'analisisIA', 'historiaClinica', 'analisisFisiologicoIA',
-      'recomendacionAutomatica', 'alertaMedica', 'objetivos', 'observacionesIA', 'perfilRadar'].map(k => [k, 1]));
+      'recomendacionAutomatica', 'alertaMedica', 'objetivos', 'observacionesIA', 'preguntasSugeridasMedico', 'perfilRadar'].map(k => [k, 1]));
     const guardado = await Interrogatorio.findOneAndUpdate({ _id: id, pacienteId: req.userId, 'fase2Operacion.token': token, ...filtroGeneracionFase2(doc) },
       { $set: { respuestas: conservarRespuestasFase1(doc), estado: 'en_proceso', progreso: 10,
         fase2Generacion: nuevaGeneracion, fase2Reinicio: { requestId, pendiente: false, generacion: nuevaGeneracion },

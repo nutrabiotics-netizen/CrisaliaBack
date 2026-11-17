@@ -14,6 +14,7 @@ import {
   obtenerRecordingUrl
 } from '../../../controllers/medico/agendamientoController';
 import { obtenerPreconsulta } from '../../../controllers/medico/preconsultaController';
+import { cambiarModalidadCita } from '../../../controllers/medico/modalidadCitaController';
 
 const router = Router();
 
@@ -33,6 +34,7 @@ router.put('/citas/:citaId/confirmar', authenticate, authorize(UserRole.MEDICO),
 router.put('/citas/:citaId/cancelar', authenticate, authorize(UserRole.MEDICO), cancelarCita);
 router.put('/citas/:citaId/completar', authenticate, authorize(UserRole.MEDICO), completarCita);
 router.put('/citas/:citaId/reagendar', authenticate, authorize(UserRole.MEDICO), reagendarCita);
+router.put('/citas/:citaId/modalidad', authenticate, authorize(UserRole.MEDICO), cambiarModalidadCita);
 router.patch('/citas/:citaId/documentos-firmados', authenticate, authorize(UserRole.MEDICO), async (req: import('express').Request, res: import('express').Response) => {
   try {
     const { citaId } = req.params;

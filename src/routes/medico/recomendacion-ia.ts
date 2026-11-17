@@ -1,13 +1,15 @@
 import { Router, Response } from 'express';
 import { authenticate, authorize, AuthRequest } from '../../middleware/auth';
 import { UserRole } from '../../types';
-import { recomendarMedicamentosConsulta } from '../../services/ai/crisaliaAgentService';
+import { recomendarMedicamentosConsulta, INSTRUCCIONES_CONCENTRACION_RECOMENDACIONES } from '../../services/ai/crisaliaAgentService';
 import { invokeBedrockText } from '../../services/ai/bedrockTextService';
 import Interrogatorio from '../../models/Interrogatorio';
 import Paciente from '../../models/Paciente';
 import Cups2026 from '../../models/Cups2026';
 
-const MEDS_FALLBACK_SYSTEM = `Eres un asistente clínico de apoyo al médico. Basándote en el cuadro clínico, recomienda: medicamentos, suplementos/nutracéuticos, hábitos/alimentación y laboratorios/estudios. Devuelve SOLO JSON válido: {"medicamentos":[{"nombre":"...","dosis":"...","frecuencia":"...","indicacion":"...","componentes":"..."}],"suplementos":[{"nombre":"...","dosis":"...","frecuencia":"...","indicacion":"...","beneficio":"...","componentes":"..."}],"habitos":[{"categoria":"alimentacion|ejercicio|sueño|estres|otro","recomendacion":"...","razon":"..."}],"laboratorios":[{"nombre":"...","codigoCups":"código CUPS Colombia si lo conoces","tipo":"laboratorio|imagenologia|otro","indicacion":"...","prioridad":"urgente|rutina"}]}. Si no hay nada en alguna categoría devuelve array vacío.`;
+const MEDS_FALLBACK_SYSTEM = `Eres un asistente clínico de apoyo al médico. Basándote en el cuadro clínico, recomienda: medicamentos, suplementos/nutracéuticos, hábitos/alimentación y laboratorios/estudios.
+${INSTRUCCIONES_CONCENTRACION_RECOMENDACIONES}
+Devuelve SOLO JSON válido: {"medicamentos":[{"nombre":"...","concentracion":"...","unidadMedida":"...","dosis":"...","frecuencia":"...","indicacion":"...","componentes":"..."}],"suplementos":[{"nombre":"...","concentracion":"...","unidadMedida":"...","dosis":"...","frecuencia":"...","indicacion":"...","beneficio":"...","componentes":"..."}],"habitos":[{"categoria":"alimentacion|ejercicio|sueño|estres|otro","recomendacion":"...","razon":"..."}],"laboratorios":[{"nombre":"...","codigoCups":"código CUPS Colombia si lo conoces","tipo":"laboratorio|imagenologia|otro","indicacion":"...","prioridad":"urgente|rutina"}]}. Si no hay nada en alguna categoría devuelve array vacío.`;
 
 const router = Router();
 

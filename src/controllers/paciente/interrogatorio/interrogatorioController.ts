@@ -450,7 +450,7 @@ export const agregarParaclinicosOcr = async (req: AuthRequest, res: Response): P
         fase2.ultimaRespuesta = { interrogatorioId, fase2Version: fase2.version, fase2Estado: 'decidiendo',
           questionId: null, guardado: true, examenesPendientes: true, progreso: fase2.progreso, finRonda: true };
         campos.fase2 = fase2; campos.progreso = fase2.progreso;
-        Object.assign(eliminar, { analisisFisiologicoIA: 1, recomendacionAutomatica: 1, alertaMedica: 1 });
+        Object.assign(eliminar, { analisisFisiologicoIA: 1, recomendacionAutomatica: 1, alertaMedica: 1, preguntasSugeridasMedico: 1 });
       }
       if (preparacionActiva) eliminar.fase2Operacion = 1;
 

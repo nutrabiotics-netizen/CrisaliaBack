@@ -7,10 +7,10 @@ const openai = new OpenAI({
 export interface HistoriaClinica {
   motivoConsulta: {
     motivoPrincipal: string;
-    tiempoEvolucion: string;
-    sintomaConsulta: string;
   };
   enfermedadActual: {
+    tiempoEvolucion: string;
+    sintomas: string;
     inicio: string;
     formaAparicion: string;
     evolucion: string;
@@ -159,7 +159,8 @@ Los IDs siguen el formato sXX_campo (s01=datos generales, s03=motivo de consulta
 Escala síntomas: 0=nunca/ausente, 1=leve, 2=moderado, 3=intenso/frecuente.
 
 INSTRUCCIONES PARA REDACCIÓN:
-- Escribe en prosa clínica completa, no en listas ni frases sueltas. Mínimo 2-4 oraciones por subcampo cuando haya datos disponibles.
+- Escribe en prosa clínica completa, no en listas ni frases sueltas. Mínimo 2-4 oraciones por subcampo cuando haya datos disponibles, excepto el motivo principal, que debe ser una única razón de consulta resumida en una o dos frases.
+- MOTIVO_CONSULTA contiene únicamente Motivo principal. El tiempo de evolución y la descripción de síntomas pertenecen a ENFERMEDAD_ACTUAL; no los incluyas como subcampos del motivo.
 - Integra los datos del interrogatorio con razonamiento clínico funcional. No te limites a transcribir — interpreta, correlaciona y contextualiza.
 - Si hay datos de múltiples secciones relevantes para un subcampo, incorpóralos todos (ej: Síntomas asociados puede incluir datos de digestión, sueño, energía, etc.).
 - Si un dato no está disponible, escribe "No reportado" — no inventes ni supongas.
@@ -171,11 +172,11 @@ ${camposClinicos.join('\n')}
 Genera la Historia Clínica usando EXACTAMENTE estos encabezados y subencabezados (no los modifiques):
 
 MOTIVO_CONSULTA:
-Motivo principal: [Descripción detallada del síntoma o situación principal que motiva la consulta, incluyendo su naturaleza, localización y características principales]
-Tiempo de evolución: [Duración exacta o aproximada, fecha o contexto de inicio, si es continuo o intermitente]
-Síntoma o situación que genera la consulta: [Descripción amplia del impacto funcional, laboral y de calidad de vida que llevó al paciente a consultar]
+Motivo principal: [Una única razón por la que el paciente consulta, resumida en una o dos frases]
 
 ENFERMEDAD_ACTUAL:
+Tiempo de evolución: [Duración exacta o aproximada del cuadro, según lo reportado]
+Síntomas: [Descripción detallada de los síntomas principales, naturaleza, localización, características e impacto funcional reportados]
 Inicio: [Circunstancias, contexto y momento de aparición del cuadro. Factores asociados al inicio]
 Forma de aparición: [Si fue súbita, gradual, relacionada con un evento específico, estrés, cambio de hábitos, etc.]
 Evolución: [Curso temporal del cuadro: si ha mejorado, empeorado, fluctuado. Hitos relevantes en la evolución]
@@ -244,10 +245,12 @@ OBSERVACIONES:
     const historiaClinica: HistoriaClinica = {
       motivoConsulta: {
         motivoPrincipal:   extraerSubcampo(bloqueMotivo, 'Motivo principal'),
-        tiempoEvolucion:   extraerSubcampo(bloqueMotivo, 'Tiempo de evolución'),
-        sintomaConsulta:   extraerSubcampo(bloqueMotivo, 'Síntoma o situación que genera la consulta'),
       },
       enfermedadActual: {
+        tiempoEvolucion:            extraerSubcampo(bloqueEnfActual, 'Tiempo de evolución') !== 'No reportado'
+          ? extraerSubcampo(bloqueEnfActual, 'Tiempo de evolución') : extraerSubcampo(bloqueMotivo, 'Tiempo de evolución'),
+        sintomas:                  extraerSubcampo(bloqueEnfActual, 'Síntomas') !== 'No reportado'
+          ? extraerSubcampo(bloqueEnfActual, 'Síntomas') : extraerSubcampo(bloqueMotivo, 'Síntoma o situación que genera la consulta'),
         inicio:                    extraerSubcampo(bloqueEnfActual, 'Inicio'),
         formaAparicion:            extraerSubcampo(bloqueEnfActual, 'Forma de aparición'),
         evolucion:                 extraerSubcampo(bloqueEnfActual, 'Evolución'),

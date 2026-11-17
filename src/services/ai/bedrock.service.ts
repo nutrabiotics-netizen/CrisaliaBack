@@ -253,8 +253,8 @@ Para la transcripción, cada línea viene etiquetada con "PACIENTE:" o "MÉDICO:
 
 # SECCIONES VÁLIDAS (claves exactas)
 
-- motivo_consulta: razón de la consulta — devolver "contenido" como JSON STRING con 3 claves: {"principal":"motivo en 1 frase","tiempoEvolucion":"desde cuándo (ej: 2 semanas, 3 meses)","sintema":"síntoma o situación específica"}. VER FORMATO ESPECIAL ABAJO.
-- enfermedad_actual: cronología completa del problema — devolver "contenido" como JSON STRING con estas claves (omitir las vacías): {"inicio":"cuándo comenzó","formaAparicion":"gradual/brusca/etc","evolucion":"cómo ha progresado","sintomasAsociados":"otros síntomas","factoresDesencadenantes":"qué lo provoca","factoresMejoran":"qué mejora o empeora","tratamientosRealizados":"tratamientos previos","medicamentosUtilizados":"medicamentos tomados","examenesPrevios":"estudios hechos","resultadosRelevantes":"resultados importantes","consultasPrevias":"consultas anteriores por esto","estadoActual":"estado al momento de la consulta"}. VER FORMATO ESPECIAL ABAJO.
+- motivo_consulta: una única razón de consulta resumida — devolver "contenido" como JSON STRING con una sola clave: {"principal":"motivo en una o dos frases"}. El tiempo de evolución y el detalle de síntomas pertenecen a enfermedad_actual. VER FORMATO ESPECIAL ABAJO.
+- enfermedad_actual: síntomas y cronología completa del problema — devolver "contenido" como JSON STRING con estas claves (omitir las vacías): {"tiempoEvolucion":"duración del cuadro","sintomas":"descripción de los síntomas principales","inicio":"cuándo comenzó","formaAparicion":"gradual/brusca/etc","evolucion":"cómo ha progresado","sintomasAsociados":"otros síntomas","factoresDesencadenantes":"qué lo provoca","factoresMejoran":"qué mejora o empeora","tratamientosRealizados":"tratamientos previos","medicamentosUtilizados":"medicamentos tomados","examenesPrevios":"estudios hechos","resultadosRelevantes":"resultados importantes","consultasPrevias":"consultas anteriores por esto","estadoActual":"estado al momento de la consulta"}. VER FORMATO ESPECIAL ABAJO.
 - antecedentes: TODA la historia previa del paciente — devolver "contenido" como JSON STRING con las claves que apliquen (omitir las vacías): {"enfermedadesCronicas":"enf. crónicas personales","alergicos":"alergias","farmacologicos":"medicamentos actuales","quirurgicos":"cirugías","traumaticos":"traumatismos","hospitalizaciones":"hospitalizaciones previas","familiares":"enfermedades en familiares de primer grado","causaMuerte":"causa de muerte familiar","habitos":"tabaco/alcohol/café/ejercicio/sueño/sustancias","alimentacion":"dieta y nutrición","inmunizaciones":"vacunas","vivienda":"vivienda y entorno","embarazo":"descripción del embarazo","edadGestacional":"semanas de gestación al nacer","tipoParto":"vaginal/cesarea/instrumentado","motivoCesarea":"motivo si fue cesárea","complicacionesParto":"complicaciones del parto","presentacionFetal":"presentación fetal","pesoNacer":"peso al nacer en gramos","tallaNacer":"talla al nacer en cm","periodoNeonatal":"descripción del período neonatal","desarrolloPsicomotor":"desarrollo motor y lenguaje en infancia","desarrolloActual":"desarrollo actual","alimentacionInfancia":"alimentación en la infancia","crecimientoDesarrollo":"crecimiento y desarrollo","inmunizacionesInfancia":"vacunas en infancia","menarquia":"edad de menarquia","ritmoMenstrual":"ritmo menstrual","fur":"fecha última regla","formulaObstetrica":"G-P-A-C","vidaSexual":"inicio sexual y anticoncepción","tamizajes":"citología o mamografía"}. VER FORMATO ESPECIAL ABAJO.
 - revision_sistemas: hallazgos por sistema — devolver "contenido" como JSON STRING con las claves de los sistemas donde se detecte algo. Usa exactamente estas claves: generales, piel, cabeza, ojos, nariz, oidos, boca, respiratorio, cardiovascular, digestivo, genitourinario, musculoEsqueletico, sistemaNervioso, endocrino, hematologico. Para los sistemas sin síntomas omite la clave (el frontend pondrá "Niega síntomas"). VER FORMATO ESPECIAL ABAJO.
 - alertas_alergias: alergias conocidas + signos de alarma (PACIENTE).
@@ -270,8 +270,9 @@ Para la transcripción, cada línea viene etiquetada con "PACIENTE:" o "MÉDICO:
 
 Cuando el contexto de preconsulta incluye datos estructurados, mapéalos a las secciones usando exactamente estas claves JSON:
 - motivoConsulta.motivoPrincipal → motivo_consulta: {"principal":"..."}
-- motivoConsulta.tiempoEvolucion → motivo_consulta: {"tiempoEvolucion":"..."}
-- motivoConsulta.sintomaConsulta → motivo_consulta: {"sintema":"..."}
+- enfermedadActual.tiempoEvolucion → enfermedad_actual: {"tiempoEvolucion":"..."}
+- enfermedadActual.sintomas → enfermedad_actual: {"sintomas":"..."}
+- Compatibilidad con preconsultas anteriores: motivoConsulta.tiempoEvolucion → enfermedad_actual: {"tiempoEvolucion":"..."}; motivoConsulta.sintomaConsulta → enfermedad_actual: {"sintomas":"..."}. Nunca los devuelvas dentro de motivo_consulta.
 - enfermedadActual.inicio → enfermedad_actual: {"inicio":"..."}
 - enfermedadActual.formaAparicion → enfermedad_actual: {"formaAparicion":"..."}
 - enfermedadActual.evolucion → enfermedad_actual: {"evolucion":"..."}
@@ -304,10 +305,10 @@ Cuando el contexto de preconsulta incluye datos estructurados, mapéalos a las s
 
 # FORMATO ESPECIAL PARA "motivo_consulta" (CRÍTICO)
 
-Cuando detectes el motivo de consulta, NO devuelvas texto libre. Devuelve el "contenido" como UN JSON STRING con exactamente 3 claves.
+Cuando detectes el motivo de consulta, NO devuelvas texto libre. Devuelve el "contenido" como UN JSON STRING con una sola clave: principal. Es una única razón de consulta. La duración y el detalle de síntomas se envían en una propuesta separada para enfermedad_actual.
 
 Ejemplo correcto:
-{"seccion":"motivo_consulta","contenido":"{\"principal\":\"Dolor en ambos pies que impide trabajar\",\"tiempoEvolucion\":\"4 semanas\",\"sintema\":\"Dolor bilateral en pies de inicio gradual\"}"}
+{"seccion":"motivo_consulta","contenido":"{\"principal\":\"Consulta por dolor en ambos pies que impide trabajar\"}"}
 
 NUNCA mezcles narrativa con el JSON. NUNCA devuelvas el objeto sin escapar las comillas. El "contenido" debe ser un STRING parseable con JSON.parse.
 
@@ -330,7 +331,7 @@ Ejemplo:
 Devuelve el "contenido" como UN JSON STRING con las claves de la enfermedad actual. Omite las claves sin información.
 
 Ejemplo:
-{"seccion":"enfermedad_actual","contenido":"{\"inicio\":\"Hace 4 semanas\",\"formaAparicion\":\"Gradual\",\"evolucion\":\"Progresivo\",\"sintomasAsociados\":\"Inflamación, calor local\",\"estadoActual\":\"Persiste con limitación funcional\"}"}
+{"seccion":"enfermedad_actual","contenido":"{\"tiempoEvolucion\":\"4 semanas\",\"sintomas\":\"Dolor bilateral en pies\",\"inicio\":\"Hace 4 semanas\",\"formaAparicion\":\"Gradual\",\"evolucion\":\"Progresivo\",\"sintomasAsociados\":\"Inflamación, calor local\",\"estadoActual\":\"Persiste con limitación funcional\"}"}
 
 # FORMATO ESPECIAL PARA "examen_fisico" (CRÍTICO)
 

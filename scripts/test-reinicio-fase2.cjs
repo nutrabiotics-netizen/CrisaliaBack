@@ -9,13 +9,13 @@ function fixture(extra={}) {
     s02_sintoma:3,s11_nivel_estres:8,s36_otro:2,examenes_paraclinicos:[{archivo:'Archivo anterior'}],aclaraciones_fase2:[{texto:'Aclaración anterior'}],relatoAlertaFase2:'Relato anterior'});
   d.fase2={version:12,estado:'confirmada',preguntaId:null,preguntas:[],ronda:3,respondidas:['s11_nivel_estres'],historial:[{rol:'usuario',texto:'Respuesta fase 2'}],turnos:[{id:'turno-viejo'}],decision:informe,progreso:100};
   Object.assign(d,{estado:'completado',progreso:100,analisisIA:'Informe anterior',historiaClinica:{motivo:'Anterior'},analisisFisiologicoIA:[{nombre:'Anterior'}],
-    recomendacionAutomatica:{llamadoAccion:'Anterior'},alertaMedica:{motivo:'Anterior'},objetivos:['Anterior'],observacionesIA:['Anterior'],perfilRadar:{json:{anterior:true}}},extra);
+    recomendacionAutomatica:{llamadoAccion:'Anterior'},alertaMedica:{motivo:'Anterior'},objetivos:['Anterior'],observacionesIA:['Anterior'],preguntasSugeridasMedico:['¿Pregunta anterior?'],perfilRadar:{json:{anterior:true}}},extra);
   return d;
 }
 test('reiniciar limpia fase 2 y devuelve a RDA y exámenes; fase 1 conserva respuestas, resumen, historial y versión',async()=>{
   const doc=fixture();const h=harness({doc});const r=await h.reset();assert.equal(r.statusCode,200);const d=h.doc;
   assert.deepEqual(d.fase1,doc.fase1);assert.equal(d.estado,'en_proceso');assert.equal(d.progreso,10);assert.equal(d.fase2Generacion,1);
-  for(const k of ['fase2','fase2Operacion','analisisIA','historiaClinica','analisisFisiologicoIA','recomendacionAutomatica','alertaMedica','objetivos','observacionesIA','perfilRadar'])assert.equal(d[k],undefined,k);
+  for(const k of ['fase2','fase2Operacion','analisisIA','historiaClinica','analisisFisiologicoIA','recomendacionAutomatica','alertaMedica','objetivos','observacionesIA','preguntasSugeridasMedico','perfilRadar'])assert.equal(d[k],undefined,k);
   for(const k of ['s01_edad','s01_ocupacion_ciuo','s03_sintoma_principal','s03_objetivo_a','zonasDolor','causas','cierreFase1','mensajeFinal'])assert.deepEqual(d.respuestas[k],doc.respuestas[k],k);
   assert.deepEqual(d.respuestas.historialChat,doc.fase1.historial);
   for(const k of ['s02_sintoma','s11_nivel_estres','s36_otro','examenes_paraclinicos','aclaraciones_fase2','relatoAlertaFase2','rda_oposicion_donacion'])assert.equal(d.respuestas[k],undefined,k);

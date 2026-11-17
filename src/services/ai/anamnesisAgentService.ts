@@ -80,6 +80,7 @@ export interface AgentDecisionGenerarS37 {
   orden_abordaje: string[];
   banderas_rojas: string[];
   nota_medico: string;
+  preguntas_medico: string[];
 }
 
 export interface AgentDecisionAlertaMedica {

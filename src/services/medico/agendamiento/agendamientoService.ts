@@ -21,7 +21,7 @@ class AgendamientoService {
     }
 
     const citas = await Cita.find(query)
-      .populate('pacienteId', 'nombre apellido email telefono tipoDocumento numeroDocumento fechaNacimiento genero sexoBiologico direccion estadoCivil grupoSanguineo rh escolaridad ocupacion condicionDesplazamiento grupoEtnico eps aseguradora')
+      .populate('pacienteId', 'nombre apellido email telefono tipoDocumento numeroDocumento fechaNacimiento genero sexoBiologico direccion estadoCivil nacionalidad paisNacimiento lugarResidencia municipioResidencia acudiente contactoEmergencia grupoSanguineo rh escolaridad ocupacion ocupacionCIUO condicionDesplazamiento grupoEtnico eps aseguradora')
       .sort({ fecha: 1, hora: 1 })
       .lean();
 
@@ -49,7 +49,10 @@ class AgendamientoService {
           sexoBiologico: pob.sexoBiologico,
           estadoCivil: pob.estadoCivil,
           nacionalidad: pob.nacionalidad,
+          paisNacimiento: pob.paisNacimiento,
           lugarResidencia: pob.lugarResidencia,
+          municipioResidencia: pob.municipioResidencia,
+          acudiente: pob.acudiente,
           direccion: pob.direccion,
           contactoEmergencia: pob.contactoEmergencia,
           regimenAfiliacion: pob.regimenAfiliacion,
@@ -60,6 +63,7 @@ class AgendamientoService {
           rh: pob.rh,
           escolaridad: pob.escolaridad,
           ocupacion: pob.ocupacion,
+          ocupacionCIUO: pob.ocupacionCIUO,
           condicionDesplazamiento: pob.condicionDesplazamiento,
           grupoEtnico: pob.grupoEtnico,
           aseguradora: pob.aseguradora || pob.eps,

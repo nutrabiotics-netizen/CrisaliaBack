@@ -9,9 +9,9 @@ const indice = entradas.map(entrada => ({ entrada, nombre: normalizar(entrada.no
 export function obtenerCUM(codigo: string): EntradaCUM | undefined { return porCodigo.get(codigo.trim()); }
 
 /** Cada presentación conserva su propio CUM; el buscador no prescribe ni asigna códigos a texto libre. */
-export function buscarCUM(texto: string, limite = 15): EntradaCUM[] {
+export function buscarCUM(texto: string, limite = 15, minimoCaracteres = 3): EntradaCUM[] {
   const consulta = normalizar(texto);
-  if (consulta.length < 3) return [];
+  if (consulta.length < minimoCaracteres) return [];
   const codigo = texto.trim();
   const palabras = consulta.split(/\s+/).filter(p => !['de', 'del', 'la', 'el', 'en', 'y', 'con'].includes(p));
   if (!palabras.length) return [];

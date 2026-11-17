@@ -57,7 +57,7 @@ async function actualizarPreparacionRDA(inicial: Awaited<ReturnType<typeof obten
       $set: { fase2: { version, estado: 'decidiendo', ronda: fase?.ronda || 0, preguntas: [], preguntaId: null,
         progreso: Math.min(95, fase?.progreso || 10), respondidas: fase?.respondidas || [], historial: fase?.historial || [], turnos: [],
         examenesPendientes: true, contextoRDA: contexto } },
-      $unset: { fase2Operacion: 1, analisisFisiologicoIA: 1, recomendacionAutomatica: 1, alertaMedica: 1 },
+      $unset: { fase2Operacion: 1, analisisFisiologicoIA: 1, recomendacionAutomatica: 1, alertaMedica: 1, preguntasSugeridasMedico: 1 },
     }, { new: true }).lean();
     if (guardado) {
       if (operacion) cancelarPreparacionFase2(operacion.token);

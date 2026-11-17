@@ -12,10 +12,11 @@ export interface IInterrogatorio extends Document {
   fase2Reinicio?: { requestId: string; pendiente: boolean; generacion: number };
   fase2Operacion?: { token: string; requestId: string; venceEn: Date; preparandoExamenes?: boolean; contextoRDA?: string; reiniciando?: boolean };
   observacionesIA?: string[];
+  preguntasSugeridasMedico?: string[];
   analisisIA?: string;
   historiaClinica?: {
-    motivoConsulta: { motivoPrincipal: string; tiempoEvolucion: string; sintomaConsulta: string };
-    enfermedadActual: { inicio: string; formaAparicion: string; evolucion: string; sintomasAsociados: string; factoresDesencadenantes: string; factoresMejoranEmpeoran: string; tratamientosRealizados: string; medicamentosUtilizados: string; examenesPrevios: string; resultadosRelevantes: string; consultasAnteriores: string; estadoActual: string };
+    motivoConsulta: { motivoPrincipal: string; tiempoEvolucion?: string; sintomaConsulta?: string };
+    enfermedadActual: { tiempoEvolucion?: string; sintomas?: string; inicio: string; formaAparicion: string; evolucion: string; sintomasAsociados: string; factoresDesencadenantes: string; factoresMejoranEmpeoran: string; tratamientosRealizados: string; medicamentosUtilizados: string; examenesPrevios: string; resultadosRelevantes: string; consultasAnteriores: string; estadoActual: string };
     antecedentes: { patologicos: string; farmacologicos: string; quirurgicos: string; alergicos: string; familiares: string; ginecologicos: string; toxicos: string };
   };
   alertaMedica?: {
@@ -86,6 +87,10 @@ const InterrogatorioSchema = new Schema<IInterrogatorio>(
     fase2Reinicio: { type: Schema.Types.Mixed },
     fase2Operacion: { type: Schema.Types.Mixed },
     observacionesIA: {
+      type: [String],
+      default: []
+    },
+    preguntasSugeridasMedico: {
       type: [String],
       default: []
     },

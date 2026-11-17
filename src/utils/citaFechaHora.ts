@@ -26,3 +26,23 @@ export function combineFechaCitaConHora(fecha: Date, hora: string): Date {
   // La hora de la cita está en hora Colombia (UTC-5), convertir a UTC sumando 5 horas
   return new Date(Date.UTC(y, mo, day, hh + 5, mm, 0, 0));
 }
+
+/** Selecciona el siguiente turno por día y hora de Colombia, con precisión de minutos. */
+export function elegirProximaCita<T extends { fecha: Date | string; hora: string; estado: string }>(
+  citas: T[], ahora = new Date()
+): T | null {
+  const minutoActual = Math.floor(ahora.getTime() / 60_000) * 60_000;
+  let proxima: T | null = null;
+  let menorInstante = Infinity;
+  for (const cita of citas) {
+    if (!['pendiente', 'confirmada', 'en_espera', 'en_consulta'].includes(cita.estado)) continue;
+    const hora = horaA24Horas(cita.hora);
+    if (!/^(?:[01]?\d|2[0-3]):[0-5]\d$/.test(hora)) continue;
+    const instante = combineFechaCitaConHora(new Date(cita.fecha), hora).getTime();
+    if (Number.isFinite(instante) && instante >= minutoActual && instante < menorInstante) {
+      proxima = cita;
+      menorInstante = instante;
+    }
+  }
+  return proxima;
+}

@@ -1,6 +1,9 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IMedicamento {
+  codigoCUM?: string;
+  marca?: string;
+  presentacion?: string;
   denominacionComun: string;
   concentracion: string;
   unidadMedida: string;
@@ -56,6 +59,9 @@ export interface IFormulaMedica extends Document {
 }
 
 const MedicamentoSchema = new Schema<IMedicamento>({
+  codigoCUM: { type: String, trim: true },
+  marca: { type: String, trim: true },
+  presentacion: { type: String, trim: true },
   denominacionComun: { type: String, required: true },
   concentracion: { type: String, required: true },
   unidadMedida: { type: String, required: true },

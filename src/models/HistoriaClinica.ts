@@ -109,6 +109,8 @@ export interface IHistoriaClinica extends Document {
   rsHematologico?: string;
 
   // Sub-campos estructurados de enfermedad actual
+  eaTiempoEvolucion?: string;
+  eaSintomas?: string;
   eaInicio?: string;
   eaFormaAparicion?: string;
   eaEvolucion?: string;
@@ -310,6 +312,8 @@ const HistoriaClinicaSchema = new Schema<IHistoriaClinica>(
     rsCardiovascular: String, rsDigestivo: String, rsGenitourinario: String,
     rsMusculoEsqueletico: String, rsSistemaNervioso: String, rsEndocrino: String,
     rsHematologico: String,
+    eaTiempoEvolucion: String,
+    eaSintomas: String,
     eaInicio: String,
     eaFormaAparicion: String,
     eaEvolucion: String,

@@ -198,7 +198,7 @@ export const responderFase2 = async (req: AuthRequest, res: Response): Promise<v
       // Un segundo intento corrige una selección técnica inválida; nunca sustituye el criterio clínico del Agent.
       let errorDecision: string | undefined;
       for (let intento = 0; intento < 2; intento++) {
-        decision = validarDecisionFase2(await consultarSiguientePaso({ sintomaInicial: r.s03_sintoma_principal || 'Consulta de salud',
+        const respuestaAgent = await consultarSiguientePaso({ sintomaInicial: r.s03_sintoma_principal || 'Consulta de salud',
           seccionesCompletadas: [...new Set(catalogo.filter(q => estado.respondidas.includes(q.id) || q.items?.some(i => estado.respondidas.includes(i.id))).map(q => q.seccionId))],
           scores, medicacionActual: medicacionFase2(r), resumenRespuestas: JSON.stringify(contexto),
           preguntasContestadas: catalogo.flatMap(q => [...(respuestaGuardadaFase2(q, r) ? [q.id] : []), ...(q.items || []).filter(i =>
@@ -206,8 +206,10 @@ export const responderFase2 = async (req: AuthRequest, res: Response): Promise<v
           preguntasDisponibles: catalogo.filter(q => !respuestaGuardadaFase2(q, r)).map(q => ({ id: q.id, seccion: q.seccionId,
             items: q.items?.filter(i => !(typeof r[i.id] === 'number' && Number.isInteger(r[i.id]) && r[i.id] >= 0 && r[i.id] <= 3)).map(i => i.id) })),
           relatoAlerta: r.relatoAlertaFase2, errorDecision, historialReciente: estado.historial.filter(m => m.rol === 'usuario').slice(-12).map(({ rol, texto }) => ({ rol, texto })) }, {
-            sessionId: preparacionToken ? `fase2-${id}-prep-${preparacionToken}` : `fase2-${id}-g${generacionFase2(doc)}`, abortSignal: cancelacion?.signal }));
+            sessionId: preparacionToken ? `fase2-${id}-prep-${preparacionToken}` : `fase2-${id}-g${generacionFase2(doc)}`, abortSignal: cancelacion?.signal });
         cancelacion?.signal.throwIfAborted();
+        try { decision = validarDecisionFase2(respuestaAgent); }
+        catch (error: any) { errorDecision = error.message; continue; }
         if (decision.accion !== 'entrevistar') { errorDecision = undefined; break; }
         try {
           preguntas = elegirPreguntasAgent(decision, catalogo, r);
@@ -234,6 +236,7 @@ export const responderFase2 = async (req: AuthRequest, res: Response): Promise<v
         try { estado.resumenPaciente = await resumirInformeFase2(decision, contextoClinicoFase2(r), cancelacion?.signal); }
         catch { console.warn('[Fase2] resumen legible pendiente; se conserva el informe del Agent'); }
         extras.analisisFisiologicoIA = decision.disfunciones_probables;
+        extras.preguntasSugeridasMedico = decision.preguntas_medico;
         extras.recomendacionAutomatica = { semaforizacion: Object.values(scores.porSeccion), recomendacionesOTC: decision.disfunciones_probables.flatMap(d => d.productos || []),
           estiloVida: [], estrategiasFuncionales: decision.disfunciones_probables, llamadoAccion: decision.nota_medico || '', generadoEn: new Date() };
         payload = informacionResumen(estado);
@@ -249,6 +252,7 @@ export const responderFase2 = async (req: AuthRequest, res: Response): Promise<v
     estado.ultimaRespuesta = payload;
     cancelacion?.signal.throwIfAborted();
     estado.turnos = [...estado.turnos, { id: requestId, respuesta: payload }].slice(-50);
+    if (estado.decision?.accion !== 'generar_s37') eliminar.preguntasSugeridasMedico = 1;
     for (const campo of Object.keys(extras)) delete eliminar[campo];
     const campos = Object.fromEntries(Object.entries(cambios).map(([k, v]) => [`respuestas.${k}`, v]));
     const guardado = await Interrogatorio.findOneAndUpdate({ _id: id, pacienteId, 'fase2Operacion.token': token, ...filtroVersion },
