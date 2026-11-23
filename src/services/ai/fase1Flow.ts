@@ -43,7 +43,7 @@ export interface PreguntaFase1 {
   search?: { source: string; placeholder?: string; allowCustom?: boolean; notFoundLabel?: string;
     multiple?: boolean; showCode?: boolean; showDescription?: boolean; unknownLabel?: string;
     manualLabel?: string; manualHelp?: string; manualAddLabel?: string; selectedLabel?: string;
-    parentescos?: { codigo: string; descripcion: string }[];
+    parentescos?: { codigo: string; descripcion: string; familiares?: { id: string; descripcion: string }[] }[];
   };
 }
 
@@ -67,6 +67,17 @@ export interface CierreNarrativoFase1 {
   enfoque: string;
   sintesis: string;
   causas: { titulo: string; desc: string; evidencias: string[] }[];
+}
+
+/** Amplía las opciones de entrevistas abiertas sin cambiar respuestas históricas ni versiones de turno. */
+export function actualizarParentescosFamiliares(estado: EstadoFase1, preguntaActual?: PreguntaFase1): EstadoFase1 {
+  if (estado.confirmada || estado.estado !== 'recopilando' || !preguntaActual?.search?.parentescos) return estado;
+  const preguntas = estado.preguntas.map(q => q.id === preguntaActual.id
+    ? { ...q, search: { ...q.search!, parentescos: preguntaActual.search!.parentescos } } : q);
+  const ultimaRespuesta = estado.preguntaId === preguntaActual.id && estado.ultimaRespuesta
+    ? { ...estado.ultimaRespuesta, busqueda: { ...estado.ultimaRespuesta.busqueda, parentescos: preguntaActual.search.parentescos } }
+    : estado.ultimaRespuesta;
+  return { ...estado, preguntas, ultimaRespuesta };
 }
 
 /** Solo información pertinente al caso; excluye nombre, teléfono y contacto de emergencia. */
@@ -117,11 +128,19 @@ export function normalizarRespuesta(q: PreguntaFase1, valor: unknown): { valido:
     const dato = valor as Record<string, unknown>;
     if (!Array.isArray(dato.familiares)) return { valido: false };
     if (dato.estado === 'no_conoce') return { valido: dato.familiares.length === 0, valor };
-    const codigos = new Set<string>();
-    const valido = dato.estado === 'registradas' && dato.familiares.length > 0 && dato.familiares.length <= 4 && dato.familiares.every((f: any) => {
+    const claves = new Set<string>();
+    const genericos = new Set<string>();
+    const detallados = new Set<string>();
+    const maximo = q.search.parentescos?.reduce((n, p) => n + (p.familiares?.length || 1), 0) ?? 0;
+    const valido = dato.estado === 'registradas' && dato.familiares.length > 0 && dato.familiares.length <= maximo && dato.familiares.every((f: any) => {
       const parentesco = q.search?.parentescos?.find(p => p.codigo === f?.parentesco?.codigo && p.descripcion === f.parentesco.descripcion);
-      if (!parentesco || codigos.has(parentesco.codigo)) return false;
-      codigos.add(parentesco.codigo);
+      if (!parentesco) return false;
+      const familiar = f.familiar === undefined ? undefined : parentesco.familiares?.find(d => d.id === f.familiar?.id && d.descripcion === f.familiar.descripcion);
+      if (f.familiar !== undefined && !familiar) return false;
+      const clave = `${parentesco.codigo}:${familiar?.id ?? ''}`;
+      if (claves.has(clave) || (familiar ? genericos : detallados).has(parentesco.codigo)) return false;
+      claves.add(clave);
+      (familiar ? detallados : genericos).add(parentesco.codigo);
       return Array.isArray(f.enfermedades) && f.enfermedades.length > 0 && f.enfermedades.length <= 30 &&
         new Set(f.enfermedades.map((e: any) => e?.codigo)).size === f.enfermedades.length &&
         f.enfermedades.every((e: any) => e && ['codigo', 'nombre', 'descripcion'].every(k => typeof e[k] === 'string' && e[k].trim()));
@@ -366,7 +385,7 @@ export function presentarPregunta(q: PreguntaFase1, respuestas: Record<string, a
 export function cierreDeterminista(respuestas: Record<string, any>, preguntas: PreguntaFase1[] = []): Record<string, any> {
   const alergia = preguntas.find(q => q.id === 's01_tipo_alergia')?.options?.find(o => o.value === respuestas.s01_tipo_alergia)?.label;
   const familiares = respuestas.s01_enfermedades_familia;
-  const antecedentes = familiares?.estado === 'registradas' ? familiares.familiares.map((f: any) => `${f.parentesco.descripcion}: ${f.enfermedades.map((e: any) => e.nombre).join(', ')}`).join('; ') : familiares?.estado === 'no_conoce' ? 'No conoces enfermedades en tu familia' : '';
+  const antecedentes = familiares?.estado === 'registradas' ? familiares.familiares.map((f: any) => `${f.familiar?.descripcion || f.parentesco.descripcion}: ${f.enfermedades.map((e: any) => e.nombre).join(', ')}`).join('; ') : familiares?.estado === 'no_conoce' ? 'No conoces enfermedades en tu familia' : '';
   const resumen = [respuestas.s03_sintoma_principal, ...(Array.isArray(respuestas.s03_sintomas_tabla)
     ? respuestas.s03_sintomas_tabla.map((row: any) => Object.entries(row).map(([k, v]) => `${k}: ${v}`).join('; ')) : []),
     Array.isArray(respuestas.s01_alergias) && respuestas.s01_alergias.length ? `Alergias referidas: ${respuestas.s01_alergias.map((a: { tipo: string; sustancia: string }) => `${preguntas.find(q => q.id === 's01_tipo_alergia')?.options?.find(o => o.value === a.tipo)?.label || a.tipo}: ${a.sustancia}`).join('; ')}` : alergia ? `Alergias referidas: ${alergia}` : '',

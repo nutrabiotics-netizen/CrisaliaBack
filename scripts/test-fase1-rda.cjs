@@ -304,6 +304,17 @@ test('esquema Mongoose conserva null, origen y negativas al serializar y valida 
   await sin.validate(); assert.equal(sin.toObject().seccionInterrogatorioInicial.estadoAntecedentesFarmacologicos, 'no_toma');
   sin.seccionInterrogatorioInicial.estadoAntecedentesFamiliares = 'INVENTADO';
   await assert.rejects(sin.validate(), /enum/);
+  const categorias = require('../src/data/anamnesis_sections/s01.json').questions.find(q => q.id === 's01_enfermedades_familia').search.parentescos;
+  const familiares = categorias.flatMap(p => (p.familiares || []).map(f => ({ parentesco: { codigo: p.codigo, descripcion: p.descripcion },
+    familiar: f, enfermedades: [{ codigo: 'E119', nombre: 'Diabetes' }] })));
+  const detallado = new Model({ pacienteId: patientId, medicoId, citaId,
+    seccionInterrogatorioInicial: mapper.proyectarFase1RDA({ s01_enfermedades_familia: { estado: 'registradas', familiares } }) });
+  await detallado.validate();
+  assert.deepEqual(detallado.toObject().seccionInterrogatorioInicial.antecedentesFamiliares.map(f => [f.parentesco, f.familiarId, f.familiarNombre, f.codigoCIE10]), [
+    ['01', 'madre', 'Mamá', 'E119'], ['01', 'padre', 'Papá', 'E119'],
+    ['04', 'abuelo_materno', 'Abuelo materno', 'E119'], ['04', 'abuelo_paterno', 'Abuelo paterno', 'E119'],
+    ['04', 'abuela_materna', 'Abuela materna', 'E119'], ['04', 'abuela_paterna', 'Abuela paterna', 'E119'],
+  ]);
 });
 
 test('consulta crea y recupera discapacidad con código y nombre sin cambiar datos médicos',async()=>{

@@ -808,7 +808,11 @@ test('antecedentes familiares es search en s01 con los cuatro parentescos y cód
   const h = harness({ interpret: accepted }); await complete(h, 's01_enfermedades_familia');
   assert.equal(h.last.respuesta, '¿Qué enfermedades conoces en tu familia?'); assert.equal(h.last.tipoOpciones, 'search');
   assert.equal(h.last.busqueda.source, 'cie10'); assert.equal(h.last.busqueda.multiple, true);
-  assert.deepEqual(h.last.busqueda.parentescos, [{ codigo: '01', descripcion: 'Padres' }, { codigo: '02', descripcion: 'Hermano' }, { codigo: '03', descripcion: 'Tío' }, { codigo: '04', descripcion: 'Abuelo' }]);
+  assert.deepEqual(h.last.busqueda.parentescos.map(({ codigo, descripcion }) => ({ codigo, descripcion })), [{ codigo: '01', descripcion: 'Padres' }, { codigo: '02', descripcion: 'Hermano' }, { codigo: '03', descripcion: 'Tío' }, { codigo: '04', descripcion: 'Abuelo' }]);
+  assert.deepEqual(h.last.busqueda.parentescos.flatMap(p => (p.familiares || []).map(f => [p.codigo, f.id, f.descripcion])), [
+    ['01', 'madre', 'Mamá'], ['01', 'padre', 'Papá'], ['04', 'abuelo_materno', 'Abuelo materno'],
+    ['04', 'abuelo_paterno', 'Abuelo paterno'], ['04', 'abuela_materna', 'Abuela materna'], ['04', 'abuela_paterna', 'Abuela paterna'],
+  ]);
   assert(h.doc.fase1.preguntas.every(q => q.id.startsWith('s01_') || q.id.startsWith('s03_')));
 });
 
@@ -829,6 +833,83 @@ test('guarda varias enfermedades por parentesco con los textos del catálogo y e
   assert.equal(h.last.questionId, 's01_medicamentos_actuales');
   assert.deepEqual(flow.datosParaCierre(h.doc.respuestas).s01_enfermedades_familia, r);
   assert(flow.cierreDeterminista(h.doc.respuestas, h.doc.fase1.preguntas).resumenItems.some(s => s.includes('Padre') && s.includes('Abuelo')));
+});
+
+test('guarda mamá, papá y cuatro abuelos por separado con códigos RDA compartidos y nombres canónicos', async () => {
+  const h = harness({ interpret: accepted }); await complete(h, 's01_enfermedades_familia');
+  const opciones = h.last.busqueda.parentescos.flatMap(p => p.familiares?.map(f => ({ parentescoCodigo: p.codigo, familiarId: f.id, nombre: f.descripcion })) || [{ parentescoCodigo: p.codigo, nombre: p.descripcion }]);
+  const calls = h.aiCalls;
+  const enviado = await h.send('Familia sintética', { valorRespuesta: { familiares: opciones.map(o => ({ ...o, descripcion: 'Inventada', familiar: { descripcion: 'Inventada' }, codigos: ['E119'] })) } });
+  assert.equal(enviado.statusCode, 200); assert.equal(h.aiCalls, calls);
+  const respuesta = h.doc.respuestas.s01_enfermedades_familia;
+  assert.equal(respuesta.familiares.length, 8);
+  for (const [index, o] of opciones.entries()) {
+    const f = respuesta.familiares[index];
+    assert.equal(f.parentesco.codigo, o.parentescoCodigo);
+    assert.equal(f.parentesco.familiares, undefined);
+    assert.equal(f.familiar?.id, o.familiarId);
+    assert.equal(f.familiar?.descripcion || f.parentesco.descripcion, o.nombre);
+    assert.equal(f.enfermedades[0].codigo, 'E119');
+  }
+  const resumen = flow.cierreDeterminista(h.doc.respuestas, h.doc.fase1.preguntas).resumenItems.join('\n');
+  for (const o of opciones) assert(resumen.includes(o.nombre + ':'));
+  assert.deepEqual(flow.datosParaCierre(h.doc.respuestas).s01_enfermedades_familia, respuesta);
+  const version = h.doc.fase1.version;
+  await h.send('Familia sintética', enviado.request);
+  assert.equal(h.doc.fase1.version, version); assert.equal(h.aiCalls, calls);
+  const retomada = harness({ doc: h.doc }); await retomada.send('', { accion: 'reanudar' });
+  assert.deepEqual(retomada.doc.respuestas.s01_enfermedades_familia, respuesta);
+});
+
+test('rechaza familiares con código RDA incorrecto, duplicados y mezclas ambiguas con categorías antiguas', async () => {
+  const h = harness({ interpret: accepted }); await complete(h, 's01_enfermedades_familia');
+  const madre = { parentescoCodigo: '01', familiarId: 'madre', codigos: ['I10X'] };
+  const generico = { parentescoCodigo: '01', codigos: ['E119'] };
+  const version = h.doc.fase1.version;
+  for (const familiares of [[{ ...madre, parentescoCodigo: '04' }], [{ ...madre, familiarId: 'inventado' }],
+    [{ ...madre, familiarId: null }], [madre, madre], [madre, generico], [generico, madre], Array(9).fill(madre)]) {
+    const result = await h.send('Dato', { valorRespuesta: { familiares } });
+    assert.equal(result.statusCode, 400); assert.equal(h.doc.fase1.version, version);
+    assert.equal(h.doc.respuestas.s01_enfermedades_familia, undefined);
+  }
+});
+
+test('entrevistas abiertas reciben las opciones nuevas al reanudar y listar, sin alterar historial ni respuestas', async () => {
+  const h = harness({ interpret: accepted }); await complete(h, 's01_enfermedades_familia');
+  const doc = h.doc;
+  const pregunta = doc.fase1.preguntas.find(q => q.id === 's01_enfermedades_familia');
+  pregunta.search.parentescos = pregunta.search.parentescos.map(({ codigo, descripcion }) => ({ codigo, descripcion }));
+  doc.fase1.ultimaRespuesta.busqueda.parentescos = clone(pregunta.search.parentescos);
+  const original = clone(doc);
+  const actual = sections.s01.questions.find(q => q.id === pregunta.id);
+  const actualizado = flow.actualizarParentescosFamiliares(doc.fase1, actual);
+  assert.deepEqual(doc, original);
+  assert.deepEqual(clone(actualizado.ultimaRespuesta.busqueda.parentescos), actual.search.parentescos);
+  assert.equal(actualizado.version, original.fase1.version);
+  assert.deepEqual(actualizado.historial, original.fase1.historial);
+  const confirmada = { ...doc.fase1, confirmada: true };
+  assert.equal(flow.actualizarParentescosFamiliares(confirmada, actual), confirmada);
+  const retomada = harness({ doc }); const result = await retomada.send('', { accion: 'reanudar' });
+  assert.equal(result.statusCode, 200);
+  assert.deepEqual(result.body.data.busqueda.parentescos, actual.search.parentescos);
+  assert.deepEqual(retomada.doc, original);
+  const guardado = await retomada.send('Mamá', { requestId: 'nuevo-familiar-tras-reanudar', valorRespuesta: { familiares: [{ parentescoCodigo: '01', familiarId: 'madre', codigos: ['E119'] }] } });
+  assert.equal(guardado.statusCode, 200);
+  assert.equal(retomada.doc.respuestas.s01_enfermedades_familia.familiares[0].familiar.id, 'madre');
+  const controller = load('src/controllers/paciente/interrogatorio/interrogatorioController.ts', {
+    '../../../services/paciente/interrogatorio/interrogatorioService': { obtenerInterrogatoriosPaciente: async () => [doc] },
+    '../../../utils/auditoriaHelper': {}, '../../../models/Interrogatorio': {}, '../../../models/Cita': {}, '../../../models/Paciente': {},
+    '../../../utils/notificacionHelper': {}, '../../../services/ai/AIService': {},
+    '../../../services/ai/anamnesisOrchestratorService': { cargarSecciones: () => sections },
+    '../../../services/ai/cuerpoConChatService': {}, '../../../services/ai/fase1Flow': flow,
+    '../../../services/paciente/registroRDAInicialService': { guardarRDAInicial: async () => {} },
+    '../fase2Controller': {}, '../../../services/paciente/reinicioFase2Flow': {},
+  });
+  const res = { status(c) { this.statusCode = c; return this; }, json(body) { this.body = body; } };
+  await controller.obtenerInterrogatorios({ userId: 'synthetic-patient', query: {} }, res);
+  assert.equal(res.body.success, true);
+  assert.deepEqual(clone(res.body.data[0].fase1.ultimaRespuesta.busqueda.parentescos), actual.search.parentescos);
+  assert.deepEqual(res.body.data[0].respuestas, original.respuestas);
 });
 
 test('rechaza parentescos no definidos, códigos inventados, registros vacíos y parentescos repetidos', async () => {

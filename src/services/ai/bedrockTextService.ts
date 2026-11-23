@@ -38,6 +38,7 @@ const client = new BedrockRuntimeClient({
 });
 
 export interface BedrockTextOptions {
+  signal?: AbortSignal;
   system?: string;
   maxTokens?: number;
   temperature?: number;
@@ -61,7 +62,7 @@ export async function invokeBedrockText(userPrompt: string, opts: BedrockTextOpt
     }
   });
 
-  const resp = await client.send(command);
+  const resp = await client.send(command, { abortSignal: opts.signal });
   const textBlock = resp.output?.message?.content?.find((c) => c.text);
   return (textBlock?.text ?? '').trim();
 }

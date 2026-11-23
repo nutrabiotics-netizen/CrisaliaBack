@@ -4,7 +4,8 @@ import interrogatorioService from '../../../services/paciente/interrogatorio/int
 import { registrarAccion } from '../../../utils/auditoriaHelper';
 import Interrogatorio from '../../../models/Interrogatorio';
 import { AIService } from '../../../services/ai/AIService';
-import { calcularProgresoFase1 } from '../../../services/ai/fase1Flow';
+import { calcularProgresoFase1, actualizarParentescosFamiliares, type PreguntaFase1 } from '../../../services/ai/fase1Flow';
+import { cargarSecciones } from '../../../services/ai/anamnesisOrchestratorService';
 import { guardarRDAInicial } from '../../../services/paciente/registroRDAInicialService';
 import { cancelarPreparacionFase2, responderFase2 } from '../fase2Controller';
 import { filtroGeneracionFase2, solicitudDeGeneracionActual } from '../../../services/paciente/reinicioFase2Flow';
@@ -113,6 +114,9 @@ export const obtenerInterrogatorios = async (req: AuthRequest, res: Response): P
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
     if (reciente) await guardarRDAInicial(reciente);
 
+    const preguntaFamiliar = interrogatorios.some(i => i.fase1?.estado === 'recopilando' && !i.fase1.confirmada)
+      ? cargarSecciones(['s01']).s01?.questions?.find((q: PreguntaFase1) => q.id === 's01_enfermedades_familia') : undefined;
+
     res.json({
       success: true,
       data: interrogatorios.map(i => ({
@@ -122,7 +126,7 @@ export const obtenerInterrogatorios = async (req: AuthRequest, res: Response): P
         progreso: i.progreso,
         analisisIA: i.analisisIA,
         respuestas: i.respuestas,
-        fase1: i.fase1,
+        fase1: i.fase1 ? actualizarParentescosFamiliares(i.fase1, preguntaFamiliar) : undefined,
         fase2: i.fase2,
         fase2Generacion: i.fase2Generacion || 0,
         progresoFase1: i.fase1 ? calcularProgresoFase1(i.fase1, i.respuestas || {}) : undefined,

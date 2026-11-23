@@ -40,3 +40,29 @@ test('el prompt exige un solo motivo y solicita duración y síntomas dentro de 
   assert.match(enfermedad, /Tiempo de evolución:/);
   assert.match(enfermedad, /Síntomas:/);
 });
+
+test('el prompt conserva familiares específicos, códigos y enfermedades anidadas sin convertirlos en object Object', () => {
+  const parentescos = require('../src/data/anamnesis_sections/s01.json').questions.find(q => q.id === 's01_enfermedades_familia').search.parentescos;
+  const dato = { estado: 'registradas', familiares: parentescos.flatMap(p => (p.familiares || []).map(f => ({
+    parentesco: { codigo: p.codigo, descripcion: p.descripcion }, familiar: f,
+    enfermedades: [{ codigo: 'E119', nombre: 'Diabetes sintética', descripcion: 'Descripción sintética' }],
+  }))) };
+  const respuestas = { s01_enfermedades_familia: dato, s03_sintomas_tabla: [null, { sintoma: 'Molestia', detalles: { frecuencia: 'diaria' } }],
+    s01_medicamentos_actuales: { estado: 'toma', medicamentos: [{ codigo: null, nombre: 'Declaración sintética', origen: 'declarado' }] } };
+  const original = structuredClone(respuestas);
+  const prompt = service.construirPrompt(respuestas);
+  assert.doesNotMatch(prompt, /\[object Object\]/);
+  for (const [id, valor] of Object.entries(respuestas)) {
+    const linea = prompt.split('\n').find(l => l.startsWith(id + ': '));
+    assert.deepEqual(JSON.parse(linea.slice(id.length + 2)), valor);
+  }
+  assert.deepEqual(respuestas, original);
+  assert.match(prompt, /No deduzcas el familiar específico/);
+  assert.match(prompt, /desconocimiento, no ausencia de antecedentes/);
+});
+
+test('el parser conserva la relación familiar-enfermedad del resumen recibido', () => {
+  const familiares = 'Mamá: diabetes. Papá: hipertensión. Abuela paterna: diabetes.';
+  const result = service.parsearRespuestaIA(`ANTECEDENTES:\nFamiliares: ${familiares}\nGinecológicos: No reportado\nOBJETIVOS:\n- Revisar antecedentes\nOBSERVACIONES:\nNinguna`);
+  assert.equal(result.historiaClinica.antecedentes.familiares, familiares);
+});

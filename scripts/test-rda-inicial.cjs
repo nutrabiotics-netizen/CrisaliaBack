@@ -78,7 +78,7 @@ test('listar al reabrir el interrogatorio recupera el borrador de una fase previ
     '../../../services/paciente/interrogatorio/interrogatorioService': { obtenerInterrogatoriosPaciente: async () => [doc] },
     '../../../utils/auditoriaHelper': {}, '../../../models/Interrogatorio': {}, '../../../models/Cita': {}, '../../../models/Paciente': {},
     '../../../utils/notificacionHelper': {}, '../../../services/ai/AIService': {}, '../../../services/ai/anamnesisOrchestratorService': {},
-    '../../../services/ai/cuerpoConChatService': {}, '../../../services/ai/fase1Flow': { calcularProgresoFase1: () => ({ porcentaje: 100 }) },
+    '../../../services/ai/cuerpoConChatService': {}, '../../../services/ai/fase1Flow': { calcularProgresoFase1: () => ({ porcentaje: 100 }), actualizarParentescosFamiliares: estado => estado },
     '../../../services/paciente/registroRDAInicialService': { guardarRDAInicial: db.guardarRDAInicial },
     '../fase2Controller': {},
     '../../../services/paciente/reinicioFase2Flow': {},

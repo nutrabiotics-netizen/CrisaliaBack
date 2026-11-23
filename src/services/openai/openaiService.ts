@@ -108,20 +108,14 @@ IMPORTANTE: NUNCA incluyas identificadores técnicos de campo (como s01, s19, s2
       if (typeof valor === 'number') {
         valorStr = `${valor} (${escala[valor] ?? valor})`;
       } else if (Array.isArray(valor)) {
-        if (valor.length > 0 && typeof valor[0] === 'object') {
-          // Arrays de objetos (ej: s03_sintomas_tabla): expandir cada campo en líneas legibles
-          valorStr = valor.map((obj: Record<string, any>, idx: number) =>
-            `[${idx + 1}] ` + Object.entries(obj)
-              .map(([k, v]) => `${k}: ${v}`)
-              .join(', ')
-          ).join(' | ');
+        if (valor.some(item => typeof item === 'object' && item !== null)) {
+          valorStr = JSON.stringify(valor);
         } else {
           valorStr = valor.join(', ');
         }
       } else if (typeof valor === 'object') {
-        valorStr = Object.entries(valor as Record<string, any>)
-          .map(([k, v]) => `${k}: ${v}`)
-          .join(', ');
+        // Preservar estructuras anidadas, en especial familiar + parentesco + enfermedades.
+        valorStr = JSON.stringify(valor);
       } else {
         valorStr = String(valor).slice(0, 500);
       }
@@ -164,6 +158,7 @@ INSTRUCCIONES PARA REDACCIÓN:
 - Integra los datos del interrogatorio con razonamiento clínico funcional. No te limites a transcribir — interpreta, correlaciona y contextualiza.
 - Si hay datos de múltiples secciones relevantes para un subcampo, incorpóralos todos (ej: Síntomas asociados puede incluir datos de digestión, sueño, energía, etc.).
 - Si un dato no está disponible, escribe "No reportado" — no inventes ni supongas.
+- En s01_enfermedades_familia, conserva cada familiar y sus enfermedades por separado en Antecedentes > Familiares. Usa familiar.descripcion (Mamá, Papá, Abuelo materno, Abuelo paterno, Abuela materna o Abuela paterna) cuando exista; en registros anteriores usa únicamente parentesco.descripcion. No deduzcas el familiar específico a partir del código RDA ni mezcles personas que compartan ese código. Si estado es "no_conoce", expresa desconocimiento, no ausencia de antecedentes. Estas enfermedades corresponden a los familiares, no al paciente. Describe solo lo registrado, sin añadir oraciones para completar una extensión mínima.
 - Usa terminología médico-clínica formal. El documento es para el médico tratante.
 
 DATOS DEL INTERROGATORIO:

@@ -20,6 +20,8 @@ interface AntecedenteFamiliar {
   nombreCIE10?: string;
   parentesco?: string;
   parentescoNombre?: string;
+  familiarId?: string;
+  familiarNombre?: string;
 }
 
 export interface SeccionInterrogatorioInicial {
@@ -197,7 +199,7 @@ const RegistroRDASchema = new Schema<IRegistroRDA>(
       antecedentesAlergias: [{ tipo: String, tipoCodigo: { type: String, enum: ['01', '02', '03', '04', '05', '06'] },
         tipoNombre: String, nombreAlergeno: String }],
       estadoAntecedentesFamiliares: { type: String, enum: ['registradas', 'no_conoce'] },
-      antecedentesFamiliares: [{ codigoCIE10: String, nombreCIE10: String, parentesco: String, parentescoNombre: String }],
+      antecedentesFamiliares: [{ codigoCIE10: String, nombreCIE10: String, parentesco: String, parentescoNombre: String, familiarId: String, familiarNombre: String }],
       estadoAntecedentesFarmacologicos: { type: String, enum: ['toma', 'no_toma'] },
       antecedentesFarmacologicos: [{ codigoCUMS: String, nombre: String, origen: { type: String, enum: ['catalogo', 'declarado'] } }],
     },

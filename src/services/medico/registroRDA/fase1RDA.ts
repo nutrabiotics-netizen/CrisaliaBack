@@ -39,6 +39,8 @@ export function proyectarFase1RDA(r: Record<string, any>): SeccionInterrogatorio
     resultado.estadoAntecedentesFamiliares = 'registradas';
     resultado.antecedentesFamiliares = familiares.familiares.flatMap((f: any) => f.enfermedades.map((e: any) => ({
       codigoCIE10: e.codigo, nombreCIE10: e.nombre, parentesco: f.parentesco.codigo, parentescoNombre: f.parentesco.descripcion,
+      ...(typeof f.familiar?.id === 'string' && typeof f.familiar.descripcion === 'string'
+        ? { familiarId: f.familiar.id, familiarNombre: f.familiar.descripcion } : {}),
     })));
   }
   const farmacos = r.s01_medicamentos_actuales;

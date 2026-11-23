@@ -13,7 +13,7 @@ import { cargarSecciones } from '../../services/ai/anamnesisOrchestratorService'
 import { interpretarTurnoFase1, generarCierrePersonalizadoFase1 } from '../../services/ai/fase1Interpreter';
 import { agregarSeguimientos, cierreDeterminista, EstadoFase1, normalizarRespuesta, preguntasIniciales,
   presentarPregunta, personalizarPreguntaAlergia, respuestasDelPerfil, siguientePregunta, PreguntaFase1, declaracionSinContacto, registrarOpcionesRespondidas,
-  aclararPregunta, datosParaCierre, calcularProgresoFase1, obtenerSeguimientoAlergia, esPreguntaAplicable, agregarOtraAlergia, actualizarRegistroAlergias } from '../../services/ai/fase1Flow';
+  aclararPregunta, datosParaCierre, calcularProgresoFase1, obtenerSeguimientoAlergia, esPreguntaAplicable, agregarOtraAlergia, actualizarRegistroAlergias, actualizarParentescosFamiliares } from '../../services/ai/fase1Flow';
 
 const preguntaCIUO = (s: EstadoFase1): PreguntaFase1 => ({ id: '_ciuo', text: '¿Cuál de estas describe mejor tu ocupación actual?', type: 'single',
   options: [...(s.ciuoCandidatos || []).map(c => ({ value: c.codigo, label: c.nombre })), { value: 'ninguna', label: 'Ninguna de estas' }] });
@@ -69,6 +69,10 @@ export const responderFase1 = async (req: AuthRequest, res: Response): Promise<v
     let doc = await Interrogatorio.findOne({ ...(interrogatorioId ? { _id: interrogatorioId } : {}), pacienteId,
       tipo: 'primera_vez', estado: { $in: ['pendiente', 'en_proceso'] } }).sort({ createdAt: -1 }).lean();
     if (!doc && interrogatorioId) throw new AppError('Interrogatorio no encontrado', 404);
+    if (doc?.fase1 && doc.fase1.estado === 'recopilando' && !doc.fase1.confirmada) {
+      const familiar = cargarSecciones(['s01']).s01?.questions?.find((q: PreguntaFase1) => q.id === 's01_enfermedades_familia');
+      doc.fase1 = actualizarParentescosFamiliares(doc.fase1, familiar);
+    }
     if (accion === 'reanudar') {
       if (!doc?.fase1?.ultimaRespuesta) throw new AppError('No hay una sesión de fase 1 para retomar', 404);
       res.json({ success: true, data: await respuestaConRDA(doc, { ...doc.fase1.ultimaRespuesta, interrogatorioId: doc._id.toString(), historial: doc.fase1.historial, progresoFase1: calcularProgresoFase1(doc.fase1, doc.respuestas || {}) }) });
@@ -193,18 +197,21 @@ export const responderFase1 = async (req: AuthRequest, res: Response): Promise<v
       if (valorRespuesta?.sinDatos === true && pregunta.search.unknownLabel) {
         r[pregunta.id] = { estado: 'no_conoce', familiares: [] };
       } else {
-        if (!Array.isArray(valorRespuesta?.familiares) || !valorRespuesta.familiares.length || valorRespuesta.familiares.length > 4) throw new AppError('Registra un parentesco y sus enfermedades.', 400);
-        const vistos = new Set<string>();
+        const maximo = pregunta.search.parentescos?.reduce((n, p) => n + (p.familiares?.length || 1), 0) ?? 0;
+        if (!Array.isArray(valorRespuesta?.familiares) || !valorRespuesta.familiares.length || valorRespuesta.familiares.length > maximo) throw new AppError('Registra un parentesco y sus enfermedades.', 400);
         const familiares = valorRespuesta.familiares.map((f: any) => {
           const parentesco = pregunta.search?.parentescos?.find(p => p.codigo === f?.parentescoCodigo);
-          if (!parentesco || vistos.has(parentesco.codigo) || !Array.isArray(f.codigos) || !f.codigos.length || f.codigos.length > 30) throw new AppError('Revisa el parentesco y las enfermedades seleccionadas.', 400);
-          vistos.add(parentesco.codigo);
+          if (!parentesco || !Array.isArray(f.codigos) || !f.codigos.length || f.codigos.length > 30) throw new AppError('Revisa el parentesco y las enfermedades seleccionadas.', 400);
+          const familiar = f.familiarId === undefined ? undefined : parentesco.familiares?.find(d => d.id === f.familiarId);
+          if (f.familiarId !== undefined && !familiar) throw new AppError('Selecciona un familiar válido para ese parentesco.', 400);
           const enfermedades = f.codigos.map((codigo: unknown) => {
             const entrada = typeof codigo === 'string' ? obtenerCIE10(codigo) : undefined;
             if (!entrada) throw new AppError('Selecciona una enfermedad válida del catálogo.', 400);
             return entrada;
           });
-          return { parentesco, enfermedades: [...new Map(enfermedades.map((e: any) => [e.codigo, e])).values()] };
+          return { parentesco: { codigo: parentesco.codigo, descripcion: parentesco.descripcion },
+            ...(familiar ? { familiar: { id: familiar.id, descripcion: familiar.descripcion } } : {}),
+            enfermedades: [...new Map(enfermedades.map((e: any) => [e.codigo, e])).values()] };
         });
         const respuesta = { estado: 'registradas', familiares };
         if (!normalizarRespuesta(pregunta, respuesta).valido) throw new AppError('No pudimos validar los antecedentes seleccionados.', 400);
