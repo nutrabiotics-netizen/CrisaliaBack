@@ -171,10 +171,11 @@
     },
     {
       "id": "s01_enfermedades_familia",
-      "text": "¿Qué enfermedades conoces en tu familia?",
+      "text": "¿Qué enfermedades conoces en tu familia? Cuéntanos con tus palabras lo que sabes de cada familiar.",
       "type": "search",
       "search": {
         "source": "cie10",
+        "semantica": true,
         "placeholder": "Busca una enfermedad o su código CIE-10",
         "multiple": true,
         "allowCustom": false,

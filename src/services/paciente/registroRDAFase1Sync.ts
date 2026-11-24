@@ -4,7 +4,7 @@ import { AppError } from '../../utils/errors';
 
 const grupos = [['identidadGenero'], ['ocupacionCodigo', 'ocupacionNombre'],
   ['indicadorAlergia', 'antecedentesAlergias'], ['estadoAntecedentesFamiliares', 'antecedentesFamiliares'],
-  ['estadoAntecedentesFarmacologicos', 'antecedentesFarmacologicos']];
+  ['estadoAntecedentesFarmacologicos', 'antecedentesFarmacologicos', 'declaracionMedicamentos']];
 // Los subdocumentos Mongoose añaden _id, que no forma parte de la declaración del paciente.
 const normalizar = (v: any): any => Array.isArray(v) ? v.map(normalizar)
   : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).filter(k => k !== '_id').sort().map(k => [k, normalizar(v[k])])) : v ?? null;
@@ -26,7 +26,8 @@ export async function sincronizarFase1RDA(registro: any, interrogatorio: any) {
     const propio = grupo.some(k => Object.prototype.hasOwnProperty.call(origen, k));
     if (!grupo.every(k => propio ? igual(actual[k], origen[k]) : vacio(actual[k]))) continue;
     for (const campo of grupo) {
-      const valor = (nuevo as any)[campo];
+      const valor = campo === 'declaracionMedicamentos' && (nuevo as any)[campo] === undefined && origen[campo] != null
+        ? null : (nuevo as any)[campo];
       if (valor === undefined) continue;
       if (!igual(actual[campo], valor)) cambios[`seccionInterrogatorioInicial.${campo}`] = valor;
       fuente[campo] = valor;

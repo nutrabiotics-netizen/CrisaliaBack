@@ -5,7 +5,7 @@ import Interrogatorio from '../../models/Interrogatorio';
 import RegistroRDA from '../../models/RegistroRDA';
 import { AppError, handleError } from '../../utils/errors';
 import { cancelarPreparacionFase2 } from './fase2Controller';
-import { conservarRespuestasFase1, filtroGeneracionFase2, generacionFase2, solicitudDeGeneracionActual } from '../../services/paciente/reinicioFase2Flow';
+import { conservarRespuestasFase1, filtroGeneracionFase2, generacionFase2, solicitudDeGeneracionActual, limpiarAntecedentesPersonalesReinicio } from '../../services/paciente/reinicioFase2Flow';
 
 /** Herramienta de desarrollo: nunca reinicia historias ligadas a una consulta o RDA transmitido. */
 export const reiniciarFase2 = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -42,6 +42,7 @@ export const reiniciarFase2 = async (req: AuthRequest, res: Response): Promise<v
       const limpiar = registro.seccionInterrogatorioPrincipal?.interrogatorioOposicionOrganosId?.toString() === id;
       const quitar = Object.fromEntries((limpiar ? ['oposicionDonarOrganos', 'respuestaOposicionOrganos', 'fechaRespuestaOposicionOrganos', 'interrogatorioOposicionOrganosId'] : [])
         .map(k => [`seccionInterrogatorioPrincipal.${k}`, 1]));
+      Object.assign(quitar, limpiarAntecedentesPersonalesReinicio(registro, id!));
       if (registro.seccionInterrogatorioPrincipal?.interrogatorioDiscapacidadId?.toString() === id) {
         quitar['seccionInterrogatorioPrincipal.discapacidades'] = 1;
         quitar['seccionInterrogatorioPrincipal.interrogatorioDiscapacidadId'] = 1;

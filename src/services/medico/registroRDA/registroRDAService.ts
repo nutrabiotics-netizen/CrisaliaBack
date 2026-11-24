@@ -31,7 +31,7 @@ function calcularCompletitud(r: any) {
                                  || (ii.indicadorAlergia === true && (ii.antecedentesAlergias?.length ?? 0) > 0),
     antecedentesFamiliares:    ii.estadoAntecedentesFamiliares === 'no_conoce'
                                  || (ii.antecedentesFamiliares?.length ?? 0) > 0,
-    antecedentesFarmacologicos:ii.estadoAntecedentesFarmacologicos === 'no_toma'
+    antecedentesFarmacologicos:ii.estadoAntecedentesFarmacologicos === 'no_toma' || ii.estadoAntecedentesFarmacologicos === 'no_sabe'
                                  || (ii.antecedentesFarmacologicos?.length ?? 0) > 0,
   };
 
@@ -157,6 +157,8 @@ class RegistroRDAService {
       'fuenteFase1.interrogatorioId': fuente._id }).lean() : null;
     const principalManual = data.seccionInterrogatorioPrincipal || {};
     const seccionInterrogatorioPrincipal = { ...principalManual,
+      ...(principalManual.antecedentesPersonalesReferidos === undefined && inicial?.seccionInterrogatorioPrincipal?.antecedentesPersonalesReferidos
+        ? { antecedentesPersonalesReferidos: inicial.seccionInterrogatorioPrincipal.antecedentesPersonalesReferidos } : {}),
       ...(fuente ? completarPreguntasRDA(principalManual, fuente.respuestas || {}, fuente._id) : {}) };
 
     const registro = await RegistroRDA.create({ ...data, tipoRegistro: 'consulta', registroInicialId: inicial?._id, fuenteFase1: fuente ? {

@@ -6,6 +6,8 @@ import Interrogatorio from '../../models/Interrogatorio';
 import { guardarRDAInicial } from '../../services/paciente/registroRDAInicialService';
 import { AppError, handleError } from '../../utils/errors';
 import { buscarCIE10, obtenerCIE10 } from '../../utils/buscarCIE10';
+import { leerSugerencia } from '../../services/ai/antecedentesCIE10';
+import { leerMedicamentos } from '../../services/ai/medicamentosReferidos';
 import { buscarCUM, obtenerCUM } from '../../utils/buscarCUM';
 import { buscarCIUO, obtenerCIUO } from '../../utils/buscarCIUO';
 import { registrarAccion } from '../../utils/auditoriaHelper';
@@ -13,7 +15,7 @@ import { cargarSecciones } from '../../services/ai/anamnesisOrchestratorService'
 import { interpretarTurnoFase1, generarCierrePersonalizadoFase1 } from '../../services/ai/fase1Interpreter';
 import { agregarSeguimientos, cierreDeterminista, EstadoFase1, normalizarRespuesta, preguntasIniciales,
   presentarPregunta, personalizarPreguntaAlergia, respuestasDelPerfil, siguientePregunta, PreguntaFase1, declaracionSinContacto, registrarOpcionesRespondidas,
-  aclararPregunta, datosParaCierre, calcularProgresoFase1, obtenerSeguimientoAlergia, esPreguntaAplicable, agregarOtraAlergia, actualizarRegistroAlergias, actualizarParentescosFamiliares } from '../../services/ai/fase1Flow';
+  aclararPregunta, datosParaCierre, calcularProgresoFase1, obtenerSeguimientoAlergia, esPreguntaAplicable, agregarOtraAlergia, actualizarRegistroAlergias, actualizarParentescosFamiliares, actualizarPreguntaMedicamentos } from '../../services/ai/fase1Flow';
 
 const preguntaCIUO = (s: EstadoFase1): PreguntaFase1 => ({ id: '_ciuo', text: '¿Cuál de estas describe mejor tu ocupación actual?', type: 'single',
   options: [...(s.ciuoCandidatos || []).map(c => ({ value: c.codigo, label: c.nombre })), { value: 'ninguna', label: 'Ninguna de estas' }] });
@@ -72,6 +74,8 @@ export const responderFase1 = async (req: AuthRequest, res: Response): Promise<v
     if (doc?.fase1 && doc.fase1.estado === 'recopilando' && !doc.fase1.confirmada) {
       const familiar = cargarSecciones(['s01']).s01?.questions?.find((q: PreguntaFase1) => q.id === 's01_enfermedades_familia');
       doc.fase1 = actualizarParentescosFamiliares(doc.fase1, familiar);
+      const medicamentos = cargarSecciones(['s01']).s01?.questions?.find((q: PreguntaFase1) => q.id === 's01_medicamentos_actuales');
+      doc.fase1 = actualizarPreguntaMedicamentos(doc.fase1, medicamentos);
     }
     if (accion === 'reanudar') {
       if (!doc?.fase1?.ultimaRespuesta) throw new AppError('No hay una sesión de fase 1 para retomar', 404);
@@ -169,6 +173,10 @@ export const responderFase1 = async (req: AuthRequest, res: Response): Promise<v
       if (!editando) throw new AppError('Completa las preguntas antes de confirmar.', 409);
       if (accion === 'confirmar') estado.confirmada = true;
       aceptada = true;
+    } else if (pregunta?.id === 's01_medicamentos_actuales' && valorRespuesta?.comprobante) {
+      r[pregunta.id] = leerMedicamentos(valorRespuesta.comprobante, { pacienteId, interrogatorioId: doc!._id.toString(), questionId: pregunta.id,
+        referencia: 'paciente', generacion: doc!.fase2Generacion || 0 });
+      aceptada = true;
     } else if (pregunta?.type === 'search' && pregunta.search?.source === 'medicamentos') {
       const codigos = valorRespuesta?.codigos ?? [];
       const manuales = valorRespuesta?.noEncontrados ?? [];
@@ -201,9 +209,18 @@ export const responderFase1 = async (req: AuthRequest, res: Response): Promise<v
         if (!Array.isArray(valorRespuesta?.familiares) || !valorRespuesta.familiares.length || valorRespuesta.familiares.length > maximo) throw new AppError('Registra un parentesco y sus enfermedades.', 400);
         const familiares = valorRespuesta.familiares.map((f: any) => {
           const parentesco = pregunta.search?.parentescos?.find(p => p.codigo === f?.parentescoCodigo);
-          if (!parentesco || !Array.isArray(f.codigos) || !f.codigos.length || f.codigos.length > 30) throw new AppError('Revisa el parentesco y las enfermedades seleccionadas.', 400);
+          if (!parentesco) throw new AppError('Revisa el parentesco registrado.', 400);
           const familiar = f.familiarId === undefined ? undefined : parentesco.familiares?.find(d => d.id === f.familiarId);
           if (f.familiarId !== undefined && !familiar) throw new AppError('Selecciona un familiar válido para ese parentesco.', 400);
+          if (f.comprobante) {
+            const registro = leerSugerencia(f.comprobante, { pacienteId, interrogatorioId: doc!._id.toString(), questionId: pregunta.id,
+              referencia: `${parentesco.codigo}:${familiar?.id ?? ''}`, generacion: doc!.fase2Generacion || 0 });
+            return { parentesco: { codigo: parentesco.codigo, descripcion: parentesco.descripcion },
+              ...(familiar ? { familiar: { id: familiar.id, descripcion: familiar.descripcion } } : {}),
+              textoOriginal: registro.textoOriginal, aclaraciones: registro.aclaraciones, estadoDeclaracion: registro.estado,
+              enfermedades: registro.enfermedades };
+          }
+          if (!Array.isArray(f.codigos) || !f.codigos.length || f.codigos.length > 30) throw new AppError('Analiza la respuesta antes de guardar el familiar.', 400);
           const enfermedades = f.codigos.map((codigo: unknown) => {
             const entrada = typeof codigo === 'string' ? obtenerCIE10(codigo) : undefined;
             if (!entrada) throw new AppError('Selecciona una enfermedad válida del catálogo.', 400);

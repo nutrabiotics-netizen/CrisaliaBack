@@ -16,7 +16,7 @@ function load(file, deps = {}) {
   return module.exports;
 }
 const flow = load('src/services/ai/fase1Flow.ts');
-const errors = load('src/utils/errors.ts');
+const errors = require('./antecedentes-harness.cjs').errors;
 const catalogo = load('src/utils/buscarCIUO.ts', { '../data/ciuo_ocupaciones.json': JSON.parse(fs.readFileSync(path.join(root, 'src/data/ciuo_ocupaciones.json'), 'utf8')) });
 const sections = Object.fromEntries(['s01', 's03'].map(id => [id, JSON.parse(fs.readFileSync(path.join(root, 'src/data/anamnesis_sections', id + '.json'), 'utf8'))]));
 const datosCIE10 = JSON.parse(fs.readFileSync(path.join(root, 'src/data/cie10_catalogo.json'), 'utf8'));
@@ -62,6 +62,8 @@ function harness(options = {}) {
     crypto: require('node:crypto'), '../../models/Paciente': { findById: () => ({ select: () => query(() => clone(options.patient || patient)) }) },
     '../../models/Interrogatorio': model, '../../utils/errors': errors, '../../utils/buscarCIUO': { buscarCIUO: options.ciuo || (() => []), obtenerCIUO: catalogo.obtenerCIUO },
     '../../utils/buscarCIE10': cie10,
+    '../../services/ai/antecedentesCIE10': require('./antecedentes-harness.cjs').semantic,
+    '../../services/ai/medicamentosReferidos': require('./antecedentes-harness.cjs').medicamentos,
     '../../utils/buscarCUM': cum,
     '../../services/paciente/registroRDAInicialService': { guardarRDAInicial: async doc => options.guardarRDAInicial ? options.guardarRDAInicial(doc) : { _id: 'rda-sintetico' } },
     '../../utils/auditoriaHelper': { registrarAccion: async () => {} },
@@ -806,7 +808,7 @@ test('catálogo CIE10 conserva los 12634 códigos, nombres y descripciones de la
 
 test('antecedentes familiares es search en s01 con los cuatro parentescos y códigos exactos', async () => {
   const h = harness({ interpret: accepted }); await complete(h, 's01_enfermedades_familia');
-  assert.equal(h.last.respuesta, '¿Qué enfermedades conoces en tu familia?'); assert.equal(h.last.tipoOpciones, 'search');
+  assert.match(h.last.respuesta, /¿Qué enfermedades conoces en tu familia\?.*tus palabras/); assert.equal(h.last.tipoOpciones, 'search'); assert.equal(h.last.busqueda.semantica, true);
   assert.equal(h.last.busqueda.source, 'cie10'); assert.equal(h.last.busqueda.multiple, true);
   assert.deepEqual(h.last.busqueda.parentescos.map(({ codigo, descripcion }) => ({ codigo, descripcion })), [{ codigo: '01', descripcion: 'Padres' }, { codigo: '02', descripcion: 'Hermano' }, { codigo: '03', descripcion: 'Tío' }, { codigo: '04', descripcion: 'Abuelo' }]);
   assert.deepEqual(h.last.busqueda.parentescos.flatMap(p => (p.familiares || []).map(f => [p.codigo, f.id, f.descripcion])), [
@@ -950,6 +952,7 @@ test('CUM importa los 100000 registros del Excel y distingue presentaciones con 
 test('medicamentos: search múltiple en s01 guarda códigos y nombres canónicos, mezcla manual y reintenta sin duplicar', async () => {
   const h = harness({ interpret: accepted }); await complete(h, 's01_medicamentos_actuales');
   assert.equal(h.last.respuesta, '¿Qué medicamentos tomas actualmente?'); assert.equal(h.last.tipoOpciones, 'search');
+  assert.notEqual(h.last.busqueda.semantica, true); assert.equal(h.last.busqueda.placeholder, 'Busca un medicamento o su código CUM');
   assert.equal(h.last.busqueda.multiple, true); assert.equal(h.last.busqueda.unknownLabel, 'No tomo medicamentos');
   const calls = h.aiCalls, antes = h.last.progresoFase1.porcentaje;
   const result = await h.send('Medicamentos', { valorRespuesta: { codigos: ['10045-2', '10042-1', '10045-2'], noEncontrados: ['Nombre aportado'], nombre: 'Inventado' } });

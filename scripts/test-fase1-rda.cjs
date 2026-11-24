@@ -187,6 +187,17 @@ test('crear conserva respuestas negativas explícitas y las cuenta como contesta
   assert.equal(r.completitud.seccion2.alergias, true); assert.equal(r.completitud.seccion2.antecedentesFamiliares, true);
   assert.equal(r.completitud.seccion2.antecedentesFarmacologicos, true);
 });
+
+test('crear RDA de consulta conserva los antecedentes abiertos del RDA inicial sin sustituir revisión médica', async () => {
+  const personales = [{ preguntaId: 's05_dx_cardiovascular', estadoDeclaracion: 'referidas', textoOriginal: 'Me dijeron presión alta', aclaraciones: [],
+    sugerencias: [{ codigoCIE10: 'I10X', nombreCIE10: 'Hipertensión', textoOriginal: 'presión alta', estadoCodificacion: 'sugerida', requiereRevisionMedica: true }] }];
+  const inicial = record({ tipoRegistro: 'inicial', citaId: undefined, fuenteFase1: { interrogatorioId: id('d') }, seccionInterrogatorioPrincipal: { antecedentesPersonalesReferidos: personales } });
+  const h = harness({ docs: [inicial] }); const r = await h.service.crear({ pacienteId: patientId, medicoId, citaId });
+  assert.deepEqual(clone(r.seccionInterrogatorioPrincipal.antecedentesPersonalesReferidos), personales);
+  const manual = harness({ docs: [inicial] });
+  const revisado = await manual.service.crear({ pacienteId: patientId, medicoId, citaId, seccionInterrogatorioPrincipal: { antecedentesPersonalesReferidos: [] } });
+  assert.deepEqual(clone(revisado.seccionInterrogatorioPrincipal.antecedentesPersonalesReferidos), []);
+});
 test('el RDA de consulta queda vinculado al borrador inicial sin permitir sustituir ese vínculo desde el cliente', async () => {
   const inicial = { _id: id('f'), pacienteId: patientId, tipoRegistro: 'inicial', estado: 'borrador',
     fuenteFase1: { interrogatorioId: id('d'), version: 30 } };

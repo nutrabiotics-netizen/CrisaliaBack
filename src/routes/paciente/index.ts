@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { interpretarAntecedentes } from '../../controllers/paciente/antecedentesController';
 import { authenticate, authorize } from '../../middleware/auth';
 import { UserRole } from '../../types';
 import { infoCitaHeridas, getMeetingHeridas } from '../../controllers/paciente/heridasPacienteController';
@@ -69,6 +70,7 @@ router.delete('/notificaciones/:id', authenticate, authorize(UserRole.PACIENTE),
 router.get('/heridas-cita/:citaId/info', authenticate, authorize(UserRole.PACIENTE), infoCitaHeridas);
 router.get('/heridas-cita/:citaId/meeting', authenticate, authorize(UserRole.PACIENTE), getMeetingHeridas);
 router.get('/enfermedades-cie10', authenticate, authorize(UserRole.PACIENTE), buscarEnfermedadesFase1);
+router.post('/antecedentes/interpretar', authenticate, authorize(UserRole.PACIENTE), interpretarAntecedentes);
 router.get('/medicamentos', authenticate, authorize(UserRole.PACIENTE), buscarMedicamentosFase1);
 router.get('/ocupaciones', authenticate, authorize(UserRole.PACIENTE), buscarOcupacionesFase1);
 router.post('/cuerpo-chat', authenticate, authorize(UserRole.PACIENTE), responderCuerpoChat);

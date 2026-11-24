@@ -41,6 +41,7 @@ export interface PreguntaFase1 {
   allergyIndex?: number;
   showIf?: { questionId: string; notIn?: string[] };
   search?: { source: string; placeholder?: string; allowCustom?: boolean; notFoundLabel?: string;
+    semantica?: boolean;
     multiple?: boolean; showCode?: boolean; showDescription?: boolean; unknownLabel?: string;
     manualLabel?: string; manualHelp?: string; manualAddLabel?: string; selectedLabel?: string;
     parentescos?: { codigo: string; descripcion: string; familiares?: { id: string; descripcion: string }[] }[];
@@ -73,11 +74,19 @@ export interface CierreNarrativoFase1 {
 export function actualizarParentescosFamiliares(estado: EstadoFase1, preguntaActual?: PreguntaFase1): EstadoFase1 {
   if (estado.confirmada || estado.estado !== 'recopilando' || !preguntaActual?.search?.parentescos) return estado;
   const preguntas = estado.preguntas.map(q => q.id === preguntaActual.id
-    ? { ...q, search: { ...q.search!, parentescos: preguntaActual.search!.parentescos } } : q);
+    ? { ...q, text: preguntaActual.text, search: { ...q.search!, semantica: preguntaActual.search!.semantica, parentescos: preguntaActual.search!.parentescos } } : q);
   const ultimaRespuesta = estado.preguntaId === preguntaActual.id && estado.ultimaRespuesta
-    ? { ...estado.ultimaRespuesta, busqueda: { ...estado.ultimaRespuesta.busqueda, parentescos: preguntaActual.search.parentescos } }
+    ? { ...estado.ultimaRespuesta, respuesta: preguntaActual.text, busqueda: { ...estado.ultimaRespuesta.busqueda, semantica: preguntaActual.search.semantica, parentescos: preguntaActual.search.parentescos } }
     : estado.ultimaRespuesta;
   return { ...estado, preguntas, ultimaRespuesta };
+}
+
+/** Aplica el buscador vigente al retomar la entrevista, sin cambiar las respuestas guardadas. */
+export function actualizarPreguntaMedicamentos(estado: EstadoFase1, pregunta?: PreguntaFase1): EstadoFase1 {
+  if (estado.confirmada || estado.estado !== 'recopilando' || pregunta?.id !== 's01_medicamentos_actuales' || pregunta.search?.source !== 'medicamentos') return estado;
+  return { ...estado, preguntas: estado.preguntas.map(q => q.id === pregunta.id ? { ...q, text: pregunta.text, search: pregunta.search } : q),
+    ultimaRespuesta: estado.preguntaId === pregunta.id && estado.ultimaRespuesta
+      ? { ...estado.ultimaRespuesta, respuesta: pregunta.text, busqueda: pregunta.search } : estado.ultimaRespuesta };
 }
 
 /** Solo información pertinente al caso; excluye nombre, teléfono y contacto de emergencia. */
@@ -113,6 +122,7 @@ export function normalizarRespuesta(q: PreguntaFase1, valor: unknown): { valido:
     const dato = valor as Record<string, unknown>;
     if (!Array.isArray(dato.medicamentos)) return { valido: false };
     if (dato.estado === 'no_toma') return { valido: dato.medicamentos.length === 0, valor };
+    if (dato.estado === 'no_sabe') return { valido: dato.medicamentos.length === 0 && typeof dato.textoOriginal === 'string' && !!dato.textoOriginal.trim() && Array.isArray(dato.aclaraciones), valor };
     const vistos = new Set<string>();
     const valido = dato.estado === 'toma' && dato.medicamentos.length > 0 && dato.medicamentos.length <= 30 && dato.medicamentos.every((m: any) => {
       if (!m || typeof m.nombre !== 'string' || !m.nombre.trim() || m.nombre.length > 1000) return false;
@@ -141,9 +151,11 @@ export function normalizarRespuesta(q: PreguntaFase1, valor: unknown): { valido:
       if (claves.has(clave) || (familiar ? genericos : detallados).has(parentesco.codigo)) return false;
       claves.add(clave);
       (familiar ? detallados : genericos).add(parentesco.codigo);
-      return Array.isArray(f.enfermedades) && f.enfermedades.length > 0 && f.enfermedades.length <= 30 &&
-        new Set(f.enfermedades.map((e: any) => e?.codigo)).size === f.enfermedades.length &&
-        f.enfermedades.every((e: any) => e && ['codigo', 'nombre', 'descripcion'].every(k => typeof e[k] === 'string' && e[k].trim()));
+      const declaracionAbierta = typeof f.textoOriginal === 'string' && f.textoOriginal.trim() && ['referidas', 'ninguna', 'no_sabe'].includes(f.estadoDeclaracion);
+      return Array.isArray(f.enfermedades) && (f.enfermedades.length > 0 || declaracionAbierta) && f.enfermedades.length <= 30 &&
+        new Set(f.enfermedades.map((e: any) => e?.codigo ?? `texto:${e?.textoOriginal}`)).size === f.enfermedades.length &&
+        f.enfermedades.every((e: any) => e && ['nombre', 'descripcion'].every(k => typeof e[k] === 'string' && e[k].trim()) &&
+          (typeof e.codigo === 'string' && !!e.codigo.trim() || declaracionAbierta && e.codigo === null && e.estadoCodificacion === 'pendiente' && e.requiereRevisionMedica === true));
     });
     return { valido, valor };
   }
@@ -390,7 +402,8 @@ export function cierreDeterminista(respuestas: Record<string, any>, preguntas: P
     ? respuestas.s03_sintomas_tabla.map((row: any) => Object.entries(row).map(([k, v]) => `${k}: ${v}`).join('; ')) : []),
     Array.isArray(respuestas.s01_alergias) && respuestas.s01_alergias.length ? `Alergias referidas: ${respuestas.s01_alergias.map((a: { tipo: string; sustancia: string }) => `${preguntas.find(q => q.id === 's01_tipo_alergia')?.options?.find(o => o.value === a.tipo)?.label || a.tipo}: ${a.sustancia}`).join('; ')}` : alergia ? `Alergias referidas: ${alergia}` : '',
     antecedentes ? `Antecedentes familiares referidos: ${antecedentes}` : '',
-    respuestas.s01_medicamentos_actuales?.estado === 'toma' ? `Medicamentos que refieres tomar actualmente: ${respuestas.s01_medicamentos_actuales.medicamentos.map((m: any) => m.nombre).join('; ')}` : respuestas.s01_medicamentos_actuales?.estado === 'no_toma' ? 'Refieres que no tomas medicamentos actualmente' : '',
+    respuestas.s01_medicamentos_actuales?.textoOriginal ? `Medicamentos referidos: ${[respuestas.s01_medicamentos_actuales.textoOriginal, ...(respuestas.s01_medicamentos_actuales.aclaraciones || [])].join('; ')}` :
+      respuestas.s01_medicamentos_actuales?.estado === 'toma' ? `Medicamentos que refieres tomar actualmente: ${respuestas.s01_medicamentos_actuales.medicamentos.map((m: any) => m.nombre).join('; ')}` : respuestas.s01_medicamentos_actuales?.estado === 'no_toma' ? 'Refieres que no tomas medicamentos actualmente' : '',
     respuestas.s03_evento_inicio ? `Relacionas el inicio o empeoramiento con: ${respuestas.s03_evento_inicio}` : '',
     respuestas.s03_que_hacias_bien ? `Recuerdas sentirte mejor cuando: ${respuestas.s03_que_hacias_bien}` : '',
     preguntas.find(q => q.id === 's03_limitacion')?.options?.find(o => o.value === respuestas.s03_limitacion)?.label,

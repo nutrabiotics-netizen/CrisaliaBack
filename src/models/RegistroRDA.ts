@@ -16,12 +16,17 @@ interface SeccionCuenta {
 
 // Sección 2 — Interrogatorio inicial
 interface AntecedenteFamiliar {
-  codigoCIE10?: string;
+  codigoCIE10?: string | null;
   nombreCIE10?: string;
   parentesco?: string;
   parentescoNombre?: string;
   familiarId?: string;
   familiarNombre?: string;
+  textoOriginal?: string;
+  aclaraciones?: string[];
+  estadoDeclaracion?: 'referidas' | 'ninguna' | 'no_sabe';
+  estadoCodificacion?: 'sugerida' | 'pendiente';
+  requiereRevisionMedica?: boolean;
 }
 
 export interface SeccionInterrogatorioInicial {
@@ -32,8 +37,11 @@ export interface SeccionInterrogatorioInicial {
   antecedentesAlergias?: { tipo: string; tipoCodigo?: '01' | '02' | '03' | '04' | '05' | '06'; tipoNombre?: string; nombreAlergeno: string }[];
   antecedentesFamiliares?: AntecedenteFamiliar[];
   estadoAntecedentesFamiliares?: 'registradas' | 'no_conoce';
-  estadoAntecedentesFarmacologicos?: 'toma' | 'no_toma';
-  antecedentesFarmacologicos?: { codigoCUMS: string | null; nombre?: string; origen?: 'catalogo' | 'declarado' }[];
+  estadoAntecedentesFarmacologicos?: 'toma' | 'no_toma' | 'no_sabe';
+  declaracionMedicamentos?: { textoOriginal: string; aclaraciones: string[] };
+  antecedentesFarmacologicos?: { codigoCUMS: string | null; nombre?: string; origen?: 'catalogo' | 'declarado';
+    textoOriginal?: string; concentracion?: string; forma?: string; presentacion?: string; marca?: string; dosis?: string; frecuencia?: string;
+    estadoCodificacion?: 'sugerida' | 'pendiente'; requiereRevisionMedica?: boolean }[];
 }
 
 // Sección 3 — Datos de facturación
@@ -56,6 +64,8 @@ interface SeccionFacturacion {
 
 // Sección 4 — Interrogatorio principal
 interface SeccionInterrogatorioPrincipal {
+  antecedentesPersonalesReferidos?: { preguntaId: string; estadoDeclaracion: string; textoOriginal: string; aclaraciones: string[];
+    sugerencias: { codigoCIE10: string | null; nombreCIE10: string; textoOriginal: string; estadoCodificacion: 'sugerida' | 'pendiente'; requiereRevisionMedica: true }[] }[];
   oposicionOrganos?: { fecha?: string; interrogatorioId: mongoose.Types.ObjectId;
     respuesta?: 'si_escrita' | 'no_escrita' | 'sin_certeza' | 'prefiero_no_responder'; oposicion?: boolean | null }[];
   // Compatibilidad con registros previos; las nuevas respuestas se guardan en el array.
@@ -142,6 +152,7 @@ export interface IRegistroRDA extends Document {
   tipoRegistro: 'inicial' | 'consulta';
   origenCuenta?: boolean;
   fuenteRespuestasFase1?: SeccionInterrogatorioInicial;
+  fuenteAntecedentesPersonales?: { interrogatorioId: mongoose.Types.ObjectId; version: number; generacion: number; datos: unknown[] };
   generacionPruebasFase2?: number;
   medicoId?: mongoose.Types.ObjectId;
   citaId?: mongoose.Types.ObjectId;
@@ -173,6 +184,7 @@ const RegistroRDASchema = new Schema<IRegistroRDA>(
     tipoRegistro: { type: String, enum: ['inicial', 'consulta'], default: 'consulta' },
     origenCuenta: Boolean,
     fuenteRespuestasFase1: Schema.Types.Mixed,
+    fuenteAntecedentesPersonales: Schema.Types.Mixed,
     generacionPruebasFase2: Number,
     medicoId: { type: Schema.Types.ObjectId, ref: 'Medico', required: function () { return this.tipoRegistro !== 'inicial'; } },
     citaId: { type: Schema.Types.ObjectId, ref: 'Cita', required: function () { return this.tipoRegistro !== 'inicial'; } },
@@ -199,9 +211,14 @@ const RegistroRDASchema = new Schema<IRegistroRDA>(
       antecedentesAlergias: [{ tipo: String, tipoCodigo: { type: String, enum: ['01', '02', '03', '04', '05', '06'] },
         tipoNombre: String, nombreAlergeno: String }],
       estadoAntecedentesFamiliares: { type: String, enum: ['registradas', 'no_conoce'] },
-      antecedentesFamiliares: [{ codigoCIE10: String, nombreCIE10: String, parentesco: String, parentescoNombre: String, familiarId: String, familiarNombre: String }],
-      estadoAntecedentesFarmacologicos: { type: String, enum: ['toma', 'no_toma'] },
-      antecedentesFarmacologicos: [{ codigoCUMS: String, nombre: String, origen: { type: String, enum: ['catalogo', 'declarado'] } }],
+      antecedentesFamiliares: [{ codigoCIE10: String, nombreCIE10: String, parentesco: String, parentescoNombre: String, familiarId: String, familiarNombre: String,
+        textoOriginal: String, aclaraciones: { type: [String], default: undefined }, estadoDeclaracion: { type: String, enum: ['referidas', 'ninguna', 'no_sabe'] },
+        estadoCodificacion: { type: String, enum: ['sugerida', 'pendiente'] }, requiereRevisionMedica: Boolean }],
+      estadoAntecedentesFarmacologicos: { type: String, enum: ['toma', 'no_toma', 'no_sabe'] },
+      declaracionMedicamentos: { type: new Schema({ textoOriginal: String, aclaraciones: [String] }, { _id: false }), default: undefined },
+      antecedentesFarmacologicos: [{ codigoCUMS: String, nombre: String, origen: { type: String, enum: ['catalogo', 'declarado'] },
+        textoOriginal: String, concentracion: String, forma: String, presentacion: String, marca: String, dosis: String, frecuencia: String,
+        estadoCodificacion: { type: String, enum: ['sugerida', 'pendiente'] }, requiereRevisionMedica: Boolean }],
     },
 
     fuenteFase1: {
@@ -232,6 +249,9 @@ const RegistroRDASchema = new Schema<IRegistroRDA>(
     },
 
     seccionInterrogatorioPrincipal: {
+      antecedentesPersonalesReferidos: { type: [{ preguntaId: String, estadoDeclaracion: String, textoOriginal: String, aclaraciones: [String],
+        sugerencias: [{ codigoCIE10: String, nombreCIE10: String, textoOriginal: String,
+          estadoCodificacion: { type: String, enum: ['sugerida', 'pendiente'] }, requiereRevisionMedica: Boolean }] }], default: undefined },
       oposicionOrganos: { type: [new Schema({
         fecha: { type: String, match: /^\d{4}-\d{2}-\d{2}$/ },
         interrogatorioId: { type: Schema.Types.ObjectId, ref: 'Interrogatorio', required: true },

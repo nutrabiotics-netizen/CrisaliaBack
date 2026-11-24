@@ -35,24 +35,31 @@ export function proyectarFase1RDA(r: Record<string, any>): SeccionInterrogatorio
     resultado.estadoAntecedentesFamiliares = 'no_conoce'; resultado.antecedentesFamiliares = [];
   } else if (familiares?.estado === 'registradas' && Array.isArray(familiares.familiares) && familiares.familiares.length &&
       familiares.familiares.every((f: any) => typeof f?.parentesco?.codigo === 'string' && typeof f.parentesco.descripcion === 'string' &&
-        Array.isArray(f.enfermedades) && f.enfermedades.length && f.enfermedades.every((e: any) => typeof e?.codigo === 'string' && typeof e.nombre === 'string'))) {
+        Array.isArray(f.enfermedades) && (f.enfermedades.length || typeof f.textoOriginal === 'string') &&
+        f.enfermedades.every((e: any) => typeof e?.nombre === 'string' && (typeof e.codigo === 'string' || e.codigo === null && e.estadoCodificacion === 'pendiente')))) {
     resultado.estadoAntecedentesFamiliares = 'registradas';
-    resultado.antecedentesFamiliares = familiares.familiares.flatMap((f: any) => f.enfermedades.map((e: any) => ({
+    resultado.antecedentesFamiliares = familiares.familiares.flatMap((f: any) => (f.enfermedades.length ? f.enfermedades : [{ codigo: null, estadoCodificacion: 'pendiente', requiereRevisionMedica: true }]).map((e: any) => ({
       codigoCIE10: e.codigo, nombreCIE10: e.nombre, parentesco: f.parentesco.codigo, parentescoNombre: f.parentesco.descripcion,
       ...(typeof f.familiar?.id === 'string' && typeof f.familiar.descripcion === 'string'
         ? { familiarId: f.familiar.id, familiarNombre: f.familiar.descripcion } : {}),
+      ...(typeof f.textoOriginal === 'string' ? { textoOriginal: f.textoOriginal, aclaraciones: f.aclaraciones || [], estadoDeclaracion: f.estadoDeclaracion } : {}),
+      ...(e.estadoCodificacion ? { estadoCodificacion: e.estadoCodificacion, requiereRevisionMedica: true } : {}),
     })));
   }
   const farmacos = r.s01_medicamentos_actuales;
-  if (farmacos?.estado === 'no_toma' && Array.isArray(farmacos.medicamentos) && !farmacos.medicamentos.length) {
-    resultado.estadoAntecedentesFarmacologicos = 'no_toma'; resultado.antecedentesFarmacologicos = [];
+  if ((farmacos?.estado === 'no_toma' || farmacos?.estado === 'no_sabe' && typeof farmacos.textoOriginal === 'string') && Array.isArray(farmacos.medicamentos) && !farmacos.medicamentos.length) {
+    resultado.estadoAntecedentesFarmacologicos = farmacos.estado; resultado.antecedentesFarmacologicos = [];
   } else if (farmacos?.estado === 'toma' && Array.isArray(farmacos.medicamentos) && farmacos.medicamentos.length &&
       farmacos.medicamentos.every((m: any) => typeof m?.nombre === 'string' && m.nombre.trim() &&
         ((typeof m.codigo === 'string' && m.codigo.trim()) || (m.codigo === null && m.origen === 'declarado')))) {
     resultado.estadoAntecedentesFarmacologicos = 'toma';
     resultado.antecedentesFarmacologicos = farmacos.medicamentos.map((m: any) => ({ codigoCUMS: m.codigo, nombre: m.nombre,
-      origen: m.codigo === null ? 'declarado' : 'catalogo' }));
+      origen: m.codigo === null ? 'declarado' : 'catalogo',
+      ...Object.fromEntries(['textoOriginal', 'concentracion', 'forma', 'presentacion', 'marca', 'dosis', 'frecuencia'].filter(k => typeof m[k] === 'string').map(k => [k, m[k]])),
+      ...(m.estadoCodificacion ? { estadoCodificacion: m.estadoCodificacion, requiereRevisionMedica: true } : {}) }));
   }
+  if (resultado.estadoAntecedentesFarmacologicos && typeof farmacos.textoOriginal === 'string')
+    resultado.declaracionMedicamentos = { textoOriginal: farmacos.textoOriginal, aclaraciones: Array.isArray(farmacos.aclaraciones) ? farmacos.aclaraciones : [] };
   return resultado;
 }
 
@@ -71,6 +78,7 @@ export function completarInicialRDA(actual: SeccionInterrogatorioInicial, fase1:
   }
   if (!actual.estadoAntecedentesFarmacologicos && !actual.antecedentesFarmacologicos?.length && fase1.estadoAntecedentesFarmacologicos) {
     cambios.estadoAntecedentesFarmacologicos = fase1.estadoAntecedentesFarmacologicos; cambios.antecedentesFarmacologicos = fase1.antecedentesFarmacologicos;
+    if (fase1.declaracionMedicamentos) cambios.declaracionMedicamentos = fase1.declaracionMedicamentos;
   }
   return cambios;
 }

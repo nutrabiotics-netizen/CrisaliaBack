@@ -12,13 +12,16 @@ function load(file, deps = {}, env = {}) {
   const code = ts.transpileModule(fs.readFileSync(path.join(root, file), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true } }).outputText;
   vm.runInNewContext(code, { module, exports: module.exports, structuredClone, AbortSignal, AbortController, TextDecoder, TextEncoder, Date, setTimeout, clearTimeout,
     console: { log() {}, warn() {}, info() {}, error() {} }, process: { env, cwd: () => root },
-    require: id => { if (Object.hasOwn(deps, id)) return deps[id]; throw Error('Unexpected import '+id); } }, { filename: file });
+    require: id => { if (Object.hasOwn(deps, id)) return deps[id];
+      if (file === 'src/controllers/paciente/interrogatorio/interrogatorioController.ts' && id === '../../../services/ai/anamnesisOrchestratorService') return { cargarSecciones: orchestrator.cargarSecciones };
+      throw Error('Unexpected import '+id); } }, { filename: file });
   return module.exports;
 }
 const fase1 = load('src/services/ai/fase1Flow.ts');
 const rdaFlow = load('src/services/paciente/preguntasRDAFlow.ts', { '../../data/rda_questions.json': require('../src/data/rda_questions.json') });
-const flow = load('src/services/ai/fase2Flow.ts', { './fase1Flow': fase1, '../paciente/preguntasRDAFlow': rdaFlow });
-const errors = load('src/utils/errors.ts');
+const semantic = require('./antecedentes-harness.cjs').semantic;
+const flow = load('src/services/ai/fase2Flow.ts', { './fase1Flow': fase1, '../paciente/preguntasRDAFlow': rdaFlow, './antecedentesCIE10': semantic });
+const errors = require('./antecedentes-harness.cjs').errors;
 const resetFlow = load('src/services/paciente/reinicioFase2Flow.ts');
 const orchestrator = load('src/services/ai/anamnesisOrchestratorService.ts', { path, fs, './anamnesisAgentService': {} });
 const index = orchestrator.cargarIndex();
@@ -74,6 +77,8 @@ function harness(options = {}) {
     '../../models/Cita': { findOne: () => ({ sort() { return this; }, lean: async () => null }) }, '../../utils/notificacionHelper': { crearNotificacionMedico: async () => {} },
     '../../utils/auditoriaHelper': { registrarAccion: async () => {} },
     '../../services/ai/fase2Flow': flow,
+    '../../services/ai/antecedentesCIE10': semantic,
+    '../../services/paciente/antecedentesRDAService': { guardarAntecedentesPersonalesRDA: async doc => options.guardarAntecedentesPersonalesRDA?.(doc) },
     '../../services/paciente/preguntasRDAFlow': rdaFlow,
     '../../services/paciente/reinicioFase2Flow': resetFlow,
     '../../services/ai/fase2Interpreter': { redactarPreguntasFase2: async (preguntas,respuestas,signal) => {
@@ -516,11 +521,12 @@ test('Claude reformula una ronda del Agent sin cambiar preguntas, opciones, orde
   const textos=['¿Te han diagnosticado alguna de estas enfermedades? Puedes marcar varias.','De esta lista, ¿cuáles enfermedades te han confirmado?','¿Con qué frecuencia tienes cada una de estas molestias?'];
   const h=harness({decisions:[seleccionar(...ids)],redact:qs=>qs.map((q,i)=>({id:q.id,texto:textos[i]}))});
   await h.send({accion:'preparar'});assert.equal(h.agentCalls,1);assert.equal(h.redactInputs.length,1);assert.deepEqual(h.redactInputs[0].preguntas.map(q=>q.id),ids);
-  await h.send({accion:'continuar'});assert.equal(h.last.respuesta,textos[0]);assert.equal(h.last.questionType,'checkbox');
+  await h.send({accion:'continuar'});assert.match(h.last.respuesta,/Cuéntanos con tus palabras/);assert.equal(h.last.busqueda.semantica,true);assert.deepEqual(h.last.opciones,[]);
   const cat=flow.catalogoFase2(sections,h.doc.respuestas);for(const q of h.doc.fase2.preguntas){const {textoPaciente,...original}=q;assert.deepEqual(clone(original),clone(cat.find(p=>p.id===q.id)));}
   await h.send({mensajeUsuario:'Diabetes mellitus tipo 1',valorRespuesta:['dm1']});
-  assert.equal(h.last.respuesta,textos[1]);assert.equal(h.agentCalls,1);assert.equal(h.redactInputs.length,1);
-  await h.send({accion:'reanudar'});assert.equal(h.last.respuesta,textos[1]);assert.equal(h.redactInputs.length,1);
+  const abierta=flow.textoRespaldoFase2(cat.find(q=>q.id===ids[1]));
+  assert.equal(h.last.respuesta,abierta);assert.equal(h.agentCalls,1);assert.equal(h.redactInputs.length,1);
+  await h.send({accion:'reanudar'});assert.equal(h.last.respuesta,abierta);assert.equal(h.redactInputs.length,1);
   await h.send({mensajeUsuario:'Ninguna',valorRespuesta:['ninguna']});assert.equal(h.last.respuesta,textos[2]);assert.equal(h.last.questionType,'symptom_table');assert.equal(h.last.tablaEscala,'frecuencia');
   assert.deepEqual(h.last.tablaItems,clone(cat.find(q=>q.id===ids[2]).items));assert.equal(h.agentCalls,1);
 });
@@ -528,12 +534,12 @@ test('una entrevista anterior recupera la redacción Claude sin repetir el Agent
   const a=harness({decisions:[seleccionar('s05_dx_metabolicas')]});await a.send();const doc=a.doc;
   doc.fase2.preguntas.forEach(q=>delete q.textoPaciente);doc.fase2.ultimaRespuesta.respuesta=doc.fase2.preguntas[0].text;
   const h=harness({doc,redact:qs=>qs.map(q=>({id:q.id,texto:'¿Te han confirmado alguna de estas enfermedades?'}))});const n=doc.fase2.historial.length;
-  await h.send({accion:'reanudar',requestId:'retomar-con-redaccion'});assert.equal(h.last.respuesta,'¿Te han confirmado alguna de estas enfermedades?');assert.equal(h.agentCalls,0);assert.equal(h.redactInputs.length,1);assert.equal(h.doc.fase2.historial.length,n);
+  await h.send({accion:'reanudar',requestId:'retomar-con-redaccion'});assert.match(h.last.respuesta,/Cuéntanos con tus palabras/);assert.equal(h.agentCalls,0);assert.equal(h.redactInputs.length,1);assert.equal(h.doc.fase2.historial.length,n);
   assert.equal(h.doc.fase2.historial.at(-1).texto,h.last.respuesta);await h.send({accion:'reanudar'});assert.equal(h.redactInputs.length,1);
 });
 test('un fallo de Claude conserva la decisión del Agent y usa una pregunta clara de respaldo',async()=>{
   const h=harness({decisions:[seleccionar('s05_dx_metabolicas','s34_polineuropatia')],redact:()=>{throw Error('proveedor no disponible');}});await h.send();
-  assert.equal(h.last.respuesta,'¿Un profesional de salud te ha diagnosticado alguna de estas enfermedades? Puedes marcar varias opciones.');assert.equal(h.agentCalls,1);assert.equal(h.doc.fase2.preguntas[1].textoPaciente.includes('¿Con qué frecuencia'),true);
+  assert.match(h.last.respuesta,/Cuéntanos con tus palabras/);assert.equal(h.agentCalls,1);assert.equal(h.doc.fase2.preguntas[1].textoPaciente.includes('¿Con qué frecuencia'),true);
   await h.send({accion:'reanudar'});assert.equal(h.agentCalls,1);assert.equal(h.redactInputs.length,1);
 });
 test('redactor Claude valida todos los IDs, el orden, texto y terminación, sin aceptar opciones ni decisiones nuevas',async()=>{

@@ -10,6 +10,10 @@ export function obtenerCUM(codigo: string): EntradaCUM | undefined { return porC
 
 /** Cada presentación conserva su propio CUM; el buscador no prescribe ni asigna códigos a texto libre. */
 export function buscarCUM(texto: string, limite = 15, minimoCaracteres = 3): EntradaCUM[] {
+  return resultadosCUM(texto, minimoCaracteres).slice(0, Math.max(0, Math.min(limite, 30)));
+}
+
+function resultadosCUM(texto: string, minimoCaracteres = 3): EntradaCUM[] {
   const consulta = normalizar(texto);
   if (consulta.length < minimoCaracteres) return [];
   const codigo = texto.trim();
@@ -24,5 +28,14 @@ export function buscarCUM(texto: string, limite = 15, minimoCaracteres = 3): Ent
     if (puntuacion) resultados.push({ entrada, puntuacion });
   }
   return resultados.sort((a, b) => b.puntuacion - a.puntuacion || a.entrada.nombre.length - b.entrada.nombre.length || a.entrada.codigo.localeCompare(b.entrada.codigo))
-    .slice(0, Math.max(0, Math.min(limite, 30))).map(r => r.entrada);
+    .map(r => r.entrada);
+}
+
+/** Términos semánticos ordenados de más preciso a más amplio. Nunca genera códigos. */
+export function buscarCandidatosCUM(terminos: string[]): { candidatos: EntradaCUM[]; hayMas: boolean } {
+  for (const termino of terminos.slice(0, 6)) {
+    const coincidencias = resultadosCUM(termino);
+    if (coincidencias.length) return { candidatos: coincidencias.slice(0, 60), hayMas: coincidencias.length > 60 };
+  }
+  return { candidatos: [], hayMas: false };
 }

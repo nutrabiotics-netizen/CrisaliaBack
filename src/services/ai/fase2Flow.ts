@@ -2,6 +2,7 @@ import { normalizarRespuesta, PreguntaFase1, OpcionesRespondidas } from './fase1
 export { registrarOpcionesRespondidas } from './fase1Flow';
 import { contextoClinicoRDA } from '../paciente/preguntasRDAFlow';
 import type { AgentDecision } from './anamnesisAgentService';
+import { esAntecedentePersonal, esAntecedenteReferido } from './antecedentesCIE10';
 
 export interface PreguntaFase2 extends PreguntaFase1 {
   items?: { id: string; label: string }[];
@@ -16,6 +17,7 @@ export interface EstadoFase2 {
   estado: 'preguntando' | 'decidiendo' | 'resumen' | 'confirmada' | 'alerta';
   ronda: number;
   preguntas: PreguntaFase2[];
+  correccionesPendientes?: string[];
   preguntaId: string | null;
   progreso: number;
   respondidas: string[];
@@ -28,6 +30,7 @@ export interface EstadoFase2 {
 const propia = (r: Record<string, any>, id: string) => Object.prototype.hasOwnProperty.call(r, id);
 
 export function validarRespuestaFase2(q: PreguntaFase2, valor: unknown): { valido: boolean; valor?: any } {
+  if (esAntecedentePersonal(q.id) && valor && typeof valor === 'object' && !Array.isArray(valor)) return { valido: esAntecedenteReferido(valor), valor };
   if (q.type === 'symptom_table') {
     if (!valor || typeof valor !== 'object' || Array.isArray(valor) || !q.items?.length) return { valido: false };
     const dato = valor as Record<string, unknown>;
@@ -82,6 +85,17 @@ export function elegirPreguntasAgent(decision: any, catalogo: PreguntaFase2[], r
   });
 }
 export function textoRespaldoFase2(q: PreguntaFase2) {
+  if (esAntecedentePersonal(q.id)) {
+    const grupos: Record<string, string> = {
+      s05_dx_metabolicas: 'el azúcar, la tiroides, las hormonas o el peso',
+      s05_dx_cardiovascular: 'el corazón, la presión arterial o la respiración',
+      s05_dx_digestivas: 'el estómago, el intestino o el hígado',
+      s05_dx_neurologicas: 'la memoria, los nervios, el ánimo o la salud mental',
+      s05_dx_inmunologicas: 'las defensas, los huesos, los músculos o las articulaciones',
+    };
+    return grupos[q.id] ? `¿Qué enfermedades te han diagnosticado relacionadas con ${grupos[q.id]}? Cuéntanos con tus palabras; si no conoces ninguna, puedes indicarlo.`
+      : '¿Te han diagnosticado alguna otra enfermedad que no hayas mencionado? Cuéntanos con tus palabras.';
+  }
   if (q.text.includes('?')) return q.text;
   if (q.type === 'symptom_table' && (q.id.startsWith('s09_') || ['s30_omega3_consumo', 's30_omega6_consumo'].includes(q.id))) return '¿Con qué frecuencia consumes cada uno de estos alimentos? Marca una opción en cada fila.';
   if (q.type === 'symptom_table') return q.scale_type === 'intensity'
@@ -93,6 +107,8 @@ export function textoRespaldoFase2(q: PreguntaFase2) {
   return `¿Qué puedes contarme sobre lo siguiente: ${q.text.charAt(0).toLowerCase() + q.text.slice(1)}?`;
 }
 export function presentarPreguntaFase2(q: PreguntaFase2): Record<string, any> {
+  if (esAntecedentePersonal(q.id)) return { respuesta: textoRespaldoFase2(q), questionId: q.id, opciones: [], opcionesData: [],
+    questionType: 'search', tipoOpciones: 'search', busqueda: { source: 'cie10', semantica: true }, finRonda: false };
   return { respuesta: q.textoPaciente || textoRespaldoFase2(q), questionId: q.id, opciones: q.options?.map(o => o.label) || [], opcionesData: q.options,
     questionType: q.type, tipoOpciones: q.type === 'symptom_table' ? 'tabla' : q.type === 'table' ? 'tabla_dinamica' : q.type === 'scale' ? 'scale' : q.type === 'checkbox' ? 'checkbox' : 'single',
     tablaItems: q.items, tablaEscala: q.scale_type === 'intensity' ? 'intensidad' : 'frecuencia', columnas: q.columns,

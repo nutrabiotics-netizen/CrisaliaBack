@@ -1,5 +1,7 @@
 import { randomUUID } from 'crypto';
 import type { Response } from 'express';
+import { esAntecedentePersonal, leerSugerencia } from '../../services/ai/antecedentesCIE10';
+import { guardarAntecedentesPersonalesRDA } from '../../services/paciente/antecedentesRDAService';
 import type { AuthRequest } from '../../middleware/auth';
 import Interrogatorio from '../../models/Interrogatorio';
 import Cita from '../../models/Cita';
@@ -54,7 +56,7 @@ export const responderFase2 = async (req: AuthRequest, res: Response): Promise<v
     const previo = doc.fase2;
     const requiereRedaccion = previo?.estado === 'preguntando' && previo.preguntas.some(q => !q.textoPaciente && !respuestaGuardadaFase2(q, respuestasPrevias));
     const repetido = previo?.turnos.find(t => t.id === requestId);
-    if (repetido) { res.json({ success: true, data: { ...repetido.respuesta, ...(accion === 'reanudar' ? { historial: previo!.historial } : {}) } }); return; }
+    if (repetido) { await guardarAntecedentesPersonalesRDA(doc); res.json({ success: true, data: { ...repetido.respuesta, ...(accion === 'reanudar' ? { historial: previo!.historial } : {}) } }); return; }
     if (doc.estado === 'completado') {
       if (mensajeUsuario || accion === 'editar' || accion === 'confirmar') throw new AppError('La entrevista ya está confirmada.', 409);
       res.json({ success: true, data: { ...previo?.ultimaRespuesta, interrogatorioId: id, fase2Estado: 'confirmada', fase2Version: previo?.version || 0,
@@ -66,7 +68,10 @@ export const responderFase2 = async (req: AuthRequest, res: Response): Promise<v
     if (accion === 'preparar' && previo && !previo.examenesPendientes) throw new AppError('La preparación inicial ya terminó.', 409);
     // Reanudar es una lectura del estado guardado, sin volver a consultar al Agent.
     if (!requiereRedaccion && !mensajeUsuario && accion !== 'confirmar' && previo && previo.estado !== 'decidiendo' && !(previo.examenesPendientes && accion === 'continuar')) {
-      res.json({ success: true, data: { ...previo.ultimaRespuesta, historial: previo.historial } }); return;
+      await guardarAntecedentesPersonalesRDA(doc);
+      const preguntaActual = previo.preguntas.find(q => q.id === previo.preguntaId);
+      res.json({ success: true, data: { ...previo.ultimaRespuesta,
+        ...(preguntaActual && esAntecedentePersonal(preguntaActual.id) ? presentarPreguntaFase2(preguntaActual) : {}), historial: previo.historial } }); return;
     }
     if (typeof requestId !== 'string' || !requestId || requestId.length > 100) throw new AppError('requestId requerido', 400);
     if (previo && (version !== previo.version || questionId !== previo.preguntaId)) throw new AppError('La entrevista cambió. Recarga para retomar la pregunta guardada.', 409);
@@ -135,9 +140,10 @@ export const responderFase2 = async (req: AuthRequest, res: Response): Promise<v
         return items?.length ? [{ ...q, items }] : [];
       });
       const interpretacion = await interpretarRespuestaFase2({ mensaje: mensajeUsuario.trim(), preguntas: editables, respuestas: contextoClinicoFase2(r), editando: true });
+      const antecedentesACorregir = editables.filter(q => esAntecedentePersonal(q.id) && interpretacion.respuestas.some(item => item.id === q.id));
       for (const item of interpretacion.respuestas) {
         const q = editables.find(q => q.id === item.id);
-        if (!q) continue;
+        if (!q || esAntecedentePersonal(q.id)) continue;
         const valor = validarRespuestaFase2(q, item.valor);
         if (!valor.valido) continue;
         Object.assign(cambios, guardarRespuestaFase2(q, valor.valor, r));
@@ -147,6 +153,14 @@ export const responderFase2 = async (req: AuthRequest, res: Response): Promise<v
         estado.estado = 'decidiendo'; estado.preguntaId = null; delete estado.decision; delete estado.resumenPaciente;
         Object.assign(eliminar, { analisisFisiologicoIA: 1, recomendacionAutomatica: 1 });
         payload = { respuesta: 'Voy a priorizar la valoración de lo que acabas de describir.', opciones: [], questionId: null, finRonda: true };
+      } else if (antecedentesACorregir.length) {
+        // Una corrección vuelve al editor semántico: el intérprete general no puede asignar CIE-10.
+        estado.correccionesPendientes = antecedentesACorregir.map(q => q.id);
+        estado.preguntas = [...antecedentesACorregir, ...estado.preguntas.filter(q => !estado.correccionesPendientes!.includes(q.id) && !respuestaGuardadaFase2(q, r))];
+        estado.estado = 'preguntando'; estado.preguntaId = antecedentesACorregir[0].id;
+        delete estado.decision; delete estado.resumenPaciente;
+        Object.assign(eliminar, { analisisFisiologicoIA: 1, recomendacionAutomatica: 1, analisisIA: 1, historiaClinica: 1 });
+        payload = presentarPreguntaFase2(antecedentesACorregir[0]);
       } else if (!Object.keys(cambios).length) {
         payload = estado.estado === 'resumen' ? informacionResumen(estado) : presentarPreguntaFase2(estado.preguntas.find(q => q.id === estado.preguntaId)!);
         payload.respuesta = interpretacion.aclaracion?.slice(0, 600) || 'Indica qué respuesta de esta fase quieres corregir y cuál es el dato correcto.';
@@ -161,7 +175,11 @@ export const responderFase2 = async (req: AuthRequest, res: Response): Promise<v
       if (estado.estado !== 'preguntando') throw new AppError('Retoma la entrevista antes de responder.', 409);
       const q = estado.preguntas.find(p => p.id === estado.preguntaId);
       if (!q) throw new AppError('No se pudo recuperar la pregunta pendiente.', 503);
-      let resultado = validarRespuestaFase2(q, valorRespuesta);
+      if (esAntecedentePersonal(q.id) && valorRespuesta === undefined) throw new AppError('Escribe el antecedente en el formulario y pulsa Revisar respuesta para continuar.', 400);
+      const valorValidado = esAntecedentePersonal(q.id) && valorRespuesta !== undefined && !Array.isArray(valorRespuesta)
+        ? leerSugerencia(valorRespuesta?.comprobante, { pacienteId, interrogatorioId: id, questionId: q.id, referencia: 'paciente', generacion: doc.fase2Generacion || 0 })
+        : valorRespuesta;
+      let resultado = validarRespuestaFase2(q, valorValidado);
       let aclaracion = '';
       let urgente = false;
       if (valorRespuesta !== undefined && !resultado.valido) throw new AppError('Revisa el valor de la respuesta seleccionada.', 400);
@@ -173,6 +191,7 @@ export const responderFase2 = async (req: AuthRequest, res: Response): Promise<v
       }
       if (resultado.valido) {
         Object.assign(cambios, guardarRespuestaFase2(q, resultado.valor, r));
+        estado.correccionesPendientes = estado.correccionesPendientes?.filter(id => id !== q.id);
         estado.respondidas = [...new Set([...estado.respondidas, ...Object.keys(cambios)])];
       }
       if (urgente) {
@@ -181,7 +200,7 @@ export const responderFase2 = async (req: AuthRequest, res: Response): Promise<v
         estado.estado = 'decidiendo'; estado.preguntaId = null;
         payload = { respuesta: 'Voy a priorizar la valoración de lo que acabas de describir.', opciones: [], questionId: null, finRonda: true };
       } else {
-        const siguiente = resultado.valido ? estado.preguntas.find(p => !respuestaGuardadaFase2(p, r)) : q;
+        const siguiente = resultado.valido ? estado.preguntas.find(p => estado.correccionesPendientes?.includes(p.id) || !respuestaGuardadaFase2(p, r)) : q;
         estado.preguntaId = siguiente?.id || null; estado.estado = siguiente ? 'preguntando' : 'decidiendo';
         if (siguiente) await redactarRonda(estado.preguntas, r, cancelacion?.signal);
         payload = siguiente ? presentarPreguntaFase2(siguiente) : { respuesta: 'Tus respuestas están guardadas. Revisemos qué información necesitamos ahora.', opciones: [], questionId: null, finRonda: true };
@@ -260,6 +279,7 @@ export const responderFase2 = async (req: AuthRequest, res: Response): Promise<v
         $unset: eliminar, $push: { 'respuestas.historialChat': { $each: nuevos.map(({ rol, texto }) => ({ rol, texto })) } } }, { new: true }).lean();
     if (!guardado) throw new AppError('La entrevista cambió antes de guardar. Reintenta la misma petición.', 409);
     token = undefined;
+    await guardarAntecedentesPersonalesRDA(guardado);
     await registrarAccion(req, 'actualizar', 'Interrogatorio', id, undefined, { fase: 'fase2', version: estado.version, estado: estado.estado, ronda: estado.ronda });
     if (!estado.examenesPendientes && (completada || estado.estado === 'alerta')) {
       try {
