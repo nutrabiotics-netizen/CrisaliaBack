@@ -4,7 +4,7 @@
  * Este agente se usa para:
  *   - Generar "Recomendaciones de Crisal-IA" al paciente entre citas
  *   - Generar "Resumen de la cita" para el paciente
- *   - Resumen actualizado del paciente (para el campo `resumenIA` del modelo)
+ *   - Resumen actualizado del paciente (para el campo `resumenIA` del modelo) w
  *
  * Credenciales por defecto (sobrescribibles vía env):
  *   CRISAL_AGENT_ID     (default: YY3KJX4H78)
