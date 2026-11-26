@@ -15,6 +15,7 @@
  */
 
 import { BedrockAgentRuntimeClient, InvokeAgentCommand } from '@aws-sdk/client-bedrock-agent-runtime';
+import type { TracePart } from '@aws-sdk/client-bedrock-agent-runtime';
 
 const AGENT_ID = (process.env.CRISAL_AGENT_ID || 'YY3KJX4H78').trim();
 const AGENT_ALIAS = (process.env.CRISAL_AGENT_ALIAS || 'TBGVLCOKOG').trim();
@@ -88,6 +89,52 @@ export interface CrisaliaAgentOptions {
   sessionId?: string;
   /** timeout en ms */
   timeoutMs?: number;
+  /** Registra métricas técnicas de las etapas, sin el contenido de las trazas. */
+  enableTrace?: boolean;
+}
+
+/** Lista explícita de campos: nunca registrar prompts, respuestas, parámetros ni razonamiento. */
+export function resumirTrazaBedrock(part: TracePart) {
+  const trace = part.trace?.orchestrationTrace;
+  const failure = part.trace?.failureTrace;
+  const input = trace?.invocationInput;
+  const observation = trace?.observation;
+  const modelInput = trace?.modelInvocationInput;
+  const modelOutput = trace?.modelInvocationOutput;
+  const step = input || observation || modelInput || modelOutput || failure;
+  if (!step) return undefined;
+
+  const metadata = modelOutput?.metadata
+    || observation?.actionGroupInvocationOutput?.metadata
+    || observation?.knowledgeBaseLookupOutput?.metadata
+    || observation?.agentCollaboratorInvocationOutput?.metadata
+    || observation?.codeInterpreterInvocationOutput?.metadata
+    || observation?.finalResponse?.metadata;
+  const kind = input ? 'invocationInput' : observation ? 'observation'
+    : modelInput ? 'modelInvocationInput' : modelOutput ? 'modelInvocationOutput' : 'failure';
+
+  return {
+    kind,
+    agentId: part.agentId,
+    agentAliasId: part.agentAliasId,
+    agentVersion: part.agentVersion,
+    eventTime: part.eventTime,
+    traceId: step.traceId,
+    invocationType: input?.invocationType,
+    observationType: observation?.type,
+    actionGroupName: input?.actionGroupInvocationInput?.actionGroupName,
+    knowledgeBaseId: input?.knowledgeBaseLookupInput?.knowledgeBaseId,
+    model: modelInput?.foundationModel,
+    failureCode: failure?.failureCode,
+    startTime: metadata?.startTime,
+    endTime: metadata?.endTime,
+    durationMs: metadata?.totalTimeMs,
+    operationTotalTimeMs: metadata?.operationTotalTimeMs,
+    clientRequestId: metadata?.clientRequestId,
+    inputTokens: metadata?.usage?.inputTokens,
+    outputTokens: metadata?.usage?.outputTokens,
+    retrievedReferences: observation?.knowledgeBaseLookupOutput?.retrievedReferences?.length,
+  };
 }
 
 /**
@@ -101,11 +148,15 @@ export async function invokeCrisaliaAgent(
 ): Promise<string> {
   const sessionId = opts.sessionId || `crisalia-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const t0 = Date.now();
+  const invocationId = `invoke-${t0}-${Math.random().toString(36).slice(2, 10)}`;
+  const enableTrace = opts.enableTrace === true;
+  let traceEvents = 0;
 
   console.log('[CrisaliaAgent] ▶ invoke', {
     sessionId,
+    invocationId,
+    enableTrace,
     promptLen: prompt.length,
-    promptPreview: prompt.slice(0, 120)
   });
 
   const timeoutMs = opts.timeoutMs ?? 45000;
@@ -117,7 +168,8 @@ export async function invokeCrisaliaAgent(
       agentId: AGENT_ID,
       agentAliasId: AGENT_ALIAS,
       sessionId,
-      inputText: prompt
+      inputText: prompt,
+      enableTrace,
     });
 
     const response = await client.send(command, { abortSignal: abort.signal });
@@ -125,6 +177,19 @@ export async function invokeCrisaliaAgent(
 
     if (response.completion) {
       for await (const event of response.completion) {
+        if (enableTrace && event.trace) {
+          const summary = resumirTrazaBedrock(event.trace);
+          if (summary) {
+            traceEvents++;
+            console.log('[CrisaliaAgent] trace ' + JSON.stringify({
+              sessionId,
+              invocationId,
+              requestId: response.$metadata?.requestId,
+              elapsedMs: Date.now() - t0,
+              ...summary,
+            }));
+          }
+        }
         if (event.chunk?.bytes) {
           chunks.push(new TextDecoder().decode(event.chunk.bytes));
         }
@@ -136,11 +201,12 @@ export async function invokeCrisaliaAgent(
     const limpio = limpiarRespuestaAgente(raw);
     console.log('[CrisaliaAgent] ◀ respuesta', {
       sessionId,
+      invocationId,
+      traceEvents,
       ms: Date.now() - t0,
       len: raw.length,
       lenLimpio: limpio.length,
     });
-    console.log('[CrisaliaAgent] ◀ respuesta completa:\n', limpio);
     return limpio;
   } catch (err: any) {
     clearTimeout(timer);
@@ -148,6 +214,10 @@ export async function invokeCrisaliaAgent(
       name: err?.name,
       message: err?.message,
       aborted: abort.signal.aborted,
+      sessionId,
+      invocationId,
+      traceEvents,
+      ms: Date.now() - t0,
       agentId: AGENT_ID,
       agentAlias: AGENT_ALIAS
     });
@@ -496,6 +566,7 @@ NUNCA incluyas texto fuera del JSON. NUNCA escribas en inglés ni comentarios me
   const raw = await invokeCrisaliaAgent(prompt, {
     sessionId: `meds-1-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     timeoutMs: input.timeoutMs ?? 600000,
+    enableTrace: true,
   });
 
   try {
